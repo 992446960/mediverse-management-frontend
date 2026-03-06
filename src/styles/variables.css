@@ -1,0 +1,149 @@
+:root {
+  /* ── Brand: Sky Blue (临床天蓝 - 参考设计主色) ── */
+  --color-primary-50:  #F0F9FF;
+  --color-primary-100: #E0F2FE;
+  --color-primary-200: #BAE6FD;
+  --color-primary-300: #7DD3FC;
+  --color-primary-400: #38BDF8;
+  --color-primary-500: #0EA5E9;  /* base */
+  --color-primary-600: #0284C7;  /* hover */
+  --color-primary-700: #0369A1;  /* active */
+  --color-primary-800: #075985;
+  --color-primary-900: #0C4A6E;
+
+  --color-primary:        var(--color-primary-500);
+  --color-primary-hover:  var(--color-primary-600);
+  --color-primary-active: var(--color-primary-700);
+
+  /* ── Functional ── */
+  --color-success: #059669;
+  --color-warning: #D97706;
+  --color-error:   #DC2626;
+  --color-info:    #0EA5E9;
+
+  /* ── Light Mode Structure（来自参考设计 HTML）── */
+  --color-bg-base:        #F8FAFC;
+  --color-bg-layout:      #F1F5F9;
+  --color-bg-container:   #FFFFFF;
+  --color-bg-elevated:    #FFFFFF;
+  --color-bg-sidebar:     #FFFFFF;          /* 亮色模式：白色侧边栏 */
+  --color-bg-sidebar-border: #E2E8F0;      /* 侧边栏右边框 */
+
+  --color-text-base:        #0F172A;
+  --color-text-secondary:   #64748B;
+  --color-text-tertiary:    #94A3B8;
+  --color-text-placeholder: #CBD5E1;
+  --color-text-inverse:     #FFFFFF;
+
+  --color-border:           #E2E8F0;
+  --color-border-secondary: #F1F5F9;
+
+  /* ── Spacing ── */
+  --spacing-xs:  4px;
+  --spacing-sm:  8px;
+  --spacing-md:  16px;
+  --spacing-lg:  24px;
+  --spacing-xl:  32px;
+  --spacing-2xl: 48px;
+
+  /* ── Radius ── */
+  --radius-sm:   6px;
+  --radius-base: 8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-full: 9999px;
+
+  /* ── Shadows（lighter in light mode）── */
+  --shadow-sm:   0 1px 2px 0 rgb(0 0 0 / 0.04);
+  --shadow-base: 0 1px 4px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+  --shadow-md:   0 4px 8px -2px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.04);
+  --shadow-lg:   0 10px 20px -4px rgb(0 0 0 / 0.10), 0 4px 8px -4px rgb(0 0 0 / 0.06);
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+
+  /* ── Transitions ── */
+  --transition-fast:   0.15s ease;
+  --transition-base:   0.25s ease;
+  --transition-slow:   0.35s ease;
+
+  /* ── Login Page — Light Mode ── */
+  --login-bg: linear-gradient(135deg, #EFF6FF 0%, #F0F9FF 50%, #F8FAFC 100%);
+  --login-orb-1: rgba(14, 165, 233, 0.25);
+  --login-orb-2: rgba(5, 150, 105, 0.15);
+  --login-orb-3: rgba(14, 165, 233, 0.08);
+  --login-card-bg: rgba(255, 255, 255, 0.92);
+  --login-card-border: rgba(14, 165, 233, 0.18);
+  --login-card-shadow: 0 8px 32px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.04);
+  --login-title-color: var(--color-text-base);
+  --login-subtitle-color: var(--color-text-secondary);
+  --login-footer-color: var(--color-text-tertiary);
+  --login-divider: rgba(14, 165, 233, 0.10);
+  --login-input-bg: transparent;
+  /* 不透明色，用于覆盖 autofill 背景（inset box-shadow），避免半透明盖不住 #E8F0FE */
+  --login-input-autofill-cover: #FFFFFF;
+  --login-input-border: var(--color-border);
+  --login-input-text: var(--color-text-base);
+  --login-input-placeholder: var(--color-text-tertiary);
+  --login-icon-color: var(--color-text-tertiary);
+  --login-error-color: var(--color-error);
+  --login-brand-color: var(--color-primary);
+}
+
+/* ── Dark Mode Overrides（JS 通过 applyTheme 动态注入，此处为 fallback）── */
+:root[data-theme='dark'] {
+  --color-primary-500: #38BDF8;
+  --color-primary-600: #0EA5E9;
+  --color-primary-700: #0284C7;
+
+  --color-primary:        var(--color-primary-500);
+  --color-primary-hover:  var(--color-primary-600);
+  --color-primary-active: var(--color-primary-700);
+
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-error:   #EF4444;
+  --color-info:    #38BDF8;
+
+  /* 参考设计 Dark Mode 背景（slate-950 系列）*/
+  --color-bg-base:        #020617;
+  --color-bg-layout:      #020617;
+  --color-bg-container:   #111827;
+  --color-bg-elevated:    #1E293B;
+  --color-bg-sidebar:     #00132B;
+  --color-bg-sidebar-border: #1E293B;
+
+  --color-text-base:        #F1F5F9;
+  --color-text-secondary:   #94A3B8;
+  --color-text-tertiary:    #64748B;
+  --color-text-placeholder: #334155;
+  --color-text-inverse:     #FFFFFF;
+
+  --color-border:           #1E293B;
+  --color-border-secondary: #0F172A;
+
+  --shadow-sm:   0 1px 2px 0 rgb(0 0 0 / 0.30);
+  --shadow-base: 0 1px 4px 0 rgb(0 0 0 / 0.40), 0 1px 2px -1px rgb(0 0 0 / 0.30);
+  --shadow-md:   0 4px 8px -2px rgb(0 0 0 / 0.45), 0 2px 4px -2px rgb(0 0 0 / 0.30);
+  --shadow-lg:   0 10px 20px -4px rgb(0 0 0 / 0.50), 0 4px 8px -4px rgb(0 0 0 / 0.35);
+  --shadow-card: 0 2px 8px 0 rgb(0 0 0 / 0.40);
+
+  /* ── Login Page — Dark Mode ── */
+  --login-bg: linear-gradient(135deg, #020617 0%, #0B1120 40%, #0C1A30 100%);
+  --login-orb-1: rgba(14, 165, 233, 0.20);
+  --login-orb-2: rgba(16, 185, 129, 0.12);
+  --login-orb-3: rgba(56, 189, 248, 0.08);
+  --login-card-bg: rgba(11, 17, 32, 0.82);
+  --login-card-border: rgba(56, 189, 248, 0.15);
+  --login-card-shadow: 0 24px 48px rgba(0, 0, 0, 0.40), 0 8px 16px rgba(0, 0, 0, 0.30);
+  --login-title-color: #F1F5F9;
+  --login-subtitle-color: rgba(200, 220, 235, 0.55);
+  --login-footer-color: rgba(200, 220, 235, 0.28);
+  --login-divider: rgba(255, 255, 255, 0.06);
+  --login-input-bg: transparent;
+  --login-input-autofill-cover: #0B1120;
+  --login-input-border: rgba(255, 255, 255, 0.10);
+  --login-input-text: #F1F5F9;
+  --login-input-placeholder: rgba(200, 220, 235, 0.35);
+  --login-icon-color: rgba(200, 220, 235, 0.40);
+  --login-error-color: #FF7875;
+  --login-brand-color: #38BDF8;
+}

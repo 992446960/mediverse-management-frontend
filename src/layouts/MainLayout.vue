@@ -1,0 +1,282 @@
+<template>
+  <a-layout class="main-layout">
+    <a-layout-sider
+      v-model:collapsed="collapsed"
+      collapsible
+      :trigger="null"
+      class="sider"
+      :style="{
+        background: 'var(--color-bg-sidebar)',
+        borderRight: '1px solid var(--color-bg-sidebar-border)',
+      }"
+    >
+      <div class="logo">
+        <span v-if="!collapsed">Mediverse</span>
+        <span v-else>M</span>
+      </div>
+      <a-menu
+        v-model:selected-keys="selectedKeys"
+        v-model:open-keys="openKeys"
+        :theme="themeStore.isDark ? 'dark' : 'light'"
+        mode="inline"
+        :items="menuItems"
+        @click="handleMenuClick"
+      />
+    </a-layout-sider>
+    <a-layout :style="{ marginLeft: collapsed ? '80px' : '200px', transition: 'margin-left 0.2s' }">
+      <a-layout-header class="header">
+        <div class="header-left">
+          <menu-unfold-outlined
+            v-if="collapsed"
+            class="trigger"
+            @click="() => (collapsed = !collapsed)"
+          />
+          <menu-fold-outlined v-else class="trigger" @click="() => (collapsed = !collapsed)" />
+          <a-breadcrumb>
+            <a-breadcrumb-item v-for="(route, index) in breadcrumbs" :key="index">
+              <router-link v-if="route.path && index < breadcrumbs.length - 1" :to="route.path">
+                {{ route.meta.title ? t(route.meta.title as string) : '' }}
+              </router-link>
+              <span v-else>{{ route.meta.title ? t(route.meta.title as string) : '' }}</span>
+            </a-breadcrumb-item>
+          </a-breadcrumb>
+        </div>
+        <div class="header-right">
+          <ThemeSwitcher />
+          <LocaleSwitcher />
+          <a-dropdown>
+            <a class="ant-dropdown-link" @click.prevent>
+              {{ user?.full_name || user?.username || t('common.user') }}
+              <DownOutlined />
+            </a>
+            <template #overlay>
+              <a-menu @click="handleUserMenuClick">
+                <a-menu-item key="profile">
+                  <UserOutlined /> {{ t('common.profile') }}
+                </a-menu-item>
+                <a-menu-divider />
+                <a-menu-item key="logout">
+                  <LogoutOutlined /> {{ t('menu.logout') }}
+                </a-menu-item>
+              </a-menu>
+            </template>
+          </a-dropdown>
+        </div>
+      </a-layout-header>
+      <a-layout-content class="content">
+        <slot />
+      </a-layout-content>
+    </a-layout>
+  </a-layout>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
+import { useAuthStore } from '@/stores/auth';
+import { useThemeStore } from '@/stores/theme';
+import { usePermission } from '@/composables/usePermission';
+import { menuConfig } from '@/config/menu';
+import ThemeSwitcher from '@/components/ThemeSwitcher/index.vue';
+import LocaleSwitcher from '@/components/LocaleSwitcher/index.vue';
+import {
+  MenuUnfoldOutlined,
+  MenuFoldOutlined,
+  DownOutlined,
+  UserOutlined,
+  LogoutOutlined,
+} from '@ant-design/icons-vue';
+import type { ItemType } from 'ant-design-vue';
+
+const collapsed = ref(false);
+const selectedKeys = ref<string[]>([]);
+const openKeys = ref<string[]>([]);
+
+const currentRoute = useRoute();
+const router = useRouter();
+const { t } = useI18n();
+const authStore = useAuthStore();
+const themeStore = useThemeStore();
+const { checkRoles } = usePermission();
+
+const user = computed(() => authStore.user);
+
+const breadcrumbs = computed(() => {
+  return currentRoute.matched.filter((item) => item.meta && item.meta.title);
+});
+
+// Filter menu items based on permissions (sysadmin 等角色依赖 user.role，由 normalizeAuthUser 保证)
+const filterMenu = (items: any[]): ItemType[] => {
+  return items
+    .filter((item) => {
+      if (item.requiredRoles && !checkRoles(item.requiredRoles)) {
+        return false;
+      }
+      return true;
+    })
+    .map((item) => {
+      const newItem: any = {
+        key: item.key,
+        label: t(item.label),
+        icon: item.icon,
+        title: t(item.label),
+      };
+      if (item.children) {
+        newItem.children = filterMenu(item.children);
+      }
+      return newItem;
+    })
+    .filter((newItem: any) => {
+      // 有 children 但被过滤成空时不再展示该父级
+      if (newItem.children && newItem.children.length === 0) return false;
+      return true;
+    });
+};
+
+const menuItems = computed(() => filterMenu(menuConfig));
+
+const handleMenuClick = ({ key }: { key: string }) => {
+  const findPath = (items: any[]): string | undefined => {
+    for (const item of items) {
+      if (item.key === key) return item.path;
+      if (item.children) {
+        const path = findPath(item.children);
+        if (path) return path;
+      }
+    }
+  };
+  const path = findPath(menuConfig);
+  if (path) {
+    router.push(path);
+  }
+};
+
+const handleUserMenuClick = async ({ key }: { key: string }) => {
+  if (key === 'logout') {
+    await authStore.logout();
+    router.push('/login');
+  } else if (key === 'profile') {
+    router.push('/');
+  }
+};
+
+// Sync menu selection with route
+watch(
+  () => currentRoute.path,
+  () => {
+    const findKey = (items: any[]): string | undefined => {
+      for (const item of items) {
+        if (item.path === currentRoute.path) return item.key;
+        if (item.children) {
+          const key = findKey(item.children);
+          if (key) return key;
+        }
+      }
+    };
+    const key = findKey(menuConfig);
+    if (key) {
+      selectedKeys.value = [key];
+    }
+  },
+  { immediate: true }
+);
+</script>
+
+<style scoped>
+.main-layout {
+  min-height: 100vh;
+}
+
+.sider {
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 100;
+  overflow: hidden;
+}
+
+.logo {
+  height: 32px;
+  margin: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--color-border-secondary);
+  padding-bottom: 16px;
+}
+
+.header {
+  background: var(--color-bg-container);
+  padding: 0 var(--spacing-lg);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: none;
+  border-bottom: 1px solid var(--color-border-secondary);
+  position: sticky;
+  top: 0;
+  z-index: 99;
+  width: 100%;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+/* 右侧图标与下拉：整体与图标均垂直居中 */
+.header-right :deep(.ant-btn) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--spacing-sm);
+}
+.header-right .ant-dropdown-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.trigger {
+  font-size: 18px;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.trigger:hover {
+  color: var(--color-primary);
+}
+
+.content {
+  margin: var(--spacing-lg) var(--spacing-md);
+  /* padding: var(--spacing-lg); */
+  /* background: var(--color-bg-container); */
+  min-height: 280px;
+  border-radius: var(--radius-base);
+  box-shadow: var(--shadow-card);
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

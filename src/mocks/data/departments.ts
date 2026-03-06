@@ -1,0 +1,20 @@
+import type { Department } from '@/types/department'
+
+/** 多机构下的科室 Mock 数据（内科、外科、儿科等） */
+export const departments: Department[] = [
+  { id: 'dept_001', org_id: 'org_001', org_name: '北京协和医院', name: '内科', code: 'DEPT001', description: '内科疾病诊疗', status: 'active', created_at: '2023-01-10T00:00:00Z', updated_at: '2024-06-01T00:00:00Z' },
+  { id: 'dept_002', org_id: 'org_001', org_name: '北京协和医院', name: '外科', code: 'DEPT002', description: '外科手术与诊疗', status: 'active', created_at: '2023-01-10T00:00:00Z', updated_at: '2024-06-01T00:00:00Z' },
+  { id: 'dept_003', org_id: 'org_001', org_name: '北京协和医院', name: '儿科', code: 'DEPT003', description: '儿童疾病诊疗', status: 'active', created_at: '2023-01-10T00:00:00Z', updated_at: '2024-06-01T00:00:00Z' },
+  { id: 'dept_004', org_id: 'org_001', org_name: '北京协和医院', name: '妇产科', code: 'DEPT004', description: '妇产科诊疗', status: 'active', created_at: '2023-01-10T00:00:00Z', updated_at: '2024-06-01T00:00:00Z' },
+  { id: 'dept_005', org_id: 'org_001', org_name: '北京协和医院', name: '急诊科', code: 'DEPT005', description: '急诊抢救', status: 'active', created_at: '2023-01-10T00:00:00Z', updated_at: '2024-06-01T00:00:00Z' },
+  { id: 'dept_006', org_id: 'org_002', org_name: '上海交通大学医学院附属瑞金医院', name: '内科', code: 'DEPT101', description: '内科疾病诊疗', status: 'active', created_at: '2023-01-11T00:00:00Z', updated_at: '2024-05-15T00:00:00Z' },
+  { id: 'dept_007', org_id: 'org_002', org_name: '上海交通大学医学院附属瑞金医院', name: '外科', code: 'DEPT102', description: '外科手术与诊疗', status: 'active', created_at: '2023-01-11T00:00:00Z', updated_at: '2024-05-15T00:00:00Z' },
+  { id: 'dept_008', org_id: 'org_002', org_name: '上海交通大学医学院附属瑞金医院', name: '内分泌科', code: 'DEPT103', description: '内分泌与代谢疾病', status: 'active', created_at: '2023-01-11T00:00:00Z', updated_at: '2024-05-15T00:00:00Z' },
+  { id: 'dept_009', org_id: 'org_002', org_name: '上海交通大学医学院附属瑞金医院', name: '心血管科', code: 'DEPT104', description: '心血管疾病诊疗', status: 'active', created_at: '2023-01-11T00:00:00Z', updated_at: '2024-05-15T00:00:00Z' },
+  { id: 'dept_010', org_id: 'org_003', org_name: '中山大学附属第一医院', name: '内科', code: 'DEPT201', description: '内科疾病诊疗', status: 'active', created_at: '2023-01-12T00:00:00Z', updated_at: '2024-05-20T00:00:00Z' },
+  { id: 'dept_011', org_id: 'org_003', org_name: '中山大学附属第一医院', name: '神经内科', code: 'DEPT202', description: '神经系统疾病', status: 'active', created_at: '2023-01-12T00:00:00Z', updated_at: '2024-05-20T00:00:00Z' },
+  { id: 'dept_012', org_id: 'org_003', org_name: '中山大学附属第一医院', name: '骨科', code: 'DEPT203', description: '骨科诊疗', status: 'active', created_at: '2023-01-12T00:00:00Z', updated_at: '2024-05-20T00:00:00Z' },
+  { id: 'dept_013', org_id: 'org_004', org_name: '华西医院', name: '内科', code: 'DEPT301', description: '内科疾病诊疗', status: 'active', created_at: '2023-01-13T00:00:00Z', updated_at: '2024-04-10T00:00:00Z' },
+  { id: 'dept_014', org_id: 'org_004', org_name: '华西医院', name: '口腔科', code: 'DEPT302', description: '口腔诊疗', status: 'active', created_at: '2023-01-13T00:00:00Z', updated_at: '2024-04-10T00:00:00Z' },
+  { id: 'dept_015', org_id: 'org_004', org_name: '华西医院', name: '儿科', code: 'DEPT303', description: '儿童疾病诊疗', status: 'inactive', created_at: '2023-01-13T00:00:00Z', updated_at: '2024-04-10T00:00:00Z' },
+]

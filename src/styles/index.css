@@ -1,0 +1,58 @@
+@import 'tailwindcss';
+@import './variables.css';
+
+/* 与 themeStore 一致：dark 由 html.dark 控制，不随系统 prefers-color-scheme 变化 */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-primary: #0ea5e9;
+  --color-success: #059669;
+  --color-warning: #d97706;
+  --color-error: #dc2626;
+  --color-info: #0ea5e9;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family, 'Figtree', 'Noto Sans SC', sans-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--color-bg-base);
+  color: var(--color-text-base);
+  transition:
+    background-color 0.3s,
+    color 0.3s;
+}
+
+/* 去掉输入框内边框样式（outline / 内阴影），保留外边框 */
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-input-password {
+  outline: none !important;
+  box-shadow: none !important;
+}
+.ant-input:focus,
+.ant-input-affix-wrapper:focus-within,
+.ant-input-password:focus-within {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* 登录页：覆盖 autofill 背景 #E8F0FE，全局写一遍提高优先级 */
+.login-container input:-webkit-autofill,
+.login-container input:-webkit-autofill:hover,
+.login-container input:-webkit-autofill:focus,
+.login-container input:-webkit-autofill:active {
+  background-color: var(--login-input-autofill-cover) !important;
+  -webkit-box-shadow: 0 0 0 1000px var(--login-input-autofill-cover) inset !important;
+  box-shadow: 0 0 0 1000px var(--login-input-autofill-cover) inset !important;
+  -webkit-text-fill-color: var(--login-input-text) !important;
+  caret-color: var(--login-input-text);
+}
+
+.app-container {
+  background-color: var(--color-bg-base);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-base);
+  box-shadow: var(--shadow-sm);
+}
