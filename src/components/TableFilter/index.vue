@@ -144,7 +144,7 @@ function onReset() {
 <style scoped>
 .table-filter{
   background-color: var(--color-bg-container);
-  padding-bottom: var(--spacing-xl);
+  padding-bottom: calc(var(--spacing-xl) + 24px);
 }
 .table-filter__header {
   display: flex;
