@@ -13,7 +13,7 @@
         @node-click="onTreeSelect"
       />
     </aside>
-    <section class="flex-1 flex flex-col min-w-0 pl-0 overflow-y-auto">
+    <section class="flex-1 flex flex-col min-h-0 min-w-0 pl-0">
       <template v-if="hasSelection">
         <div class="mb-4">
           <TableFilter
@@ -41,13 +41,13 @@
           :columns="columns as ColumnsType<Record<string, unknown>>"
           :data-source="data as unknown as Record<string, unknown>[]"
           :loading="loading"
-          scroll-height="60vh"
           row-key="id"
           :scroll="{ x: 1500 }"
           :pagination="paginationConfig"
           :toolbar="toolbarConfig"
           :empty-text="t('common.noData')"
           @change="onTableChange"
+          @refresh="refresh"
         >
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'roles'">

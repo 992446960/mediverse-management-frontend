@@ -23,7 +23,10 @@
         @click="handleMenuClick"
       />
     </a-layout-sider>
-    <a-layout :style="{ marginLeft: collapsed ? '80px' : '200px', transition: 'margin-left 0.2s' }">
+    <a-layout
+      class="main-right-layout"
+      :style="{ marginLeft: collapsed ? '80px' : '200px', transition: 'margin-left 0.2s' }"
+    >
       <a-layout-header class="header">
         <div class="header-left">
           <menu-unfold-outlined
@@ -55,9 +58,7 @@
                   <UserOutlined /> {{ t('common.profile') }}
                 </a-menu-item>
                 <a-menu-divider />
-                <a-menu-item key="logout">
-                  <LogoutOutlined /> {{ t('menu.logout') }}
-                </a-menu-item>
+                <a-menu-item key="logout"> <LogoutOutlined /> {{ t('menu.logout') }} </a-menu-item>
               </a-menu>
             </template>
           </a-dropdown>
@@ -71,49 +72,49 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { useI18n } from 'vue-i18n';
-import { useAuthStore } from '@/stores/auth';
-import { useThemeStore } from '@/stores/theme';
-import { usePermission } from '@/composables/usePermission';
-import { menuConfig } from '@/config/menu';
-import ThemeSwitcher from '@/components/ThemeSwitcher/index.vue';
-import LocaleSwitcher from '@/components/LocaleSwitcher/index.vue';
+import { ref, computed, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import { useAuthStore } from '@/stores/auth'
+import { useThemeStore } from '@/stores/theme'
+import { usePermission } from '@/composables/usePermission'
+import { menuConfig } from '@/config/menu'
+import ThemeSwitcher from '@/components/ThemeSwitcher/index.vue'
+import LocaleSwitcher from '@/components/LocaleSwitcher/index.vue'
 import {
   MenuUnfoldOutlined,
   MenuFoldOutlined,
   DownOutlined,
   UserOutlined,
   LogoutOutlined,
-} from '@ant-design/icons-vue';
-import type { ItemType } from 'ant-design-vue';
+} from '@ant-design/icons-vue'
+import type { ItemType } from 'ant-design-vue'
 
-const collapsed = ref(false);
-const selectedKeys = ref<string[]>([]);
-const openKeys = ref<string[]>([]);
+const collapsed = ref(false)
+const selectedKeys = ref<string[]>([])
+const openKeys = ref<string[]>([])
 
-const currentRoute = useRoute();
-const router = useRouter();
-const { t } = useI18n();
-const authStore = useAuthStore();
-const themeStore = useThemeStore();
-const { checkRoles } = usePermission();
+const currentRoute = useRoute()
+const router = useRouter()
+const { t } = useI18n()
+const authStore = useAuthStore()
+const themeStore = useThemeStore()
+const { checkRoles } = usePermission()
 
-const user = computed(() => authStore.user);
+const user = computed(() => authStore.user)
 
 const breadcrumbs = computed(() => {
-  return currentRoute.matched.filter((item) => item.meta && item.meta.title);
-});
+  return currentRoute.matched.filter((item) => item.meta && item.meta.title)
+})
 
 // Filter menu items based on permissions (sysadmin 等角色依赖 user.role，由 normalizeAuthUser 保证)
 const filterMenu = (items: any[]): ItemType[] => {
   return items
     .filter((item) => {
       if (item.requiredRoles && !checkRoles(item.requiredRoles)) {
-        return false;
+        return false
       }
-      return true;
+      return true
     })
     .map((item) => {
       const newItem: any = {
@@ -121,45 +122,45 @@ const filterMenu = (items: any[]): ItemType[] => {
         label: t(item.label),
         icon: item.icon,
         title: t(item.label),
-      };
-      if (item.children) {
-        newItem.children = filterMenu(item.children);
       }
-      return newItem;
+      if (item.children) {
+        newItem.children = filterMenu(item.children)
+      }
+      return newItem
     })
     .filter((newItem: any) => {
       // 有 children 但被过滤成空时不再展示该父级
-      if (newItem.children && newItem.children.length === 0) return false;
-      return true;
-    });
-};
+      if (newItem.children && newItem.children.length === 0) return false
+      return true
+    })
+}
 
-const menuItems = computed(() => filterMenu(menuConfig));
+const menuItems = computed(() => filterMenu(menuConfig))
 
 const handleMenuClick = ({ key }: { key: string }) => {
   const findPath = (items: any[]): string | undefined => {
     for (const item of items) {
-      if (item.key === key) return item.path;
+      if (item.key === key) return item.path
       if (item.children) {
-        const path = findPath(item.children);
-        if (path) return path;
+        const path = findPath(item.children)
+        if (path) return path
       }
     }
-  };
-  const path = findPath(menuConfig);
-  if (path) {
-    router.push(path);
   }
-};
+  const path = findPath(menuConfig)
+  if (path) {
+    router.push(path)
+  }
+}
 
 const handleUserMenuClick = async ({ key }: { key: string }) => {
   if (key === 'logout') {
-    await authStore.logout();
-    router.push('/login');
+    await authStore.logout()
+    router.push('/login')
   } else if (key === 'profile') {
-    router.push('/');
+    router.push('/')
   }
-};
+}
 
 // Sync menu selection with route
 watch(
@@ -167,20 +168,20 @@ watch(
   () => {
     const findKey = (items: any[]): string | undefined => {
       for (const item of items) {
-        if (item.path === currentRoute.path) return item.key;
+        if (item.path === currentRoute.path) return item.key
         if (item.children) {
-          const key = findKey(item.children);
-          if (key) return key;
+          const key = findKey(item.children)
+          if (key) return key
         }
       }
-    };
-    const key = findKey(menuConfig);
+    }
+    const key = findKey(menuConfig)
     if (key) {
-      selectedKeys.value = [key];
+      selectedKeys.value = [key]
     }
   },
   { immediate: true }
-);
+)
 </script>
 
 <style scoped>
@@ -261,13 +262,20 @@ watch(
   color: var(--color-primary);
 }
 
+/* 右侧主区域：flex 列布局，占满高度，便于内容区表格等占满剩余空间 */
+.main-right-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
 .content {
   margin: var(--spacing-lg) var(--spacing-md);
-  /* padding: var(--spacing-lg); */
-  /* background: var(--color-bg-container); */
-  min-height: 280px;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   border-radius: var(--radius-base);
-  box-shadow: var(--shadow-card);
 }
 
 .fade-enter-active,

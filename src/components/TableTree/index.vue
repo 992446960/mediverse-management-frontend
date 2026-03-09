@@ -1,7 +1,7 @@
 <template>
   <div
-    class="table-tree pb-4 bg-white dark:bg-slate-900 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none flex flex-col flex-1 overflow-hidden border border-slate-200/60 dark:border-slate-800 min-h-0"
-    :style="{ maxHeight }"
+    class="table-tree pb-4 bg-white dark:bg-slate-900 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none flex flex-col overflow-hidden border border-slate-200/60 dark:border-slate-800"
+    :style="tableTreeStyle"
   >
     <div class="px-5 pt-6 pb-4">
       <div class="flex items-center justify-between mb-5">
@@ -116,6 +116,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { ReloadOutlined, SearchOutlined, DownOutlined } from '@ant-design/icons-vue'
+import { TABLE_TREE_HEIGHT_CALC } from '@/constants/layout'
 import { tableTreeIconMap } from './icons'
 import type { TableTreeNode, TableTreeClickPayload } from './types'
 
@@ -140,7 +141,10 @@ interface Props {
   refreshTitle?: string
   /** 无数据或过滤无结果时的文案 */
   emptyText?: string
-  /** 最大高度，默认 90vh，用于限制树区域高度并内部滚动 */
+  /**
+   * 树容器高度，用于限制树区域并保证内部滚动生效。
+   * 默认 100vh - layout header - content margin，与 MainLayout 一致；可传值覆盖。
+   */
   maxHeight?: string
 }
 
@@ -151,8 +155,11 @@ const props = withDefaults(defineProps<Props>(), {
   fetchData: undefined,
   refreshTitle: '刷新',
   emptyText: '暂无数据',
-  maxHeight: '90vh',
+  maxHeight: TABLE_TREE_HEIGHT_CALC,
 })
+
+/** 根节点样式：固定高度以让内部 overflow 滚动生效，避免 flex-1 导致滚动失效 */
+const tableTreeStyle = computed(() => ({ height: props.maxHeight }))
 
 function onRefresh() {
   if (typeof props.fetchData === 'function') {

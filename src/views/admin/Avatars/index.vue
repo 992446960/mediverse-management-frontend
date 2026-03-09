@@ -1,6 +1,6 @@
 <template>
   <div class="avatars-page flex flex-1 flex-col overflow-hidden">
-    <section class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+    <section class="flex-1 flex flex-col min-h-0 min-w-0">
       <div class="mb-4">
         <TableFilter
           v-model="filterState"
@@ -27,13 +27,13 @@
         :columns="columns as ColumnsType<Record<string, unknown>>"
         :data-source="data as unknown as Record<string, unknown>[]"
         :loading="loading"
-        scroll-height="60vh"
         row-key="id"
         :scroll="{ x: 1000 }"
         :pagination="paginationConfig"
         :toolbar="toolbarConfig"
         :empty-text="t('common.noData')"
         @change="onTableChange"
+        @refresh="refresh"
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'scope'">
@@ -122,8 +122,8 @@ interface AvatarFilterState {
 const filterState = ref<AvatarFilterState>({
   keyword: '',
   type: '',
-  org_id: undefined,
-  dept_id: undefined,
+  org_id: '',
+  dept_id: '',
   status: '',
 })
 
@@ -133,7 +133,7 @@ const deptList = ref<Department[]>([])
 watch(
   () => filterState.value.org_id,
   async (orgId) => {
-    filterState.value.dept_id = undefined
+    filterState.value.dept_id = ''
     deptList.value = []
     if (!orgId) return
     const res = await getDepartments({ org_id: orgId, page: 1, page_size: 500 })
@@ -234,7 +234,7 @@ function onFilterSearch() {
 }
 
 function onFilterReset() {
-  filterState.value = { keyword: '', type: '', org_id: undefined, dept_id: undefined, status: '' }
+  filterState.value = { keyword: '', type: '', org_id: '', dept_id: '', status: '' }
   handleSearch(getListParams())
 }
 

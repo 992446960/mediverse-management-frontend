@@ -22,17 +22,15 @@
     </div>
     <ProTable
       :title="t('org.title')"
-      :subtitle="`(共 ${pagination.total} 条记录)`"
       :columns="columns as ColumnsType<Record<string, unknown>>"
       :data-source="data as unknown as Record<string, unknown>[]"
       :loading="loading"
-      scroll-height="60vh"
       row-key="id"
       :scroll="{ x: 900 }"
       :pagination="paginationConfig"
-      :toolbar="toolbarConfig"
       :empty-text="t('common.noData')"
       @change="onTableChange"
+      @refresh="refresh"
     />
     <OrgForm v-model:open="formOpen" :initial-record="editingRecord" @submit="handleFormSubmit" />
   </div>
@@ -58,7 +56,6 @@ import { confirmDelete } from '@/utils/confirm'
 import type { TableFilterFieldConfig } from '@/components/TableFilter/types'
 import type {
   ProTablePagination,
-  ProTableToolItem,
   ProTableColumnExt,
   ProTableActionBtn,
 } from '@/components/Table/types'
@@ -132,9 +129,6 @@ const paginationConfig = computed<ProTablePagination>(() => ({
   },
 }))
 
-const toolbarConfig = computed<ProTableToolItem[]>(() => [
-  { key: 'refresh', icon: 'reload', title: t('common.refresh'), handle: refresh },
-])
 
 const columns = computed<
   (ProTableColumnExt<Organization> & {

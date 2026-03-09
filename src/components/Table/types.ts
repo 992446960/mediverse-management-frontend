@@ -71,6 +71,10 @@ export interface ProTableBarConfig {
   updateTime?: string
   /** 总条数文案，默认 (n) => `共 ${n} 条` */
   totalLabel?: (total: number) => string
+  /** 是否在顶栏「条数」后方展示刷新按钮（紧跟数据最后更新时间） */
+  showRefresh?: boolean
+  /** 点击刷新时的回调，与 showRefresh 搭配使用 */
+  onRefresh?: () => void | Promise<void>
 }
 
 /**

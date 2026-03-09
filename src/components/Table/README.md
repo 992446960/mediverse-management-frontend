@@ -1,6 +1,6 @@
 # ProTable 通用表格
 
-基于 Ant Design Vue 4.x `a-table` 的封装，统一空状态、加载态、**固定高度表体滚动**、横向滚动与操作列插槽。默认表体高度 400px，在表格内滚动。
+基于 Ant Design Vue 4.x `a-table` 的封装，统一空状态、加载态、**固定高度表体滚动**、横向滚动与操作列插槽。表体高度**默认根据容器自动计算**（ResizeObserver 测量），占满剩余空间并在表格内滚动；未测量到高度时回退 400px。传 `scrollHeight="0"` 可关闭固定高度。
 
 ## Props
 
@@ -12,7 +12,7 @@
 | rowKey       | `string \| (record) => Key`   | -           | 行 key                                                               |
 | pagination   | `false \| ProTablePagination` | false       | 分页：false 不分页；对象时为受控分页                                 |
 | scroll       | `{ x?, y? }`                  | -           | 横向/纵向滚动（会与 scrollHeight 合并）                              |
-| scrollHeight | `number \| string`            | 400         | 表体固定高度（数字为 px），表格在**内部滚动**；传 `0` 表示不固定高度 |
+| scrollHeight | `number \| string`            | 自动        | 表体高度：不传时由组件根据容器测量填满剩余空间；可传 px/vh 覆盖；传 `0` 表示不固定 |
 | actionsKey   | `string`                      | `'actions'` | 操作列 key，匹配时使用 `#actions` 插槽                               |
 | emptyText    | `string`                      | -           | 空数据时文案                                                         |
 
@@ -40,7 +40,6 @@
     :loading="loading"
     row-key="id"
     :scroll="{ x: 1100 }"
-    :scroll-height="400"
     :pagination="paginationConfig"
     @change="onTableChange"
   >

@@ -14,7 +14,7 @@
 | fetchData         | () => void \| Promise\<void\> | -          | 刷新回调；传入时展示标题右侧刷新按钮，点击后调用 |
 | refreshTitle      | string                        | '刷新'     | 刷新按钮的 title 文案                            |
 | emptyText         | string                        | '暂无数据' | 无数据/无匹配结果文案                            |
-| maxHeight         | string                        | '86vh'     | 容器最大高度，用于内部滚动                       |
+| maxHeight         | string                        | 见下       | 容器高度（默认 `100vh - header - content margin`，与 MainLayout 一致，保证内部滚动） |
 
 ### TableTreeNode
 
