@@ -200,7 +200,7 @@ export default defineConfig({
   },
   theme: {
     colors: {
-      primary: '#1890ff',
+      primary: '#0ea5e9',  /* 与 variables.css 主色一致（Sky Blue） */
     },
   },
 })
