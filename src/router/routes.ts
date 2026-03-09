@@ -68,7 +68,7 @@ const routes: RouteRecordRaw[] = [
       layout: 'MainLayout',
       title: 'menu.deptWorkbench',
       requiresAuth: true,
-      requiredRoles: ['sysadmin', 'org_admin', 'dept_admin'],
+      requiredRoles: ['dept_admin'],
     },
     children: [
       {
@@ -98,7 +98,7 @@ const routes: RouteRecordRaw[] = [
       layout: 'MainLayout',
       title: 'menu.orgWorkbench',
       requiresAuth: true,
-      requiredRoles: ['sysadmin', 'org_admin'],
+      requiredRoles: ['org_admin'],
     },
     children: [
       {

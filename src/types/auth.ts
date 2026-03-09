@@ -12,6 +12,7 @@ export interface User {
   dept_id?: string
   is_active: boolean
   must_change_pwd: boolean
+  has_avatar: boolean
   last_login_at?: string
   created_at: string
   updated_at: string

@@ -44,7 +44,7 @@ export const menuConfig: MenuConfig[] = [
     key: 'dept',
     label: 'menu.deptWorkbench',
     icon: () => h(TeamOutlined),
-    requiredRoles: ['sysadmin', 'org_admin', 'dept_admin'],
+    requiredRoles: ['dept_admin'],
     children: [
       { key: 'dept-files', label: 'menu.files', path: '/dept/files' },
       { key: 'dept-knowledge', label: 'menu.knowledgeCards', path: '/dept/knowledge-cards' },
@@ -55,7 +55,7 @@ export const menuConfig: MenuConfig[] = [
     key: 'org',
     label: 'menu.orgWorkbench',
     icon: () => h(BankOutlined),
-    requiredRoles: ['sysadmin', 'org_admin'],
+    requiredRoles: ['org_admin'],
     children: [
       { key: 'org-files', label: 'menu.files', path: '/org/files' },
       { key: 'org-knowledge', label: 'menu.knowledgeCards', path: '/org/knowledge-cards' },

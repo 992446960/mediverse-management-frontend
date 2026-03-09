@@ -15,7 +15,7 @@ export const users: UserListItem[] = [
     dept_name: '内科',
     roles: ['sysadmin'],
     status: 'active',
-    has_avatar: false,
+    has_avatar: true,
     created_at: '2023-01-01T00:00:00Z',
   },
   {
@@ -30,7 +30,7 @@ export const users: UserListItem[] = [
     dept_name: '内科',
     roles: ['org_admin'],
     status: 'active',
-    has_avatar: false,
+    has_avatar: true,
     created_at: '2023-01-02T00:00:00Z',
   },
   {
@@ -45,7 +45,7 @@ export const users: UserListItem[] = [
     dept_name: '内科',
     roles: ['dept_admin'],
     status: 'active',
-    has_avatar: false,
+    has_avatar: true,
     created_at: '2023-01-03T00:00:00Z',
   },
   {
@@ -60,7 +60,7 @@ export const users: UserListItem[] = [
     dept_name: '内科',
     roles: ['user'],
     status: 'active',
-    has_avatar: false,
+    has_avatar: true,
     created_at: '2023-01-04T00:00:00Z',
   },
   {
