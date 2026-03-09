@@ -22,6 +22,7 @@ export function createPermissionGuard(router: Router) {
       return { path: '/login', query: { redirect: to.fullPath } }
     }
 
+    // 有持久化 user 时直接放行；无 user 时再拉取（兼容旧 session 或首次）
     if (!authStore.user) {
       try {
         await authStore.fetchUserInfo()

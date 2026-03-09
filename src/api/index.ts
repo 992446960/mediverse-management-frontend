@@ -111,7 +111,13 @@ api.interceptors.response.use(
 
     // 业务状态码判断
     if (res.code !== 0) {
-      message.error(res.message || 'Error')
+      // /auth/me、/auth/logout 业务失败时由路由守卫静默跳转登录，不弹 toast（与 5xx 行为一致）
+      const isAuthEndpoint =
+        response.config?.url?.includes?.('/auth/me') ||
+        response.config?.url?.includes?.('/auth/logout')
+      if (!isAuthEndpoint) {
+        message.error(res.message || 'Error')
+      }
       return Promise.reject(new Error(res.message || 'Error'))
     }
 
