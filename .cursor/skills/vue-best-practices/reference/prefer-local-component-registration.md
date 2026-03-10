@@ -26,7 +26,6 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import Card from './components/Card.vue'
 import Modal from './components/Modal.vue'
-import Table from './components/Table.vue'
 import Pagination from './components/Pagination.vue'
 import UserAvatar from './components/UserAvatar.vue'
 import SearchBar from './components/SearchBar.vue'
@@ -36,7 +35,6 @@ const app = createApp(App)
 // WRONG: All these components are now in the bundle even if unused
 app.component('Card', Card)
 app.component('Modal', Modal)
-app.component('Table', Table)
 app.component('Pagination', Pagination)
 app.component('UserAvatar', UserAvatar)
 app.component('SearchBar', SearchBar)
