@@ -1,4 +1,4 @@
-# TableTree 通用树形侧栏
+# PageTree 通用树形侧栏
 
 参考「全部机构」布局：卡片容器、标题、搜索框、可展开的树列表（根节点 + 子节点连线样式）。
 
@@ -11,7 +11,7 @@
 | treeData          | TableTreeNode[]               | -          | 树数据                                           |
 | selectedKey       | string                        | ''         | 当前选中节点 key                                 |
 | loading           | boolean                       | false      | 加载态                                           |
-| fetchData         | () => void \| Promise\<void\> | -          | 刷新回调；传入时展示标题右侧刷新按钮，点击后调用 |
+| fetchData         | () => void \| Promise<void> | -          | 刷新回调；传入时展示标题右侧刷新按钮，点击后调用 |
 | refreshTitle      | string                        | '刷新'     | 刷新按钮的 title 文案                            |
 | emptyText         | string                        | '暂无数据' | 无数据/无匹配结果文案                            |
 | maxHeight         | string                        | 见下       | 容器高度（默认 `100vh - header - content margin`，与 MainLayout 一致，保证内部滚动） |
@@ -30,7 +30,7 @@
 ## 使用示例
 
 ```vue
-<TableTree
+<PageTree
   title="全部机构"
   search-placeholder="搜索机构名称"
   :tree-data="treeData"
@@ -42,3 +42,4 @@
 ```
 
 树数据可由 API 机构/科室树转换而来，见 `views/admin/Departments/index.vue`。
+

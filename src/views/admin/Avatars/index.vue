@@ -1,72 +1,53 @@
 <template>
   <div class="avatars-page flex flex-1 flex-col overflow-hidden">
-    <section class="flex-1 flex flex-col min-h-0 min-w-0">
-      <div class="mb-4">
-        <TableFilter
-          v-model="filterState"
-          :title="t('menu.avatarManagement')"
-          :primary-action="{
-            text: t('avatar.addAvatar'),
-            permission: ['sysadmin', 'org_admin', 'dept_admin'],
-          }"
-          :fields="filterFields"
-          :search-text="t('common.search')"
-          :reset-text="t('common.reset')"
-          @search="onFilterSearch"
-          @reset="onFilterReset"
-          @primary-action="openWizard"
-        >
-          <template #primaryActionIcon>
-            <PlusOutlined />
-          </template>
-        </TableFilter>
-      </div>
-      <ProTable
-        :title="t('menu.avatarManagement')"
-        :subtitle="`(共 ${pagination.total} 条记录)`"
-        :columns="columns as ColumnsType<Record<string, unknown>>"
-        :data-source="data as unknown as Record<string, unknown>[]"
-        :loading="loading"
-        row-key="id"
-        :scroll="{ x: 1000 }"
-        :pagination="paginationConfig"
-        :toolbar="toolbarConfig"
-        :empty-text="t('common.noData')"
-        @change="onTableChange"
-        @refresh="refresh"
-      >
-        <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'scope'">
-            {{ formatScope(record as Avatar) }}
-          </template>
-          <template v-else>
-            {{ getCellValue(record as Record<string, unknown>, column as { dataIndex?: string | string[] }) }}
-          </template>
-        </template>
-      </ProTable>
-      <AvatarWizard
-        v-model:open="wizardOpen"
-        @success="handleWizardSuccess"
+    <div class="app-container p-4 mb-4">
+      <PageHead :head-conf="headConf" />
+      <PageFilter
+        ref="pageFilterRef"
+        :filter-conf="filterConf"
+        @fetch-table-data="onFilterFetch"
       />
-      <AvatarEditModal
-        v-model:open="editOpen"
-        :avatar-id="editingId ?? undefined"
-        @success="handleEditSuccess"
+    </div>
+    <div class="app-container p-0 flex-1 flex flex-col min-h-0">
+      <PageTable
+        ref="pageTableRef"
+        :table-conf="tableConf"
+        :table-columns="tableColumns"
+        :table-data="tableData as unknown as Record<string, unknown>[]"
+        @fetch-table-data="onTableFetch"
       />
-    </section>
+    </div>
+    <AvatarWizard
+      v-model:open="wizardOpen"
+      @success="handleWizardSuccess"
+    />
+    <AvatarEditModal
+      v-model:open="editOpen"
+      :avatar-id="editingId ?? undefined"
+      @success="handleEditSuccess"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import dayjs from 'dayjs'
 import { message } from 'ant-design-vue'
-import { PlusOutlined } from '@ant-design/icons-vue'
-import { TableFilter } from '@/components/TableFilter'
-import { ProTable } from '@/components/Table'
+import {
+  PlusOutlined,
+  SearchOutlined,
+  ReloadOutlined,
+  EditOutlined,
+  PauseCircleOutlined,
+  PlayCircleOutlined,
+  DeleteOutlined,
+} from '@ant-design/icons-vue'
+import PageHead from '@/components/PageHead/index.vue'
+import PageFilter from '@/components/PageFilter/index.vue'
+import PageTable from '@/components/PageTable/index.vue'
 import AvatarWizard from './components/AvatarWizard.vue'
 import AvatarEditModal from './components/AvatarEditModal.vue'
-import { useTableData } from '@/composables/useTableData'
 import { getAvatars, updateAvatarStatus, deleteAvatar } from '@/api/avatars'
 import { getOrganizations } from '@/api/organizations'
 import { getDepartments } from '@/api/departments'
@@ -80,27 +61,123 @@ import {
 } from '@/types/avatar'
 import type { Organization } from '@/types/organization'
 import type { Department } from '@/types/department'
-import type { TableFilterFieldConfig } from '@/components/TableFilter/types'
-import type {
-  ProTablePagination,
-  ProTableToolItem,
-  ProTableColumnExt,
-  ProTableActionBtn,
-} from '@/components/Table/types'
-import type { ColumnsType } from 'ant-design-vue/es/table'
+import type { PageHeadConfig } from '@/components/PageHead/types'
+import type { PageFilterConfig } from '@/components/PageFilter/types'
+import type { PageTableConfig, PageTableColumnConfig } from '@/components/PageTable/types'
 
 const { t } = useI18n()
 
-function getCellValue(
-  record: Record<string, unknown>,
-  column: { dataIndex?: string | string[] },
-): string {
-  const d = column.dataIndex
-  if (d == null) return ''
-  const key = Array.isArray(d) ? d.join('.') : d
-  const v = record[key]
-  return v != null ? String(v) : ''
-}
+const pageFilterRef = ref<InstanceType<typeof PageFilter> | null>(null)
+const pageTableRef = ref<InstanceType<typeof PageTable> | null>(null)
+
+const tableData = ref<Avatar[]>([])
+const loading = ref(false)
+const total = ref(0)
+
+const orgList = ref<Organization[]>([])
+const deptList = ref<Department[]>([])
+/** 当前已加载科室的机构 ID，用于在 loadData 时按需刷新 deptList */
+const deptListOrgId = ref<string | null>(null)
+
+const headConf = computed<PageHeadConfig>(() => ({
+  title: t('menu.avatarManagement'),
+  btns: [
+    {
+      text: t('avatar.addAvatar'),
+      type: 'primary',
+      icon: PlusOutlined,
+      handle: openWizard,
+      permission: ['sysadmin', 'org_admin', 'dept_admin'],
+    },
+  ],
+}))
+
+const filterConf = computed<PageFilterConfig>(() => ({
+  filterForm: [
+    {
+      key: 'keyword',
+      label: t('avatar.name'),
+      type: 'input',
+      ph: t('avatar.name'),
+      col: 8,
+      defaultValue: '',
+    },
+    {
+      key: 'type',
+      label: t('avatar.type'),
+      type: 'select',
+      ph: t('common.all'),
+      col: 4,
+      options: [
+        { label: t('common.all'), value: '' },
+        ...AVATAR_TYPE_VALUES.map((v) => ({ label: t(AVATAR_TYPE_LABEL_KEYS[v]), value: v })),
+      ],
+      clearable: true,
+      defaultValue: '',
+    },
+    {
+      key: 'org_id',
+      label: t('avatar.org'),
+      type: 'select',
+      ph: t('common.all'),
+      col: 6,
+      options: [
+        { label: t('common.all'), value: '' },
+        ...orgList.value.map((o) => ({ label: o.name, value: o.id })),
+      ],
+      clearable: true,
+      defaultValue: '',
+    },
+    {
+      key: 'dept_id',
+      label: t('avatar.dept'),
+      type: 'select',
+      ph: t('common.all'),
+      col: 6,
+      options: [
+        { label: t('common.all'), value: '' },
+        ...deptList.value.map((d) => ({ label: d.name, value: d.id })),
+      ],
+      clearable: true,
+      defaultValue: '',
+    },
+    {
+      key: 'status',
+      label: t('org.status'),
+      type: 'select',
+      ph: t('common.all'),
+      col: 6,
+      options: [
+        { label: t('common.all'), value: '' },
+        { label: t('status.active'), value: 'active' },
+        { label: t('status.inactive'), value: 'inactive' },
+      ],
+      clearable: true,
+      defaultValue: '',
+    },
+  ],
+  btns: [
+    {
+      text: t('common.search'),
+      type: 'primary',
+      icon: SearchOutlined,
+      handle: () => {
+        pageTableRef.value?.resetCurPage(1)
+        loadData()
+      },
+    },
+    {
+      text: t('common.reset'),
+      icon: ReloadOutlined,
+      handle: () => {
+        pageFilterRef.value?.filterFormReset()
+        pageTableRef.value?.resetCurPage(1)
+        loadData()
+      },
+    },
+  ],
+  btnsCol: 6,
+}))
 
 function formatScope(record: Avatar): string {
   const parts: string[] = [record.org_name]
@@ -109,217 +186,134 @@ function formatScope(record: Avatar): string {
   return parts.join(' / ')
 }
 
-type AvatarStatus = 'active' | 'inactive'
+const tableConf = computed<PageTableConfig>(() => ({
+  isLoading: loading.value,
+  total: total.value,
+  updateTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+  rowKey: 'id',
+  emptyText: t('common.noData'),
+}))
 
-interface AvatarFilterState {
-  keyword?: string
-  type?: '' | AvatarType
-  org_id?: string
-  dept_id?: string
-  status?: '' | AvatarStatus
-}
-
-const filterState = ref<AvatarFilterState>({
-  keyword: '',
-  type: '',
-  org_id: '',
-  dept_id: '',
-  status: '',
-})
-
-const orgList = ref<Organization[]>([])
-const deptList = ref<Department[]>([])
-
-watch(
-  () => filterState.value.org_id,
-  async (orgId) => {
-    filterState.value.dept_id = ''
-    deptList.value = []
-    if (!orgId) return
-    const res = await getDepartments({ org_id: orgId, page: 1, page_size: 500 })
-    deptList.value = res.items
-  },
-)
-
-const filterFields = computed<TableFilterFieldConfig[]>(() => [
+const tableColumns = computed<PageTableColumnConfig[]>(() => [
   {
-    key: 'keyword',
-    label: t('avatar.name') + ':',
-    type: 'input',
-    placeholder: t('avatar.name'),
-    inputClass: 'w-64',
+    label: t('avatar.name'),
+    prop: 'name',
+    width: 140,
+    showOverflowTooltip: true,
   },
   {
-    key: 'type',
-    label: t('avatar.type') + ':',
-    type: 'select',
-    inputClass: 'min-w-[140px]',
-    options: [
-      { label: t('dept.allStatus').replace(t('dept.status'), '').trim() || '全部', value: '' },
-      ...AVATAR_TYPE_VALUES.map((v) => ({ label: t(AVATAR_TYPE_LABEL_KEYS[v]), value: v })),
-    ],
+    label: t('avatar.type'),
+    prop: 'type',
+    type: 'scope',
+    scopeType: '_tag',
+    width: 90,
+    tagType: (row) => AVATAR_TYPE_TAG_COLORS[row.type as AvatarType] ?? 'default',
+    tagText: (row) => t(AVATAR_TYPE_LABEL_KEYS[row.type as AvatarType]),
   },
   {
-    key: 'org_id',
-    label: t('avatar.org') + ':',
-    type: 'select',
-    inputClass: 'min-w-[160px]',
-    options: [
-      { label: t('dept.allStatus').replace(t('dept.status'), '').trim() || '全部', value: '' },
-      ...orgList.value.map(o => ({ label: o.name, value: o.id })),
-    ],
+    label: t('avatar.scope'),
+    prop: 'scope',
+    width: 220,
+    showOverflowTooltip: true,
+    formatter: (row) => formatScope(row as Avatar),
   },
   {
-    key: 'dept_id',
-    label: t('avatar.dept') + ':',
-    type: 'select',
-    inputClass: 'min-w-[160px]',
-    options: [
-      { label: t('dept.allStatus').replace(t('dept.status'), '').trim() || '全部', value: '' },
-      ...deptList.value.map(d => ({ label: d.name, value: d.id })),
-    ],
+    label: t('org.status'),
+    prop: 'status',
+    type: 'scope',
+    scopeType: '_tag',
+    width: 100,
+    tagType: (row) => (row.status === 'active' ? 'success' : 'error'),
+    tagText: (row) => (row.status === 'active' ? t('status.active') : t('status.inactive')),
   },
   {
-    key: 'status',
-    label: t('org.status') + ':',
-    type: 'select',
-    inputClass: 'min-w-[140px]',
-    options: [
-      { label: t('dept.allStatus').replace(t('dept.status'), '').trim() || '全部', value: '' },
-      { label: t('status.active'), value: 'active' },
-      { label: t('status.inactive'), value: 'inactive' },
+    label: t('common.createdAt'),
+    prop: 'created_at',
+    width: 160,
+    formatter: (row) => dayjs(row.created_at as string).format('YYYY-MM-DD HH:mm'),
+  },
+  {
+    label: t('common.actions'),
+    type: 'operation',
+    width: 260,
+    fixed: 'right',
+    btns: [
+      {
+        text: t('common.edit'),
+        icon: EditOutlined,
+        handle: openEditForm as unknown as (row: Record<string, unknown>, index?: number) => void,
+      },
+      {
+        text: t('status.inactive'),
+        dynamicText: (row) =>
+          row.status === 'active' ? t('status.inactive') : t('status.active'),
+        dynamicIcon: (row) =>
+          row.status === 'active' ? PauseCircleOutlined : PlayCircleOutlined,
+        dynamicColor: (row) =>
+          row.status === 'active' ? 'warning' : 'success',
+        handle: handleToggleStatus as unknown as (row: Record<string, unknown>, index?: number) => void,
+      },
+      {
+        text: t('common.delete'),
+        icon: DeleteOutlined,
+        color: 'danger',
+        handle: handleDelete as unknown as (row: Record<string, unknown>, index?: number) => void,
+      },
     ],
   },
 ])
 
-function getListParams(): {
-  keyword?: string
-  type?: AvatarType
-  org_id?: string
-  dept_id?: string
-  status?: AvatarStatus
-} {
-  const typeVal = filterState.value.type
-  const type = typeVal === 'general' || typeVal === 'specialist' || typeVal === 'expert'
-    ? typeVal
-    : undefined
+async function loadData() {
+  const params = pageFilterRef.value?.filteParams ?? {}
+  const page = pageTableRef.value?.currentPage ?? 1
+  const pageSize = pageTableRef.value?.pageSize ?? 20
+  const orgId = (params.org_id as string) || undefined
 
-  const statusVal = filterState.value.status
-  const status = statusVal === 'active' || statusVal === 'inactive' ? statusVal : undefined
+  if (orgId && deptListOrgId.value !== orgId) {
+    deptListOrgId.value = orgId
+    const res = await getDepartments({ org_id: orgId, page: 1, page_size: 500 })
+    deptList.value = res.items
+  }
+  if (!orgId) {
+    deptListOrgId.value = null
+    deptList.value = []
+  }
 
-  return {
-    keyword: filterState.value.keyword?.trim() || undefined,
-    type,
-    org_id: filterState.value.org_id || undefined,
-    dept_id: filterState.value.dept_id || undefined,
-    status,
+  const typeVal = params.type as string
+  const type =
+    typeVal === 'general' || typeVal === 'specialist' || typeVal === 'expert'
+      ? typeVal
+      : undefined
+  const statusVal = params.status as string
+  const status =
+    statusVal === 'active' || statusVal === 'inactive' ? statusVal : undefined
+
+  loading.value = true
+  try {
+    const result = await getAvatars({
+      page,
+      page_size: pageSize,
+      keyword: (params.keyword as string)?.trim() || undefined,
+      type: type as AvatarType | undefined,
+      org_id: (params.org_id as string) || undefined,
+      dept_id: (params.dept_id as string) || undefined,
+      status,
+    })
+    tableData.value = result.items
+    total.value = result.total
+  } finally {
+    loading.value = false
   }
 }
 
-const {
-  data,
-  loading,
-  pagination,
-  handleTableChange,
-  handleSearch,
-  refresh,
-} = useTableData({
-  fetchFn: getAvatars,
-  defaultParams: { keyword: undefined, type: undefined, org_id: undefined },
-  immediate: true,
-})
-
-function onFilterSearch() {
-  handleSearch(getListParams())
+function onFilterFetch() {
+  pageTableRef.value?.resetCurPage(1)
+  loadData()
 }
 
-function onFilterReset() {
-  filterState.value = { keyword: '', type: '', org_id: '', dept_id: '', status: '' }
-  handleSearch(getListParams())
+function onTableFetch() {
+  loadData()
 }
-
-function onTableChange(p: { current: number; pageSize: number; total: number }) {
-  handleTableChange({ current: p.current, pageSize: p.pageSize })
-}
-
-const paginationConfig = computed<ProTablePagination>(() => ({
-  current: pagination.current,
-  pageSize: pagination.pageSize,
-  total: pagination.total,
-  onChange: (page: number, pageSize: number) => {
-    handleTableChange({ current: page, pageSize })
-  },
-}))
-
-const toolbarConfig = computed<ProTableToolItem[]>(() => [
-  { key: 'refresh', icon: 'reload', title: t('common.refresh'), handle: refresh },
-])
-
-const columns = computed<
-  (ProTableColumnExt<Avatar> & {
-    title: string
-    dataIndex?: string
-    key: string
-  })[]
->(() => [
-  {
-    title: t('avatar.name'),
-    dataIndex: 'name',
-    key: 'name',
-    ellipsis: true,
-    width: 140,
-  },
-  {
-    title: t('avatar.type'),
-    dataIndex: 'type',
-    key: 'type',
-    width: 90,
-    cellType: 'tag',
-    tagType: (record) => AVATAR_TYPE_TAG_COLORS[record.type] ?? 'default',
-    tagText: (record) => t(AVATAR_TYPE_LABEL_KEYS[record.type]),
-  },
-  { title: t('avatar.scope'), key: 'scope', ellipsis: true, width: 220 },
-  {
-    title: t('org.status'),
-    dataIndex: 'status',
-    key: 'status',
-    width: 100,
-    cellType: 'status',
-    statusLabels: { active: t('status.active'), inactive: t('status.inactive') },
-    activeValue: 'active',
-  },
-  {
-    title: t('common.createdAt'),
-    dataIndex: 'created_at',
-    key: 'created_at',
-    width: 160,
-    cellType: 'date',
-    dateFormat: 'YYYY-MM-DD HH:mm',
-  },
-  {
-    title: t('common.actions'),
-    key: 'actions',
-    fixed: 'right',
-    width: 300,
-    cellType: 'actions',
-    btns: actionBtns.value,
-  },
-])
-
-const actionBtns = computed<ProTableActionBtn<Avatar>[]>(() => [
-  { text: t('common.edit'), handle: openEditForm },
-  {
-    text: t('status.inactive'),
-    dynamicText: (record) =>
-      record.status === 'active' ? t('status.inactive') : t('status.active'),
-    handle: handleToggleStatus,
-  },
-  {
-    text: t('common.delete'),
-    handle: handleDelete,
-    danger: true,
-  },
-])
 
 const wizardOpen = ref(false)
 const editOpen = ref(false)
@@ -336,13 +330,13 @@ function openEditForm(record: Avatar) {
 
 function handleWizardSuccess() {
   wizardOpen.value = false
-  refresh()
+  loadData()
 }
 
 function handleEditSuccess() {
   editOpen.value = false
   editingId.value = null
-  refresh()
+  loadData()
 }
 
 function handleToggleStatus(record: Avatar) {
@@ -355,7 +349,7 @@ function handleToggleStatus(record: Avatar) {
     onOk: async () => {
       await updateAvatarStatus(record.id, { status: nextStatus })
       message.success(t('common.success'))
-      refresh()
+      loadData()
     },
   })
 }
@@ -369,14 +363,14 @@ function handleDelete(record: Avatar) {
     onOk: async () => {
       await deleteAvatar(record.id)
       message.success(t('common.success'))
-      refresh()
+      loadData()
     },
   })
 }
 
-onMounted(() => {
-  getOrganizations({ page: 1, page_size: 500 }).then((res) => {
-    orgList.value = res.items
-  })
+onMounted(async () => {
+  const res = await getOrganizations({ page: 1, page_size: 500 })
+  orgList.value = res.items
+  loadData()
 })
 </script>

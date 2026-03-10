@@ -24,6 +24,13 @@ body {
     color 0.3s;
 }
 
+/* a-button 全局：icon 与文字垂直居中对齐 */
+.ant-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* 去掉输入框内边框样式（outline / 内阴影），保留外边框 */
 .ant-input,
 .ant-input-affix-wrapper,
@@ -51,8 +58,7 @@ body {
 }
 
 .app-container {
-  background-color: var(--color-bg-base);
-  padding: var(--spacing-md);
-  border-radius: var(--radius-base);
+  background-color: var(--color-bg-container);
+  border-radius: var(--radius-xl);
   box-shadow: var(--shadow-sm);
 }

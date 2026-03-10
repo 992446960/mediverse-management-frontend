@@ -1,7 +1,7 @@
 <template>
   <div class="departments-page flex flex-1 overflow-hidden">
-    <aside class="w-80 pr-4 flex flex-colshrink-0 bg-slate-100 dark:bg-slate-950">
-      <TableTree
+    <aside class="w-80 pr-4 flex flex-col shrink-0">
+      <PageTree
         :title="t('dept.allOrgs')"
         :search-placeholder="t('dept.searchOrg')"
         :tree-data="treeData"
@@ -15,40 +15,23 @@
     </aside>
     <section class="flex-1 flex flex-col min-h-0 min-w-0 pl-0">
       <template v-if="selectedOrgId">
-        <div class="mb-4">
-          <TableFilter
-            v-model="filterState"
-            :title="t('dept.title')"
-            :primary-action="{
-              text: t('dept.addDept'),
-              permission: ['sysadmin', 'org_admin'],
-            }"
-            :fields="filterFields"
-            :search-text="t('common.search')"
-            :reset-text="t('common.reset')"
-            @search="onFilterSearch"
-            @reset="onFilterReset"
-            @primary-action="openCreateForm"
-          >
-            <template #primaryActionIcon>
-              <PlusOutlined />
-            </template>
-          </TableFilter>
+        <div class="app-container p-4 mb-4">
+          <PageHead :head-conf="headConf" />
+          <PageFilter
+            ref="pageFilterRef"
+            :filter-conf="filterConf"
+            @fetch-table-data="onFilterFetch"
+          />
         </div>
-        <ProTable
-          :title="`${selectedOrgName} - ${t('dept.deptList')}`"
-          :subtitle="`(共 ${pagination.total} 条记录)`"
-          :columns="columns as ColumnsType<Record<string, unknown>>"
-          :data-source="data as unknown as Record<string, unknown>[]"
-          :loading="loading"
-          row-key="id"
-          :scroll="{ x: 900 }"
-          :pagination="paginationConfig"
-          :toolbar="toolbarConfig"
-          :empty-text="t('common.noData')"
-          @change="onTableChange"
-          @refresh="refresh"
-        />
+        <div class="app-container p-0 flex-1 flex flex-col min-h-0">
+          <PageTable
+            ref="pageTableRef"
+            :table-conf="tableConf"
+            :table-columns="tableColumns"
+            :table-data="tableData as unknown as Record<string, unknown>[]"
+            @fetch-table-data="onTableFetch"
+          />
+        </div>
       </template>
       <div
         v-else
@@ -70,13 +53,22 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import dayjs from 'dayjs'
 import { message } from 'ant-design-vue'
-import { PlusOutlined } from '@ant-design/icons-vue'
-import { TableTree } from '@/components/TableTree'
-import { TableFilter } from '@/components/TableFilter'
-import { ProTable } from '@/components/Table'
+import {
+  PlusOutlined,
+  SearchOutlined,
+  ReloadOutlined,
+  EditOutlined,
+  PauseCircleOutlined,
+  PlayCircleOutlined,
+  DeleteOutlined,
+} from '@ant-design/icons-vue'
+import { PageTree } from '@/components/PageTree'
+import PageHead from '@/components/PageHead/index.vue'
+import PageFilter from '@/components/PageFilter/index.vue'
+import PageTable from '@/components/PageTable/index.vue'
 import DeptForm from './components/DeptForm.vue'
-import { useTableData } from '@/composables/useTableData'
 import { useAuthStore } from '@/stores/auth'
 import { getOrganizations } from '@/api/organizations'
 import {
@@ -87,28 +79,30 @@ import {
   updateDeptStatus,
 } from '@/api/departments'
 import { confirmDelete } from '@/utils/confirm'
+import type { PageHeadConfig } from '@/components/PageHead/types'
+import type { PageFilterConfig } from '@/components/PageFilter/types'
+import type { PageTableConfig, PageTableColumnConfig } from '@/components/PageTable/types'
 import type { Organization } from '@/types/organization'
 import type { Department, DepartmentForm } from '@/types/department'
-import type { TableTreeNode } from '@/components/TableTree/types'
-import type { TableFilterFieldConfig } from '@/components/TableFilter/types'
-import type {
-  ProTablePagination,
-  ProTableToolItem,
-  ProTableColumnExt,
-  ProTableActionBtn,
-} from '@/components/Table/types'
-import type { ColumnsType } from 'ant-design-vue/es/table'
+import type { TableTreeNode } from '@/components/PageTree/types'
 
 const { t } = useI18n()
 const authStore = useAuthStore()
 
+const pageFilterRef = ref<InstanceType<typeof PageFilter> | null>(null)
+const pageTableRef = ref<InstanceType<typeof PageTable> | null>(null)
+
+const tableData = ref<Department[]>([])
+const loading = ref(false)
+const total = ref(0)
+
+// ----- 左侧树（保持不变） -----
 const treeLoading = ref(false)
 const organizationsList = ref<Organization[]>([])
 const selectedOrgId = ref<string | null>(null)
 const selectedOrgName = ref<string>('')
 const selectedOrgKey = ref<string>('')
 
-/** 将 GET /organizations 的 items 转为 TableTree 所需的一级结构（无 children） */
 const treeData = computed<TableTreeNode[]>(() => {
   let list = organizationsList.value
   if (authStore.isOrgAdmin && authStore.currentOrgId) {
@@ -132,67 +126,6 @@ async function loadTree() {
   }
 }
 
-const filterState = ref<Record<string, string | number | undefined>>({
-  name: '',
-  status: '',
-})
-
-const filterFields = computed<TableFilterFieldConfig[]>(() => [
-  {
-    key: 'name',
-    label: t('dept.name') + ':',
-    type: 'input',
-    placeholder: t('dept.namePlaceholder'),
-    inputClass: 'w-64',
-  },
-  {
-    key: 'status',
-    label: t('dept.status') + ':',
-    type: 'select',
-    inputClass: 'min-w-[140px]',
-    options: [
-      { label: t('dept.allStatus'), value: '' },
-      { label: t('status.active'), value: 'active' },
-      { label: t('status.inactive'), value: 'inactive' },
-    ],
-  },
-])
-
-function getListParams(): { org_id?: string; name?: string; status?: 'active' | 'inactive' } {
-  const s = filterState.value.status as string
-  const status = s === 'active' || s === 'inactive' ? s : undefined
-  return {
-    org_id: selectedOrgId.value ?? undefined,
-    name: (filterState.value.name as string) || undefined,
-    status,
-  }
-}
-
-const { data, loading, pagination, handleTableChange, handleSearch, refresh } = useTableData({
-  fetchFn: getDepartments,
-  defaultParams: { org_id: undefined, name: undefined, status: undefined },
-  immediate: false,
-})
-
-function onFilterSearch() {
-  handleSearch(getListParams())
-}
-
-function onFilterReset() {
-  filterState.value = { name: '', status: '' }
-  handleSearch(getListParams())
-}
-
-watch(selectedOrgId, (id) => {
-  if (id) {
-    handleSearch(getListParams())
-  } else {
-    data.value = []
-    pagination.current = 1
-    pagination.total = 0
-  }
-})
-
 function onTreeSelect(payload: { key: string; label: string; level: 'root' | 'branch' }) {
   if (!payload.key.startsWith('org_')) return
   selectedOrgId.value = payload.key.replace(/^org_/, '')
@@ -200,78 +133,181 @@ function onTreeSelect(payload: { key: string; label: string; level: 'root' | 'br
   selectedOrgKey.value = payload.key
 }
 
-function onTableChange(p: { current: number; pageSize: number; total: number }) {
-  handleTableChange({ current: p.current, pageSize: p.pageSize })
-}
-
-const paginationConfig = computed<ProTablePagination>(() => ({
-  current: pagination.current,
-  pageSize: pagination.pageSize,
-  total: pagination.total,
-  onChange: (page: number, pageSize: number) => {
-    handleTableChange({ current: page, pageSize })
-  },
+// ----- 右侧 PageHead / PageFilter / PageTable -----
+const headConf = computed<PageHeadConfig>(() => ({
+  title: t('dept.title'),
+  btns: [
+    {
+      text: t('dept.addDept'),
+      type: 'primary',
+      icon: PlusOutlined,
+      handle: openCreateForm,
+      permission: ['sysadmin', 'org_admin'],
+    },
+  ],
 }))
 
-const toolbarConfig = computed<ProTableToolItem[]>(() => [
-  { key: 'refresh', icon: 'reload', title: t('common.refresh'), handle: refresh },
-])
+const filterConf = computed<PageFilterConfig>(() => ({
+  filterForm: [
+    {
+      key: 'name',
+      label: t('dept.name'),
+      type: 'input',
+      ph: t('dept.namePlaceholder'),
+      col: 8,
+      defaultValue: '',
+    },
+    {
+      key: 'status',
+      label: t('dept.status'),
+      type: 'select',
+      ph: t('common.all'),
+      col: 6,
+      options: [
+        { label: t('common.all'), value: '' },
+        { label: t('status.active'), value: 'active' },
+        { label: t('status.inactive'), value: 'inactive' },
+      ],
+      clearable: true,
+      defaultValue: '',
+    },
+  ],
+  btns: [
+    {
+      text: t('common.search'),
+      type: 'primary',
+      icon: SearchOutlined,
+      handle: () => {
+        pageTableRef.value?.resetCurPage(1)
+        loadData()
+      },
+    },
+    {
+      text: t('common.reset'),
+      icon: ReloadOutlined,
+      handle: () => {
+        pageFilterRef.value?.filterFormReset()
+        pageTableRef.value?.resetCurPage(1)
+        loadData()
+      },
+    },
+  ],
+  btnsCol: 6,
+}))
 
-const columns = computed<
-  (ProTableColumnExt<Department> & {
-    title: string
-    dataIndex?: string
-    key: string
-    ellipsis?: boolean
-    width?: number
-    fixed?: 'right'
-  })[]
->(() => [
-  { title: t('dept.name'), dataIndex: 'name', key: 'name', ellipsis: true },
-  { title: t('dept.code'), dataIndex: 'code', key: 'code', width: 140 },
-  { title: t('dept.branch'), dataIndex: 'org_name', key: 'org_name', ellipsis: true, width: 180 },
+const tableConf = computed<PageTableConfig>(() => ({
+  isLoading: loading.value,
+  total: total.value,
+  updateTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+  rowKey: 'id',
+  emptyText: t('common.noData'),
+}))
+
+const tableColumns = computed<PageTableColumnConfig[]>(() => [
+  { label: t('dept.name'), prop: 'name', width: 160, showOverflowTooltip: true },
+  { label: t('dept.code'), prop: 'code', width: 120 },
+  { label: t('dept.branch'), prop: 'org_name', width: 180, showOverflowTooltip: true },
   {
-    title: t('dept.status'),
-    dataIndex: 'status',
-    key: 'status',
+    label: t('dept.status'),
+    prop: 'status',
+    type: 'scope',
+    scopeType: '_tag',
     width: 100,
-    cellType: 'status',
-    statusLabels: { active: t('status.active'), inactive: t('status.inactive') },
-    activeValue: 'active',
+    tagType: (row) => (row.status === 'active' ? 'success' : 'error'),
+    tagText: (row) => (row.status === 'active' ? t('status.active') : t('status.inactive')),
   },
   {
-    title: t('common.createdAt'),
-    dataIndex: 'created_at',
-    key: 'created_at',
+    label: t('common.createdAt'),
+    prop: 'created_at',
     width: 160,
-    cellType: 'date',
-    dateFormat: 'YYYY-MM-DD HH:mm',
+    formatter: (row) => dayjs(row.created_at as string).format('YYYY-MM-DD HH:mm'),
   },
   {
-    title: t('common.actions'),
-    key: 'actions',
+    label: t('common.actions'),
+    type: 'operation',
+    width: 260,
     fixed: 'right',
-    width: 300,
-    cellType: 'actions',
-    btns: actionBtns.value,
+    btns: [
+      {
+        text: t('common.edit'),
+        icon: EditOutlined,
+        handle: openEditForm as unknown as (row: Record<string, unknown>, index?: number) => void,
+      },
+      {
+        text: t('status.inactive'),
+        dynamicText: (row) =>
+          row.status === 'active' ? t('status.inactive') : t('status.active'),
+        dynamicIcon: (row) =>
+          row.status === 'active' ? PauseCircleOutlined : PlayCircleOutlined,
+        dynamicColor: (row) =>
+          row.status === 'active' ? 'warning' : 'success',
+        handle: handleToggleStatus as unknown as (row: Record<string, unknown>, index?: number) => void,
+      },
+      {
+        text: t('common.delete'),
+        icon: DeleteOutlined,
+        color: 'danger',
+        handle: handleDelete as unknown as (row: Record<string, unknown>, index?: number) => void,
+      },
+    ],
   },
 ])
 
-const actionBtns = computed<ProTableActionBtn<Department>[]>(() => [
-  { text: t('common.edit'), handle: openEditForm },
-  {
-    text: t('status.inactive'),
-    dynamicText: (record) =>
-      record.status === 'active' ? t('status.inactive') : t('status.active'),
-    handle: handleToggleStatus,
-  },
-  {
-    text: t('common.delete'),
-    handle: handleDelete,
-    danger: true,
-  },
-])
+async function loadData() {
+  const orgId = selectedOrgId.value
+  if (!orgId) {
+    tableData.value = []
+    total.value = 0
+    return
+  }
 
+  const params = pageFilterRef.value?.filteParams ?? {}
+  const page = pageTableRef.value?.currentPage ?? 1
+  const pageSize = pageTableRef.value?.pageSize ?? 20
+
+  const statusVal = params.status
+  const status =
+    statusVal === 'active' || statusVal === 'inactive' ? statusVal : undefined
+
+  loading.value = true
+  try {
+    const result = await getDepartments({
+      page,
+      page_size: pageSize,
+      org_id: orgId,
+      name: (params.name as string) || undefined,
+      status,
+    })
+    tableData.value = result.items
+    total.value = result.total
+  } finally {
+    loading.value = false
+  }
+}
+
+function onFilterFetch() {
+  pageTableRef.value?.resetCurPage(1)
+  loadData()
+}
+
+function onTableFetch() {
+  loadData()
+}
+
+function refresh() {
+  loadData()
+}
+
+watch(selectedOrgId, (id) => {
+  if (id) {
+    loadData()
+  } else {
+    tableData.value = []
+    total.value = 0
+  }
+})
+
+// ----- 表单与操作 -----
 const formOpen = ref(false)
 const editingRecord = ref<Department | null>(null)
 

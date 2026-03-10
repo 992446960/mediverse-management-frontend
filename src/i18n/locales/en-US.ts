@@ -32,6 +32,10 @@ export default {
     confirmStatusContent: "Are you sure you want to change this organization's status?",
     required: 'required',
     max100: 'max 100 characters',
+    totalCount: 'Total {count}',
+    lastUpdateTime: 'Last updated: {time}',
+    detail: 'Detail',
+    more: 'More',
   },
   org: {
     title: 'Organization Management',
@@ -87,6 +91,10 @@ export default {
     roleDeptAdmin: 'Dept Admin',
     roleUser: 'User',
     roleAtLeastOne: 'Please select at least one role',
+    keywordPlaceholder: 'Username / Name / Phone',
+    initialPasswordLabel: 'Initial password',
+    usernameLength: '4-50 letters, numbers, underscores',
+    createSuccessWithPassword: 'Success. Initial password: {password}',
   },
   status: {
     active: 'Active',
@@ -167,6 +175,7 @@ export default {
     addAvatar: 'Add Avatar',
     editAvatar: 'Edit Avatar',
     confirmStatusContent: "Are you sure you want to change this avatar's status?",
+    scopeDisplay: 'Binding scope: {scope}',
     wizard: {
       selectType: 'Select Type',
       bindScope: 'Binding Scope',

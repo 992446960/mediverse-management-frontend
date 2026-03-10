@@ -1,12 +1,51 @@
 <template>
   <a-modal
     :open="open"
-    :title="isEdit ? t('user.editUser') : t('user.addUser')"
+    :title="viewOnly ? t('common.detail') : (isEdit ? t('user.editUser') : t('user.addUser'))"
     :confirm-loading="confirmLoading"
+    :ok-text="t('common.confirm')"
+    :cancel-text="t('common.cancel')"
+    :footer="viewOnly ? null : undefined"
     @ok="handleOk"
     @cancel="emit('update:open', false)"
   >
+    <template v-if="viewOnly && initialRecord">
+      <a-descriptions :column="1" bordered size="small" class="user-form-detail">
+        <a-descriptions-item :label="t('user.username')">
+          {{ initialRecord.username }}
+        </a-descriptions-item>
+        <a-descriptions-item :label="t('user.realName')">
+          {{ initialRecord.real_name }}
+        </a-descriptions-item>
+        <a-descriptions-item :label="t('user.phone')">
+          {{ initialRecord.phone || '—' }}
+        </a-descriptions-item>
+        <a-descriptions-item :label="t('user.email')">
+          {{ initialRecord.email || '—' }}
+        </a-descriptions-item>
+        <a-descriptions-item :label="t('user.org')">
+          {{ initialRecord.org_name }}
+        </a-descriptions-item>
+        <a-descriptions-item :label="t('user.dept')">
+          {{ initialRecord.dept_name }}
+        </a-descriptions-item>
+        <a-descriptions-item :label="t('user.roles')">
+          <a-space :size="4" wrap>
+            <a-tag v-for="r in initialRecord.roles" :key="r">
+              {{ t(ROLE_LABEL_KEYS[r] ?? r) }}
+            </a-tag>
+          </a-space>
+        </a-descriptions-item>
+        <a-descriptions-item :label="t('user.status')">
+          {{ initialRecord.status === 'active' ? t('status.active') : t('status.inactive') }}
+        </a-descriptions-item>
+        <a-descriptions-item :label="t('common.createdAt')">
+          {{ formatCreatedAt(initialRecord.created_at) }}
+        </a-descriptions-item>
+      </a-descriptions>
+    </template>
     <a-form
+      v-else
       ref="formRef"
       :model="formState"
       :rules="rules"
@@ -82,12 +121,16 @@
         </a-select>
       </a-form-item>
     </a-form>
+    <template v-if="viewOnly" #footer>
+      <a-button @click="emit('update:open', false)">{{ t('common.close') }}</a-button>
+    </template>
   </a-modal>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import dayjs from 'dayjs'
 import { useAuthStore } from '@/stores/auth'
 import type { FormInstance } from 'ant-design-vue'
 import { getOrganizations } from '@/api/organizations'
@@ -101,9 +144,22 @@ import type { Department } from '@/types/department'
 const { t } = useI18n()
 const authStore = useAuthStore()
 
+const ROLE_LABEL_KEYS: Record<UserRole, string> = {
+  sysadmin: 'user.roleSysadmin',
+  org_admin: 'user.roleOrgAdmin',
+  dept_admin: 'user.roleDeptAdmin',
+  user: 'user.roleUser',
+}
+
+function formatCreatedAt(iso: string): string {
+  return dayjs(iso).format('YYYY-MM-DD HH:mm')
+}
+
 interface Props {
   open: boolean
   initialRecord?: UserListItem | null
+  /** 仅查看详情（只读展示，无表单） */
+  viewOnly?: boolean
   /** 新增时默认机构 ID（来自左侧树选中） */
   defaultOrgId?: string
   /** 新增时默认科室 ID（来自左侧树选中） */
@@ -112,6 +168,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   initialRecord: null,
+  viewOnly: false,
   defaultOrgId: '',
   defaultDeptId: '',
 })
@@ -146,7 +203,7 @@ const formState = ref({
 const rules = computed(() => ({
   username: [
     { required: !isEdit.value, message: t('user.username') + ' ' + t('common.required'), trigger: 'blur' },
-    { min: 4, max: 50, message: '4-50 位字母数字下划线', trigger: 'blur' },
+    { min: 4, max: 50, message: t('user.usernameLength'), trigger: 'blur' },
   ],
   real_name: [
     { required: true, message: t('user.realName') + ' ' + t('common.required'), trigger: 'blur' },
@@ -272,6 +329,10 @@ onMounted(async () => {
 })
 
 async function handleOk() {
+  if (props.viewOnly) {
+    emit('update:open', false)
+    return
+  }
   try {
     await formRef.value?.validate()
     confirmLoading.value = true

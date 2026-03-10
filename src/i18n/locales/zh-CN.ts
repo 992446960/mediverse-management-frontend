@@ -32,6 +32,10 @@ export default {
     confirmStatusContent: '确定要切换该机构状态吗？',
     required: '必填',
     max100: '最多 100 字',
+    totalCount: '共 {count} 条',
+    lastUpdateTime: '数据最后更新时间：{time}',
+    detail: '详情',
+    more: '更多',
   },
   org: {
     title: '机构管理',
@@ -87,6 +91,10 @@ export default {
     roleDeptAdmin: '科室管理员',
     roleUser: '普通用户',
     roleAtLeastOne: '请至少选择一个角色',
+    keywordPlaceholder: '用户名/姓名/手机',
+    initialPasswordLabel: '初始密码',
+    usernameLength: '4-50 位字母数字下划线',
+    createSuccessWithPassword: '操作成功，初始密码：{password}',
   },
   status: {
     active: '启用',
@@ -167,6 +175,7 @@ export default {
     addAvatar: '新增分身',
     editAvatar: '编辑分身',
     confirmStatusContent: '确定要切换该分身状态吗？',
+    scopeDisplay: '绑定范围：{scope}',
     wizard: {
       selectType: '选择类型',
       bindScope: '绑定范围',

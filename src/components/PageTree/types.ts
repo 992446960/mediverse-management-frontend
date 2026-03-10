@@ -19,3 +19,4 @@ export interface TableTreeClickPayload {
   /** 根节点为 root，子节点为 branch */
   level: 'root' | 'branch'
 }
+

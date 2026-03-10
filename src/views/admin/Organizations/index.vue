@@ -1,50 +1,44 @@
 <template>
   <div class="organizations-page flex flex-1 flex-col overflow-hidden">
-    <div class="mb-4">
-      <TableFilter
-        v-model="filterState"
-        :title="t('org.title')"
-        :primary-action="{
-          text: t('org.addOrg'),
-          permission: ['sysadmin'],
-        }"
-        :fields="filterFields"
-        :search-text="t('common.search')"
-        :reset-text="t('common.reset')"
-        @search="onFilterSearch"
-        @reset="onFilterReset"
-        @primary-action="openCreateForm"
-      >
-        <template #primaryActionIcon>
-          <PlusOutlined />
-        </template>
-      </TableFilter>
+    <div class="app-container p-4 mb-4">
+      <PageHead :head-conf="headConf" />
+      <PageFilter
+        ref="pageFilterRef"
+        :filter-conf="filterConf"
+        @fetch-table-data="onFilterFetch"
+      />
     </div>
-    <ProTable
-      :title="t('org.title')"
-      :columns="columns as ColumnsType<Record<string, unknown>>"
-      :data-source="data as unknown as Record<string, unknown>[]"
-      :loading="loading"
-      row-key="id"
-      :scroll="{ x: 900 }"
-      :pagination="paginationConfig"
-      :empty-text="t('common.noData')"
-      @change="onTableChange"
-      @refresh="refresh"
-    />
+    <div class="app-container p-0 flex-1 flex flex-col min-h-0">
+      <PageTable
+        ref="pageTableRef"
+        :table-conf="tableConf"
+        :table-columns="tableColumns"
+        :table-data="tableData as unknown as Record<string, unknown>[]"
+        @fetch-table-data="onTableFetch"
+      />
+    </div>
     <OrgForm v-model:open="formOpen" :initial-record="editingRecord" @submit="handleFormSubmit" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import dayjs from 'dayjs'
 import { message } from 'ant-design-vue'
-import { PlusOutlined } from '@ant-design/icons-vue'
-import { TableFilter } from '@/components/TableFilter'
-import ProTable from '@/components/Table/ProTable.vue'
+import {
+  PlusOutlined,
+  SearchOutlined,
+  ReloadOutlined,
+  EditOutlined,
+  PauseCircleOutlined,
+  PlayCircleOutlined,
+  DeleteOutlined,
+} from '@ant-design/icons-vue'
+import PageHead from '@/components/PageHead/index.vue'
+import PageFilter from '@/components/PageFilter/index.vue'
+import PageTable from '@/components/PageTable/index.vue'
 import OrgForm from './components/OrgForm.vue'
-import { useTableData } from '@/composables/useTableData'
 import {
   getOrganizations,
   createOrganization,
@@ -53,137 +47,175 @@ import {
   updateOrgStatus,
 } from '@/api/organizations'
 import { confirmDelete } from '@/utils/confirm'
-import type { TableFilterFieldConfig } from '@/components/TableFilter/types'
-import type {
-  ProTablePagination,
-  ProTableColumnExt,
-  ProTableActionBtn,
-} from '@/components/Table/types'
+import type { PageHeadConfig } from '@/components/PageHead/types'
+import type { PageFilterConfig } from '@/components/PageFilter/types'
+import type { PageTableConfig, PageTableColumnConfig } from '@/components/PageTable/types'
 import type { Organization, OrganizationForm } from '@/types/organization'
-import type { ColumnsType } from 'ant-design-vue/es/table'
 
 const { t } = useI18n()
 
-const filterState = ref<Record<string, string | number | undefined>>({
-  name: '',
-  status: '',
-})
+const pageFilterRef = ref<InstanceType<typeof PageFilter> | null>(null)
+const pageTableRef = ref<InstanceType<typeof PageTable> | null>(null)
 
-const filterFields = computed<TableFilterFieldConfig[]>(() => [
+const tableData = ref<Organization[]>([])
+const loading = ref(false)
+const total = ref(0)
+
+const headConf = computed<PageHeadConfig>(() => ({
+  title: t('org.title'),
+  btns: [
+    {
+      text: t('org.addOrg'),
+      type: 'primary',
+      icon: PlusOutlined,
+      handle: openCreateForm,
+      permission: ['sysadmin'],
+    },
+  ],
+}))
+
+const filterConf = computed<PageFilterConfig>(() => ({
+  filterForm: [
+    {
+      key: 'name',
+      label: t('org.name'),
+      type: 'input',
+      ph: t('org.namePlaceholder'),
+      col: 6,
+      defaultValue: '',
+    },
+    {
+      key: 'status',
+      label: t('org.status'),
+      type: 'select',
+      ph: t('common.all'),
+      col: 6,
+      options: [
+        { label: t('common.all'), value: '' },
+        { label: t('status.active'), value: 'active' },
+        { label: t('status.inactive'), value: 'inactive' },
+      ],
+      clearable: true,
+      defaultValue: '',
+    },
+  ],
+  btns: [
+    {
+      text: t('common.search'),
+      type: 'primary',
+      icon: SearchOutlined,
+      handle: () => {
+        pageTableRef.value?.resetCurPage(1)
+        loadData()
+      },
+    },
+    {
+      text: t('common.reset'),
+      icon: ReloadOutlined,
+      handle: () => {
+        pageFilterRef.value?.filterFormReset()
+        pageTableRef.value?.resetCurPage(1)
+        loadData()
+      },
+    },
+  ],
+  btnsCol: 6,
+}))
+
+const tableConf = computed<PageTableConfig>(() => ({
+  isLoading: loading.value,
+  total: total.value,
+  updateTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+  rowKey: 'id',
+  emptyText: t('common.noData'),
+}))
+
+const tableColumns = computed<PageTableColumnConfig[]>(() => [
+  { label: t('org.name'), prop: 'name', width: 160, showOverflowTooltip: true },
+  { label: t('org.code'), prop: 'code', width: 120 },
+  { label: t('org.description'), prop: 'description', width: 200, showOverflowTooltip: true },
   {
-    key: 'name',
-    label: t('org.name') + ':',
-    type: 'input',
-    placeholder: t('org.namePlaceholder'),
-    inputClass: 'w-64',
+    label: t('org.status'),
+    prop: 'status',
+    type: 'scope',
+    scopeType: '_tag',
+    width: 100,
+    tagType: (row) => (row.status === 'active' ? 'success' : 'error'),
+    tagText: (row) => (row.status === 'active' ? t('status.active') : t('status.inactive')),
   },
   {
-    key: 'status',
-    label: t('org.status') + ':',
-    type: 'select',
-    inputClass: 'min-w-[140px]',
-    options: [
-      { label: t('common.all'), value: '' },
-      { label: t('status.active'), value: 'active' },
-      { label: t('status.inactive'), value: 'inactive' },
+    label: t('common.createdAt'),
+    prop: 'created_at',
+    width: 160,
+    formatter: (row) => dayjs(row.created_at as string).format('YYYY-MM-DD HH:mm'),
+  },
+  {
+    label: t('common.actions'),
+    type: 'operation',
+    width: 260,
+    fixed: 'right',
+    btns: [
+      {
+        text: t('common.edit'),
+        icon: EditOutlined,
+        handle: openEditForm as unknown as (row: Record<string, unknown>, index?: number) => void,
+      },
+      {
+        text: t('status.inactive'),
+        dynamicText: (row) =>
+          row.status === 'active' ? t('status.inactive') : t('status.active'),
+        dynamicIcon: (row) =>
+          row.status === 'active' ? PauseCircleOutlined : PlayCircleOutlined,
+        dynamicColor: (row) =>
+          row.status === 'active' ? 'warning' : 'success',
+        handle: handleToggleStatus as unknown as (row: Record<string, unknown>, index?: number) => void,
+      },
+      {
+        text: t('common.delete'),
+        icon: DeleteOutlined,
+        color: 'danger',
+        handle: handleDelete as unknown as (row: Record<string, unknown>, index?: number) => void,
+      },
     ],
   },
 ])
 
-function getListParams(): { name?: string; status?: 'active' | 'inactive' } {
-  const s = filterState.value.status as string
-  const status = s === 'active' || s === 'inactive' ? s : undefined
-  return {
-    name: (filterState.value.name as string) || undefined,
-    status,
+async function loadData() {
+  const params = pageFilterRef.value?.filteParams ?? {}
+  const page = pageTableRef.value?.currentPage ?? 1
+  const pageSize = pageTableRef.value?.pageSize ?? 20
+
+  const statusVal = params.status
+  const status =
+    statusVal === 'active' || statusVal === 'inactive' ? statusVal : undefined
+
+  loading.value = true
+  try {
+    const result = await getOrganizations({
+      page,
+      page_size: pageSize,
+      name: (params.name as string) || undefined,
+      status,
+    })
+    tableData.value = result.items
+    total.value = result.total
+  } finally {
+    loading.value = false
   }
 }
 
-const { data, loading, pagination, handleTableChange, handleSearch, refresh } = useTableData({
-  fetchFn: getOrganizations,
-  defaultParams: { name: undefined, status: undefined },
-  immediate: true,
-})
-
-function onFilterSearch() {
-  handleSearch(getListParams())
+function onFilterFetch() {
+  pageTableRef.value?.resetCurPage(1)
+  loadData()
 }
 
-function onFilterReset() {
-  filterState.value = { name: '', status: '' }
-  handleSearch(getListParams())
+function onTableFetch() {
+  loadData()
 }
 
-function onTableChange(p: { current: number; pageSize: number; total: number }) {
-  handleTableChange({ current: p.current, pageSize: p.pageSize })
+function refresh() {
+  loadData()
 }
-
-const paginationConfig = computed<ProTablePagination>(() => ({
-  current: pagination.current,
-  pageSize: pagination.pageSize,
-  total: pagination.total,
-  showSizeChanger: true,
-  showQuickJumper: false,
-  onChange: (page: number, pageSize: number) => {
-    handleTableChange({ current: page, pageSize })
-  },
-}))
-
-
-const columns = computed<
-  (ProTableColumnExt<Organization> & {
-    title: string
-    dataIndex?: string
-    key: string
-    ellipsis?: boolean
-    width?: number
-    fixed?: 'right'
-  })[]
->(() => [
-  { title: t('org.name'), dataIndex: 'name', key: 'name', ellipsis: true },
-  { title: t('org.code'), dataIndex: 'code', key: 'code', width: 120 },
-  { title: t('org.description'), dataIndex: 'description', key: 'description', ellipsis: true },
-  {
-    title: t('org.status'),
-    dataIndex: 'status',
-    key: 'status',
-    width: 100,
-    cellType: 'status',
-    statusLabels: { active: t('status.active'), inactive: t('status.inactive') },
-    activeValue: 'active',
-  },
-  {
-    title: t('common.createdAt'),
-    dataIndex: 'created_at',
-    key: 'created_at',
-    width: 160,
-    cellType: 'date',
-    dateFormat: 'YYYY-MM-DD HH:mm',
-  },
-  {
-    title: t('common.actions'),
-    key: 'actions',
-    fixed: 'right',
-    width: 220,
-    cellType: 'actions',
-    btns: actionBtns.value,
-  },
-])
-
-const actionBtns = computed<ProTableActionBtn<Organization>[]>(() => [
-  { text: t('common.edit'), handle: openEditForm },
-  {
-    text: t('status.inactive'),
-    dynamicText: (record) =>
-      record.status === 'active' ? t('status.inactive') : t('status.active'),
-    handle: handleToggleStatus,
-  },
-  {
-    text: t('common.delete'),
-    handle: handleDelete,
-    danger: true,
-  },
-])
 
 const formOpen = ref(false)
 const editingRecord = ref<Organization | null>(null)
@@ -241,4 +273,6 @@ function handleDelete(record: Organization) {
     },
   })
 }
+
+onMounted(loadData)
 </script>

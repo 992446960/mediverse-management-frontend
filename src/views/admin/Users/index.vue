@@ -1,7 +1,7 @@
 <template>
   <div class="users-page flex flex-1 overflow-hidden">
-    <aside class="w-80 pr-4 flex flex-col shrink-0 bg-slate-100 dark:bg-slate-950">
-      <TableTree
+    <aside class="w-80 pr-4 flex flex-col shrink-0">
+      <PageTree
         :title="t('dept.allOrgs')"
         :search-placeholder="t('dept.searchOrg')"
         :tree-data="treeData"
@@ -15,53 +15,31 @@
     </aside>
     <section class="flex-1 flex flex-col min-h-0 min-w-0 pl-0">
       <template v-if="hasSelection">
-        <div class="mb-4">
-          <TableFilter
-            v-model="filterState"
-            :title="t('menu.userManagement')"
-            :primary-action="{
-              text: t('user.addUser'),
-              permission: ['sysadmin', 'org_admin', 'dept_admin'],
-            }"
-            :fields="filterFields"
-            :search-text="t('common.search')"
-            :reset-text="t('common.reset')"
-            @search="onFilterSearch"
-            @reset="onFilterReset"
-            @primary-action="openCreateForm"
-          >
-            <template #primaryActionIcon>
-              <PlusOutlined />
-            </template>
-          </TableFilter>
+        <div class="app-container p-4 mb-4">
+          <PageHead :head-conf="headConf" />
+          <PageFilter
+            ref="pageFilterRef"
+            :filter-conf="filterConf"
+            @fetch-table-data="onFilterFetch"
+          />
         </div>
-        <ProTable
-          :title="tableTitle"
-          :subtitle="`(共 ${pagination.total} 条记录)`"
-          :columns="columns as ColumnsType<Record<string, unknown>>"
-          :data-source="data as unknown as Record<string, unknown>[]"
-          :loading="loading"
-          row-key="id"
-          :scroll="{ x: 1500 }"
-          :pagination="paginationConfig"
-          :toolbar="toolbarConfig"
-          :empty-text="t('common.noData')"
-          @change="onTableChange"
-          @refresh="refresh"
-        >
-          <template #bodyCell="{ column, record }">
-            <template v-if="column.key === 'roles'">
+        <div class="app-container p-0 flex-1 flex flex-col min-h-0">
+          <PageTable
+            ref="pageTableRef"
+            :table-conf="tableConf"
+            :table-columns="tableColumns"
+            :table-data="tableData as unknown as Record<string, unknown>[]"
+            @fetch-table-data="onTableFetch"
+          >
+            <template #roles="{ row }">
               <a-space :size="4" wrap>
-                <a-tag v-for="r in (record as UserListItem).roles" :key="r">
+                <a-tag v-for="r in row.roles as UserRole[]" :key="r">
                   {{ t(roleLabelKey(r)) }}
                 </a-tag>
               </a-space>
             </template>
-            <template v-else>
-              {{ formatCellValue(record as Record<string, unknown>, column) }}
-            </template>
-          </template>
-        </ProTable>
+          </PageTable>
+        </div>
       </template>
       <div
         v-else
@@ -72,6 +50,7 @@
       <UserForm
         v-model:open="formOpen"
         :initial-record="editingRecord"
+        :view-only="viewOnly"
         :default-org-id="selectedOrgId ?? ''"
         :default-dept-id="selectedDeptId ?? ''"
         @submit="handleFormSubmit"
@@ -96,14 +75,24 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import dayjs from 'dayjs'
 import { message } from 'ant-design-vue'
-import { PlusOutlined } from '@ant-design/icons-vue'
-import { TableTree } from '@/components/TableTree'
-import { TableFilter } from '@/components/TableFilter'
-import { ProTable } from '@/components/Table'
+import {
+  PlusOutlined,
+  SearchOutlined,
+  ReloadOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  TeamOutlined,
+  KeyOutlined,
+  EyeOutlined,
+} from '@ant-design/icons-vue'
+import { PageTree } from '@/components/PageTree'
+import PageHead from '@/components/PageHead/index.vue'
+import PageFilter from '@/components/PageFilter/index.vue'
+import PageTable from '@/components/PageTable/index.vue'
 import UserForm from './components/UserForm.vue'
 import RoleEditor from './components/RoleEditor.vue'
-import { useTableData } from '@/composables/useTableData'
 import { useAuthStore } from '@/stores/auth'
 import { getDepartmentsTree } from '@/api/departments'
 import {
@@ -115,28 +104,29 @@ import {
   resetPassword,
 } from '@/api/users'
 import { confirmDelete } from '@/utils/confirm'
+import type { PageHeadConfig } from '@/components/PageHead/types'
+import type { PageFilterConfig } from '@/components/PageFilter/types'
+import type { PageTableConfig, PageTableColumnConfig } from '@/components/PageTable/types'
 import type { UserListItem } from '@/types/user'
 import type { CreateUserPayload, UpdateUserPayload } from '@/types/user'
 import type { UserRole } from '@/types/auth'
 import type { OrgDeptTreeNode } from '@/types/department'
-import type { TableTreeNode } from '@/components/TableTree/types'
-import type { TableFilterFieldConfig } from '@/components/TableFilter/types'
-import type {
-  ProTablePagination,
-  ProTableToolItem,
-  ProTableColumnExt,
-  ProTableActionBtn,
-} from '@/components/Table/types'
-import type { ColumnsType } from 'ant-design-vue/es/table'
+import type { TableTreeNode } from '@/components/PageTree/types'
 
 const { t } = useI18n()
 const authStore = useAuthStore()
 
+const pageFilterRef = ref<InstanceType<typeof PageFilter> | null>(null)
+const pageTableRef = ref<InstanceType<typeof PageTable> | null>(null)
+
+const tableData = ref<UserListItem[]>([])
+const loading = ref(false)
+const total = ref(0)
+
+// ----- 左侧树（保持不变） -----
 const treeLoading = ref(false)
 const rawTree = ref<OrgDeptTreeNode[]>([])
-/** 科室 id -> 机构 id，用于树选科室时设置 selectedOrgId */
 const deptIdToOrgId = ref<Map<string, string>>(new Map())
-/** 机构 id -> 机构名称，用于右侧标题等 */
 const orgIdToName = ref<Map<string, string>>(new Map())
 
 const selectedOrgId = ref<string | null>(null)
@@ -155,19 +145,6 @@ function roleLabelKey(role: UserRole): string {
   return ROLE_LABEL_KEYS[role] ?? role
 }
 
-/** bodyCell 插槽中未单独处理的列（如 username、real_name）的默认展示值 */
-function formatCellValue(
-  record: Record<string, unknown>,
-  column: { dataIndex?: string | string[]; key?: string }
-): string {
-  const di = column.dataIndex
-  if (di == null) return ''
-  const key = Array.isArray(di) ? di.join('.') : di
-  const v = record[key as string]
-  return v != null ? String(v) : ''
-}
-
-/** 将 getDepartmentsTree 转为 TableTree 的树形结构（机构为根、科室为子） */
 const treeData = computed<TableTreeNode[]>(() => {
   let list = rawTree.value
   if (authStore.isOrgAdmin && authStore.currentOrgId) {
@@ -209,87 +186,6 @@ async function loadTree() {
   }
 }
 
-const hasSelection = computed(() => !!selectedOrgId.value || !!selectedDeptId.value)
-
-const tableTitle = computed(() => {
-  const org = selectedOrgName.value || orgIdToName.value.get(selectedOrgId.value || '') || ''
-  if (selectedDeptId.value) {
-    return org ? `${org} - ${t('menu.userManagement')}` : t('menu.userManagement')
-  }
-  return org ? `${org} - ${t('menu.userManagement')}` : t('menu.userManagement')
-})
-
-const filterState = ref<Record<string, string | number | undefined>>({
-  keyword: '',
-  status: '',
-})
-
-const filterFields = computed<TableFilterFieldConfig[]>(() => [
-  {
-    key: 'keyword',
-    label: t('common.search') + ':',
-    type: 'input',
-    placeholder: t('user.username') + '/' + t('user.realName') + '/' + t('user.phone'),
-    inputClass: 'w-64',
-  },
-  {
-    key: 'status',
-    label: t('user.status') + ':',
-    type: 'select',
-    inputClass: 'min-w-[140px]',
-    options: [
-      { label: t('dept.allStatus'), value: '' },
-      { label: t('status.active'), value: 'active' },
-      { label: t('status.inactive'), value: 'inactive' },
-    ],
-  },
-])
-
-function getListParams(): {
-  org_id?: string
-  dept_id?: string
-  keyword?: string
-  status?: 'active' | 'inactive'
-} {
-  const s = filterState.value.status as string
-  const status = s === 'active' || s === 'inactive' ? s : undefined
-  return {
-    org_id: selectedOrgId.value ?? undefined,
-    dept_id: selectedDeptId.value ?? undefined,
-    keyword: (filterState.value.keyword as string)?.trim() || undefined,
-    status,
-  }
-}
-
-const { data, loading, pagination, handleTableChange, handleSearch, refresh } = useTableData({
-  fetchFn: getUsers,
-  defaultParams: {},
-  immediate: false,
-})
-
-function onFilterSearch() {
-  handleSearch(getListParams())
-}
-
-function onFilterReset() {
-  filterState.value = { keyword: '', status: '' }
-  handleSearch(getListParams())
-}
-
-watch(
-  () => [selectedOrgId.value, selectedDeptId.value] as const,
-  ([orgId, deptId]) => {
-    if (orgId || deptId) {
-      handleSearch(getListParams())
-    } else {
-      data.value = []
-      pagination.current = 1
-      pagination.total = 0
-    }
-  },
-  { immediate: true }
-)
-
 function onTreeSelect(payload: { key: string; label: string; level: 'root' | 'branch' }) {
   const key = payload.key
   if (key.startsWith('org_')) {
@@ -301,94 +197,242 @@ function onTreeSelect(payload: { key: string; label: string; level: 'root' | 'br
     const id = key.replace(/^dept_/, '')
     selectedDeptId.value = id
     selectedOrgId.value = deptIdToOrgId.value.get(id) ?? null
-    selectedOrgName.value = selectedOrgId.value ? orgIdToName.value.get(selectedOrgId.value) || '' : ''
+    selectedOrgName.value = selectedOrgId.value
+      ? orgIdToName.value.get(selectedOrgId.value) || ''
+      : ''
   }
   selectedNodeKey.value = key
 }
 
-function onTableChange(p: { current: number; pageSize: number; total: number }) {
-  handleTableChange({ current: p.current, pageSize: p.pageSize })
-}
+const hasSelection = computed(() => !!selectedOrgId.value || !!selectedDeptId.value)
 
-const paginationConfig = computed<ProTablePagination>(() => ({
-  current: pagination.current,
-  pageSize: pagination.pageSize,
-  total: pagination.total,
-  onChange: (page: number, pageSize: number) => {
-    handleTableChange({ current: page, pageSize })
-  },
+// ----- 右侧 PageHead / PageFilter / PageTable -----
+const headConf = computed<PageHeadConfig>(() => ({
+  title: t('menu.userManagement'),
+  btns: [
+    {
+      text: t('user.addUser'),
+      type: 'primary',
+      icon: PlusOutlined,
+      handle: openCreateForm,
+      permission: ['sysadmin', 'org_admin', 'dept_admin'],
+    },
+  ],
 }))
 
-const toolbarConfig = computed<ProTableToolItem[]>(() => [
-  { key: 'refresh', icon: 'reload', title: t('common.refresh'), handle: refresh },
-])
+const filterConf = computed<PageFilterConfig>(() => ({
+  filterForm: [
+    {
+      key: 'keyword',
+      label: t('common.search'),
+      type: 'input',
+      ph: t('user.keywordPlaceholder'),
+      col: 8,
+      defaultValue: '',
+    },
+    {
+      key: 'status',
+      label: t('user.status'),
+      type: 'select',
+      ph: t('common.all'),
+      col: 6,
+      options: [
+        { label: t('common.all'), value: '' },
+        { label: t('status.active'), value: 'active' },
+        { label: t('status.inactive'), value: 'inactive' },
+      ],
+      clearable: true,
+      defaultValue: '',
+    },
+  ],
+  btns: [
+    {
+      text: t('common.search'),
+      type: 'primary',
+      icon: SearchOutlined,
+      handle: () => {
+        pageTableRef.value?.resetCurPage(1)
+        loadData()
+      },
+    },
+    {
+      text: t('common.reset'),
+      icon: ReloadOutlined,
+      handle: () => {
+        pageFilterRef.value?.filterFormReset()
+        pageTableRef.value?.resetCurPage(1)
+        loadData()
+      },
+    },
+  ],
+  btnsCol: 6,
+}))
 
-const columns = computed<
-  (ProTableColumnExt<UserListItem> & {
-    title: string
-    dataIndex?: string
-    key: string
-    ellipsis?: boolean
-    width?: number
-    fixed?: 'right'
-  })[]
->(() => [
-  { title: t('user.username'), dataIndex: 'username', key: 'username', ellipsis: true, width: 120 },
-  { title: t('user.realName'), dataIndex: 'real_name', key: 'real_name', width: 100, ellipsis: true },
-  { title: t('user.phone'), dataIndex: 'phone', key: 'phone', width: 130 },
-  { title: t('user.email'), dataIndex: 'email', key: 'email', width: 180, ellipsis: true },
-  { title: t('user.org'), dataIndex: 'org_name', key: 'org_name', width: 160, ellipsis: true },
-  { title: t('user.dept'), dataIndex: 'dept_name', key: 'dept_name', width: 100, ellipsis: true },
-  { title: t('user.roles'), dataIndex: 'roles', key: 'roles', width: 180 },
+const tableConf = computed<PageTableConfig>(() => ({
+  isLoading: loading.value,
+  total: total.value,
+  updateTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+  rowKey: 'id',
+  emptyText: t('common.noData'),
+}))
+
+const tableColumns = computed<PageTableColumnConfig[]>(() => [
+  { label: t('user.username'), prop: 'username', width: 120, showOverflowTooltip: true },
+  { label: t('user.realName'), prop: 'real_name', width: 100, showOverflowTooltip: true },
+  { label: t('user.phone'), prop: 'phone', width: 160 },
+  { label: t('user.email'), prop: 'email', width: 180, showOverflowTooltip: true },
+  { label: t('user.org'), prop: 'org_name', width: 160, showOverflowTooltip: true },
+  { label: t('user.dept'), prop: 'dept_name', width: 100, showOverflowTooltip: true },
   {
-    title: t('user.status'),
-    dataIndex: 'status',
-    key: 'status',
+    label: t('user.roles'),
+    type: 'slot',
+    slotName: 'roles',
+    width: 260,
+  },
+  {
+    label: t('user.status'),
+    prop: 'status',
+    type: 'scope',
+    scopeType: '_tag',
     width: 90,
-    cellType: 'status',
-    statusLabels: { active: t('status.active'), inactive: t('status.inactive') },
-    activeValue: 'active',
+    tagType: (row) => (row.status === 'active' ? 'success' : 'error'),
+    tagText: (row) => (row.status === 'active' ? t('status.active') : t('status.inactive')),
   },
   {
-    title: t('common.createdAt'),
-    dataIndex: 'created_at',
-    key: 'created_at',
-    width: 160,
-    cellType: 'date',
-    dateFormat: 'YYYY-MM-DD HH:mm',
+    label: t('common.createdAt'),
+    prop: 'created_at',
+    width: 200,
+    formatter: (row) => dayjs(row.created_at as string).format('YYYY-MM-DD HH:mm'),
   },
   {
-    title: t('common.actions'),
-    key: 'actions',
+    label: t('common.actions'),
+    type: 'operation',
+    width: 280,
     fixed: 'right',
-    width: 300,
-    align: 'right',
-    cellType: 'actions',
-    btns: actionBtns.value,
+    btns: [      
+      {
+        text: t('common.detail'),
+        icon: EyeOutlined,
+        handle: openDetail as unknown as (row: Record<string, unknown>, index?: number) => void,
+      },
+      {
+        text: t('common.edit'),
+        icon: EditOutlined,
+        handle: openEditForm as unknown as (row: Record<string, unknown>, index?: number) => void,
+      },
+      {
+        text: t('common.more'),
+        type: 'popover',
+        moreList: [
+          {
+            text: t('user.roleEditor'),
+            icon: TeamOutlined,
+            handle: openRoleEditor as unknown as (
+              row: Record<string, unknown>,
+              index?: number
+            ) => void,
+          },
+          {
+            text: t('user.resetPassword'),
+            icon: KeyOutlined,
+            color: 'warning',
+            handle: openResetPasswordConfirm as unknown as (
+              row: Record<string, unknown>,
+              index?: number
+            ) => void,
+          },
+          {
+            text: t('common.delete'),
+            icon: DeleteOutlined,
+            color: 'danger',
+            handle: handleDelete as unknown as (
+              row: Record<string, unknown>,
+              index?: number
+            ) => void,
+          },
+        ],
+      },
+    ],
   },
 ])
 
-const actionBtns = computed<ProTableActionBtn<UserListItem>[]>(() => [
-  { text: t('common.edit'), handle: openEditForm },
-  { text: t('user.roleEditor'), handle: openRoleEditor },
-  { text: t('user.resetPassword'), handle: openResetPasswordConfirm },
-  {
-    text: t('common.delete'),
-    handle: handleDelete,
-    danger: true,
-  },
-])
+async function loadData() {
+  const orgId = selectedOrgId.value
+  const deptId = selectedDeptId.value
+  if (!orgId && !deptId) {
+    tableData.value = []
+    total.value = 0
+    return
+  }
 
+  const params = pageFilterRef.value?.filteParams ?? {}
+  const page = pageTableRef.value?.currentPage ?? 1
+  const pageSize = pageTableRef.value?.pageSize ?? 20
+  const statusVal = params.status as string
+  const status = statusVal === 'active' || statusVal === 'inactive' ? statusVal : undefined
+
+  loading.value = true
+  try {
+    const result = await getUsers({
+      page,
+      page_size: pageSize,
+      org_id: orgId ?? undefined,
+      dept_id: deptId ?? undefined,
+      keyword: (params.keyword as string)?.trim() || undefined,
+      status,
+    })
+    tableData.value = result.items
+    total.value = result.total
+  } finally {
+    loading.value = false
+  }
+}
+
+function onFilterFetch() {
+  pageTableRef.value?.resetCurPage(1)
+  loadData()
+}
+
+function onTableFetch() {
+  loadData()
+}
+
+function refresh() {
+  loadData()
+}
+
+watch(
+  () => [selectedOrgId.value, selectedDeptId.value] as const,
+  ([orgId, deptId]) => {
+    if (orgId || deptId) {
+      loadData()
+    } else {
+      tableData.value = []
+      total.value = 0
+    }
+  }
+)
+
+// ----- 表单与操作 -----
 const formOpen = ref(false)
 const editingRecord = ref<UserListItem | null>(null)
+const viewOnly = ref(false)
 
 function openCreateForm() {
   editingRecord.value = null
+  viewOnly.value = false
+  formOpen.value = true
+}
+
+function openDetail(record: UserListItem) {
+  editingRecord.value = record
+  viewOnly.value = true
   formOpen.value = true
 }
 
 function openEditForm(record: UserListItem) {
   editingRecord.value = record
+  viewOnly.value = false
   formOpen.value = true
 }
 
@@ -400,7 +444,7 @@ async function handleFormSubmit(payload: CreateUserPayload | UpdateUserPayload) 
     } else {
       const res = await createUser(payload as CreateUserPayload)
       if (res.initial_password) {
-        message.success(t('common.success') + '，初始密码：' + res.initial_password)
+        message.success(t('user.createSuccessWithPassword', { password: res.initial_password }))
       } else {
         message.success(t('common.success'))
       }

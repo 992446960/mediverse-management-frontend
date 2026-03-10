@@ -3,6 +3,8 @@
     :open="open"
     :title="t('user.roleEditor')"
     :confirm-loading="confirmLoading"
+    :ok-text="t('common.confirm')"
+    :cancel-text="t('common.cancel')"
     @ok="handleOk"
     @cancel="emit('update:open', false)"
   >

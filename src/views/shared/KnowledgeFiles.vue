@@ -13,113 +13,57 @@
     </aside>
 
     <section class="flex-1 flex flex-col min-h-0 min-w-0 pl-0">
-      <div class="mb-4">
-        <TableFilter
-          v-model="filterState"
-          :title="title"
-          :fields="filterFields"
-          @search="onFilterSearch"
-          @reset="onFilterReset"
+      <div class="app-container p-4 mb-4">
+        <PageHead :head-conf="headConf" />
+        <PageFilter
+          ref="pageFilterRef"
+          :filter-conf="filterConf"
+          @fetch-table-data="onFilterFetch"
         />
       </div>
-
-      <ProTable
-        :title="tableTitle"
-        :columns="columns"
-        :data-source="data"
-        :loading="loading"
-        row-key="id"
-        :pagination="paginationConfig"
-        :toolbar="toolbarConfig"
-        @refresh="refresh"
-      >
-        <template #bodyCell="{ column, record }">
-          <!-- 文件名称：用 key 或 dataIndex 匹配（兼容 a-table 列标识），取值兼容 snake_case -->
-          <template v-if="(column.key === 'file_name') || (column.dataIndex === 'file_name')">
-            <a-tooltip v-if="getFileName(record, column)" :title="getFileName(record, column)">
-              <span class="truncate block">{{ getFileName(record, column) }}</span>
-            </a-tooltip>
-            <span v-else class="text-slate-400">—</span>
-          </template>
-
-          <!-- 状态列渲染 -->
-          <template v-else-if="column.key === 'status'">
-            <a-tooltip v-if="record.status === 'failed'" :title="record.error_msg">
-              <a-tag :color="FILE_STATUS_CONFIG[record.status as FileStatus].color">
-                {{ FILE_STATUS_CONFIG[record.status as FileStatus].label }}
+      <div class="app-container p-0 flex-1 flex flex-col min-h-0">
+        <PageTable
+          ref="pageTableRef"
+          :table-conf="tableConf"
+          :table-columns="tableColumns"
+          :table-data="tableData as unknown as Record<string, unknown>[]"
+          @fetch-table-data="onTableFetch"
+        >
+          <template #status="{ row }">
+            <a-tooltip
+              v-if="(row as FileListItem).status === 'failed' && (row as FileListItem).error_msg"
+              :title="(row as FileListItem).error_msg"
+            >
+              <a-tag :color="getStatusColor((row as FileListItem).status)">
+                {{ getStatusLabel((row as FileListItem).status) }}
               </a-tag>
             </a-tooltip>
-            <a-tag v-else :color="FILE_STATUS_CONFIG[record.status as FileStatus].color">
-              {{ FILE_STATUS_CONFIG[record.status as FileStatus].label }}
+            <a-tag v-else :color="getStatusColor((row as FileListItem).status)">
+              {{ getStatusLabel((row as FileListItem).status) }}
             </a-tag>
           </template>
-
-          <!-- 文件大小格式化 -->
-          <template v-else-if="column.key === 'file_size'">
-            {{ formatFileSize(record.file_size) }}
-          </template>
-
-          <!-- 发布时间格式化 -->
-          <template v-else-if="column.key === 'created_at'">
-            {{ record.created_at ? formatPublishTime(record.created_at) : '—' }}
-          </template>
-
-          <!-- 操作列 -->
-          <template v-else-if="column.key === 'actions'">
-            <div class="flex items-center gap-1">
-              <a-dropdown>
-                <template #overlay>
-                  <a-menu class="action-menu">
-                    <a-menu-item key="preview" @click="handlePreview(record)">
-                      <template #icon><EyeOutlined style="color: var(--color-primary)" /></template>
-                      <span style="color: var(--color-primary)">{{ t('knowledge.preview') }}</span>
-                    </a-menu-item>
-                    <a-menu-item key="delete" danger @click="handleDelete(record)">
-                      <template #icon><DeleteOutlined /></template>
-                      {{ t('common.delete') }}
-                    </a-menu-item>
-                    <a-menu-item key="download" @click="handleDownload(record)">
-                      <template #icon><DownloadOutlined style="color: var(--color-primary)" /></template>
-                      <span style="color: var(--color-primary)">{{ t('knowledge.download') }}</span>
-                    </a-menu-item>
-                    <a-menu-item
-                      v-if="record.status === 'failed'"
-                      key="retry"
-                      @click="handleRetry(record)"
-                    >
-                      <template #icon><ReloadOutlined style="color: var(--color-primary)" /></template>
-                      <span style="color: var(--color-primary)">{{ t('knowledge.retry') }}</span>
-                    </a-menu-item>
-                  </a-menu>
-                </template>
-                <a-button type="link" size="small">
-                  <template #icon><EllipsisOutlined /></template>
-                </a-button>
-              </a-dropdown>
-            </div>
-          </template>
-        </template>
-      </ProTable>
+        </PageTable>
+      </div>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { message } from 'ant-design-vue'
 import dayjs from 'dayjs'
+import { message } from 'ant-design-vue'
 import {
-  EllipsisOutlined,
+  SearchOutlined,
+  ReloadOutlined,
   EyeOutlined,
   DeleteOutlined,
   DownloadOutlined,
-  ReloadOutlined,
 } from '@ant-design/icons-vue'
 import { DirectoryTree } from '@/components/DirectoryTree'
-import { TableFilter } from '@/components/TableFilter'
-import { ProTable } from '@/components/Table'
-import { useTableData } from '@/composables/useTableData'
+import PageHead from '@/components/PageHead/index.vue'
+import PageFilter from '@/components/PageFilter/index.vue'
+import PageTable from '@/components/PageTable/index.vue'
 import { useFileStatusPoll } from '@/composables/useFileStatusPoll'
 import {
   getDirectoryTree,
@@ -131,9 +75,10 @@ import {
 } from '@/api/knowledge'
 import { confirmDelete } from '@/utils/confirm'
 import { FILE_STATUS_CONFIG } from '@/types/knowledge'
+import type { PageHeadConfig } from '@/components/PageHead/types'
+import type { PageFilterConfig } from '@/components/PageFilter/types'
+import type { PageTableConfig, PageTableColumnConfig } from '@/components/PageTable/types'
 import type { OwnerType, DirectoryNode, FileListItem, FileStatus } from '@/types/knowledge'
-import type { TableFilterFieldConfig } from '@/components/TableFilter/types'
-import type { ProTablePagination, ProTableToolItem } from '@/components/Table/types'
 
 const props = defineProps<{
   ownerType: OwnerType
@@ -143,7 +88,14 @@ const props = defineProps<{
 
 const { t } = useI18n()
 
-// 目录树相关
+const pageFilterRef = ref<InstanceType<typeof PageFilter> | null>(null)
+const pageTableRef = ref<InstanceType<typeof PageTable> | null>(null)
+
+const tableData = ref<FileListItem[]>([])
+const loading = ref(false)
+const total = ref(0)
+
+// ----- 左侧目录树（保持不变） -----
 const treeLoading = ref(false)
 const treeData = ref<DirectoryNode[]>([])
 const selectedDirId = ref('__all__')
@@ -159,136 +111,259 @@ async function loadTree() {
 
 function onTreeSelect(payload: { key: string }) {
   selectedDirId.value = payload.key
-  onFilterSearch()
+  pageTableRef.value?.resetCurPage(1)
+  loadData()
 }
-
-/** 在树中递归查找节点 */
-function findNodeById(nodes: DirectoryNode[], id: string): DirectoryNode | undefined {
-  for (const node of nodes) {
-    if (node.id === id) return node
-    if (node.children?.length) {
-      const found = findNodeById(node.children, id)
-      if (found) return found
-    }
-  }
-  return undefined
-}
-
-/** 表格标题：选中的目录名，未选或选「全部」时为「所有文件」 */
-const tableTitle = computed(() => {
-  if (selectedDirId.value === '__all__') return t('knowledge.allFiles')
-  const node = findNodeById(treeData.value, selectedDirId.value)
-  return node?.name ?? t('knowledge.allFiles')
-})
 
 async function handleCreateDir(parentId: string | null, name: string) {
   try {
     await createDirectory(props.ownerType, props.ownerId, { parent_id: parentId, name })
     message.success(t('common.success'))
     loadTree()
-  } catch (error) {
+  } catch {
     // 错误已由拦截器处理
   }
 }
 
-// 表格相关
-const filterState = ref({
-  keyword: '',
-  status: '',
-})
+// ----- 状态列展示（FILE_STATUS_CONFIG + i18n 映射） -----
+const FILE_STATUS_LABEL_KEYS: Record<FileStatus, string> = {
+  uploading: 'knowledge.statusProcessing',
+  parsing: 'knowledge.statusProcessing',
+  extracting: 'knowledge.statusProcessing',
+  indexing: 'knowledge.statusProcessing',
+  done: 'knowledge.statusDone',
+  failed: 'knowledge.statusFailed',
+}
 
-const filterFields = computed<TableFilterFieldConfig[]>(() => [
+function getStatusColor(status: FileStatus): string {
+  return FILE_STATUS_CONFIG[status]?.color ?? 'default'
+}
+
+function getStatusLabel(status: FileStatus): string {
+  const key = FILE_STATUS_LABEL_KEYS[status]
+  if (key) return t(key)
+  return FILE_STATUS_CONFIG[status]?.label ?? status
+}
+
+// ----- 右侧 PageHead / PageFilter / PageTable -----
+const headConf = computed<PageHeadConfig>(() => ({
+  title: props.title,
+  // 上传入口：无上传 API 时可预留 btns: [] 或后续接入
+  btns: [],
+}))
+
+const filterConf = computed<PageFilterConfig>(() => ({
+  filterForm: [
+    {
+      key: 'keyword',
+      label: t('common.search'),
+      type: 'input',
+      ph: t('knowledge.searchFilePlaceholder'),
+      col: 8,
+      defaultValue: '',
+    },
+    {
+      key: 'status',
+      label: t('knowledge.fileStatus'),
+      type: 'select',
+      ph: t('common.all'),
+      col: 6,
+      options: [
+        { label: t('common.all'), value: '' },
+        { label: t('knowledge.statusProcessing'), value: 'processing' },
+        { label: t('knowledge.statusDone'), value: 'done' },
+        { label: t('knowledge.statusFailed'), value: 'failed' },
+      ],
+      clearable: true,
+      defaultValue: '',
+    },
+  ],
+  btns: [
+    {
+      text: t('common.search'),
+      type: 'primary',
+      icon: SearchOutlined,
+      handle: () => {
+        pageTableRef.value?.resetCurPage(1)
+        loadData()
+      },
+    },
+    {
+      text: t('common.reset'),
+      icon: ReloadOutlined,
+      handle: () => {
+        pageFilterRef.value?.filterFormReset()
+        pageTableRef.value?.resetCurPage(1)
+        loadData()
+      },
+    },
+  ],
+  btnsCol: 6,
+}))
+
+const tableConf = computed<PageTableConfig>(() => ({
+  isLoading: loading.value,
+  total: total.value,
+  updateTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+  rowKey: 'id',
+  emptyText: t('common.noData'),
+}))
+
+function formatFileSize(bytes: number): string {
+  if (bytes === 0) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`
+}
+
+const tableColumns = computed<PageTableColumnConfig[]>(() => [
   {
-    key: 'keyword',
     label: t('knowledge.fileName'),
-    type: 'input',
-    placeholder: t('knowledge.searchFilePlaceholder'),
-    inputClass: 'w-64',
+    prop: 'file_name',
+    width: 200,
+    showOverflowTooltip: true,
+  },
+  { label: t('knowledge.fileType'), prop: 'file_type', width: 100 },
+  {
+    label: t('knowledge.fileSize'),
+    prop: 'file_size',
+    width: 120,
+    formatter: (row) => formatFileSize(Number(row.file_size ?? 0)),
   },
   {
-    key: 'status',
-    label: t('knowledge.fileStatus'),
-    type: 'select',
-    inputClass: 'min-w-[140px]',
-    options: [
-      { label: t('common.all'), value: '' },
-      { label: t('knowledge.statusProcessing'), value: 'processing' },
-      { label: t('knowledge.statusDone'), value: 'done' },
-      { label: t('knowledge.statusFailed'), value: 'failed' },
+    label: t('knowledge.cardCount'),
+    prop: 'knowledge_card_count',
+    width: 120,
+  },
+  {
+    label: t('knowledge.status'),
+    prop: 'status',
+    type: 'slot',
+    slotName: 'status',
+    width: 160,
+  },
+  {
+    label: t('knowledge.publishOrg'),
+    prop: 'created_by_name',
+    width: 160,
+    showOverflowTooltip: true,
+  },
+  {
+    label: t('knowledge.publishTime'),
+    prop: 'created_at',
+    width: 180,
+    formatter: (row) =>
+      row.created_at ? dayjs(row.created_at as string).format('YYYY-MM-DD HH:mm') : '—',
+  },
+  {
+    label: t('common.actions'),
+    type: 'operation',
+    width: 280,
+    fixed: 'right',
+    btns: [
+      {
+        text: t('knowledge.preview'),
+        icon: EyeOutlined,
+        handle: (row: Record<string, unknown>) => handlePreview(row as unknown as FileListItem),
+      },
+      {
+        text: t('knowledge.download'),
+        icon: DownloadOutlined,
+        handle: (row: Record<string, unknown>) => handleDownload(row as unknown as FileListItem),
+      },
+      {
+        text: t('common.more'),
+        type: 'popover',
+        moreList: [
+          {
+            text: t('common.delete'),
+            icon: DeleteOutlined,
+            color: 'danger',
+            handle: (row: Record<string, unknown>) =>
+              handleDelete(row as unknown as FileListItem),
+          },
+          {
+            text: t('knowledge.retry'),
+            icon: ReloadOutlined,
+            btnIsShow: (row) => (row.status as string) === 'failed',
+            handle: (row: Record<string, unknown>) =>
+              handleRetry(row as unknown as FileListItem),
+          },
+        ],
+      },
     ],
   },
 ])
 
-const { data, loading, pagination, handleTableChange, handleSearch, refresh } = useTableData<FileListItem, any>({
-  fetchFn: (params) => getFileList(props.ownerType, props.ownerId, params),
-  immediate: false,
-})
+// ----- 数据拉取 -----
+async function loadData() {
+  const params = pageFilterRef.value?.filteParams ?? {}
+  const page = pageTableRef.value?.currentPage ?? 1
+  const pageSize = pageTableRef.value?.pageSize ?? 20
+  const keyword = (params.keyword as string)?.trim() || undefined
+  const statusVal = params.status as string
+  const status: FileStatus | undefined =
+    statusVal === 'processing' || statusVal === 'done' || statusVal === 'failed'
+      ? (statusVal as FileStatus)
+      : undefined
+  const dirId =
+    selectedDirId.value === '__all__' ? undefined : selectedDirId.value
 
-// 状态轮询
-const { startPoll } = useFileStatusPoll(props.ownerType, props.ownerId, data)
-
-watch(data, (newList) => {
-  const hasActive = newList.some((f) => f.status !== 'done' && f.status !== 'failed')
-  if (hasActive) startPoll()
-}, { deep: true })
-
-function onFilterSearch() {
-  handleSearch({
-    dir_id: selectedDirId.value,
-    keyword: filterState.value.keyword,
-    status: filterState.value.status as any,
-  })
-}
-
-function onFilterReset() {
-  filterState.value = { keyword: '', status: '' }
-  onFilterSearch()
-}
-
-const paginationConfig = computed<ProTablePagination>(() => ({
-  current: pagination.current,
-  pageSize: pagination.pageSize,
-  total: pagination.total,
-  onChange: (page, pageSize) => handleTableChange({ current: page, pageSize }),
-}))
-
-const toolbarConfig = computed<ProTableToolItem[]>(() => [
-  { key: 'refresh', icon: 'reload', title: t('common.refresh'), handle: refresh },
-])
-
-const columns = [
-  { title: t('knowledge.fileName'), dataIndex: 'file_name', key: 'file_name', ellipsis: true },
-  { title: t('knowledge.fileType'), dataIndex: 'file_type', key: 'file_type', width: 100 },
-  { title: t('knowledge.fileSize'), dataIndex: 'file_size', key: 'file_size', width: 120 },
-  { title: t('knowledge.cardCount'), dataIndex: 'knowledge_card_count', key: 'knowledge_card_count', width: 120 },
-  { title: t('knowledge.status'), dataIndex: 'status', key: 'status', width: 180 },
-  { title: t('knowledge.publishOrg'), dataIndex: 'created_by_name', key: 'created_by_name', width: 180, ellipsis: true },
-  { title: t('knowledge.publishTime'), dataIndex: 'created_at', key: 'created_at', width: 180 },
-  { title: t('common.actions'), key: 'actions', width: 120, fixed: 'right' },
-]
-
-async function handleRetry(record: FileListItem) {
+  loading.value = true
   try {
-    await retryFile(props.ownerType, props.ownerId, record.id)
-    message.success(t('common.retrySuccess'))
-    refresh()
-  } catch (error) {}
+    const result = await getFileList(props.ownerType, props.ownerId, {
+      page,
+      page_size: pageSize,
+      dir_id: dirId,
+      keyword,
+      status,
+    })
+    tableData.value = result.items
+    total.value = result.total
+  } finally {
+    loading.value = false
+  }
 }
 
+function onFilterFetch() {
+  pageTableRef.value?.resetCurPage(1)
+  loadData()
+}
+
+function onTableFetch() {
+  loadData()
+}
+
+// ----- 状态轮询 -----
+const { startPoll } = useFileStatusPoll(props.ownerType, props.ownerId, tableData)
+
+watch(
+  tableData,
+  (newList) => {
+    const hasActive = newList.some(
+      (f) => f.status !== 'done' && f.status !== 'failed'
+    )
+    if (hasActive) startPoll()
+  },
+  { deep: true }
+)
+
+// ----- 操作列行为 -----
 function handlePreview(record: FileListItem) {
-  message.info('TODO: 预览文件功能开发中 - ' + record.file_name)
+  message.info(`TODO: ${t('knowledge.preview')} - ${record.file_name}`)
 }
 
 function handleDelete(record: FileListItem) {
   confirmDelete({
     title: t('common.confirmDeleteTitle'),
     content: t('common.confirmDeleteContent'),
+    okText: t('common.confirm'),
+    cancelText: t('common.cancel'),
     onOk: async () => {
-      try {
-        await deleteFile(props.ownerType, props.ownerId, record.id)
-        message.success(t('common.success'))
-        refresh()
-      } catch (error) {}
+      await deleteFile(props.ownerType, props.ownerId, record.id)
+      message.success(t('common.success'))
+      loadData()
     },
   })
 }
@@ -304,41 +379,24 @@ async function handleDownload(record: FileListItem) {
     link.click()
     document.body.removeChild(link)
     window.URL.revokeObjectURL(url)
-  } catch (error) {
+  } catch {
     message.error(t('knowledge.downloadFailed'))
   }
 }
 
-function formatFileSize(bytes: number) {
-  if (bytes === 0) return '0 B'
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-}
-
-/** 从 record 取文件名字段（兼容 dataIndex 与 file_name） */
-function getFileName(
-  record: FileListItem,
-  column: { dataIndex?: string | string[] }
-): string {
-  const raw =
-    record.file_name ??
-    (typeof column.dataIndex === 'string'
-      ? (record as unknown as Record<string, unknown>)[column.dataIndex]
-      : undefined)
-  return raw != null ? String(raw) : ''
-}
-
-/** 发布时间格式化展示 */
-function formatPublishTime(iso: string) {
-  const d = dayjs(iso)
-  return d.isValid() ? d.format('YYYY-MM-DD HH:mm') : iso
+async function handleRetry(record: FileListItem) {
+  try {
+    await retryFile(props.ownerType, props.ownerId, record.id)
+    message.success(t('common.success'))
+    loadData()
+  } catch {
+    // 错误已由拦截器处理
+  }
 }
 
 onMounted(() => {
   loadTree()
-  onFilterSearch()
+  loadData()
 })
 </script>
 

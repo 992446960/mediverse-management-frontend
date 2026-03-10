@@ -4,6 +4,8 @@
     :title="t('avatar.editAvatar')"
     width="40%"
     :confirm-loading="submitLoading"
+    :ok-text="t('common.confirm')"
+    :cancel-text="t('common.cancel')"
     :destroy-on-close="true"
     @ok="onSubmit"
     @cancel="emit('update:open', false)"
@@ -15,7 +17,7 @@
         v-if="avatar"
         class="mb-4"
         type="info"
-        :message="t('avatar.scope') + '：' + formatScope(avatar)"
+        :message="t('avatar.scopeDisplay', { scope: formatScope(avatar) })"
         show-icon
       />
 

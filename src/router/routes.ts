@@ -1,4 +1,4 @@
-import type { RouteRecordRaw } from 'vue-router';
+import type { RouteRecordRaw } from 'vue-router'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -189,13 +189,19 @@ const routes: RouteRecordRaw[] = [
         path: 'users',
         name: 'AdminUsers',
         component: () => import('@/views/admin/Users/index.vue'),
-        meta: { title: 'menu.userManagement', requiredRoles: ['sysadmin', 'org_admin', 'dept_admin'] },
+        meta: {
+          title: 'menu.userManagement',
+          requiredRoles: ['sysadmin', 'org_admin', 'dept_admin'],
+        },
       },
       {
         path: 'avatars',
         name: 'AdminAvatars',
         component: () => import('@/views/admin/Avatars/index.vue'),
-        meta: { title: 'menu.avatarManagement', requiredRoles: ['sysadmin', 'org_admin', 'dept_admin'] },
+        meta: {
+          title: 'menu.avatarManagement',
+          requiredRoles: ['sysadmin', 'org_admin', 'dept_admin'],
+        },
       },
       {
         path: 'api-tokens',
@@ -204,17 +210,6 @@ const routes: RouteRecordRaw[] = [
         meta: { title: 'menu.apiToken', requiredRoles: ['sysadmin'] },
       },
     ],
-  },
-  {
-    path: '/examples/pro-components',
-    name: 'ExamplesProComponents',
-    component: () => import('@/views/examples/ProComponentsExample.vue'),
-    meta: {
-      layout: 'MainLayout',
-      title: '通用组件示例',
-      requiresAuth: true,
-      hidden: true,
-    },
   },
   {
     path: '/403',
@@ -236,6 +231,6 @@ const routes: RouteRecordRaw[] = [
       hidden: true,
     },
   },
-];
+]
 
-export default routes;
+export default routes
