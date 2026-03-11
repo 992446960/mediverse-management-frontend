@@ -62,3 +62,36 @@ body {
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-sm);
 }
+
+/* 全局 Modal 样式 */
+.ant-modal {
+  .ant-modal-content {
+    padding: 0;
+    .ant-modal-header {
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--color-border);
+      background-color: var(--color-bg-base);
+      margin-bottom: 0;
+    }
+    .ant-modal-body {
+      padding: 10px 20px;
+    }
+    .ant-modal-footer {
+      padding: 10px 20px;
+      border-top: 1px solid var(--color-border);
+    }
+    /* 全局 Modal 表单样式 */
+    .ant-form-item {
+      margin-bottom: 14px;
+    }
+  }
+}
+
+/* 全局 Modal 确认框样式 */
+.ant-modal-confirm {
+  .ant-modal-content{
+    .ant-modal-body {
+      padding: 20px;
+    }
+  }
+}

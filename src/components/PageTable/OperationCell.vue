@@ -38,7 +38,7 @@
               <a-menu-item
                 v-for="(m, mIdx) in btn.moreList?.filter((item) => item.btnIsShow?.(record) !== false) ?? []"
                 :key="mIdx"
-                @click="m.handle?.(record, index)"
+                @click="onMoreItemClick(m, record, index)"
               >
                 <a-button
                   :type="m.buttonType ?? DEFAULT_BUTTON_TYPE"
@@ -103,6 +103,15 @@ defineProps<{
 }>()
 
 const moreOpen = ref(false)
+
+function onMoreItemClick(
+  m: PageTableOperationBtn,
+  record: Record<string, unknown>,
+  index: number
+) {
+  moreOpen.value = false
+  m.handle?.(record, index)
+}
 
 const DEFAULT_BUTTON_TYPE = 'link'
 const WARNING_COLOR = '#faad14'
