@@ -81,7 +81,6 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     ScopeCell: typeof import('./src/components/PageTable/ScopeCell.vue')['default']
     TableFilter: typeof import('./src/components/TableFilter/index.vue')['default']
-    PageTree: typeof import('./src/components/PageTree/index.vue')['default']
     ThemeSwitcher: typeof import('./src/components/ThemeSwitcher/index.vue')['default']
   }
 }

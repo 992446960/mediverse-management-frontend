@@ -99,19 +99,25 @@ const router = useRouter()
 const { t } = useI18n()
 const authStore = useAuthStore()
 const themeStore = useThemeStore()
-const { checkRoles } = usePermission()
+const { checkRoles, isSysAdmin } = usePermission()
 
 const user = computed(() => authStore.user)
+
+// 开发环境且为系统管理员：拥有所有菜单路由（含个人工作台）
+const isDevSysAdmin = computed(
+  () => import.meta.env.DEV && isSysAdmin.value
+)
 
 const breadcrumbs = computed(() => {
   return currentRoute.matched.filter((item) => item.meta && item.meta.title)
 })
 
 // Filter menu items based on permissions (sysadmin 等角色依赖 user.role，由 normalizeAuthUser 保证)
-const filterMenu = (items: any[]): ItemType[] => {
+// skipRoleCheck：开发环境 sysadmin 时不再按角色过滤，展示除个人工作台外的全部菜单
+const filterMenu = (items: any[], skipRoleCheck = false): ItemType[] => {
   return items
     .filter((item) => {
-      if (item.requiredRoles && !checkRoles(item.requiredRoles)) {
+      if (!skipRoleCheck && item.requiredRoles && !checkRoles(item.requiredRoles)) {
         return false
       }
       return true
@@ -124,7 +130,7 @@ const filterMenu = (items: any[]): ItemType[] => {
         title: t(item.label),
       }
       if (item.children) {
-        newItem.children = filterMenu(item.children)
+        newItem.children = filterMenu(item.children, skipRoleCheck)
       }
       return newItem
     })
@@ -135,7 +141,7 @@ const filterMenu = (items: any[]): ItemType[] => {
     })
 }
 
-const menuItems = computed(() => filterMenu(menuConfig))
+const menuItems = computed(() => filterMenu(menuConfig, isDevSysAdmin.value))
 
 const handleMenuClick = ({ key }: { key: string }) => {
   const findPath = (items: any[]): string | undefined => {
@@ -178,6 +184,8 @@ watch(
     const key = findKey(menuConfig)
     if (key) {
       selectedKeys.value = [key]
+    } else {
+      selectedKeys.value = []
     }
   },
   { immediate: true }

@@ -88,7 +88,7 @@
     <!-- 新增目录弹窗 -->
     <a-modal
       v-model:open="addModalVisible"
-      :title="t('knowledge.addDirectory')"
+      :title="addModalTitle"
       @ok="handleAddDirectory"
       :confirm-loading="addLoading"
     >
@@ -179,9 +179,18 @@ const addModalVisible = ref(false)
 const addLoading = ref(false)
 const newDirName = ref('')
 const currentParentId = ref<string | null>(null)
+/** 当前父节点名称，用于弹框标题「在 xx 下新增目录」 */
+const currentParentLabel = ref<string | null>(null)
 
-function openAddModal(parent: DirectoryNode | null) {
+const addModalTitle = computed(() =>
+  currentParentLabel.value
+    ? t('knowledge.addDirectoryUnderParent', { parent: currentParentLabel.value })
+    : t('knowledge.addDirectory')
+)
+
+function openAddModal(parent: DirectoryTreeNode | null) {
   currentParentId.value = parent ? parent.id : null
+  currentParentLabel.value = parent ? (parent.label ?? parent.name) : null
   newDirName.value = ''
   addModalVisible.value = true
 }

@@ -4,7 +4,7 @@
       v-if="authStore.currentOrgId"
       owner-type="org"
       :owner-id="authStore.currentOrgId"
-      :title="t('menu.files')"
+      :title="t('menu.orgFilesManagement')"
     />
     <div v-else class="flex flex-1 items-center justify-center">
       <a-empty :description="t('common.noPermission')" />
