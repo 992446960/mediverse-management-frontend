@@ -202,6 +202,7 @@ import { useI18n } from 'vue-i18n'
 import { PlusOutlined, CloseOutlined } from '@ant-design/icons-vue'
 import type { FormInstance } from 'ant-design-vue'
 import type { AvatarWizardForm, AvatarStyle } from '@/types/avatar'
+import { uploadAvatar } from '@/api/upload'
 
 const { t } = useI18n()
 
@@ -223,6 +224,7 @@ const TAG_MAX_COUNT = 10
 const avatarFileRef = ref<HTMLInputElement | null>(null)
 const avatarPreviewUrl = ref('')
 const AVATAR_ACCEPT = 'image/jpeg,image/png,image/gif'
+const avatarUploading = ref(false)
 
 const local = ref<
   Pick<
@@ -319,7 +321,7 @@ function triggerAvatarFileInput() {
   avatarFileRef.value?.click()
 }
 
-function onAvatarFileChange(e: Event) {
+async function onAvatarFileChange(e: Event) {
   const input = e.target as HTMLInputElement
   const file = input.files?.[0]
   input.value = ''
@@ -329,10 +331,17 @@ function onAvatarFileChange(e: Event) {
     return
   }
   revokeAvatarPreview()
-  // TODO: 上传接口对接后改为调用 API，返回服务端 URL 写入 local.avatar_url；当前本地模拟使用 blob URL 回显
-  const url = URL.createObjectURL(file)
-  avatarPreviewUrl.value = url
-  local.value = { ...local.value, avatar_url: url }
+  avatarUploading.value = true
+  try {
+    const res = await uploadAvatar(file)
+    const nextUrl = res.url
+    avatarPreviewUrl.value = nextUrl
+    local.value = { ...local.value, avatar_url: nextUrl }
+  } catch {
+    revokeAvatarPreview()
+  } finally {
+    avatarUploading.value = false
+  }
 }
 
 onBeforeUnmount(revokeAvatarPreview)
