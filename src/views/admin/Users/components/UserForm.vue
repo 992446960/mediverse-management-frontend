@@ -115,6 +115,7 @@
         <a-select
           v-model:value="formState.org_id"
           :placeholder="t('user.org')"
+          :disabled="lockOrg"
           allow-clear
           show-search
           :filter-option="filterOption"
@@ -129,6 +130,7 @@
         <a-select
           v-model:value="formState.dept_id"
           :placeholder="t('user.dept')"
+          :disabled="lockDept"
           allow-clear
           show-search
           :filter-option="filterOption"
@@ -172,13 +174,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, onMounted } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
 import { useAuthStore } from '@/stores/auth'
 import type { FormInstance } from 'ant-design-vue'
-import { getOrganizations } from '@/api/organizations'
-import { getDepartments } from '@/api/departments'
+import { useOrgDeptFromTree } from '@/composables/useOrgDeptFromTree'
 import type { UserListItem } from '@/types/user'
 import type { CreateUserPayload, UpdateUserPayload } from '@/types/user'
 import type { UserRole } from '@/types/auth'
@@ -187,6 +188,7 @@ import type { Department } from '@/types/department'
 
 const { t } = useI18n()
 const authStore = useAuthStore()
+const { getOrgOptions, getDeptOptions } = useOrgDeptFromTree()
 
 const ROLE_LABEL_KEYS: Record<UserRole, string> = {
   sysadmin: 'user.roleSysadmin',
@@ -224,8 +226,8 @@ const emit = defineEmits<{
 
 const isEdit = computed(() => !!props.initialRecord?.id)
 
-/** 科室管理员：机构+科室均锁定，且不展示角色项 */
-const lockOrg = computed(() => authStore.isDeptAdmin)
+/** 科室管理员：机构+科室均锁定；机构管理员：仅机构锁定；系统管理员无限制 */
+const lockOrg = computed(() => authStore.isDeptAdmin || authStore.isOrgAdmin)
 const lockDept = computed(() => authStore.isDeptAdmin)
 const showRoleField = computed(() => !authStore.isDeptAdmin)
 
@@ -283,17 +285,11 @@ function filterOption(input: string, option: { children?: { [key: string]: unkno
 }
 
 async function loadOrgOptions() {
-  const res = await getOrganizations({ page: 1, page_size: 500 })
-  orgOptions.value = res.items
+  orgOptions.value = await getOrgOptions()
 }
 
 async function loadDeptOptions(orgId: string) {
-  if (!orgId) {
-    deptOptions.value = []
-    return
-  }
-  const res = await getDepartments({ org_id: orgId, page: 1, page_size: 500 })
-  deptOptions.value = res.items
+  deptOptions.value = orgId ? await getDeptOptions(orgId) : []
 }
 
 async function onOrgChange(orgId: string) {
@@ -303,17 +299,7 @@ async function onOrgChange(orgId: string) {
 }
 
 async function loadOrgOptionsForEdit() {
-  if (authStore.isSysAdmin) {
-    const res = await getOrganizations({ page: 1, page_size: 500 })
-    orgOptionsForEdit.value = res.items
-  }
-  else if (authStore.isOrgAdmin && authStore.currentOrgId) {
-    const res = await getOrganizations({ page: 1, page_size: 500 })
-    orgOptionsForEdit.value = res.items.filter((o) => o.id === authStore.currentOrgId)
-  }
-  else {
-    orgOptionsForEdit.value = []
-  }
+  orgOptionsForEdit.value = await getOrgOptions()
 }
 
 watch(
@@ -321,19 +307,30 @@ watch(
   async ([open, record, defaultOrgId, defaultDeptId]) => {
     if (open) {
       if (record) {
+        const orgId = authStore.isDeptAdmin
+          ? (authStore.currentOrgId ?? record.org_id)
+          : (authStore.isOrgAdmin ? (authStore.currentOrgId ?? record.org_id) : record.org_id)
+        const deptId = authStore.isDeptAdmin
+          ? (authStore.currentDeptId ?? record.dept_id)
+          : record.dept_id
         formState.value = {
           username: record.username,
           real_name: record.real_name,
           password: '',
-          org_id: record.org_id,
-          dept_id: record.dept_id,
+          org_id: orgId,
+          dept_id: deptId,
           roles: [...record.roles],
           remark: record.remark ?? '',
           status: record.status,
         }
         await loadOrgOptionsForEdit()
-        await loadDeptOptions(record.org_id)
-        deptOptionsForEdit.value = deptOptions.value
+        await loadDeptOptions(orgId)
+        if (authStore.isDeptAdmin && authStore.currentDeptId) {
+          deptOptionsForEdit.value = deptOptions.value.filter((d) => d.id === authStore.currentDeptId)
+        }
+        else {
+          deptOptionsForEdit.value = deptOptions.value
+        }
       }
       else {
         const orgId = lockOrg.value ? (authStore.currentOrgId ?? '') : (defaultOrgId ?? '')
@@ -348,16 +345,11 @@ watch(
           remark: '',
           status: 'active',
         }
-        if (authStore.isSysAdmin) {
-          await loadOrgOptions()
-          if (orgId) await loadDeptOptions(orgId)
-        }
-        else if (authStore.isOrgAdmin && authStore.currentOrgId) {
-          await loadDeptOptions(authStore.currentOrgId)
-          if (!formState.value.org_id) formState.value.org_id = authStore.currentOrgId
-        }
-        else if (authStore.isDeptAdmin) {
-          if (authStore.currentOrgId) await loadDeptOptions(authStore.currentOrgId)
+        await loadOrgOptions()
+        if (orgId) await loadDeptOptions(orgId)
+        if (authStore.isOrgAdmin && !formState.value.org_id) formState.value.org_id = authStore.currentOrgId ?? ''
+        if (authStore.isDeptAdmin && authStore.currentDeptId) {
+          deptOptions.value = deptOptions.value.filter((d) => d.id === authStore.currentDeptId)
         }
         deptOptionsForEdit.value = []
         orgOptionsForEdit.value = []
@@ -367,10 +359,6 @@ watch(
   },
   { immediate: true }
 )
-
-onMounted(async () => {
-  if (authStore.isSysAdmin) await loadOrgOptions()
-})
 
 async function handleOk() {
   if (props.viewOnly) {

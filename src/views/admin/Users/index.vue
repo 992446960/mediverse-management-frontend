@@ -61,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
 import { message } from 'ant-design-vue'
@@ -81,6 +81,7 @@ import PageFilter from '@/components/PageFilter/index.vue'
 import PageTable from '@/components/PageTable/index.vue'
 import UserForm from './components/UserForm.vue'
 import { useAuthStore } from '@/stores/auth'
+import { useOrgDeptFromTree } from '@/composables/useOrgDeptFromTree'
 import { getDepartmentsTree } from '@/api/departments'
 import {
   getUsers,
@@ -195,11 +196,14 @@ const assignableRoles = computed<UserRole[]>(() => {
   return ['user']
 })
 
+const { setTree: setOrgDeptTree, clearCache: clearOrgDeptCache } = useOrgDeptFromTree()
+
 async function loadTree() {
   treeLoading.value = true
   try {
     const list = await getDepartmentsTree()
     rawTree.value = list
+    setOrgDeptTree(list)
     const deptMap = new Map<string, string>()
     const orgNameMap = new Map<string, string>()
     list
@@ -382,6 +386,7 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
             ) => void,
           },
           {
+            text: t('status.inactive'),
             dynamicText: (row) =>
               (row.status === 'active' ? t('status.inactive') : t('status.active')),
             dynamicIcon: (row) => (row.status === 'active' ? StopOutlined : CheckCircleOutlined),
@@ -455,7 +460,8 @@ watch(
       tableData.value = []
       total.value = 0
     }
-  }
+  },
+  { immediate: true }
 )
 
 // ----- 表单与操作 -----
@@ -540,6 +546,10 @@ function handleToggleStatus(record: UserListItem) {
 }
 
 onMounted(() => {
-  if (showTree.value) loadTree()
+  loadTree()
+})
+
+onBeforeUnmount(() => {
+  clearOrgDeptCache()
 })
 </script>
