@@ -6,10 +6,42 @@ import type {
   FileListParams,
   FileStatusResponse,
   CreateDirectoryPayload,
+  UploadFileResult,
 } from '@/types/knowledge'
 import type { PaginatedData } from '@/types/api'
+import type { AxiosRequestConfig } from 'axios'
 
 const BASE_URL = '/knowledge'
+
+/**
+ * 单文件上传。FormData 仅 append 一个 file，可选 dir_id。
+ * 响应 data 可能是单对象或单元素数组，统一解析为 UploadFileResult。
+ */
+export function uploadFile(
+  ownerType: OwnerType,
+  ownerId: string,
+  file: File,
+  dirId?: string,
+  config?: AxiosRequestConfig
+): Promise<UploadFileResult> {
+  if (!(file instanceof File)) {
+    return Promise.reject(new Error('uploadFile requires a native File object'))
+  }
+  const form = new FormData()
+  form.append('file', file)
+  if (dirId) form.append('dir_id', dirId)
+  return request
+    .post<UploadFileResult | UploadFileResult[]>(
+      `${BASE_URL}/${ownerType}/${ownerId}/files`,
+      form,
+      config
+    )
+    .then((data) => {
+      const one = Array.isArray(data) ? data[0] : data
+      if (!one) throw new Error('Upload response empty')
+      return one
+    })
+}
 
 /**
  * 获取目录树

@@ -1,6 +1,6 @@
 import { http, HttpResponse, delay } from 'msw'
 import { mockDirectories, mockFiles, FILE_STATUS_STEPS } from '../data/knowledge'
-import type { FileStatus, DirectoryNode, FileListItem } from '@/types/knowledge'
+import type { DirectoryNode, FileListItem } from '@/types/knowledge'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 
@@ -53,6 +53,73 @@ export const knowledgeHandlers = [
       message: 'ok',
       data: newDir,
     })
+  }),
+
+  // 上传文件（单文件，FormData: file + 可选 dir_id）
+  http.post(`${API_BASE}/knowledge/:ownerType/:ownerId/files`, async ({ request }) => {
+    try {
+      const formData = await request.formData()
+      const file = (formData.get('file') ?? formData.get('files')) as File | FileList | null
+      const rawFile = file instanceof FileList ? file[0] : file
+      const dirId = (formData.get('dir_id') as string) || ''
+
+      if (!rawFile || !(rawFile instanceof File)) {
+        return HttpResponse.json({ code: 40001, message: 'Missing file', data: null }, { status: 200 })
+      }
+
+    const id = `file_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
+    const fileType = (rawFile.name.split('.').pop() || 'bin').toLowerCase()
+    let dirName = '未分类'
+    if (dirId) {
+      const findDir = (nodes: typeof mutableDirectories): string | null => {
+        for (const n of nodes) {
+          if (n.id === dirId) return n.name
+          if (n.children?.length) {
+            const found = findDir(n.children)
+            if (found) return found
+          }
+        }
+        return null
+      }
+      dirName = findDir(mutableDirectories) ?? dirName
+    }
+
+    const newItem: FileListItem = {
+      id,
+      file_name: rawFile.name,
+      file_type: fileType,
+      file_size: rawFile.size,
+      dir_id: dirId,
+      dir_name: dirName,
+      status: 'uploading',
+      error_msg: null,
+      auto_category_suggestion: null,
+      auto_category_name: null,
+      knowledge_card_count: 0,
+      created_by: 'u_doctor_001',
+      created_by_name: '北京协和医院',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
+    mutableFiles.push(newItem)
+    await delay(200)
+    return HttpResponse.json({
+      code: 0,
+      message: 'ok',
+      data: [
+        {
+          id: newItem.id,
+          file_name: newItem.file_name,
+          file_size: newItem.file_size,
+          status: newItem.status,
+          created_at: newItem.created_at,
+        },
+      ],
+    })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Upload failed'
+      return HttpResponse.json({ code: 50001, message, data: null }, { status: 200 })
+    }
   }),
 
   // 查询文件列表
@@ -110,11 +177,9 @@ export const knowledgeHandlers = [
     // 模拟状态推进
     if (file.status !== 'done' && file.status !== 'failed') {
       const currentIndex = FILE_STATUS_STEPS.indexOf(file.status)
-      if (currentIndex < FILE_STATUS_STEPS.length - 1) {
-        // 50% 概率推进到下一步
-        if (Math.random() > 0.5) {
-          file.status = FILE_STATUS_STEPS[currentIndex + 1]
-        }
+      if (currentIndex >= 0 && currentIndex < FILE_STATUS_STEPS.length - 1) {
+        const next = FILE_STATUS_STEPS[currentIndex + 1]
+        if (next && Math.random() > 0.5) file.status = next
       }
     }
 

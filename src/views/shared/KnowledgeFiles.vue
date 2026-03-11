@@ -45,14 +45,31 @@
         </PageTable>
       </div>
     </section>
+
+    <a-modal
+      v-model:open="uploadModalVisible"
+      :title="t('knowledge.uploadFile')"
+      :footer="null"
+      width="560px"
+      :mask-closable="false"
+      @cancel="onUploadModalCancel"
+    >
+      <FileUploader
+        :owner-type="props.ownerType"
+        :owner-id="props.ownerId"
+        :queue="uploadQueue"
+        :tree-data="treeData"
+        @success="onUploadSuccess"
+      />
+    </a-modal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
-import { message } from 'ant-design-vue'
+import { message, Modal } from 'ant-design-vue'
 import {
   SearchOutlined,
   ReloadOutlined,
@@ -62,10 +79,12 @@ import {
   UploadOutlined,
 } from '@ant-design/icons-vue'
 import { DirectoryTree } from '@/components/DirectoryTree'
+import FileUploader from '@/components/FileUploader/index.vue'
 import PageHead from '@/components/PageHead/index.vue'
 import PageFilter from '@/components/PageFilter/index.vue'
 import PageTable from '@/components/PageTable/index.vue'
 import { useFileStatusPoll } from '@/composables/useFileStatusPoll'
+import type { UploadQueueItem } from '@/components/FileUploader/types'
 import {
   getDirectoryTree,
   createDirectory,
@@ -146,22 +165,82 @@ function getStatusLabel(status: FileStatus): string {
   return FILE_STATUS_CONFIG[status]?.label ?? status
 }
 
-// ----- 右侧 PageHead / PageFilter / PageTable -----
-function handleUpload() {
-  // TODO: 文件上传
+// ----- 上传队列与弹窗 -----
+const uploadQueue = ref<UploadQueueItem[]>([])
+const uploadModalVisible = ref(false)
+
+const uploadingCount = computed(() =>
+  uploadQueue.value.filter((i) => i.status === 'pending' || i.status === 'uploading').length
+)
+
+function openUploadModal() {
+  uploadModalVisible.value = true
 }
 
-const headConf = computed<PageHeadConfig>(() => ({
-  title: props.title,
-  btns: [
+function onUploadModalCancel() {
+  const n = uploadingCount.value
+  if (n > 0) {
+    Modal.confirm({
+      title: t('knowledge.uploadCloseConfirmTitle'),
+      content: t('knowledge.uploadCloseConfirmContent', { count: n }),
+      okText: t('common.confirm'),
+      cancelText: t('common.cancel'),
+      onOk: () => {
+        uploadModalVisible.value = false
+      },
+    })
+  } else {
+    uploadModalVisible.value = false
+  }
+}
+
+function onUploadSuccess() {
+  loadData()
+  startPoll()
+  message.success(t('knowledge.uploadSuccess'))
+}
+
+function handleBeforeUnload(e: BeforeUnloadEvent) {
+  if (uploadingCount.value > 0) {
+    e.preventDefault()
+    e.returnValue = ''
+  }
+}
+
+onBeforeUnmount(() => {
+  window.removeEventListener('beforeunload', handleBeforeUnload)
+})
+
+watch(uploadingCount, (count) => {
+  if (count > 0) {
+    window.addEventListener('beforeunload', handleBeforeUnload)
+  } else {
+    window.removeEventListener('beforeunload', handleBeforeUnload)
+  }
+}, { immediate: true })
+
+const headConf = computed<PageHeadConfig>(() => {
+  const btns: PageHeadConfig['btns'] = [
     {
       text: t('knowledge.uploadFile'),
       type: 'primary',
       icon: UploadOutlined,
-      handle: handleUpload,
+      handle: openUploadModal,
     },
-  ],
-}))
+  ]
+  if (uploadingCount.value > 0) {
+    btns.push({
+      text: t('knowledge.uploadingCount', { count: uploadingCount.value }),
+      type: 'link',
+      show: true,
+      handle: openUploadModal,
+    })
+  }
+  return {
+    title: props.title,
+    btns,
+  }
+})
 
 const filterConf = computed<PageFilterConfig>(() => ({
   filterForm: [

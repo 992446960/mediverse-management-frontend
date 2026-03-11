@@ -21,16 +21,21 @@ function fetchAdapter(config: InternalAxiosRequestConfig): Promise<AxiosResponse
     ? setTimeout(() => controller.abort(), config.timeout)
     : undefined
   const headers = new Headers(config.headers as Record<string, string>)
-  if (!headers.has('Content-Type')) {
+  const isFormData = config.data instanceof FormData
+  if (!isFormData && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json')
   }
-  // config.data 可能已被 axios 的 transformRequest 序列化为字符串，避免二次 JSON.stringify
+  if (isFormData && headers.has('Content-Type')) {
+    headers.delete('Content-Type')
+  }
   const body =
     config.data == null
       ? undefined
-      : typeof config.data === 'string'
-        ? config.data
-        : JSON.stringify(config.data)
+      : isFormData
+        ? (config.data as FormData)
+        : typeof config.data === 'string'
+          ? config.data
+          : JSON.stringify(config.data)
 
   return fetch(url, {
     method: config.method?.toUpperCase() || 'GET',
@@ -91,6 +96,10 @@ api.interceptors.request.use(
     const token = getToken()
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`
+    }
+    // 上传为 FormData 时不要带 Content-Type，由浏览器/XHR 自动设置 multipart/form-data; boundary=...
+    if (config.data instanceof FormData && config.headers) {
+      delete config.headers['Content-Type']
     }
     return config
   },

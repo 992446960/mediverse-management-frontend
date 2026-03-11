@@ -14,6 +14,15 @@ export interface DirectoryNode {
   children?: DirectoryNode[]
 }
 
+/** 上传文件接口返回（单文件上传响应） */
+export interface UploadFileResult {
+  id: string
+  file_name: string
+  file_size: number
+  status: FileStatus
+  created_at: string
+}
+
 /** 文件列表项 */
 export interface FileListItem {
   id: string
