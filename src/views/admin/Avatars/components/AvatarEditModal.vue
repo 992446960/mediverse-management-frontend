@@ -31,12 +31,39 @@
           />
         </a-form-item>
 
-        <a-form-item :label="t('avatar.avatarUrl')" name="avatar_url">
-          <a-input
-            v-model:value="form.avatar_url"
-            :placeholder="t('avatar.avatarUrl')"
-            allow-clear
-          />
+        <a-form-item :label="t('avatar.avatar')" name="avatar_url">
+          <div class="edit-avatar-wrap flex flex-col gap-2">
+            <input
+              ref="avatarFileRef"
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              class="hidden"
+              aria-hidden="true"
+              @change="onAvatarFileChange"
+            />
+            <div
+              class="edit-avatar-upload-card w-20 h-20 rounded-lg bg-gray-50 dark:bg-gray-700 flex flex-col items-center justify-center cursor-pointer border border-dashed border-gray-300 dark:border-gray-600 hover:border-[#0ea5e9] hover:text-[#0ea5e9] transition-all overflow-hidden shrink-0"
+              :class="{ 'pointer-events-none opacity-70': avatarUploading }"
+              @click="triggerAvatarFileInput"
+            >
+              <a-spin v-if="avatarUploading" />
+              <img
+                v-else-if="form.avatar_url"
+                :src="form.avatar_url"
+                :alt="t('avatar.avatar')"
+                class="w-full h-full object-cover"
+              />
+              <template v-else>
+                <PlusOutlined class="text-gray-400 text-lg" />
+                <span class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{
+                  t('avatar.wizard.avatarUpload')
+                }}</span>
+              </template>
+            </div>
+            <p class="text-xs text-gray-400">
+              {{ t('avatar.wizard.avatarSizeHint') + '，' + t('avatar.wizard.avatarFormatHint') }}
+            </p>
+          </div>
         </a-form-item>
 
         <a-form-item :label="t('avatar.bio')" name="bio">
@@ -101,9 +128,13 @@
 import { computed, ref, watch } from 'vue'
 import { message } from 'ant-design-vue'
 import type { FormInstance } from 'ant-design-vue'
+import { PlusOutlined } from '@ant-design/icons-vue'
 import { useI18n } from 'vue-i18n'
 import { getAvatarDetail, updateAvatar } from '@/api/avatars'
+import { uploadAvatar } from '@/api/upload'
 import type { Avatar, AvatarStyle, UpdateAvatarParams } from '@/types/avatar'
+
+const AVATAR_ACCEPT = 'image/jpeg,image/png,image/gif,image/webp'
 
 const { t } = useI18n()
 
@@ -123,6 +154,8 @@ const loading = ref(false)
 const submitLoading = ref(false)
 const avatar = ref<Avatar | null>(null)
 const formRef = ref<FormInstance>()
+const avatarFileRef = ref<HTMLInputElement | null>(null)
+const avatarUploading = ref(false)
 
 interface EditFormState {
   name: string
@@ -149,6 +182,26 @@ function formatScope(record: Avatar): string {
   if (record.dept_name) parts.push(record.dept_name)
   if (record.user_name) parts.push(record.user_name)
   return parts.join(' / ')
+}
+
+function triggerAvatarFileInput() {
+  avatarFileRef.value?.click()
+}
+
+async function onAvatarFileChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (!file) return
+  const type = file.type
+  if (!AVATAR_ACCEPT.split(',').map((s) => s.trim()).includes(type)) return
+  avatarUploading.value = true
+  try {
+    const res = await uploadAvatar(file)
+    form.value = { ...form.value, avatar_url: res.url }
+  } finally {
+    avatarUploading.value = false
+  }
 }
 
 function fillFromAvatar(a: Avatar) {
@@ -236,3 +289,10 @@ async function onSubmit() {
   }
 }
 </script>
+
+<style scoped>
+.edit-avatar-upload-card {
+  min-width: 80px;
+  min-height: 80px;
+}
+</style>
