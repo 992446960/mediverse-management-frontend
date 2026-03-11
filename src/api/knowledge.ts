@@ -21,7 +21,11 @@ export function getDirectoryTree(ownerType: OwnerType, ownerId: string) {
 /**
  * 新建目录
  */
-export function createDirectory(ownerType: OwnerType, ownerId: string, payload: CreateDirectoryPayload) {
+export function createDirectory(
+  ownerType: OwnerType,
+  ownerId: string,
+  payload: CreateDirectoryPayload
+) {
   return request.post<DirectoryNode>(`${BASE_URL}/${ownerType}/${ownerId}/directories`, payload)
 }
 
@@ -29,14 +33,18 @@ export function createDirectory(ownerType: OwnerType, ownerId: string, payload: 
  * 查询文件列表
  */
 export function getFileList(ownerType: OwnerType, ownerId: string, params: FileListParams) {
-  return request.get<PaginatedData<FileListItem>>(`${BASE_URL}/${ownerType}/${ownerId}/files`, { params })
+  return request.get<PaginatedData<FileListItem>>(`${BASE_URL}/${ownerType}/${ownerId}/files`, {
+    params,
+  })
 }
 
 /**
  * 查询文件处理状态（轮询）
  */
 export function getFileStatus(ownerType: OwnerType, ownerId: string, fileId: string) {
-  return request.get<FileStatusResponse>(`${BASE_URL}/${ownerType}/${ownerId}/files/${fileId}/status`)
+  return request.get<FileStatusResponse>(
+    `${BASE_URL}/${ownerType}/${ownerId}/files/${fileId}/status`
+  )
 }
 
 /**

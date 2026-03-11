@@ -174,21 +174,24 @@ export const knowledgeHandlers = [
   }),
 
   // 下载文件
-  http.get(`${API_BASE}/knowledge/:ownerType/:ownerId/files/:fileId/download`, async ({ params }) => {
-    const { fileId } = params
-    const file = mutableFiles.find((f) => f.id === fileId)
+  http.get(
+    `${API_BASE}/knowledge/:ownerType/:ownerId/files/:fileId/download`,
+    async ({ params }) => {
+      const { fileId } = params
+      const file = mutableFiles.find((f) => f.id === fileId)
 
-    if (!file) {
-      return HttpResponse.json({ code: 404, message: 'File not found', data: null })
+      if (!file) {
+        return HttpResponse.json({ code: 404, message: 'File not found', data: null })
+      }
+
+      // 模拟返回一个简单的 Blob 数据
+      const blob = new Blob(['Mock file content for ' + file.file_name], { type: 'text/plain' })
+      return new HttpResponse(blob, {
+        headers: {
+          'Content-Type': 'application/octet-stream',
+          'Content-Disposition': `attachment; filename="${encodeURIComponent(file.file_name)}"`,
+        },
+      })
     }
-
-    // 模拟返回一个简单的 Blob 数据
-    const blob = new Blob(['Mock file content for ' + file.file_name], { type: 'text/plain' })
-    return new HttpResponse(blob, {
-      headers: {
-        'Content-Type': 'application/octet-stream',
-        'Content-Disposition': `attachment; filename="${encodeURIComponent(file.file_name)}"`,
-      },
-    })
-  }),
+  ),
 ]

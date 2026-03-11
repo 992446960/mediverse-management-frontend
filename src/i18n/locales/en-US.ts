@@ -146,10 +146,12 @@ export default {
     statusFailed: 'Failed',
     retry: 'Retry',
     preview: 'Preview',
+    uploadFile: 'Upload File',
     download: 'Download',
     downloadFailed: 'Download Failed',
     noAvatarTitle: 'No Avatar Created',
-    noAvatarSubTitle: 'Please create your digital doctor avatar before managing personal knowledge base.',
+    noAvatarSubTitle:
+      'Please create your digital doctor avatar before managing personal knowledge base.',
     goToCreateAvatar: 'Create Avatar',
   },
   theme: {

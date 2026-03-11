@@ -59,6 +59,7 @@ import {
   EyeOutlined,
   DeleteOutlined,
   DownloadOutlined,
+  UploadOutlined,
 } from '@ant-design/icons-vue'
 import { DirectoryTree } from '@/components/DirectoryTree'
 import PageHead from '@/components/PageHead/index.vue'
@@ -146,10 +147,20 @@ function getStatusLabel(status: FileStatus): string {
 }
 
 // ----- 右侧 PageHead / PageFilter / PageTable -----
+function handleUpload() {
+  // TODO: 文件上传
+}
+
 const headConf = computed<PageHeadConfig>(() => ({
   title: props.title,
-  // 上传入口：无上传 API 时可预留 btns: [] 或后续接入
-  btns: [],
+  btns: [
+    {
+      text: t('knowledge.uploadFile'),
+      type: 'primary',
+      icon: UploadOutlined,
+      handle: handleUpload,
+    },
+  ],
 }))
 
 const filterConf = computed<PageFilterConfig>(() => ({
@@ -280,15 +291,13 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
             text: t('common.delete'),
             icon: DeleteOutlined,
             color: 'danger',
-            handle: (row: Record<string, unknown>) =>
-              handleDelete(row as unknown as FileListItem),
+            handle: (row: Record<string, unknown>) => handleDelete(row as unknown as FileListItem),
           },
           {
             text: t('knowledge.retry'),
             icon: ReloadOutlined,
             btnIsShow: (row) => (row.status as string) === 'failed',
-            handle: (row: Record<string, unknown>) =>
-              handleRetry(row as unknown as FileListItem),
+            handle: (row: Record<string, unknown>) => handleRetry(row as unknown as FileListItem),
           },
         ],
       },
@@ -307,8 +316,7 @@ async function loadData() {
     statusVal === 'processing' || statusVal === 'done' || statusVal === 'failed'
       ? (statusVal as FileStatus)
       : undefined
-  const dirId =
-    selectedDirId.value === '__all__' ? undefined : selectedDirId.value
+  const dirId = selectedDirId.value === '__all__' ? undefined : selectedDirId.value
 
   loading.value = true
   try {
@@ -341,9 +349,7 @@ const { startPoll } = useFileStatusPoll(props.ownerType, props.ownerId, tableDat
 watch(
   tableData,
   (newList) => {
-    const hasActive = newList.some(
-      (f) => f.status !== 'done' && f.status !== 'failed'
-    )
+    const hasActive = newList.some((f) => f.status !== 'done' && f.status !== 'failed')
     if (hasActive) startPoll()
   },
   { deep: true }

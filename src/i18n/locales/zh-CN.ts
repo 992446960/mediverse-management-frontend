@@ -146,6 +146,7 @@ export default {
     statusFailed: '失败',
     retry: '重试',
     preview: '预览',
+    uploadFile: '文件上传',
     download: '下载',
     downloadFailed: '下载失败',
     noAvatarTitle: '尚未创建分身',

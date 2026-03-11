@@ -90,7 +90,7 @@ uploading → parsing → extracting → indexing → done
 | 支持格式 | `.pdf`, `.txt`, `.csv`, `.json`, `.md`, `.xlsx`, `.docx` |
 | 单文件大小 | ≤ 50MB |
 | 上传方式 | 拖拽 + 点击选择 |
-| 并发上传 | 支持多文件同时上传 |
+| 并发上传 | 支持多文件同时上传最多20 |
 | 进度展示 | 每个文件独立进度条 |
 
 ---
