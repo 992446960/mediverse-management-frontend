@@ -26,6 +26,12 @@ export const useAuthStore = defineStore(
   const isDeptAdmin = computed(() => currentRoles.value.includes('dept_admin'))
   const currentOrgId = computed(() => user.value?.org_id || null)
   const currentDeptId = computed(() => user.value?.dept_id || null)
+  /** 是否显示「我的工作台」 */
+  const hasExpertAvatar = computed(() => user.value?.has_expert_avatar ?? false)
+  /** 是否显示「科室工作台」 */
+  const hasDeptAvatar = computed(() => user.value?.has_dept_avatar ?? false)
+  /** 是否显示「机构工作台」 */
+  const hasOrgAvatar = computed(() => user.value?.has_org_avatar ?? false)
 
   async function login(params: LoginParams) {
     const res = await authApi.login(params)
@@ -78,6 +84,9 @@ export const useAuthStore = defineStore(
     isDeptAdmin,
     currentOrgId,
     currentDeptId,
+    hasExpertAvatar,
+    hasDeptAvatar,
+    hasOrgAvatar,
     login,
     logout,
     clearAuthOnly,

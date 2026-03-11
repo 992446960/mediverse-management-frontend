@@ -1,7 +1,19 @@
 import { http, HttpResponse } from 'msw'
 import { users } from '../data/users'
+import type { UserListItem } from '@/types/user'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1'
+
+/** 为登录/me 返回的用户注入 has_*_avatar（与 API 设计一致，mock 按角色推导） */
+function withWorkbenchAvatars(u: UserListItem) {
+  const roles = u.roles || []
+  return {
+    ...u,
+    has_expert_avatar: true,
+    has_dept_avatar: roles.includes('sysadmin') || roles.includes('org_admin') || roles.includes('dept_admin'),
+    has_org_avatar: roles.includes('sysadmin') || roles.includes('org_admin'),
+  }
+}
 
 export const authHandlers = [
   // Login
@@ -41,8 +53,9 @@ export const authHandlers = [
       data: {
         access_token: `mock_access_token_${user.id}`,
         refresh_token: `mock_refresh_token_${user.id}`,
-        expires_in: 3600,
-        user,
+        token_type: 'Bearer',
+        expires_in: 28800,
+        user: withWorkbenchAvatars(user),
       },
     })
   }),
@@ -84,7 +97,8 @@ export const authHandlers = [
       message: 'Success',
       data: {
         access_token: `mock_access_token_${user.id}_refreshed`,
-        expires_in: 3600,
+        token_type: 'Bearer',
+        expires_in: 28800,
       },
     })
   }),
@@ -118,7 +132,7 @@ export const authHandlers = [
     return HttpResponse.json({
       code: 0,
       message: 'Success',
-      data: user,
+      data: withWorkbenchAvatars(user),
     })
   }),
 

@@ -39,6 +39,9 @@ export function normalizeAuthUser(raw: unknown): User {
   const is_active =
     typeof o.is_active === 'boolean' ? o.is_active : status === 'active'
   const now = new Date().toISOString()
+  const has_expert_avatar = o.has_expert_avatar === true
+  const has_dept_avatar = o.has_dept_avatar === true
+  const has_org_avatar = o.has_org_avatar === true
   return {
     id,
     username,
@@ -51,6 +54,10 @@ export function normalizeAuthUser(raw: unknown): User {
     dept_id: typeof o.dept_id === 'string' ? o.dept_id : undefined,
     is_active,
     must_change_pwd: o.must_change_pwd === true,
+    has_avatar: o.has_avatar === true,
+    has_expert_avatar,
+    has_dept_avatar,
+    has_org_avatar,
     last_login_at:
       typeof o.last_login_at === 'string' ? o.last_login_at : undefined,
     created_at: typeof o.created_at === 'string' ? o.created_at : now,

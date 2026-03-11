@@ -13,6 +13,12 @@ export interface User {
   is_active: boolean
   must_change_pwd: boolean
   has_avatar: boolean
+  /** 是否显示「我的工作台」 */
+  has_expert_avatar: boolean
+  /** 是否显示「科室工作台」 */
+  has_dept_avatar: boolean
+  /** 是否显示「机构工作台」 */
+  has_org_avatar: boolean
   last_login_at?: string
   created_at: string
   updated_at: string
@@ -27,6 +33,7 @@ export interface LoginParams {
 export interface LoginResponse {
   access_token: string
   refresh_token: string
+  token_type?: string
   expires_in: number
   user: User
 }

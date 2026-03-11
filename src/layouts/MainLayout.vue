@@ -112,11 +112,16 @@ const breadcrumbs = computed(() => {
   return currentRoute.matched.filter((item) => item.meta && item.meta.title)
 })
 
-// Filter menu items based on permissions (sysadmin 等角色依赖 user.role，由 normalizeAuthUser 保证)
+// Filter menu items: 工作台按 user.has_*_avatar，其余按 requiredRoles
 // skipRoleCheck：开发环境 sysadmin 时不再按角色过滤，展示除个人工作台外的全部菜单
 const filterMenu = (items: any[], skipRoleCheck = false): ItemType[] => {
   return items
     .filter((item) => {
+      if (item.showWhenAvatar) {
+        if (item.showWhenAvatar === 'expert') return authStore.hasExpertAvatar
+        if (item.showWhenAvatar === 'dept') return authStore.hasDeptAvatar
+        if (item.showWhenAvatar === 'org') return authStore.hasOrgAvatar
+      }
       if (!skipRoleCheck && item.requiredRoles && !checkRoles(item.requiredRoles)) {
         return false
       }

@@ -14,12 +14,17 @@ import {
 } from '@ant-design/icons-vue';
 import { h } from 'vue';
 
+/** 工作台显示条件：由登录接口 user.has_*_avatar 决定 */
+export type WorkbenchAvatarKind = 'expert' | 'dept' | 'org'
+
 export interface MenuConfig {
   key: string;
   label: string; // i18n key
   icon?: () => VNode;
   path?: string;
   requiredRoles?: UserRole[];
+  /** 存在时按 user.has_*_avatar 显示工作台，不按 requiredRoles */
+  showWhenAvatar?: WorkbenchAvatarKind;
   children?: MenuConfig[];
 }
 
@@ -34,6 +39,7 @@ export const menuConfig: MenuConfig[] = [
     key: 'my',
     label: 'menu.myWorkbench',
     icon: () => h(UserOutlined),
+    showWhenAvatar: 'expert',
     children: [
       { key: 'my-files', label: 'menu.files', path: '/my/files' },
       { key: 'my-knowledge', label: 'menu.knowledgeCards', path: '/my/knowledge-cards' },
@@ -44,7 +50,7 @@ export const menuConfig: MenuConfig[] = [
     key: 'dept',
     label: 'menu.deptWorkbench',
     icon: () => h(TeamOutlined),
-    requiredRoles: ['dept_admin'],
+    showWhenAvatar: 'dept',
     children: [
       { key: 'dept-files', label: 'menu.files', path: '/dept/files' },
       { key: 'dept-knowledge', label: 'menu.knowledgeCards', path: '/dept/knowledge-cards' },
@@ -55,7 +61,7 @@ export const menuConfig: MenuConfig[] = [
     key: 'org',
     label: 'menu.orgWorkbench',
     icon: () => h(BankOutlined),
-    requiredRoles: ['org_admin'],
+    showWhenAvatar: 'org',
     children: [
       { key: 'org-files', label: 'menu.files', path: '/org/files' },
       { key: 'org-knowledge', label: 'menu.knowledgeCards', path: '/org/knowledge-cards' },
