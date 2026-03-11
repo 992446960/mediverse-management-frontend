@@ -93,19 +93,37 @@
       <a-form-item :label="t('user.realName')" name="real_name">
         <a-input v-model:value="formState.real_name" :placeholder="t('user.realName')" :maxlength="50" show-count />
       </a-form-item>
-      <a-form-item :label="t('user.phone')" name="phone">
-        <a-input v-model:value="formState.phone" :placeholder="t('user.phone')" />
+      <a-form-item v-if="!isEdit" :label="t('user.initialPasswordLabel')" name="password">
+        <a-input-password
+          v-model:value="formState.password"
+          :placeholder="t('user.passwordOptionalPlaceholder')"
+          autocomplete="new-password"
+        />
       </a-form-item>
-      <a-form-item :label="t('user.email')" name="email">
-        <a-input v-model:value="formState.email" :placeholder="t('user.email')" />
-      </a-form-item>
-      <a-form-item v-if="!isEdit" :label="t('user.roles')" name="roles">
+      <a-form-item v-if="!isEdit && showRoleField" :label="t('user.roles')" name="roles">
         <a-checkbox-group v-model:value="formState.roles" class="flex flex-col gap-2">
-          <a-checkbox value="sysadmin">{{ t('user.roleSysadmin') }}</a-checkbox>
-          <a-checkbox value="org_admin">{{ t('user.roleOrgAdmin') }}</a-checkbox>
-          <a-checkbox value="dept_admin">{{ t('user.roleDeptAdmin') }}</a-checkbox>
-          <a-checkbox value="user">{{ t('user.roleUser') }}</a-checkbox>
+          <a-checkbox
+            v-for="r in assignableRoles"
+            :key="r"
+            :value="r"
+          >
+            {{ t(ROLE_LABEL_KEYS[r] ?? r) }}
+          </a-checkbox>
         </a-checkbox-group>
+      </a-form-item>
+      <a-form-item v-if="isEdit" :label="t('user.org')" name="org_id">
+        <a-select
+          v-model:value="formState.org_id"
+          :placeholder="t('user.org')"
+          allow-clear
+          show-search
+          :filter-option="filterOption"
+          @change="onOrgChange"
+        >
+          <a-select-option v-for="o in orgOptionsForEdit" :key="o.id" :value="o.id">
+            {{ o.name }}
+          </a-select-option>
+        </a-select>
       </a-form-item>
       <a-form-item v-if="isEdit" :label="t('user.dept')" name="dept_id">
         <a-select
@@ -119,6 +137,32 @@
             {{ d.name }}
           </a-select-option>
         </a-select>
+      </a-form-item>
+      <a-form-item v-if="isEdit && showRoleField" :label="t('user.roles')" name="roles">
+        <a-checkbox-group v-model:value="formState.roles" class="flex flex-col gap-2">
+          <a-checkbox
+            v-for="r in assignableRoles"
+            :key="r"
+            :value="r"
+          >
+            {{ t(ROLE_LABEL_KEYS[r] ?? r) }}
+          </a-checkbox>
+        </a-checkbox-group>
+      </a-form-item>
+      <a-form-item :label="t('user.remark')" name="remark">
+        <a-textarea
+          v-model:value="formState.remark"
+          :placeholder="t('user.remark')"
+          :rows="2"
+          :maxlength="500"
+          show-count
+        />
+      </a-form-item>
+      <a-form-item :label="t('user.status')" name="status">
+        <a-radio-group v-model:value="formState.status">
+          <a-radio value="active">{{ t('status.active') }}</a-radio>
+          <a-radio value="inactive">{{ t('status.inactive') }}</a-radio>
+        </a-radio-group>
       </a-form-item>
     </a-form>
     <template v-if="viewOnly" #footer>
@@ -158,12 +202,11 @@ function formatCreatedAt(iso: string): string {
 interface Props {
   open: boolean
   initialRecord?: UserListItem | null
-  /** 仅查看详情（只读展示，无表单） */
   viewOnly?: boolean
-  /** 新增时默认机构 ID（来自左侧树选中） */
   defaultOrgId?: string
-  /** 新增时默认科室 ID（来自左侧树选中） */
   defaultDeptId?: string
+  /** 当前用户可分配的角色（科室管理员不展示角色项，不传则仅 user） */
+  assignableRoles?: UserRole[]
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -171,6 +214,7 @@ const props = withDefaults(defineProps<Props>(), {
   viewOnly: false,
   defaultOrgId: '',
   defaultDeptId: '',
+  assignableRoles: () => ['user'],
 })
 
 const emit = defineEmits<{
@@ -180,24 +224,27 @@ const emit = defineEmits<{
 
 const isEdit = computed(() => !!props.initialRecord?.id)
 
-/** 科室管理员：机构+科室均锁定 */
+/** 科室管理员：机构+科室均锁定，且不展示角色项 */
 const lockOrg = computed(() => authStore.isDeptAdmin)
 const lockDept = computed(() => authStore.isDeptAdmin)
+const showRoleField = computed(() => !authStore.isDeptAdmin)
 
 const formRef = ref<FormInstance>()
 const confirmLoading = ref(false)
 const orgOptions = ref<Organization[]>([])
+const orgOptionsForEdit = ref<Organization[]>([])
 const deptOptions = ref<Department[]>([])
 const deptOptionsForEdit = ref<Department[]>([])
 
 const formState = ref({
   username: '',
   real_name: '',
+  password: '',
   org_id: '',
   dept_id: '',
-  phone: '',
-  email: '',
   roles: ['user'] as UserRole[],
+  remark: '',
+  status: 'active' as 'active' | 'inactive',
 })
 
 const rules = computed(() => ({
@@ -209,47 +256,25 @@ const rules = computed(() => ({
     { required: true, message: t('user.realName') + ' ' + t('common.required'), trigger: 'blur' },
     { max: 50, message: t('common.max100'), trigger: 'blur' },
   ],
-  org_id: [{ required: !isEdit.value, message: t('user.org') + ' ' + t('common.required'), trigger: 'change' }],
-  dept_id: [{ required: !isEdit.value, message: t('user.dept') + ' ' + t('common.required'), trigger: 'change' }],
-  phone: [
-    {
-      validator: (_: unknown, val: string) => {
-        const v = val?.trim()
-        if (!v) return Promise.resolve()
-        if (!/^1[3-9]\d{9}$/.test(v)) return Promise.reject(new Error(t('user.phoneInvalid')))
-        return Promise.resolve()
-      },
-      trigger: 'blur',
-    },
-  ],
-  email: [
-    {
-      validator: (_: unknown, val: string) => {
-        const v = val?.trim()
-        if (!v) return Promise.resolve()
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return Promise.reject(new Error(t('user.emailInvalid')))
-        return Promise.resolve()
-      },
-      trigger: 'blur',
-    },
-  ],
-  roles: [
-    {
-      required: !isEdit.value,
-      type: 'array' as const,
-      min: 1,
-      message: t('user.roles') + ' ' + t('common.required'),
-      trigger: 'change',
-    },
-    {
-      validator: (_: unknown, val: UserRole[]) => {
-        if (isEdit.value) return Promise.resolve()
-        if (val?.includes('user')) return Promise.resolve()
-        return Promise.reject(new Error(t('user.roleUser') + ' ' + t('common.required')))
-      },
-      trigger: 'change',
-    },
-  ],
+  roles: showRoleField.value
+    ? [
+        {
+          required: !isEdit.value,
+          type: 'array' as const,
+          min: 1,
+          message: t('user.roles') + ' ' + t('common.required'),
+          trigger: 'change',
+        },
+        {
+          validator: (_: unknown, val: UserRole[]) => {
+            if (isEdit.value) return Promise.resolve()
+            if (val?.includes('user')) return Promise.resolve()
+            return Promise.reject(new Error(t('user.roleUser') + ' ' + t('common.required')))
+          },
+          trigger: 'change',
+        },
+      ]
+    : [],
 }))
 
 function filterOption(input: string, option: { children?: { [key: string]: unknown }[] }) {
@@ -271,9 +296,24 @@ async function loadDeptOptions(orgId: string) {
   deptOptions.value = res.items
 }
 
-function onOrgChange(orgId: string) {
+async function onOrgChange(orgId: string) {
   formState.value.dept_id = ''
-  loadDeptOptions(orgId)
+  await loadDeptOptions(orgId)
+  if (isEdit.value) deptOptionsForEdit.value = deptOptions.value
+}
+
+async function loadOrgOptionsForEdit() {
+  if (authStore.isSysAdmin) {
+    const res = await getOrganizations({ page: 1, page_size: 500 })
+    orgOptionsForEdit.value = res.items
+  }
+  else if (authStore.isOrgAdmin && authStore.currentOrgId) {
+    const res = await getOrganizations({ page: 1, page_size: 500 })
+    orgOptionsForEdit.value = res.items.filter((o) => o.id === authStore.currentOrgId)
+  }
+  else {
+    orgOptionsForEdit.value = []
+  }
 }
 
 watch(
@@ -284,12 +324,14 @@ watch(
         formState.value = {
           username: record.username,
           real_name: record.real_name,
+          password: '',
           org_id: record.org_id,
           dept_id: record.dept_id,
-          phone: record.phone ?? '',
-          email: record.email ?? '',
           roles: [...record.roles],
+          remark: record.remark ?? '',
+          status: record.status,
         }
+        await loadOrgOptionsForEdit()
         await loadDeptOptions(record.org_id)
         deptOptionsForEdit.value = deptOptions.value
       }
@@ -299,11 +341,12 @@ watch(
         formState.value = {
           username: '',
           real_name: '',
+          password: '',
           org_id: orgId,
           dept_id: deptId,
-          phone: '',
-          email: '',
           roles: ['user'],
+          remark: '',
+          status: 'active',
         }
         if (authStore.isSysAdmin) {
           await loadOrgOptions()
@@ -317,6 +360,7 @@ watch(
           if (authStore.currentOrgId) await loadDeptOptions(authStore.currentOrgId)
         }
         deptOptionsForEdit.value = []
+        orgOptionsForEdit.value = []
       }
       formRef.value?.clearValidate()
     }
@@ -339,23 +383,27 @@ async function handleOk() {
     if (isEdit.value && props.initialRecord) {
       const payload: UpdateUserPayload = {
         real_name: formState.value.real_name.trim(),
+        org_id: formState.value.org_id || undefined,
         dept_id: formState.value.dept_id || undefined,
-        phone: formState.value.phone?.trim() || undefined,
-        email: formState.value.email?.trim() || undefined,
+        roles: showRoleField.value && formState.value.roles.length ? formState.value.roles : undefined,
+        remark: formState.value.remark?.trim() || undefined,
+        status: formState.value.status,
       }
       emit('submit', payload)
     }
     else {
+      const roles: UserRole[] = showRoleField.value && formState.value.roles.length ? formState.value.roles : ['user']
+      if (!roles.includes('user')) roles.push('user')
       const payload: CreateUserPayload = {
         username: formState.value.username.trim(),
         real_name: formState.value.real_name.trim(),
-        org_id: formState.value.org_id,
-        dept_id: formState.value.dept_id,
-        phone: formState.value.phone?.trim() || undefined,
-        email: formState.value.email?.trim() || undefined,
-        roles: formState.value.roles.length ? formState.value.roles : ['user'],
+        password: formState.value.password?.trim() || undefined,
+        org_id: formState.value.org_id || undefined,
+        dept_id: formState.value.dept_id || undefined,
+        roles,
+        remark: formState.value.remark?.trim() || undefined,
+        status: formState.value.status,
       }
-      if (!payload.roles.includes('user')) payload.roles.push('user')
       emit('submit', payload)
     }
     emit('update:open', false)

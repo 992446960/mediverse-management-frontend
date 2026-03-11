@@ -46,7 +46,6 @@
                   :danger="getBtnDanger(m, record)"
                   :style="getBtnColorStyle(m, record)"
                   :disabled="m.btnDisabled?.(record)"
-                  @click="m.handle?.(record, index)"
                 >
                   <template v-if="resolveIcon(m, record)" #icon>
                     <component :is="resolveIcon(m, record)" />

@@ -6,7 +6,6 @@ import type {
   UserListItem,
   CreateUserPayload,
   UpdateUserPayload,
-  UpdateUserRolesPayload,
 } from '@/types/user'
 import type { UserRole } from '@/types/auth'
 
@@ -19,10 +18,6 @@ const deptMap = new Map(departments.map(d => [d.id, d]))
 
 function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
-}
-
-function genTempPassword(): string {
-  return `Temp@${Math.random().toString(36).slice(2, 10)}`
 }
 
 export const userHandlers = [
@@ -65,10 +60,10 @@ export const userHandlers = [
   http.post(`${API_BASE}/users`, async ({ request }) => {
     await delay(250)
     const body = (await request.json()) as CreateUserPayload
-    if (!body.username?.trim() || !body.real_name?.trim() || !body.org_id || !body.dept_id) {
+    if (!body.username?.trim() || !body.real_name?.trim()) {
       return HttpResponse.json({
         code: 40001,
-        message: '用户名、真实姓名、机构、科室为必填',
+        message: '用户名、真实姓名为必填',
         data: null,
       })
     }
@@ -87,36 +82,33 @@ export const userHandlers = [
         data: null,
       })
     }
-    const org = orgMap.get(body.org_id)
-    const dept = deptMap.get(body.dept_id)
+    const orgId = body.org_id || ''
+    const deptId = body.dept_id || ''
+    const org = orgId ? orgMap.get(orgId) : undefined
+    const dept = deptId ? deptMap.get(deptId) : undefined
     const id = `u_${Date.now()}`
     const now = new Date().toISOString()
-    const initialPassword = genTempPassword()
     const newUser: UserListItem = {
       id,
       username: body.username.trim(),
       real_name: body.real_name.trim(),
       avatar_url: undefined,
-      phone: body.phone?.trim() ?? undefined,
-      email: body.email?.trim() ?? undefined,
-      org_id: body.org_id,
+      phone: undefined,
+      email: undefined,
+      org_id: orgId,
       org_name: org?.name ?? '',
-      dept_id: body.dept_id,
+      dept_id: deptId,
       dept_name: dept?.name ?? '',
       roles: [...body.roles],
-      status: 'active',
-      has_avatar: false,
+      remark: body.remark?.trim(),
+      status: body.status ?? 'active',
       created_at: now,
     }
     mutableUsers.push(newUser)
     return HttpResponse.json({
       code: 0,
       message: 'ok',
-      data: {
-        ...newUser,
-        initial_password: initialPassword,
-        must_change_pwd: true,
-      },
+      data: { ...newUser },
     })
   }),
 
@@ -134,13 +126,28 @@ export const userHandlers = [
     }
     const cur = mutableUsers[idx]!
     if (body.real_name !== undefined) cur.real_name = body.real_name.trim()
+    if (body.org_id !== undefined) {
+      cur.org_id = body.org_id
+      const org = orgMap.get(body.org_id)
+      cur.org_name = org?.name ?? ''
+    }
     if (body.dept_id !== undefined) {
       cur.dept_id = body.dept_id
       const dept = deptMap.get(body.dept_id)
       cur.dept_name = dept?.name ?? ''
     }
-    if (body.phone !== undefined) cur.phone = body.phone?.trim() || undefined
-    if (body.email !== undefined) cur.email = body.email?.trim() || undefined
+    if (body.roles !== undefined) {
+      if (!body.roles.length || !body.roles.includes('user')) {
+        return HttpResponse.json({
+          code: 40001,
+          message: '角色至少包含 user',
+          data: null,
+        })
+      }
+      cur.roles = [...body.roles]
+    }
+    if (body.remark !== undefined) cur.remark = body.remark?.trim()
+    if (body.status === 'active' || body.status === 'inactive') cur.status = body.status
     return HttpResponse.json({
       code: 0,
       message: 'ok',
@@ -148,7 +155,7 @@ export const userHandlers = [
     })
   }),
 
-  http.delete(`${API_BASE}/users/:id`, async ({ params }) => {
+  http.post(`${API_BASE}/users/:id/reset-pass`, async ({ params }) => {
     await delay(200)
     const id = params.id as string
     const idx = mutableUsers.findIndex(u => u.id === id)
@@ -159,61 +166,10 @@ export const userHandlers = [
         data: null,
       })
     }
-    mutableUsers.splice(idx, 1)
     return HttpResponse.json({
       code: 0,
       message: 'ok',
       data: null,
-    })
-  }),
-
-  http.patch(`${API_BASE}/users/:id/roles`, async ({ request, params }) => {
-    await delay(200)
-    const id = params.id as string
-    const body = (await request.json()) as UpdateUserRolesPayload
-    const idx = mutableUsers.findIndex(u => u.id === id)
-    if (idx === -1) {
-      return HttpResponse.json({
-        code: 40002,
-        message: '用户不存在',
-        data: null,
-      })
-    }
-    if (!body.roles?.length || !body.roles.includes('user')) {
-      return HttpResponse.json({
-        code: 40001,
-        message: '角色至少包含 user',
-        data: null,
-      })
-    }
-    const cur = mutableUsers[idx]!
-    cur.roles = [...body.roles]
-    return HttpResponse.json({
-      code: 0,
-      message: 'ok',
-      data: { ...cur },
-    })
-  }),
-
-  http.post(`${API_BASE}/users/:id/reset-password`, async ({ params }) => {
-    await delay(200)
-    const id = params.id as string
-    const idx = mutableUsers.findIndex(u => u.id === id)
-    if (idx === -1) {
-      return HttpResponse.json({
-        code: 40002,
-        message: '用户不存在',
-        data: null,
-      })
-    }
-    const newPassword = genTempPassword()
-    return HttpResponse.json({
-      code: 0,
-      message: 'ok',
-      data: {
-        new_password: newPassword,
-        must_change_pwd: true,
-      },
     })
   }),
 ]

@@ -14,8 +14,9 @@ export interface UserListItem {
   dept_id: string
   dept_name: string
   roles: UserRole[]
+  remark?: string
   status: 'active' | 'inactive'
-  has_avatar: boolean
+  has_avatar?: boolean
   created_at: string
 }
 
@@ -28,38 +29,29 @@ export interface UserListParams extends PaginationParams {
   status?: 'active' | 'inactive'
 }
 
-/** 新增用户请求体（与 API POST /users 一致） */
+/** 新增用户请求体（与 API POST /users 一致，V2 不含 phone/email） */
 export interface CreateUserPayload {
   username: string
   real_name: string
-  org_id: string
-  dept_id: string
-  phone?: string
-  email?: string
+  password?: string
+  org_id?: string
+  dept_id?: string
   roles: UserRole[]
+  remark?: string
+  status?: 'active' | 'inactive'
 }
 
-/** 新增用户响应（含仅返回一次的初始密码） */
-export interface CreateUserResponse extends Omit<UserListItem, 'has_avatar'> {
-  initial_password?: string
-  must_change_pwd: boolean
-}
+/** 新增用户响应：返回创建后的完整用户对象（同列表项） */
+export type CreateUserResponse = UserListItem
 
 /** 编辑用户请求体（与 API PUT /users/:id 一致，字段可选） */
 export interface UpdateUserPayload {
   real_name?: string
+  org_id?: string
   dept_id?: string
-  phone?: string
-  email?: string
+  roles?: UserRole[]
+  remark?: string
+  status?: 'active' | 'inactive'
 }
 
-/** 设置用户角色请求体（与 API PATCH /users/:id/roles 一致） */
-export interface UpdateUserRolesPayload {
-  roles: UserRole[]
-}
-
-/** 重置密码响应（临时密码仅返回一次） */
-export interface ResetPasswordResponse {
-  new_password: string
-  must_change_pwd: boolean
-}
+/** 重置密码：POST /users/:id/reset-pass 无 body，响应 data 为 null */

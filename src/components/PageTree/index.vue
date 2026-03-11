@@ -177,12 +177,29 @@ const emit = defineEmits<{
 const searchKeyword = ref('')
 const expandedKeys = ref<Set<string>>(new Set())
 
-/** 根据关键词过滤树（仅过滤根节点 label，子节点保留） */
+/** 根据关键词过滤树：无子节点时按根 label；有子节点时按根或子 label 匹配并过滤子节点 */
 const filteredTree = computed(() => {
   const list = props.treeData
   const kw = searchKeyword.value.trim().toLowerCase()
   if (!kw) return list
-  return list.filter((node) => node.label.toLowerCase().includes(kw))
+  return list
+    .map((node) => {
+      if (!node.children?.length) {
+        return node.label.toLowerCase().includes(kw) ? node : null
+      }
+      const matchedChildren = node.children.filter((c) =>
+        c.label.toLowerCase().includes(kw)
+      )
+      const rootMatch = node.label.toLowerCase().includes(kw)
+      if (rootMatch || matchedChildren.length > 0) {
+        return {
+          ...node,
+          children: rootMatch ? node.children : matchedChildren,
+        }
+      }
+      return null
+    })
+    .filter((n): n is TableTreeNode => !!n)
 })
 
 /** 选中变化时若为带子节点且当前在列表中，默认展开 */

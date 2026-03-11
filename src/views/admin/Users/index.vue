@@ -1,9 +1,9 @@
 <template>
   <div class="users-page flex flex-1 overflow-hidden">
-    <aside class="w-80 pr-4 flex flex-col shrink-0">
+    <aside v-if="showTree" class="w-80 pr-4 flex flex-col shrink-0">
       <PageTree
-        :title="t('dept.allOrgs')"
-        :search-placeholder="t('dept.searchOrg')"
+        :title="treeTitle"
+        :search-placeholder="treeSearchPlaceholder"
         :tree-data="treeData"
         :selected-key="selectedNodeKey"
         :loading="treeLoading"
@@ -13,7 +13,7 @@
         @node-click="onTreeSelect"
       />
     </aside>
-    <section class="flex-1 flex flex-col min-h-0 min-w-0 pl-0">
+    <section class="flex-1 flex flex-col min-h-0 min-w-0 pl-0" :class="{ 'pl-0': showTree }">
       <template v-if="hasSelection">
         <div class="app-container p-4 mb-4">
           <PageHead :head-conf="headConf" />
@@ -53,21 +53,9 @@
         :view-only="viewOnly"
         :default-org-id="selectedOrgId ?? ''"
         :default-dept-id="selectedDeptId ?? ''"
+        :assignable-roles="assignableRoles"
         @submit="handleFormSubmit"
       />
-      <RoleEditor
-        v-model:open="roleEditorOpen"
-        :roles="roleEditorUser?.roles ?? []"
-        @submit="handleRoleSubmit"
-      />
-      <a-modal
-        v-model:open="tempPasswordModalOpen"
-        :title="t('user.tempPasswordTitle')"
-        :footer="null"
-      >
-        <p class="mb-2">{{ t('user.tempPasswordTip') }}</p>
-        <a-input-password v-model:value="tempPassword" readonly class="mb-2" />
-      </a-modal>
     </section>
   </div>
 </template>
@@ -82,26 +70,23 @@ import {
   SearchOutlined,
   ReloadOutlined,
   EditOutlined,
-  DeleteOutlined,
-  TeamOutlined,
   KeyOutlined,
   EyeOutlined,
+  StopOutlined,
+  CheckCircleOutlined,
 } from '@ant-design/icons-vue'
 import { PageTree } from '@/components/PageTree'
 import PageHead from '@/components/PageHead/index.vue'
 import PageFilter from '@/components/PageFilter/index.vue'
 import PageTable from '@/components/PageTable/index.vue'
 import UserForm from './components/UserForm.vue'
-import RoleEditor from './components/RoleEditor.vue'
 import { useAuthStore } from '@/stores/auth'
 import { getDepartmentsTree } from '@/api/departments'
 import {
   getUsers,
   createUser,
   updateUser,
-  deleteUser,
-  updateUserRoles,
-  resetPassword,
+  resetPass,
 } from '@/api/users'
 import { confirmDelete } from '@/utils/confirm'
 import type { PageHeadConfig } from '@/components/PageHead/types'
@@ -123,7 +108,17 @@ const tableData = ref<UserListItem[]>([])
 const loading = ref(false)
 const total = ref(0)
 
-// ----- 左侧树（保持不变） -----
+/** 多角色按最高权限：sysadmin > org_admin > dept_admin > user */
+const highestRole = computed<UserRole>(() => {
+  if (authStore.isSysAdmin) return 'sysadmin'
+  if (authStore.isOrgAdmin) return 'org_admin'
+  if (authStore.isDeptAdmin) return 'dept_admin'
+  return 'user'
+})
+
+const showTree = computed(() => highestRole.value === 'sysadmin' || highestRole.value === 'org_admin')
+
+// ----- 左侧树 -----
 const treeLoading = ref(false)
 const rawTree = ref<OrgDeptTreeNode[]>([])
 const deptIdToOrgId = ref<Map<string, string>>(new Map())
@@ -145,25 +140,59 @@ function roleLabelKey(role: UserRole): string {
   return ROLE_LABEL_KEYS[role] ?? role
 }
 
+/** sysadmin：机构-科室二级树；org_admin：当前机构下科室一维列表 */
 const treeData = computed<TableTreeNode[]>(() => {
-  let list = rawTree.value
-  if (authStore.isOrgAdmin && authStore.currentOrgId) {
-    list = list.filter((n) => n.type === 'org' && n.id === authStore.currentOrgId)
-  }
-  return list
-    .filter((n) => n.type === 'org')
-    .map((org) => ({
-      key: `org_${org.id}`,
-      label: org.name,
-      icon: 'bank' as const,
-      children: org.children?.length
-        ? org.children.map((dept) => ({
-            key: `dept_${dept.id}`,
-            label: dept.name,
-            icon: 'apartment' as const,
-          }))
-        : undefined,
+  const list = rawTree.value.filter((n) => n.type === 'org')
+  if (highestRole.value === 'org_admin' && authStore.currentOrgId) {
+    const org = list.find((n) => n.id === authStore.currentOrgId)
+    if (!org?.children?.length) return []
+    return org.children.map((dept) => ({
+      key: `dept_${dept.id}`,
+      label: dept.name,
+      icon: 'apartment' as const,
     }))
+  }
+  return list.map((org) => ({
+    key: `org_${org.id}`,
+    label: org.name,
+    icon: 'bank' as const,
+    children: org.children?.length
+      ? org.children.map((dept) => ({
+          key: `dept_${dept.id}`,
+          label: dept.name,
+          icon: 'apartment' as const,
+        }))
+      : undefined,
+  }))
+})
+
+const treeTitle = computed(() => {
+  if (highestRole.value === 'org_admin' && authStore.currentOrgId) {
+    return orgIdToName.value.get(authStore.currentOrgId) ?? t('dept.allOrgs')
+  }
+  return t('dept.allOrgs')
+})
+
+const treeSearchPlaceholder = computed(() => {
+  if (highestRole.value === 'org_admin') return t('dept.searchDeptName')
+  return t('dept.searchOrgOrDept')
+})
+
+/** 列表筛选用：有树时用选中节点，无树（dept_admin）时用当前用户机构/科室 */
+const effectiveOrgId = computed(() => {
+  if (!showTree.value && authStore.currentOrgId) return authStore.currentOrgId
+  return selectedOrgId.value
+})
+const effectiveDeptId = computed(() => {
+  if (!showTree.value && authStore.currentDeptId) return authStore.currentDeptId
+  return selectedDeptId.value
+})
+
+/** 角色编辑弹窗可分配角色（按当前用户权限） */
+const assignableRoles = computed<UserRole[]>(() => {
+  if (authStore.isSysAdmin) return ['sysadmin', 'org_admin', 'dept_admin', 'user']
+  if (authStore.isOrgAdmin) return ['dept_admin', 'user']
+  return ['user']
 })
 
 async function loadTree() {
@@ -204,7 +233,10 @@ function onTreeSelect(payload: { key: string; label: string; level: 'root' | 'br
   selectedNodeKey.value = key
 }
 
-const hasSelection = computed(() => !!selectedOrgId.value || !!selectedDeptId.value)
+/** 有树时需选中节点；无树（dept_admin）时直接展示本科室用户列表 */
+const hasSelection = computed(
+  () => showTree.value ? !!(selectedOrgId.value || selectedDeptId.value) : !!(effectiveOrgId.value || effectiveDeptId.value)
+)
 
 // ----- 右侧 PageHead / PageFilter / PageTable -----
 const headConf = computed<PageHeadConfig>(() => ({
@@ -228,6 +260,22 @@ const filterConf = computed<PageFilterConfig>(() => ({
       type: 'input',
       ph: t('user.keywordPlaceholder'),
       col: 8,
+      defaultValue: '',
+    },
+    {
+      key: 'role',
+      label: t('user.roles'),
+      type: 'select',
+      ph: t('common.all'),
+      col: 6,
+      options: [
+        { label: t('common.all'), value: '' },
+        { label: t('user.roleSysadmin'), value: 'sysadmin' },
+        { label: t('user.roleOrgAdmin'), value: 'org_admin' },
+        { label: t('user.roleDeptAdmin'), value: 'dept_admin' },
+        { label: t('user.roleUser'), value: 'user' },
+      ],
+      clearable: true,
       defaultValue: '',
     },
     {
@@ -309,7 +357,7 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
     type: 'operation',
     width: 280,
     fixed: 'right',
-    btns: [      
+    btns: [
       {
         text: t('common.detail'),
         icon: EyeOutlined,
@@ -325,14 +373,6 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
         type: 'popover',
         moreList: [
           {
-            text: t('user.roleEditor'),
-            icon: TeamOutlined,
-            handle: openRoleEditor as unknown as (
-              row: Record<string, unknown>,
-              index?: number
-            ) => void,
-          },
-          {
             text: t('user.resetPassword'),
             icon: KeyOutlined,
             color: 'warning',
@@ -342,10 +382,11 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
             ) => void,
           },
           {
-            text: t('common.delete'),
-            icon: DeleteOutlined,
-            color: 'danger',
-            handle: handleDelete as unknown as (
+            dynamicText: (row) =>
+              (row.status === 'active' ? t('status.inactive') : t('status.active')),
+            dynamicIcon: (row) => (row.status === 'active' ? StopOutlined : CheckCircleOutlined),
+            dynamicColor: (row) => (row.status === 'active' ? 'danger' : 'success'),
+            handle: handleToggleStatus as unknown as (
               row: Record<string, unknown>,
               index?: number
             ) => void,
@@ -357,8 +398,8 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
 ])
 
 async function loadData() {
-  const orgId = selectedOrgId.value
-  const deptId = selectedDeptId.value
+  const orgId = effectiveOrgId.value
+  const deptId = effectiveDeptId.value
   if (!orgId && !deptId) {
     tableData.value = []
     total.value = 0
@@ -370,6 +411,8 @@ async function loadData() {
   const pageSize = pageTableRef.value?.pageSize ?? 20
   const statusVal = params.status as string
   const status = statusVal === 'active' || statusVal === 'inactive' ? statusVal : undefined
+  const roleVal = params.role as string
+  const role = roleVal && ['sysadmin', 'org_admin', 'dept_admin', 'user'].includes(roleVal) ? roleVal as UserRole : undefined
 
   loading.value = true
   try {
@@ -379,6 +422,7 @@ async function loadData() {
       org_id: orgId ?? undefined,
       dept_id: deptId ?? undefined,
       keyword: (params.keyword as string)?.trim() || undefined,
+      role,
       status,
     })
     tableData.value = result.items
@@ -402,9 +446,10 @@ function refresh() {
 }
 
 watch(
-  () => [selectedOrgId.value, selectedDeptId.value] as const,
-  ([orgId, deptId]) => {
-    if (orgId || deptId) {
+  () => [selectedOrgId.value, selectedDeptId.value, effectiveOrgId.value, effectiveDeptId.value] as const,
+  ([selOrg, selDept, effOrg, effDept]) => {
+    const has = showTree.value ? !!(selOrg || selDept) : !!(effOrg || effDept)
+    if (has) {
       loadData()
     } else {
       tableData.value = []
@@ -442,12 +487,8 @@ async function handleFormSubmit(payload: CreateUserPayload | UpdateUserPayload) 
       await updateUser(editingRecord.value.id, payload as UpdateUserPayload)
       message.success(t('common.success'))
     } else {
-      const res = await createUser(payload as CreateUserPayload)
-      if (res.initial_password) {
-        message.success(t('user.createSuccessWithPassword', { password: res.initial_password }))
-      } else {
-        message.success(t('common.success'))
-      }
+      await createUser(payload as CreateUserPayload)
+      message.success(t('common.success'))
     }
     refresh()
   } catch {
@@ -455,40 +496,23 @@ async function handleFormSubmit(payload: CreateUserPayload | UpdateUserPayload) 
   }
 }
 
-const roleEditorOpen = ref(false)
-const roleEditorUser = ref<UserListItem | null>(null)
-
-function openRoleEditor(record: UserListItem) {
-  roleEditorUser.value = record
-  roleEditorOpen.value = true
-}
-
-async function handleRoleSubmit(roles: UserRole[]) {
-  if (!roleEditorUser.value) return
-  try {
-    await updateUserRoles(roleEditorUser.value.id, { roles })
-    message.success(t('common.success'))
-    refresh()
-  } catch {
-    // error already shown
-  }
-}
-
-const tempPasswordModalOpen = ref(false)
-const tempPassword = ref('')
+const DEFAULT_PASSWORD = '123456'
 
 function openResetPasswordConfirm(record: UserListItem) {
   confirmDelete({
     title: t('user.resetPassword'),
-    content: t('user.confirmResetPassword', { name: record.real_name || record.username }),
+    content: t('user.confirmResetPasswordToDefault', { name: record.real_name || record.username }),
     okText: t('common.confirm'),
     cancelText: t('common.cancel'),
     onOk: async () => {
       try {
-        const res = await resetPassword(record.id)
-        tempPassword.value = res.new_password
-        tempPasswordModalOpen.value = true
-        copyTempPassword()
+        await resetPass(record.id)
+        message.success(t('user.resetPasswordSuccessDefault'))
+        navigator.clipboard.writeText(DEFAULT_PASSWORD).then(
+          () => message.success(t('user.defaultPasswordCopy')),
+          () => {}
+        )
+        refresh()
       } catch {
         // error already shown
       }
@@ -496,27 +520,26 @@ function openResetPasswordConfirm(record: UserListItem) {
   })
 }
 
-function copyTempPassword() {
-  if (!tempPassword.value) return
-  navigator.clipboard.writeText(tempPassword.value).then(
-    () => message.success(t('user.tempPasswordCopy')),
-    () => {}
-  )
-}
-
-function handleDelete(record: UserListItem) {
+function handleToggleStatus(record: UserListItem) {
+  const isActivate = record.status === 'inactive'
   confirmDelete({
-    title: t('common.confirmDeleteTitle'),
-    content: t('common.confirmDeleteContent'),
-    okText: t('common.delete'),
+    title: isActivate ? t('status.active') : t('status.inactive'),
+    content: isActivate ? t('user.confirmActivate') : t('user.confirmDeactivate'),
+    okText: t('common.confirm'),
     cancelText: t('common.cancel'),
     onOk: async () => {
-      await deleteUser(record.id)
-      message.success(t('common.success'))
-      refresh()
+      try {
+        await updateUser(record.id, { status: isActivate ? 'active' : 'inactive' })
+        message.success(t('common.success'))
+        refresh()
+      } catch {
+        // error already shown
+      }
     },
   })
 }
 
-onMounted(loadTree)
+onMounted(() => {
+  if (showTree.value) loadTree()
+})
 </script>

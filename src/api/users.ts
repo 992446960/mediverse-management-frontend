@@ -6,36 +6,24 @@ import type {
   CreateUserPayload,
   CreateUserResponse,
   UpdateUserPayload,
-  UpdateUserRolesPayload,
-  ResetPasswordResponse,
 } from '@/types/user'
 
-/** 分页查询用户列表（支持 org_id / dept_id / keyword 过滤） */
+/** 分页查询用户列表（Query: org_id, dept_id, keyword, role, status, page, page_size） */
 export function getUsers(params: UserListParams) {
   return request.get<PaginatedData<UserListItem>>('/users', { params })
 }
 
-/** 新增用户（返回含 initial_password，仅创建时返回一次） */
+/** 新增用户（password 可选，不传默认 123456；V2 不含 phone/email） */
 export function createUser(data: CreateUserPayload) {
   return request.post<CreateUserResponse>('/users', data)
 }
 
-/** 编辑用户 */
+/** 编辑用户（含 roles；V2 可修改 real_name, org_id, dept_id, roles, remark, status） */
 export function updateUser(id: string, data: UpdateUserPayload) {
   return request.put<UserListItem>(`/users/${id}`, data)
 }
 
-/** 删除用户 */
-export function deleteUser(id: string) {
-  return request.delete<null>(`/users/${id}`)
-}
-
-/** 设置用户角色 */
-export function updateUserRoles(id: string, data: UpdateUserRolesPayload) {
-  return request.patch<UserListItem>(`/users/${id}/roles`, data)
-}
-
-/** 重置密码（返回临时密码，仅返回一次） */
-export function resetPassword(id: string) {
-  return request.post<ResetPasswordResponse>(`/users/${id}/reset-password`)
+/** 重置密码：无 body，将密码重置为默认 123456，响应 data 为 null */
+export function resetPass(id: string) {
+  return request.post<null>(`/users/${id}/reset-pass`)
 }

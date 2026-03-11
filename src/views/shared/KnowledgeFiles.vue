@@ -1,6 +1,6 @@
 <template>
   <div class="knowledge-files-shared flex flex-1 overflow-hidden">
-    <aside class="w-80 pr-4 flex flex-col shrink-0 bg-slate-100 dark:bg-slate-950">
+    <aside class="w-80 pr-4 flex flex-col shrink-0">
       <DirectoryTree
         :title="t('knowledge.directory')"
         :tree-data="treeData"
