@@ -104,9 +104,7 @@ const { checkRoles, isSysAdmin } = usePermission()
 const user = computed(() => authStore.user)
 
 // 开发环境且为系统管理员：拥有所有菜单路由（含个人工作台）
-const isDevSysAdmin = computed(
-  () => import.meta.env.DEV && isSysAdmin.value
-)
+const isDevSysAdmin = computed(() => import.meta.env.DEV && isSysAdmin.value)
 
 const breadcrumbs = computed(() => {
   return currentRoute.matched.filter((item) => item.meta && item.meta.title)
@@ -200,6 +198,7 @@ watch(
 <style scoped>
 .main-layout {
   min-height: 100vh;
+  min-width: 1000px;
 }
 
 .sider {

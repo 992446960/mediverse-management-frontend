@@ -238,9 +238,9 @@ export default {
       avatarUpload: '上传',
       avatarSizeHint: '建议尺寸: 200x200px',
       avatarFormatHint: '支持 JPG, PNG, GIF',
-      pageTitlePersonal: '我的数字分身',
-      pageTitleDept: '科室数字医生',
-      pageTitleOrg: '机构数字医生',
+      pageTitlePersonal: '我的数字分身配置',
+      pageTitleDept: '科室数字医生配置',
+      pageTitleOrg: '机构数字医生配置',
       stats: {
         title: '数字分身服务统计数据',
         totalSessions: '累计接诊数',
@@ -252,6 +252,9 @@ export default {
       quickGuide: {
         title: '快速操作指引',
         content: '完成配置后，您可以直接在控制台进入对话测试进行实时调试。',
+        contentBefore: '完成配置后，您可以直接在控制台进入',
+        contentLink: '对话测试',
+        contentAfter: '进行实时调试。',
         testNow: '立即测试',
       },
       config: {

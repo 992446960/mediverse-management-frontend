@@ -16,22 +16,35 @@
                   ref="fileInputRef"
                   type="file"
                   accept="image/jpeg,image/png,image/gif,image/webp"
-                  class="hidden"
+                  style="display: none"
                   aria-hidden="true"
                   @change="onAvatarFileChange"
                 />
                 <div
-                  class="avatar-upload-card"
+                  class="avatar-upload-card group relative w-20 h-20 rounded-lg bg-gray-50 dark:bg-gray-700 flex flex-col items-center justify-center cursor-pointer border border-dashed border-gray-300 dark:border-gray-600 hover:border-[#0ea5e9] hover:text-[#0ea5e9] transition-all overflow-hidden shrink-0"
                   :class="{ 'pointer-events-none opacity-70': avatarUploading }"
-                  @click="triggerUpload"
+                  @click="onAvatarClick"
                 >
                   <a-spin v-if="avatarUploading" />
-                  <img
-                    v-else-if="formData.avatar_url"
-                    :src="formData.avatar_url"
-                    :alt="t('avatar.avatar')"
-                    class="w-full h-full object-cover"
-                  />
+                  <template v-else-if="formData.avatar_url">
+                    <img
+                      :src="formData.avatar_url"
+                      :alt="t('avatar.avatar')"
+                      class="w-full h-full object-cover"
+                    />
+                    <div
+                      class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 text-white"
+                    >
+                      <EyeOutlined
+                        class="text-lg hover:scale-110 transition-transform"
+                        @click.stop="handlePreview"
+                      />
+                      <UploadOutlined
+                        class="text-lg hover:scale-110 transition-transform"
+                        @click.stop="triggerAvatarFileInput"
+                      />
+                    </div>
+                  </template>
                   <template v-else>
                     <PlusOutlined class="text-gray-400 text-lg" />
                     <span class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{
@@ -40,24 +53,19 @@
                   </template>
                 </div>
                 <p class="text-xs text-gray-400">
-                  {{ t('avatar.wizard.avatarSizeHint') }}，{{
-                    t('avatar.wizard.config.avatarFormatHint')
+                  {{
+                    t('avatar.wizard.avatarSizeHint') + '，' + t('avatar.wizard.avatarFormatHint')
                   }}
                 </p>
               </div>
             </a-form-item>
 
-            <!-- 名称 -->
-            <a-form-item
-              :label="t('avatar.name')"
-              name="name"
-              :rules="[{ required: true, message: t('common.required') }]"
-            >
+            <!-- 名称（只读，不允许更新） -->
+            <a-form-item :label="t('avatar.name')" name="name">
               <a-input
                 v-model:value="formData.name"
                 :placeholder="t('avatar.wizard.config.placeholderName')"
-                :maxlength="100"
-                show-count
+                disabled
                 class="step-info-input"
               />
             </a-form-item>
@@ -167,7 +175,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { PlusOutlined, CloseOutlined } from '@ant-design/icons-vue'
+import { EyeOutlined, PlusOutlined, CloseOutlined, UploadOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import type { OwnerType } from '@/constants/avatar'
 import type { UpdateAvatarConfigParams } from '@/types/avatarConfig'
@@ -194,6 +202,7 @@ const fileInputRef = ref<HTMLInputElement>()
 const tagPopoverVisible = ref(false)
 const newTag = ref('')
 const avatarUploading = ref(false)
+const previewVisible = ref(false)
 
 const AVATAR_ACCEPT = 'image/jpeg,image/png,image/gif,image/webp'
 
@@ -236,11 +245,22 @@ const fetchConfig = async () => {
   }
 }
 
+/** 仅允许更新的字段 */
+const UPDATE_ALLOWED_KEYS = [
+  'bio',
+  'tags',
+  'greeting',
+  'style',
+  'style_custom',
+  'avatar_url',
+] as const
+
 const handleSave = async () => {
   try {
     await formRef.value.validate()
     saving.value = true
-    await updateAvatarConfig(props.ownerType, props.ownerId, formData)
+    const payload = Object.fromEntries(UPDATE_ALLOWED_KEYS.map((k) => [k, formData[k] as unknown]))
+    await updateAvatarConfig(props.ownerType, props.ownerId, payload)
     message.success(t('common.success'))
     emit('saved')
   } catch (err) {
@@ -250,8 +270,20 @@ const handleSave = async () => {
   }
 }
 
-const triggerUpload = () => {
+function triggerAvatarFileInput() {
   fileInputRef.value?.click()
+}
+
+function handlePreview() {
+  previewVisible.value = true
+}
+
+function onAvatarClick() {
+  if (formData.avatar_url) {
+    handlePreview()
+  } else {
+    triggerAvatarFileInput()
+  }
 }
 
 const onAvatarFileChange = async (e: Event) => {
@@ -310,9 +342,6 @@ onMounted(fetchConfig)
 }
 
 .avatar-upload-card {
-  @apply w-20 h-20 rounded-lg bg-gray-50 dark:bg-gray-700 flex flex-col items-center justify-center 
-         cursor-pointer border border-dashed border-gray-300 dark:border-gray-600 
-         hover:border-[#0ea5e9] hover:text-[#0ea5e9] transition-all overflow-hidden shrink-0;
   min-width: 80px;
   min-height: 80px;
 }

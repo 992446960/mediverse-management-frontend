@@ -80,15 +80,6 @@
           </div>
         </a-form-item>
 
-        <a-image
-          :style="{ display: 'none' }"
-          :preview="{
-            visible: previewVisible,
-            onVisibleChange: (vis) => (previewVisible = vis),
-          }"
-          :src="form.avatar_url"
-        />
-
         <a-form-item :label="t('avatar.bio')" name="bio">
           <a-textarea
             v-model:value="form.bio"

@@ -1,10 +1,13 @@
-import { ref, onUnmounted } from 'vue'
+import { onUnmounted } from 'vue'
 import type { Ref } from 'vue'
 import type { FileListItem, OwnerType } from '@/types/knowledge'
 import { getFileStatus } from '@/api/knowledge'
 
-export function useFileStatusPoll(ownerType: OwnerType, ownerId: string, fileList: Ref<FileListItem[]>) {
-  const pollingIds = ref<Set<string>>(new Set())
+export function useFileStatusPoll(
+  ownerType: OwnerType,
+  ownerId: string,
+  fileList: Ref<FileListItem[]>
+) {
   let timer: ReturnType<typeof setInterval> | null = null
 
   const startPoll = () => {

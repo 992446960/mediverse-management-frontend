@@ -72,15 +72,6 @@
         </div>
       </a-form-item>
 
-      <a-image
-        :style="{ display: 'none' }"
-        :preview="{
-          visible: previewVisible,
-          onVisibleChange: (vis) => (previewVisible = vis),
-        }"
-        :src="avatarPreviewUrl"
-      />
-
       <a-form-item name="bio">
         <template #label>
           <span class="step-info-label">{{ t('avatar.bio') }}</span>

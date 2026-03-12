@@ -251,9 +251,9 @@ export default {
       styleCustom: 'Custom',
       confirmCreate: 'Create',
       createSuccess: 'Avatar created successfully',
-      pageTitlePersonal: 'My Digital Avatar',
-      pageTitleDept: 'Dept Digital Doctor',
-      pageTitleOrg: 'Org Digital Doctor',
+      pageTitlePersonal: 'My Digital Avatar Configuration',
+      pageTitleDept: 'Dept Digital Doctor Configuration',
+      pageTitleOrg: 'Org Digital Doctor Configuration',
       stats: {
         title: 'Digital Avatar Service Statistics',
         totalSessions: 'Total Sessions',
@@ -266,6 +266,9 @@ export default {
         title: 'Quick Action Guide',
         content:
           'After completing the configuration, you can directly enter the dialogue test in the console for real-time debugging.',
+        contentBefore: 'After completing the configuration, you can directly enter the ',
+        contentLink: 'dialogue test',
+        contentAfter: ' in the console for real-time debugging.',
         testNow: 'Test Now',
       },
       config: {

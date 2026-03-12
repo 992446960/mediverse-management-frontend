@@ -3,6 +3,7 @@ import { organizationHandlers } from './handlers/organizations'
 import { departmentHandlers } from './handlers/departments'
 import { userHandlers } from './handlers/users'
 import { avatarHandlers } from './handlers/avatars'
+import { avatarConfigHandlers } from './handlers/avatarConfig'
 import { knowledgeHandlers } from './handlers/knowledge'
 
 export const handlers = [
@@ -11,5 +12,6 @@ export const handlers = [
   ...departmentHandlers,
   ...userHandlers,
   ...avatarHandlers,
+  ...avatarConfigHandlers,
   ...knowledgeHandlers,
 ]

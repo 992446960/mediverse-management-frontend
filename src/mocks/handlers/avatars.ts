@@ -243,7 +243,12 @@ export const avatarHandlers = [
         data: null,
       })
     }
-    const url = `https://example.com/uploads/avatar-${Date.now()}-${file.name}`
+    // 转为 data URL，保证上传成功后能正确回显
+    const buf = await file.arrayBuffer()
+    const bytes = new Uint8Array(buf)
+    const binary = Array.from(bytes, (b) => String.fromCharCode(b)).join('')
+    const base64 = btoa(binary)
+    const url = `data:${file.type || 'image/jpeg'};base64,${base64}`
     return HttpResponse.json({
       code: 0,
       message: 'ok',

@@ -1,7 +1,7 @@
 <template>
-  <div class="p-6">
+  <div>
     <div class="app-container p-6 mb-6">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 m-0">
+      <h1 class="text-xl font-bold text-gray-900 dark:text-gray-100 m-0">
         {{ t('avatar.wizard.' + AVATAR_PAGE_TITLE.org) }}
       </h1>
     </div>
