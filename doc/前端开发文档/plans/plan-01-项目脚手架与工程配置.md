@@ -152,7 +152,7 @@ mediverse-management-frontend/
 
 | 包名 | 用途 | 引入计划 |
 |------|------|---------|
-| `pdfjs-dist` | PDF 渲染 | Plan 09 |
+| `@vue-office/*`、`marked` | 文件预览（PDF/docx/xlsx/md） | Plan 09 |
 | `marked` | Markdown 渲染 | Plan 10 |
 | `dompurify` + `@types/dompurify` | HTML 净化 | Plan 10 |
 | `@tiptap/vue-3` + `@tiptap/starter-kit` | 富文本编辑 | Plan 10 |

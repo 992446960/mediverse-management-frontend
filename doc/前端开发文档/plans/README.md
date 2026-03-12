@@ -77,7 +77,7 @@ Plan 17 需所有其他计划基本完成后执行
 |---------|---------|
 | Plan 01 | **运行时**: vue, vue-router, pinia, vue-i18n, ant-design-vue, @ant-design/icons-vue, **ant-design-x-vue**, axios, dayjs, lodash-es |
 | Plan 01 | **开发**: vite, @vitejs/plugin-vue, typescript, **@antfu/eslint-config**, eslint, **unocss**, @unocss/preset-wind, @unocss/preset-icons, husky, lint-staged, msw, unplugin-vue-components, unplugin-auto-import, vue-tsc |
-| Plan 09 | pdfjs-dist |
+| Plan 09 | @vue-office/docx, @vue-office/excel, @vue-office/pdf, vue-demi, marked |
 | Plan 10 | @tiptap/vue-3, @tiptap/starter-kit, @tiptap/extension-placeholder, marked, dompurify |
 | Plan 13 | highlight.js |
 | Plan 16 | echarts, vue-echarts |

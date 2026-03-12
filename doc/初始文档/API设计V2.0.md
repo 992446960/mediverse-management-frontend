@@ -1235,7 +1235,7 @@ data: {"type":"error","code":50002,"message":"AI 服务暂时不可用，请稍�
 
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|:----:|------|
-| type | string | ❌ | evidence / rule |
+| type | string | ❌ | evidence / rule / experience |
 | online_status | string | ❌ | online / offline |
 | audit_status | string | ❌ | pending / approved / rejected |
 | source_file_id | string | ❌ | 按来源文件过滤（返回包含该文件为来源之一的知识卡） |
@@ -1318,7 +1318,7 @@ data: {"type":"error","code":50002,"message":"AI 服务暂时不可用，请稍�
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|:----:|------|
-| type | string | ✅ | evidence / rule |
+| type | string | ✅ | evidence / rule / experience |
 | title | string | ✅ | 标题，最多 200 字 |
 | content | string | ✅ | Markdown 格式内容 |
 | tags | string[] | ❌ | 标签，最多 10 个 |
