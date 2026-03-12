@@ -445,6 +445,7 @@ const PREVIEW_ROUTE_NAMES: Record<OwnerType, string> = {
   personal: 'MyFilesPreview',
   dept: 'DeptFilesPreview',
   org: 'OrgFilesPreview',
+  avatar: 'AvatarFilesPreview',
 }
 
 function handlePreview(record: FileListItem) {

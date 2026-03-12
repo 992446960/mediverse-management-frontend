@@ -132,6 +132,7 @@ const WORKSPACE_LABELS: Record<OwnerType, string> = {
   personal: '个人',
   dept: '科室',
   org: '机构',
+  avatar: '分身',
 }
 
 const STATUS_BADGE: Record<FileStatus, string> = {

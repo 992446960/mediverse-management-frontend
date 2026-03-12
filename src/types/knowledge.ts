@@ -1,8 +1,10 @@
 import type { PaginationParams } from './api'
 
-export type OwnerType = 'personal' | 'dept' | 'org'
+export type OwnerType = 'personal' | 'dept' | 'org' | 'avatar'
 export type FileStatus = 'uploading' | 'parsing' | 'extracting' | 'indexing' | 'done' | 'failed'
 export type CardType = 'evidence' | 'rule' | 'experience'
+export type OnlineStatus = 'online' | 'offline'
+export type AuditStatus = 'pending' | 'approved' | 'rejected'
 
 /** 目录树节点 */
 export interface DirectoryNode {
@@ -50,8 +52,36 @@ export interface FileCard {
   type: CardType
   title: string
   tags: string[]
-  online_status?: string
+  online_status?: OnlineStatus
   confidence?: number
+}
+
+/** 知识卡详情 */
+export interface KnowledgeCard {
+  id: string
+  title: string
+  content: string
+  type: CardType
+  tags: string[]
+  online_status: OnlineStatus
+  audit_status: AuditStatus
+  reference_count: number
+  source_files: { id: string; name: string }[]
+  created_by: string
+  created_by_name: string
+  created_at: string
+  updated_at: string
+  version: string
+}
+
+/** 知识卡版本 */
+export interface KnowledgeCardVersion {
+  version: string
+  summary: string
+  created_by: string
+  created_by_name: string
+  created_at: string
+  content: string
 }
 
 /** 文件处理状态响应 */
@@ -72,6 +102,14 @@ export interface FileListParams extends PaginationParams {
   status?: FileStatus
 }
 
+/** 知识卡列表请求参数 */
+export interface KnowledgeCardListParams extends PaginationParams {
+  type?: CardType | 'all'
+  online_status?: OnlineStatus
+  audit_status?: AuditStatus
+  keyword?: string
+}
+
 /** 创建目录请求负载 */
 export interface CreateDirectoryPayload {
   parent_id: string | null
@@ -88,6 +126,26 @@ export const FILE_STATUS_CONFIG: Record<FileStatus, { color: string; label: stri
   /** 已完成：#53b614 */
   done: { color: '#53b614', label: '已完成' },
   failed: { color: 'error', label: '处理失败' },
+}
+
+/** 知识卡类型配置 */
+export const CARD_TYPE_CONFIG: Record<CardType, { color: string; label: string }> = {
+  evidence: { color: 'blue', label: '循证卡' },
+  rule: { color: 'orange', label: '规则卡' },
+  experience: { color: 'green', label: '经验卡' },
+}
+
+/** 知识卡在线状态配置 */
+export const ONLINE_STATUS_CONFIG: Record<OnlineStatus, { color: string; label: string }> = {
+  online: { color: 'success', label: '已上线' },
+  offline: { color: 'default', label: '已下线' },
+}
+
+/** 知识卡审核状态配置 */
+export const AUDIT_STATUS_CONFIG: Record<AuditStatus, { color: string; label: string }> = {
+  pending: { color: 'orange', label: '待审核' },
+  approved: { color: 'success', label: '已通过' },
+  rejected: { color: 'error', label: '已驳回' },
 }
 
 // 保持向下兼容

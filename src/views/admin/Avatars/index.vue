@@ -19,6 +19,14 @@
       :avatar-id="editingId ?? undefined"
       @success="handleEditSuccess"
     />
+    <a-drawer
+      v-model:open="knowledgeDrawerOpen"
+      :title="t('menu.knowledgeBase') + ' - ' + (currentAvatarName || '')"
+      width="1000px"
+      :destroy-on-close="true"
+    >
+      <KnowledgeCardList v-if="currentAvatarId" owner-type="avatar" :owner-id="currentAvatarId" />
+    </a-drawer>
   </div>
 </template>
 
@@ -35,12 +43,14 @@ import {
   PauseCircleOutlined,
   PlayCircleOutlined,
   DeleteOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons-vue'
 import PageHead from '@/components/PageHead/index.vue'
 import PageFilter from '@/components/PageFilter/index.vue'
 import PageTable from '@/components/PageTable/index.vue'
 import AvatarWizard from './components/AvatarWizard.vue'
 import AvatarEditModal from './components/AvatarEditModal.vue'
+import KnowledgeCardList from '@/components/KnowledgeCardList/index.vue'
 import { getAvatars, updateAvatarStatus, deleteAvatar } from '@/api/avatars'
 import { getOrganizations } from '@/api/organizations'
 import { getDepartments } from '@/api/departments'
@@ -208,7 +218,7 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
     prop: 'scope',
     width: 220,
     showOverflowTooltip: true,
-    formatter: (row) => formatScope(row as Avatar),
+    formatter: (row) => formatScope(row as unknown as Avatar),
   },
   {
     label: t('org.status'),
@@ -216,41 +226,50 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
     type: 'scope',
     scopeType: '_tag',
     width: 100,
-    tagType: (row) => (row.status === 'active' ? 'success' : 'error'),
-    tagText: (row) => (row.status === 'active' ? t('status.active') : t('status.inactive')),
+    tagType: (row) => ((row as unknown as Avatar).status === 'active' ? 'success' : 'error'),
+    tagText: (row) =>
+      (row as unknown as Avatar).status === 'active' ? t('status.active') : t('status.inactive'),
   },
   {
     label: t('common.createdAt'),
     prop: 'created_at',
     width: 160,
-    formatter: (row) => dayjs(row.created_at as string).format('YYYY-MM-DD HH:mm'),
+    formatter: (row) =>
+      dayjs((row as unknown as Avatar).created_at as string).format('YYYY-MM-DD HH:mm'),
   },
   {
     label: t('common.actions'),
     type: 'operation',
-    width: 260,
+    width: 320,
     fixed: 'right',
     btns: [
       {
+        text: t('menu.knowledgeBase'),
+        icon: FileTextOutlined,
+        handle: (row) => openKnowledge(row as unknown as Avatar),
+      },
+      {
         text: t('common.edit'),
         icon: EditOutlined,
-        handle: openEditForm as unknown as (row: Record<string, unknown>, index?: number) => void,
+        handle: (row) => openEditForm(row as unknown as Avatar),
       },
       {
         text: t('status.inactive'),
-        dynamicText: (row) => (row.status === 'active' ? t('status.inactive') : t('status.active')),
-        dynamicIcon: (row) => (row.status === 'active' ? PauseCircleOutlined : PlayCircleOutlined),
-        dynamicColor: (row) => (row.status === 'active' ? 'warning' : 'success'),
-        handle: handleToggleStatus as unknown as (
-          row: Record<string, unknown>,
-          index?: number
-        ) => void,
+        dynamicText: (row) =>
+          (row as unknown as Avatar).status === 'active'
+            ? t('status.inactive')
+            : t('status.active'),
+        dynamicIcon: (row) =>
+          (row as unknown as Avatar).status === 'active' ? PauseCircleOutlined : PlayCircleOutlined,
+        dynamicColor: (row) =>
+          (row as unknown as Avatar).status === 'active' ? 'warning' : 'success',
+        handle: (row) => handleToggleStatus(row as unknown as Avatar),
       },
       {
         text: t('common.delete'),
         icon: DeleteOutlined,
         color: 'danger',
-        handle: handleDelete as unknown as (row: Record<string, unknown>, index?: number) => void,
+        handle: (row) => handleDelete(row as unknown as Avatar),
       },
     ],
   },
@@ -308,6 +327,9 @@ function onTableFetch() {
 const wizardOpen = ref(false)
 const editOpen = ref(false)
 const editingId = ref<string | null>(null)
+const knowledgeDrawerOpen = ref(false)
+const currentAvatarId = ref<string | null>(null)
+const currentAvatarName = ref<string | null>(null)
 
 function openWizard() {
   wizardOpen.value = true
@@ -316,6 +338,12 @@ function openWizard() {
 function openEditForm(record: Avatar) {
   editingId.value = record.id
   editOpen.value = true
+}
+
+function openKnowledge(record: Avatar) {
+  currentAvatarId.value = record.id
+  currentAvatarName.value = record.name
+  knowledgeDrawerOpen.value = true
 }
 
 function handleWizardSuccess() {

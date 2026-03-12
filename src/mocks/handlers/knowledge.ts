@@ -1,6 +1,13 @@
 import { http, HttpResponse, delay } from 'msw'
 import { mockDirectories, mockFiles, FILE_STATUS_STEPS, MOCK_PARSED_MD } from '../data/knowledge'
-import type { DirectoryNode, FileListItem, FileCard } from '@/types/knowledge'
+import { mockKnowledgeCards, mockCardVersions } from '../data/knowledgeCards'
+import type {
+  DirectoryNode,
+  FileListItem,
+  FileCard,
+  KnowledgeCard,
+  OwnerType,
+} from '@/types/knowledge'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 
@@ -53,6 +60,7 @@ const mockFileCards: Record<string, FileCard[]> = {
 // 可变数据，模拟增删改
 const mutableDirectories = [...mockDirectories]
 const mutableFiles = [...mockFiles]
+const mutableCards = [...mockKnowledgeCards]
 
 export const knowledgeHandlers = [
   // 获取目录树
@@ -355,4 +363,167 @@ export const knowledgeHandlers = [
       })
     }
   ),
+
+  // 查询知识卡列表
+  http.get(`${API_BASE}/knowledge/:ownerType/:ownerId/cards`, async ({ request }) => {
+    const url = new URL(request.url)
+    const type = url.searchParams.get('type')
+    const onlineStatus = url.searchParams.get('online_status')
+    const auditStatus = url.searchParams.get('audit_status')
+    const keyword = url.searchParams.get('keyword')
+    const page = Number(url.searchParams.get('page') || '1')
+    const pageSize = Number(url.searchParams.get('page_size') || '20')
+
+    let filtered = [...mutableCards]
+
+    if (type && type !== 'all') {
+      filtered = filtered.filter((c) => c.type === type)
+    }
+    if (onlineStatus) {
+      filtered = filtered.filter((c) => c.online_status === onlineStatus)
+    }
+    if (auditStatus) {
+      filtered = filtered.filter((c) => c.audit_status === auditStatus)
+    }
+    if (keyword) {
+      const kw = keyword.toLowerCase()
+      filtered = filtered.filter(
+        (c) => c.title.toLowerCase().includes(kw) || c.content.toLowerCase().includes(kw)
+      )
+    }
+
+    const total = filtered.length
+    const start = (page - 1) * pageSize
+    const items = filtered.slice(start, start + pageSize)
+
+    await delay(300)
+    return HttpResponse.json({
+      code: 0,
+      message: 'ok',
+      data: {
+        total,
+        page,
+        page_size: pageSize,
+        items,
+      },
+    })
+  }),
+
+  // 获取单个知识卡详情
+  http.get(`${API_BASE}/knowledge/:ownerType/:ownerId/cards/:cardId`, async ({ params }) => {
+    const { cardId } = params
+    const card = mutableCards.find((c) => c.id === cardId)
+    if (!card) {
+      return HttpResponse.json({ code: 404, message: 'Card not found', data: null })
+    }
+    await delay(200)
+    return HttpResponse.json({
+      code: 0,
+      message: 'ok',
+      data: card,
+    })
+  }),
+
+  // 创建/更新知识卡
+  http.post(`${API_BASE}/knowledge/:ownerType/:ownerId/cards`, async ({ request, params }) => {
+    const payload = (await request.json()) as any
+    const { ownerType, ownerId } = params as { ownerType: OwnerType; ownerId: string }
+    const isUpdate = !!payload.id
+
+    if (isUpdate) {
+      const index = mutableCards.findIndex((c) => c.id === payload.id)
+      const oldCard = mutableCards[index]
+      if (index !== -1 && oldCard) {
+        const versionStr = oldCard.version || 'v1.0.0'
+        const versionParts = versionStr.split('.')
+        const majorVersion = parseInt(versionParts[0]?.slice(1) || '1')
+        const newCard: KnowledgeCard = {
+          ...oldCard,
+          ...payload,
+          updated_at: new Date().toISOString(),
+          version: `v${majorVersion + 1}.0.0`,
+          owner_type: ownerType as any,
+          owner_id: ownerId,
+        }
+        mutableCards[index] = newCard
+        return HttpResponse.json({ code: 0, message: 'updated', data: newCard })
+      }
+    }
+
+    const newCard: KnowledgeCard = {
+      id: `card_${Date.now()}`,
+      title: payload.title,
+      content: payload.content,
+      type: payload.type,
+      tags: payload.tags || [],
+      online_status: 'offline',
+      audit_status: 'pending',
+      reference_count: 0,
+      source_files: payload.source_files || [],
+      owner_type: ownerType as any,
+      owner_id: ownerId,
+      created_by: 'u_current_user',
+      created_by_name: '当前用户',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      version: 'v1.0.0',
+    }
+    mutableCards.unshift(newCard)
+    return HttpResponse.json({ code: 0, message: 'created', data: newCard })
+  }),
+
+  // 知识卡上下线
+  http.post(
+    `${API_BASE}/knowledge/:ownerType/:ownerId/cards/:cardId/status`,
+    async ({ params, request }) => {
+      const { cardId } = params
+      const { status } = (await request.json()) as { status: 'online' | 'offline' }
+      const card = mutableCards.find((c) => c.id === cardId)
+      if (card) {
+        card.online_status = status
+        return HttpResponse.json({ code: 0, message: 'ok', data: card })
+      }
+      return HttpResponse.json({ code: 404, message: 'not found' })
+    }
+  ),
+
+  // 获取版本历史
+  http.get(
+    `${API_BASE}/knowledge/:ownerType/:ownerId/cards/:cardId/versions`,
+    async ({ params }) => {
+      const { cardId } = params
+      const versions = mockCardVersions[cardId as string] || []
+      return HttpResponse.json({ code: 0, message: 'ok', data: versions })
+    }
+  ),
+
+  // 版本回退
+  http.post(
+    `${API_BASE}/knowledge/:ownerType/:ownerId/cards/:cardId/rollback`,
+    async ({ params, request }) => {
+      const { cardId } = params
+      const { version } = (await request.json()) as { version: string }
+      const card = mutableCards.find((c) => c.id === cardId)
+      const versionData = mockCardVersions[cardId as string]?.find((v) => v.version === version)
+
+      if (card && versionData) {
+        card.content = versionData.content
+        card.version = version
+        card.updated_at = new Date().toISOString()
+        return HttpResponse.json({ code: 0, message: 'ok', data: card })
+      }
+      return HttpResponse.json({ code: 404, message: 'not found' })
+    }
+  ),
+
+  // 删除知识卡
+  http.delete(`${API_BASE}/knowledge/:ownerType/:ownerId/cards/:cardId`, async ({ params }) => {
+    const { cardId } = params
+    const index = mutableCards.findIndex((c) => c.id === cardId)
+    if (index !== -1) {
+      mutableCards.splice(index, 1)
+      return HttpResponse.json({ code: 0, message: 'ok' })
+    }
+    return HttpResponse.json({ code: 404, message: 'not found' })
+  }),
 ]

@@ -23,6 +23,7 @@ declare module 'vue' {
     ADatePicker: typeof import('ant-design-vue/es')['DatePicker']
     ADescriptions: typeof import('ant-design-vue/es')['Descriptions']
     ADescriptionsItem: typeof import('ant-design-vue/es')['DescriptionsItem']
+    ADrawer: typeof import('ant-design-vue/es')['Drawer']
     ADropdown: typeof import('ant-design-vue/es')['Dropdown']
     AEmpty: typeof import('ant-design-vue/es')['Empty']
     AForm: typeof import('ant-design-vue/es')['Form']
@@ -75,7 +76,10 @@ declare module 'vue' {
     FilePreview: typeof import('./src/components/FilePreview/index.vue')['default']
     FileUploader: typeof import('./src/components/FileUploader/index.vue')['default']
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
+    KnowledgeCardEditor: typeof import('./src/components/KnowledgeCardEditor/index.vue')['default']
+    KnowledgeCardList: typeof import('./src/components/KnowledgeCardList/index.vue')['default']
     KnowledgeCardSidebar: typeof import('./src/components/FilePreview/KnowledgeCardSidebar.vue')['default']
+    KnowledgeCardViewer: typeof import('./src/components/KnowledgeCardViewer/index.vue')['default']
     LoadingSkeleton: typeof import('./src/components/LoadingSkeleton/index.vue')['default']
     LocaleSwitcher: typeof import('./src/components/LocaleSwitcher/index.vue')['default']
     ModalForm: typeof import('./src/components/Form/ModalForm.vue')['default']
@@ -94,5 +98,7 @@ declare module 'vue' {
     TableFilter: typeof import('./src/components/TableFilter/index.vue')['default']
     TextFileViewer: typeof import('./src/components/FilePreview/TextFileViewer.vue')['default']
     ThemeSwitcher: typeof import('./src/components/ThemeSwitcher/index.vue')['default']
+    TiptapEditor: typeof import('./src/components/KnowledgeCardEditor/TiptapEditor.vue')['default']
+    VersionTimeline: typeof import('./src/components/KnowledgeCardViewer/VersionTimeline.vue')['default']
   }
 }
