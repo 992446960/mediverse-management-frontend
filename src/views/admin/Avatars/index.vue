@@ -2,11 +2,7 @@
   <div class="avatars-page flex flex-1 flex-col overflow-hidden">
     <div class="app-container p-4 mb-4">
       <PageHead :head-conf="headConf" />
-      <PageFilter
-        ref="pageFilterRef"
-        :filter-conf="filterConf"
-        @fetch-table-data="onFilterFetch"
-      />
+      <PageFilter ref="pageFilterRef" :filter-conf="filterConf" @fetch-table-data="onFilterFetch" />
     </div>
     <div class="app-container p-0 flex-1 flex flex-col min-h-0">
       <PageTable
@@ -17,10 +13,7 @@
         @fetch-table-data="onTableFetch"
       />
     </div>
-    <AvatarWizard
-      v-model:open="wizardOpen"
-      @success="handleWizardSuccess"
-    />
+    <AvatarWizard v-model:open="wizardOpen" @success="handleWizardSuccess" />
     <AvatarEditModal
       v-model:open="editOpen"
       :avatar-id="editingId ?? undefined"
@@ -30,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
 import { message } from 'ant-design-vue'
@@ -245,13 +238,13 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
       },
       {
         text: t('status.inactive'),
-        dynamicText: (row) =>
-          row.status === 'active' ? t('status.inactive') : t('status.active'),
-        dynamicIcon: (row) =>
-          row.status === 'active' ? PauseCircleOutlined : PlayCircleOutlined,
-        dynamicColor: (row) =>
-          row.status === 'active' ? 'warning' : 'success',
-        handle: handleToggleStatus as unknown as (row: Record<string, unknown>, index?: number) => void,
+        dynamicText: (row) => (row.status === 'active' ? t('status.inactive') : t('status.active')),
+        dynamicIcon: (row) => (row.status === 'active' ? PauseCircleOutlined : PlayCircleOutlined),
+        dynamicColor: (row) => (row.status === 'active' ? 'warning' : 'success'),
+        handle: handleToggleStatus as unknown as (
+          row: Record<string, unknown>,
+          index?: number
+        ) => void,
       },
       {
         text: t('common.delete'),
@@ -281,12 +274,9 @@ async function loadData() {
 
   const typeVal = params.type as string
   const type =
-    typeVal === 'general' || typeVal === 'specialist' || typeVal === 'expert'
-      ? typeVal
-      : undefined
+    typeVal === 'general' || typeVal === 'specialist' || typeVal === 'expert' ? typeVal : undefined
   const statusVal = params.status as string
-  const status =
-    statusVal === 'active' || statusVal === 'inactive' ? statusVal : undefined
+  const status = statusVal === 'active' || statusVal === 'inactive' ? statusVal : undefined
 
   loading.value = true
   try {

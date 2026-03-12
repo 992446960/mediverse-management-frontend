@@ -26,21 +26,37 @@
           <input
             ref="avatarFileRef"
             type="file"
-            accept="image/jpeg,image/png,image/gif"
-            class="hidden"
+            accept="image/jpeg,image/png,image/gif,image/webp"
+            style="display: none"
             aria-hidden="true"
             @change="onAvatarFileChange"
           />
           <div
-            class="step-info-upload-card w-20 h-20 rounded-lg bg-gray-50 dark:bg-gray-700 flex flex-col items-center justify-center cursor-pointer border border-dashed border-gray-300 dark:border-gray-600 hover:border-[#0ea5e9] hover:text-[#0ea5e9] transition-all overflow-hidden shrink-0"
-            @click="triggerAvatarFileInput"
+            class="step-info-upload-card group relative w-20 h-20 rounded-lg bg-gray-50 dark:bg-gray-700 flex flex-col items-center justify-center cursor-pointer border border-dashed border-gray-300 dark:border-gray-600 hover:border-[#0ea5e9] hover:text-[#0ea5e9] transition-all overflow-hidden shrink-0"
+            :class="{ 'pointer-events-none opacity-70': avatarUploading }"
+            @click="onAvatarClick"
           >
-            <img
-              v-if="avatarPreviewUrl"
-              :src="avatarPreviewUrl"
-              :alt="t('avatar.avatar')"
-              class="w-full h-full object-cover"
-            />
+            <a-spin v-if="avatarUploading" />
+            <template v-else-if="avatarPreviewUrl">
+              <img
+                :src="avatarPreviewUrl"
+                :alt="t('avatar.avatar')"
+                class="w-full h-full object-cover"
+              />
+              <!-- 悬浮层：仅在有图片时显示 -->
+              <div
+                class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 text-white"
+              >
+                <EyeOutlined
+                  class="text-lg hover:scale-110 transition-transform"
+                  @click.stop="handlePreview"
+                />
+                <UploadOutlined
+                  class="text-lg hover:scale-110 transition-transform"
+                  @click.stop="triggerAvatarFileInput"
+                />
+              </div>
+            </template>
             <template v-else>
               <PlusOutlined class="text-gray-400 text-lg" />
               <span class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{
@@ -49,10 +65,21 @@
             </template>
           </div>
           <div class="flex flex-col gap-0.5">
-            <p class="text-xs text-gray-400">{{ t('avatar.wizard.avatarSizeHint') + '，' + t('avatar.wizard.avatarFormatHint')}}</p>
+            <p class="text-xs text-gray-400">
+              {{ t('avatar.wizard.avatarSizeHint') + '，' + t('avatar.wizard.avatarFormatHint') }}
+            </p>
           </div>
         </div>
       </a-form-item>
+
+      <a-image
+        :style="{ display: 'none' }"
+        :preview="{
+          visible: previewVisible,
+          onVisibleChange: (vis) => (previewVisible = vis),
+        }"
+        :src="avatarPreviewUrl"
+      />
 
       <a-form-item name="bio">
         <template #label>
@@ -76,60 +103,60 @@
         <template #label>
           <span class="step-info-label">{{ t('avatar.tags') }}</span>
         </template>
-          <div class="step-info-tags-wrap flex flex-wrap items-center gap-2">
-            <template v-for="(tag, index) in local.tags" :key="`${tag}-${index}`">
-              <span class="step-info-tag-pill">
-                <span class="step-info-tag-text">{{ tag }}</span>
-                <span
-                  class="step-info-tag-remove"
-                  role="button"
-                  tabindex="0"
-                  :aria-label="t('common.delete')"
-                  @click="removeTag(index)"
-                  @keydown.enter.prevent="removeTag(index)"
-                  @keydown.space.prevent="removeTag(index)"
-                >
-                  <CloseOutlined class="step-info-tag-remove-icon" />
-                </span>
-              </span>
-            </template>
-            <a-popover
-              v-if="local.tags.length < TAG_MAX_COUNT"
-              v-model:open="tagPopoverOpen"
-              trigger="click"
-              overlay-class-name="step-info-tag-popover"
-              @open-change="onTagPopoverOpenChange"
-            >
-              <template #content>
-                <div class="step-info-tag-add-popover p-1">
-                  <a-input
-                    ref="tagInputRef"
-                    v-model:value="tagInputValue"
-                    :placeholder="t('avatar.wizard.tagPlaceholder')"
-                    :maxlength="20"
-                    size="small"
-                    class="w-48"
-                    @keydown.enter.prevent="confirmAddTag"
-                  />
-                  <a-button type="primary" size="small" class="mt-2 w-full" @click="confirmAddTag">
-                    {{ t('common.confirm') }}
-                  </a-button>
-                </div>
-              </template>
+        <div class="step-info-tags-wrap flex flex-wrap items-center gap-2">
+          <template v-for="(tag, index) in local.tags" :key="`${tag}-${index}`">
+            <span class="step-info-tag-pill">
+              <span class="step-info-tag-text">{{ tag }}</span>
               <span
-                class="step-info-tag-add-pill"
+                class="step-info-tag-remove"
                 role="button"
                 tabindex="0"
-                :aria-label="t('avatar.wizard.addTag')"
-                @keydown.enter.prevent="tagPopoverOpen = true"
-                @keydown.space.prevent="tagPopoverOpen = true"
+                :aria-label="t('common.delete')"
+                @click="removeTag(index)"
+                @keydown.enter.prevent="removeTag(index)"
+                @keydown.space.prevent="removeTag(index)"
               >
-                <PlusOutlined class="step-info-tag-add-icon" />
-                <span>{{ t('avatar.wizard.tagPlaceholderAdd') }}</span>
+                <CloseOutlined class="step-info-tag-remove-icon" />
               </span>
-            </a-popover>
-          </div>
-        </a-form-item>
+            </span>
+          </template>
+          <a-popover
+            v-if="local.tags.length < TAG_MAX_COUNT"
+            v-model:open="tagPopoverOpen"
+            trigger="click"
+            overlay-class-name="step-info-tag-popover"
+            @open-change="onTagPopoverOpenChange"
+          >
+            <template #content>
+              <div class="step-info-tag-add-popover p-1">
+                <a-input
+                  ref="tagInputRef"
+                  v-model:value="tagInputValue"
+                  :placeholder="t('avatar.wizard.tagPlaceholder')"
+                  :maxlength="20"
+                  size="small"
+                  class="w-48"
+                  @keydown.enter.prevent="confirmAddTag"
+                />
+                <a-button type="primary" size="small" class="mt-2 w-full" @click="confirmAddTag">
+                  {{ t('common.confirm') }}
+                </a-button>
+              </div>
+            </template>
+            <span
+              class="step-info-tag-add-pill"
+              role="button"
+              tabindex="0"
+              :aria-label="t('avatar.wizard.addTag')"
+              @keydown.enter.prevent="tagPopoverOpen = true"
+              @keydown.space.prevent="tagPopoverOpen = true"
+            >
+              <PlusOutlined class="step-info-tag-add-icon" />
+              <span>{{ t('avatar.wizard.tagPlaceholderAdd') }}</span>
+            </span>
+          </a-popover>
+        </div>
+      </a-form-item>
 
       <a-form-item name="greeting">
         <template #label>
@@ -153,34 +180,27 @@
         <template #label>
           <span class="step-info-label">{{ t('avatar.style') }}</span>
         </template>
-          <div class="step-info-style-group" role="radiogroup" :aria-label="t('avatar.style')">
-            <div
-              v-for="styleOpt in styleOptions"
-              :key="styleOpt.value"
-              role="radio"
-              tabindex="0"
-              class="step-info-style-card cursor-pointer"
-              :class="{ 'step-info-style-card--selected': local.style === styleOpt.value }"
-              :aria-checked="local.style === styleOpt.value"
-              @click="local.style = styleOpt.value"
-              @keydown.enter.prevent="local.style = styleOpt.value"
-              @keydown.space.prevent="local.style = styleOpt.value"
-            >
-              <span
-                class="step-info-style-dot"
-                :class="{ 'step-info-style-dot--selected': local.style === styleOpt.value }"
-              />
-              <span class="step-info-style-text">
-                {{ t(styleOpt.labelKey) }}
-              </span>
-            </div>
+        <div class="step-info-style-group" role="radiogroup" :aria-label="t('avatar.style')">
+          <div
+            v-for="styleOpt in styleOptions"
+            :key="styleOpt.value"
+            role="radio"
+            tabindex="0"
+            class="step-info-style-card cursor-pointer"
+            :class="{ 'step-info-style-card--selected': local.style === styleOpt.value }"
+            :aria-checked="local.style === styleOpt.value"
+            @click="local.style = styleOpt.value"
+            @keydown.enter.prevent="local.style = styleOpt.value"
+            @keydown.space.prevent="local.style = styleOpt.value"
+          >
+            <span class="step-info-style-text">
+              {{ t(styleOpt.labelKey) }}
+            </span>
           </div>
-        </a-form-item>
+        </div>
+      </a-form-item>
 
-      <a-form-item
-        v-if="local.style === 'custom'"
-        name="style_custom"
-      >
+      <a-form-item v-if="local.style === 'custom'" name="style_custom">
         <template #label>
           <span class="step-info-label">{{ t('avatar.styleCustom') }}</span>
         </template>
@@ -199,7 +219,7 @@
 <script setup lang="ts">
 import { ref, watch, computed, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { PlusOutlined, CloseOutlined } from '@ant-design/icons-vue'
+import { EyeOutlined, PlusOutlined, CloseOutlined, UploadOutlined } from '@ant-design/icons-vue'
 import type { FormInstance } from 'ant-design-vue'
 import type { AvatarWizardForm, AvatarStyle } from '@/types/avatar'
 import { uploadAvatar } from '@/api/upload'
@@ -223,8 +243,9 @@ const tagInputRef = ref<{ focus: () => void } | null>(null)
 const TAG_MAX_COUNT = 10
 const avatarFileRef = ref<HTMLInputElement | null>(null)
 const avatarPreviewUrl = ref('')
-const AVATAR_ACCEPT = 'image/jpeg,image/png,image/gif'
+const AVATAR_ACCEPT = 'image/jpeg,image/png,image/gif,image/webp'
 const avatarUploading = ref(false)
+const previewVisible = ref(false)
 
 const local = ref<
   Pick<
@@ -321,13 +342,29 @@ function triggerAvatarFileInput() {
   avatarFileRef.value?.click()
 }
 
+function handlePreview() {
+  previewVisible.value = true
+}
+
+function onAvatarClick() {
+  if (avatarPreviewUrl.value) {
+    handlePreview()
+  } else {
+    triggerAvatarFileInput()
+  }
+}
+
 async function onAvatarFileChange(e: Event) {
   const input = e.target as HTMLInputElement
   const file = input.files?.[0]
   input.value = ''
   if (!file) return
   const type = file.type as string
-  if (!AVATAR_ACCEPT.split(',').map((s) => s.trim()).includes(type)) {
+  if (
+    !AVATAR_ACCEPT.split(',')
+      .map((s) => s.trim())
+      .includes(type)
+  ) {
     return
   }
   revokeAvatarPreview()
@@ -422,7 +459,9 @@ defineExpose({
   border-radius: 50%;
   color: #0ea5e9;
   cursor: pointer;
-  transition: color 0.15s, background 0.15s;
+  transition:
+    color 0.15s,
+    background 0.15s;
 }
 .step-info-tag-remove:hover {
   color: #0284c7;
@@ -442,7 +481,9 @@ defineExpose({
   color: #9ca3af;
   font-size: 12px;
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
 }
 .step-info-tag-add-pill:hover {
   border-color: #9ca3af;
@@ -477,23 +518,12 @@ defineExpose({
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   background: #fff;
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
 }
 .step-info-style-card:hover {
   border-color: #0ea5e9;
-}
-.step-info-style-dot {
-  flex-shrink: 0;
-  width: 16px;
-  height: 16px;
-  border: 2px solid #d1d5db;
-  border-radius: 50%;
-  background: #fff;
-  transition: border-color 0.15s, background 0.15s;
-}
-.step-info-style-dot--selected {
-  border-color: #0ea5e9;
-  background: #0ea5e9;
 }
 .step-info-style-card--selected {
   border-color: #0ea5e9 !important;
@@ -505,14 +535,6 @@ defineExpose({
 .step-info-style-text {
   font-size: 14px;
   color: #6b7280;
-}
-.dark .step-info-style-dot {
-  border-color: #6b7280;
-  background: var(--ant-color-bg-container);
-}
-.dark .step-info-style-dot--selected {
-  border-color: #0ea5e9;
-  background: #0ea5e9;
 }
 .dark .step-info-style-card {
   background: var(--ant-color-bg-container);

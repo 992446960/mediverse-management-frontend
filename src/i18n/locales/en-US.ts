@@ -160,7 +160,8 @@ export default {
     uploadAutoCategory: 'Auto category',
     uploadManualCategory: 'Select directory',
     uploadSelectDirectoryLabel: 'Select directory',
-    uploadQueueHint: 'You can drag more files to add; category and directory apply to files not yet started.',
+    uploadQueueHint:
+      'You can drag more files to add; category and directory apply to files not yet started.',
     selectDirectory: 'Select directory',
     uploadDragText: 'Click or drag files here to upload',
     uploadAcceptHint: 'Accepted formats: {accept}',
@@ -176,7 +177,8 @@ export default {
     uploadFailed: 'Upload failed',
     uploadingCount: 'Uploading ({count})',
     uploadCloseConfirmTitle: 'Confirm close',
-    uploadCloseConfirmContent: '{count} file(s) uploading. They will continue in background. Close anyway?',
+    uploadCloseConfirmContent:
+      '{count} file(s) uploading. They will continue in background. Close anyway?',
     uploadLeaveConfirm: 'Files are uploading. Leaving will abort uploads. Leave anyway?',
     download: 'Download',
     downloadFailed: 'Download Failed',
@@ -249,6 +251,33 @@ export default {
       styleCustom: 'Custom',
       confirmCreate: 'Create',
       createSuccess: 'Avatar created successfully',
+      pageTitlePersonal: 'My Digital Avatar',
+      pageTitleDept: 'Dept Digital Doctor',
+      pageTitleOrg: 'Org Digital Doctor',
+      stats: {
+        title: 'Digital Avatar Service Statistics',
+        totalSessions: 'Total Sessions',
+        todaySessions: 'Today Sessions',
+        todayTokensUsed: 'Today Tokens Used',
+        totalTokensUsed: 'Total Tokens Used',
+        totalReferences: 'Knowledge Base References',
+      },
+      quickGuide: {
+        title: 'Quick Action Guide',
+        content:
+          'After completing the configuration, you can directly enter the dialogue test in the console for real-time debugging.',
+        testNow: 'Test Now',
+      },
+      config: {
+        basicInfo: 'Basic Info Configuration',
+        dialogStrategy: 'Dialogue Strategy',
+        placeholderName:
+          'Please enter the name of the digital avatar, e.g., Clinical Assistant - Xiaolan',
+        placeholderBio:
+          'Please briefly describe the background and responsibilities of the digital avatar',
+        placeholderGreeting: 'Hello! I am your digital clinical assistant, how can I help you?',
+        avatarFormatHint: 'Supports JPG, PNG formats, recommended size 512x512px',
+      },
     },
   },
   auth: {

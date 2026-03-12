@@ -7,22 +7,22 @@ import type { Avatar, CreateAvatarParams, UpdateAvatarParams } from '@/types/ava
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 
-const mutableAvatars: Avatar[] = initialAvatars.map(a => ({ ...a }))
+const mutableAvatars: Avatar[] = initialAvatars.map((a) => ({ ...a }))
 
 function resolveOrgName(orgId: string): string {
-  return organizations.find(o => o.id === orgId)?.name ?? ''
+  return organizations.find((o) => o.id === orgId)?.name ?? ''
 }
 
 function resolveDeptName(deptId: string): string {
-  return departments.find(d => d.id === deptId)?.name ?? ''
+  return departments.find((d) => d.id === deptId)?.name ?? ''
 }
 
 function resolveUserName(userId: string): string {
-  return users.find(u => u.id === userId)?.real_name ?? ''
+  return users.find((u) => u.id === userId)?.real_name ?? ''
 }
 
 function delay(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms))
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 export const avatarHandlers = [
@@ -30,7 +30,10 @@ export const avatarHandlers = [
     await delay(250)
     const url = new URL(request.url)
     const page = Math.max(1, Number.parseInt(url.searchParams.get('page') || '1', 10))
-    const pageSize = Math.min(100, Math.max(1, Number.parseInt(url.searchParams.get('page_size') || '20', 10)))
+    const pageSize = Math.min(
+      100,
+      Math.max(1, Number.parseInt(url.searchParams.get('page_size') || '20', 10))
+    )
     const keyword = url.searchParams.get('keyword')?.trim() || ''
     const type = url.searchParams.get('type') as Avatar['type'] | null
     const org_id = url.searchParams.get('org_id')?.trim() || ''
@@ -40,19 +43,19 @@ export const avatarHandlers = [
     let list = mutableAvatars
 
     if (keyword) {
-      list = list.filter(a => a.name.includes(keyword))
+      list = list.filter((a) => a.name.includes(keyword))
     }
     if (type === 'general' || type === 'specialist' || type === 'expert') {
-      list = list.filter(a => a.type === type)
+      list = list.filter((a) => a.type === type)
     }
     if (org_id) {
-      list = list.filter(a => a.org_id === org_id)
+      list = list.filter((a) => a.org_id === org_id)
     }
     if (dept_id) {
-      list = list.filter(a => a.dept_id === dept_id)
+      list = list.filter((a) => a.dept_id === dept_id)
     }
     if (status === 'active' || status === 'inactive') {
-      list = list.filter(a => a.status === status)
+      list = list.filter((a) => a.status === status)
     }
 
     const total = list.length
@@ -144,7 +147,7 @@ export const avatarHandlers = [
     await delay(200)
     const id = params.id as string
     const body = (await request.json()) as UpdateAvatarParams
-    const idx = mutableAvatars.findIndex(a => a.id === id)
+    const idx = mutableAvatars.findIndex((a) => a.id === id)
     if (idx === -1) {
       return HttpResponse.json({
         code: 40002,
@@ -154,12 +157,14 @@ export const avatarHandlers = [
     }
     const cur = mutableAvatars[idx]!
     if (body.name !== undefined) cur.name = body.name.trim()
-    if (body.avatar_url !== undefined) cur.avatar_url = body.avatar_url ? body.avatar_url.trim() : null
+    if (body.avatar_url !== undefined)
+      cur.avatar_url = body.avatar_url ? body.avatar_url.trim() : null
     if (body.bio !== undefined) cur.bio = body.bio ? body.bio.trim() : null
     if (body.tags !== undefined) cur.tags = body.tags
     if (body.greeting !== undefined) cur.greeting = body.greeting ? body.greeting.trim() : null
     if (body.style !== undefined) cur.style = body.style
-    if (body.style_custom !== undefined) cur.style_custom = body.style_custom ? body.style_custom.trim() : null
+    if (body.style_custom !== undefined)
+      cur.style_custom = body.style_custom ? body.style_custom.trim() : null
     cur.updated_at = new Date().toISOString()
     return HttpResponse.json({
       code: 0,
@@ -171,7 +176,7 @@ export const avatarHandlers = [
   http.delete(`${API_BASE}/avatars/:id`, async ({ params }) => {
     await delay(200)
     const id = params.id as string
-    const idx = mutableAvatars.findIndex(a => a.id === id)
+    const idx = mutableAvatars.findIndex((a) => a.id === id)
     if (idx === -1) {
       return HttpResponse.json({
         code: 40002,
@@ -191,7 +196,7 @@ export const avatarHandlers = [
     await delay(200)
     const id = params.id as string
     const body = (await request.json()) as { status: 'active' | 'inactive' }
-    const idx = mutableAvatars.findIndex(a => a.id === id)
+    const idx = mutableAvatars.findIndex((a) => a.id === id)
     if (idx === -1) {
       return HttpResponse.json({
         code: 40002,
@@ -212,7 +217,7 @@ export const avatarHandlers = [
   http.get(`${API_BASE}/avatars/:id`, async ({ params }) => {
     await delay(150)
     const id = params.id as string
-    const avatar = mutableAvatars.find(a => a.id === id)
+    const avatar = mutableAvatars.find((a) => a.id === id)
     if (!avatar) {
       return HttpResponse.json({
         code: 40002,
@@ -224,6 +229,29 @@ export const avatarHandlers = [
       code: 0,
       message: 'ok',
       data: { ...avatar },
+    })
+  }),
+
+  http.post(`${API_BASE}/upload/avatar`, async ({ request }) => {
+    await delay(300)
+    const formData = await request.formData()
+    const file = formData.get('file') as File | null
+    if (!file || !(file instanceof File)) {
+      return HttpResponse.json({
+        code: 40001,
+        message: '请选择要上传的文件',
+        data: null,
+      })
+    }
+    const url = `https://example.com/uploads/avatar-${Date.now()}-${file.name}`
+    return HttpResponse.json({
+      code: 0,
+      message: 'ok',
+      data: {
+        url,
+        file_name: file.name,
+        file_size: file.size,
+      },
     })
   }),
 ]

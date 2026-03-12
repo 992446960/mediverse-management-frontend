@@ -37,22 +37,36 @@
               ref="avatarFileRef"
               type="file"
               accept="image/jpeg,image/png,image/gif,image/webp"
-              class="hidden"
+              style="display: none"
               aria-hidden="true"
               @change="onAvatarFileChange"
             />
             <div
-              class="edit-avatar-upload-card w-20 h-20 rounded-lg bg-gray-50 dark:bg-gray-700 flex flex-col items-center justify-center cursor-pointer border border-dashed border-gray-300 dark:border-gray-600 hover:border-[#0ea5e9] hover:text-[#0ea5e9] transition-all overflow-hidden shrink-0"
+              class="edit-avatar-upload-card group relative w-20 h-20 rounded-lg bg-gray-50 dark:bg-gray-700 flex flex-col items-center justify-center cursor-pointer border border-dashed border-gray-300 dark:border-gray-600 hover:border-[#0ea5e9] hover:text-[#0ea5e9] transition-all overflow-hidden shrink-0"
               :class="{ 'pointer-events-none opacity-70': avatarUploading }"
-              @click="triggerAvatarFileInput"
+              @click="onAvatarClick"
             >
               <a-spin v-if="avatarUploading" />
-              <img
-                v-else-if="form.avatar_url"
-                :src="form.avatar_url"
-                :alt="t('avatar.avatar')"
-                class="w-full h-full object-cover"
-              />
+              <template v-else-if="form.avatar_url">
+                <img
+                  :src="form.avatar_url"
+                  :alt="t('avatar.avatar')"
+                  class="w-full h-full object-cover"
+                />
+                <!-- 悬浮层：仅在有图片时显示 -->
+                <div
+                  class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 text-white"
+                >
+                  <EyeOutlined
+                    class="text-lg hover:scale-110 transition-transform"
+                    @click.stop="handlePreview"
+                  />
+                  <UploadOutlined
+                    class="text-lg hover:scale-110 transition-transform"
+                    @click.stop="triggerAvatarFileInput"
+                  />
+                </div>
+              </template>
               <template v-else>
                 <PlusOutlined class="text-gray-400 text-lg" />
                 <span class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{
@@ -65,6 +79,15 @@
             </p>
           </div>
         </a-form-item>
+
+        <a-image
+          :style="{ display: 'none' }"
+          :preview="{
+            visible: previewVisible,
+            onVisibleChange: (vis) => (previewVisible = vis),
+          }"
+          :src="form.avatar_url"
+        />
 
         <a-form-item :label="t('avatar.bio')" name="bio">
           <a-textarea
@@ -128,7 +151,7 @@
 import { computed, ref, watch } from 'vue'
 import { message } from 'ant-design-vue'
 import type { FormInstance } from 'ant-design-vue'
-import { PlusOutlined } from '@ant-design/icons-vue'
+import { EyeOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons-vue'
 import { useI18n } from 'vue-i18n'
 import { getAvatarDetail, updateAvatar } from '@/api/avatars'
 import { uploadAvatar } from '@/api/upload'
@@ -156,6 +179,7 @@ const avatar = ref<Avatar | null>(null)
 const formRef = ref<FormInstance>()
 const avatarFileRef = ref<HTMLInputElement | null>(null)
 const avatarUploading = ref(false)
+const previewVisible = ref(false)
 
 interface EditFormState {
   name: string
@@ -188,13 +212,30 @@ function triggerAvatarFileInput() {
   avatarFileRef.value?.click()
 }
 
+function handlePreview() {
+  previewVisible.value = true
+}
+
+function onAvatarClick() {
+  if (form.value.avatar_url) {
+    handlePreview()
+  } else {
+    triggerAvatarFileInput()
+  }
+}
+
 async function onAvatarFileChange(e: Event) {
   const input = e.target as HTMLInputElement
   const file = input.files?.[0]
   input.value = ''
   if (!file) return
   const type = file.type
-  if (!AVATAR_ACCEPT.split(',').map((s) => s.trim()).includes(type)) return
+  if (
+    !AVATAR_ACCEPT.split(',')
+      .map((s) => s.trim())
+      .includes(type)
+  )
+    return
   avatarUploading.value = true
   try {
     const res = await uploadAvatar(file)

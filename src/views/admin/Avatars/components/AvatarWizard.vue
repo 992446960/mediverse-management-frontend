@@ -18,7 +18,7 @@
 
     <div
       :id="contentId"
-      class="avatar-wizard-content px-6 pt-2 pb-0"
+      class="avatar-wizard-content pb-0"
       role="region"
       :aria-label="t('avatar.wizard.stepProgress', { current: currentStep + 1, total: 4 })"
     >
@@ -82,10 +82,10 @@
 
     <!-- 底部：分隔线 + 取消/上一步 + 确认 -->
     <div
-      class="avatar-wizard-footer px-6 py-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-slate-900/50 flex justify-end items-center gap-3"
+      class="avatar-wizard-footer pt-3 pb-2 border-t border-gray-100 dark:border-gray-800 dark:bg-slate-900/50 flex justify-end items-center gap-3"
     >
       <a-button
-        class="avatar-wizard-btn min-h-[44px] min-w-[80px] cursor-pointer transition-colors duration-200"
+        class="avatar-wizard-btn cursor-pointer transition-colors duration-200"
         @click="onCancel"
       >
         {{ currentStep > 0 ? t('common.prev') : t('common.cancel') }}
@@ -93,7 +93,7 @@
       <a-button
         v-if="currentStep < 3"
         type="primary"
-        class="avatar-wizard-btn min-h-[44px] min-w-[80px] cursor-pointer transition-colors duration-200 bg-[#0ea5e9] hover:bg-sky-600! border-0"
+        class="avatar-wizard-btn cursor-pointer transition-colors duration-200 bg-[#0ea5e9] hover:bg-sky-600! border-0"
         :loading="loading"
         @click="onNext"
       >
