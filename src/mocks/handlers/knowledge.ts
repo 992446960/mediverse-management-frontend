@@ -1,12 +1,58 @@
 import { http, HttpResponse, delay } from 'msw'
-import { mockDirectories, mockFiles, FILE_STATUS_STEPS } from '../data/knowledge'
-import type { DirectoryNode, FileListItem } from '@/types/knowledge'
+import { mockDirectories, mockFiles, FILE_STATUS_STEPS, MOCK_PARSED_MD } from '../data/knowledge'
+import type { DirectoryNode, FileListItem, FileCard } from '@/types/knowledge'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 
+/** 最小有效 PDF 用于预览占位 */
+const MINIMAL_PDF = `%PDF-1.4
+1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
+2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj
+3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R>>endobj
+xref
+0 4
+0000000000 65535 f 
+0000000009 00000 n 
+0000000052 00000 n 
+0000000101 00000 n 
+trailer<</Size 4/Root 1 0 R>>
+startxref
+178
+%%EOF`
+
+/** 模拟知识卡数据 */
+const mockFileCards: Record<string, FileCard[]> = {
+  file_001: [
+    {
+      id: 'card_001',
+      type: 'evidence',
+      title: '高血压诊断标准',
+      tags: ['高血压', '诊断'],
+      online_status: 'online',
+      confidence: 0.92,
+    },
+    {
+      id: 'card_002',
+      type: 'rule',
+      title: '降压药物选用原则',
+      tags: ['用药', '指南'],
+      online_status: 'online',
+      confidence: 0.88,
+    },
+    {
+      id: 'card_003',
+      type: 'experience',
+      title: '顽固性高血压处理经验',
+      tags: ['临床经验'],
+      online_status: 'online',
+      confidence: 0.85,
+    },
+  ],
+}
+
 // 可变数据，模拟增删改
-let mutableDirectories = [...mockDirectories]
-let mutableFiles = [...mockFiles]
+const mutableDirectories = [...mockDirectories]
+const mutableFiles = [...mockFiles]
 
 export const knowledgeHandlers = [
   // 获取目录树
@@ -64,62 +110,92 @@ export const knowledgeHandlers = [
       const dirId = (formData.get('dir_id') as string) || ''
 
       if (!rawFile || !(rawFile instanceof File)) {
-        return HttpResponse.json({ code: 40001, message: 'Missing file', data: null }, { status: 200 })
+        return HttpResponse.json(
+          { code: 40001, message: 'Missing file', data: null },
+          { status: 200 }
+        )
       }
 
-    const id = `file_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
-    const fileType = (rawFile.name.split('.').pop() || 'bin').toLowerCase()
-    let dirName = '未分类'
-    if (dirId) {
-      const findDir = (nodes: typeof mutableDirectories): string | null => {
-        for (const n of nodes) {
-          if (n.id === dirId) return n.name
-          if (n.children?.length) {
-            const found = findDir(n.children)
-            if (found) return found
+      const id = `file_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
+      const fileType = (rawFile.name.split('.').pop() || 'bin').toLowerCase()
+      let dirName = '未分类'
+      if (dirId) {
+        const findDir = (nodes: typeof mutableDirectories): string | null => {
+          for (const n of nodes) {
+            if (n.id === dirId) return n.name
+            if (n.children?.length) {
+              const found = findDir(n.children)
+              if (found) return found
+            }
           }
+          return null
         }
-        return null
+        dirName = findDir(mutableDirectories) ?? dirName
       }
-      dirName = findDir(mutableDirectories) ?? dirName
-    }
 
-    const newItem: FileListItem = {
-      id,
-      file_name: rawFile.name,
-      file_type: fileType,
-      file_size: rawFile.size,
-      dir_id: dirId,
-      dir_name: dirName,
-      status: 'uploading',
-      error_msg: null,
-      auto_category_suggestion: null,
-      auto_category_name: null,
-      knowledge_card_count: 0,
-      created_by: 'u_doctor_001',
-      created_by_name: '北京协和医院',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }
-    mutableFiles.push(newItem)
-    await delay(200)
-    return HttpResponse.json({
-      code: 0,
-      message: 'ok',
-      data: [
-        {
-          id: newItem.id,
-          file_name: newItem.file_name,
-          file_size: newItem.file_size,
-          status: newItem.status,
-          created_at: newItem.created_at,
-        },
-      ],
-    })
+      const newItem: FileListItem = {
+        id,
+        file_name: rawFile.name,
+        file_type: fileType,
+        file_size: rawFile.size,
+        dir_id: dirId,
+        dir_name: dirName,
+        status: 'uploading',
+        error_msg: null,
+        auto_category_suggestion: null,
+        auto_category_name: null,
+        knowledge_card_count: 0,
+        created_by: 'u_doctor_001',
+        created_by_name: '北京协和医院',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+      mutableFiles.push(newItem)
+      await delay(200)
+      return HttpResponse.json({
+        code: 0,
+        message: 'ok',
+        data: [
+          {
+            id: newItem.id,
+            file_name: newItem.file_name,
+            file_size: newItem.file_size,
+            status: newItem.status,
+            created_at: newItem.created_at,
+          },
+        ],
+      })
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Upload failed'
       return HttpResponse.json({ code: 50001, message, data: null }, { status: 200 })
     }
+  }),
+
+  // 查询单个文件详情
+  http.get(`${API_BASE}/knowledge/:ownerType/:ownerId/files/:fileId`, async ({ params }) => {
+    const { fileId } = params
+    const file = mutableFiles.find((f) => f.id === fileId)
+    if (!file) {
+      return HttpResponse.json({ code: 40002, message: 'File not found', data: null })
+    }
+    await delay(200)
+    return HttpResponse.json({
+      code: 0,
+      message: 'ok',
+      data: file,
+    })
+  }),
+
+  // 查询文件关联的知识卡
+  http.get(`${API_BASE}/knowledge/:ownerType/:ownerId/files/:fileId/cards`, async ({ params }) => {
+    const fileId = params.fileId as string
+    await delay(300)
+    const items = mockFileCards[fileId] ?? []
+    return HttpResponse.json({
+      code: 0,
+      message: 'ok',
+      data: items,
+    })
   }),
 
   // 查询文件列表
@@ -235,6 +311,26 @@ export const knowledgeHandlers = [
       code: 0,
       message: 'ok',
       data: null,
+    })
+  }),
+
+  // 模拟解析后文档（ParsedDocViewer fetch）
+  http.get(`${API_BASE}/mock/files/:fileId/parsed`, async () => {
+    await delay(100)
+    return new HttpResponse(MOCK_PARSED_MD, {
+      headers: { 'Content-Type': 'text/markdown; charset=utf-8' },
+    })
+  }),
+
+  // 模拟原文件（vue-office fetch，返回最小 PDF 二进制流）
+  http.get(`${API_BASE}/mock/files/:fileId/original`, async () => {
+    await delay(100)
+    const body = new TextEncoder().encode(MINIMAL_PDF)
+    return new HttpResponse(body, {
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Length': String(body.length),
+      },
     })
   }),
 

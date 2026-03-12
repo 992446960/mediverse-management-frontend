@@ -7,6 +7,7 @@ import type {
   FileStatusResponse,
   CreateDirectoryPayload,
   UploadFileResult,
+  FileCard,
 } from '@/types/knowledge'
 import type { PaginatedData } from '@/types/api'
 import type { AxiosRequestConfig } from 'axios'
@@ -31,11 +32,9 @@ export function uploadFile(
   form.append('file', file)
   if (dirId) form.append('dir_id', dirId)
   return request
-    .post<UploadFileResult | UploadFileResult[]>(
-      `${BASE_URL}/${ownerType}/${ownerId}/files`,
-      form,
-      config
-    )
+    .post<
+      UploadFileResult | UploadFileResult[]
+    >(`${BASE_URL}/${ownerType}/${ownerId}/files`, form, config)
     .then((data) => {
       const one = Array.isArray(data) ? data[0] : data
       if (!one) throw new Error('Upload response empty')
@@ -71,6 +70,17 @@ export function getFileList(ownerType: OwnerType, ownerId: string, params: FileL
 }
 
 /**
+ * 查询单个文件详情（含 file_url、parsed_file_url）
+ */
+export function getFileDetail(
+  ownerType: OwnerType,
+  ownerId: string,
+  fileId: string
+): Promise<FileListItem> {
+  return request.get<FileListItem>(`${BASE_URL}/${ownerType}/${ownerId}/files/${fileId}`)
+}
+
+/**
  * 查询文件处理状态（轮询）
  */
 export function getFileStatus(ownerType: OwnerType, ownerId: string, fileId: string) {
@@ -100,4 +110,16 @@ export function downloadFile(ownerType: OwnerType, ownerId: string, fileId: stri
   return request.get(`${BASE_URL}/${ownerType}/${ownerId}/files/${fileId}/download`, {
     responseType: 'blob',
   })
+}
+
+/**
+ * 查询文件关联的知识卡
+ * GET /api/v1/knowledge/{owner_type}/{owner_id}/files/{id}/cards
+ */
+export function getFileCards(
+  ownerType: OwnerType,
+  ownerId: string,
+  fileId: string
+): Promise<FileCard[]> {
+  return request.get<FileCard[]>(`${BASE_URL}/${ownerType}/${ownerId}/files/${fileId}/cards`)
 }

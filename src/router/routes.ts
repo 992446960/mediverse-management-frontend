@@ -48,6 +48,12 @@ const routes: RouteRecordRaw[] = [
         meta: { title: 'menu.files' },
       },
       {
+        path: 'files/preview/:id',
+        name: 'MyFilesPreview',
+        component: () => import('@/views/shared/FilePreviewPage.vue'),
+        meta: { title: 'knowledge.preview', hidden: true },
+      },
+      {
         path: 'knowledge-cards',
         name: 'MyKnowledgeCards',
         component: () => import('@/views/my/KnowledgeCards.vue'),
@@ -78,6 +84,12 @@ const routes: RouteRecordRaw[] = [
         meta: { title: 'menu.files' },
       },
       {
+        path: 'files/preview/:id',
+        name: 'DeptFilesPreview',
+        component: () => import('@/views/shared/FilePreviewPage.vue'),
+        meta: { title: 'knowledge.preview', hidden: true },
+      },
+      {
         path: 'knowledge-cards',
         name: 'DeptKnowledgeCards',
         component: () => import('@/views/dept/KnowledgeCards.vue'),
@@ -106,6 +118,12 @@ const routes: RouteRecordRaw[] = [
         name: 'OrgFiles',
         component: () => import('@/views/org/Files.vue'),
         meta: { title: 'menu.files' },
+      },
+      {
+        path: 'files/preview/:id',
+        name: 'OrgFilesPreview',
+        component: () => import('@/views/shared/FilePreviewPage.vue'),
+        meta: { title: 'knowledge.preview', hidden: true },
       },
       {
         path: 'knowledge-cards',

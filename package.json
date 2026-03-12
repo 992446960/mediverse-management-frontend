@@ -13,13 +13,18 @@
   },
   "dependencies": {
     "@ant-design/icons-vue": "^7.0.1",
+    "@vue-office/docx": "^1.6.3",
+    "@vue-office/excel": "^1.7.14",
+    "@vue-office/pdf": "^2.0.10",
     "ant-design-vue": "^4.2.6",
     "axios": "^1.13.6",
     "dayjs": "^1.11.19",
     "lodash-es": "^4.17.23",
+    "marked": "^17.0.4",
     "pinia": "^3.0.4",
     "pinia-plugin-persistedstate": "^4.7.1",
     "vue": "^3.5.25",
+    "vue-demi": "^0.14.10",
     "vue-i18n": "^11.2.8",
     "vue-router": "^5.0.3"
   },
@@ -50,6 +55,14 @@
     "vue-tsc": "^3.1.5"
   },
   "packageManager": "pnpm@10.28.2+sha512.41872f037ad22f7348e3b1debbaf7e867cfd448f2726d9cf74c08f19507c31d2c8e7a11525b983febc2df640b5438dee6023ebb1f84ed43cc2d654d2bc326264",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@vue-office/docx",
+      "@vue-office/excel",
+      "@vue-office/pdf",
+      "vue-demi"
+    ]
+  },
   "msw": {
     "workerDirectory": [
       "public"

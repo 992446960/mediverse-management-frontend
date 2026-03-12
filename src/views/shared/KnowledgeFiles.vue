@@ -70,6 +70,7 @@ import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
 import { message, Modal } from 'ant-design-vue'
+import { useRouter } from 'vue-router'
 import {
   SearchOutlined,
   ReloadOutlined,
@@ -107,6 +108,7 @@ const props = defineProps<{
 }>()
 
 const { t } = useI18n()
+const router = useRouter()
 
 const pageFilterRef = ref<InstanceType<typeof PageFilter> | null>(null)
 const pageTableRef = ref<InstanceType<typeof PageTable> | null>(null)
@@ -169,8 +171,8 @@ function getStatusLabel(status: FileStatus): string {
 const uploadQueue = ref<UploadQueueItem[]>([])
 const uploadModalVisible = ref(false)
 
-const uploadingCount = computed(() =>
-  uploadQueue.value.filter((i) => i.status === 'pending' || i.status === 'uploading').length
+const uploadingCount = computed(
+  () => uploadQueue.value.filter((i) => i.status === 'pending' || i.status === 'uploading').length
 )
 
 function openUploadModal() {
@@ -211,13 +213,17 @@ onBeforeUnmount(() => {
   window.removeEventListener('beforeunload', handleBeforeUnload)
 })
 
-watch(uploadingCount, (count) => {
-  if (count > 0) {
-    window.addEventListener('beforeunload', handleBeforeUnload)
-  } else {
-    window.removeEventListener('beforeunload', handleBeforeUnload)
-  }
-}, { immediate: true })
+watch(
+  uploadingCount,
+  (count) => {
+    if (count > 0) {
+      window.addEventListener('beforeunload', handleBeforeUnload)
+    } else {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+    }
+  },
+  { immediate: true }
+)
 
 const headConf = computed<PageHeadConfig>(() => {
   const btns: PageHeadConfig['btns'] = [
@@ -435,8 +441,15 @@ watch(
 )
 
 // ----- 操作列行为 -----
+const PREVIEW_ROUTE_NAMES: Record<OwnerType, string> = {
+  personal: 'MyFilesPreview',
+  dept: 'DeptFilesPreview',
+  org: 'OrgFilesPreview',
+}
+
 function handlePreview(record: FileListItem) {
-  message.info(`TODO: ${t('knowledge.preview')} - ${record.file_name}`)
+  const name = PREVIEW_ROUTE_NAMES[props.ownerType]
+  router.push({ name, params: { id: record.id } })
 }
 
 function handleDelete(record: FileListItem) {

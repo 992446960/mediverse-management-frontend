@@ -32,6 +32,8 @@ export interface FileListItem {
   dir_id: string
   dir_name: string
   status: FileStatus
+  file_url?: string
+  parsed_file_url?: string | null
   error_msg: string | null
   auto_category_suggestion: string | null
   auto_category_name: string | null
@@ -40,6 +42,16 @@ export interface FileListItem {
   created_by_name: string
   created_at: string
   updated_at: string
+}
+
+/** 文件关联的知识卡（预览侧栏用） */
+export interface FileCard {
+  id: string
+  type: CardType
+  title: string
+  tags: string[]
+  online_status?: string
+  confidence?: number
 }
 
 /** 文件处理状态响应 */

@@ -69,6 +69,30 @@ export const mockDirectories: DirectoryNode[] = [
   },
 ]
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1'
+
+/** 模拟解析后文档（PDF 解析视图用） */
+export const MOCK_PARSED_MD = `# 中国高血压防治指南 2023 解析摘要
+
+## 一、高血压定义与分类
+
+根据《中国高血压防治指南（2023年）》，高血压定义为：在未使用降压药物的情况下，非同日3次测量诊室血压，收缩压≥140mmHg和（或）舒张压≥90mmHg。
+
+### 血压分类
+
+| 分类 | 收缩压(mmHg) | 舒张压(mmHg) |
+|------|-------------|-------------|
+| 正常 | <120 | 和 <80 |
+| 正常高值 | 120-139 | 和（或）80-89 |
+| 高血压 | ≥140 | 和（或）≥90 |
+
+## 二、诊断要点
+
+1. 确诊需多次测量
+2. 建议进行动态血压监测
+3. 排除继发性高血压
+`
+
 /** 模拟文件列表数据 */
 export const mockFiles: FileListItem[] = [
   {
@@ -79,6 +103,8 @@ export const mockFiles: FileListItem[] = [
     dir_id: 'dir_001_001',
     dir_name: '高血压指南',
     status: 'done',
+    file_url: `${API_BASE}/mock/files/file_001/original`,
+    parsed_file_url: `${API_BASE}/mock/files/file_001/parsed`,
     error_msg: null,
     auto_category_suggestion: 'dir_001',
     auto_category_name: '指南',
@@ -96,6 +122,8 @@ export const mockFiles: FileListItem[] = [
     dir_id: 'dir_001_002',
     dir_name: '糖尿病指南',
     status: 'parsing',
+    file_url: `${API_BASE}/mock/files/file_002/original`,
+    parsed_file_url: null,
     error_msg: null,
     auto_category_suggestion: 'dir_001',
     auto_category_name: '指南',
@@ -113,6 +141,8 @@ export const mockFiles: FileListItem[] = [
     dir_id: '',
     dir_name: '未分类',
     status: 'failed',
+    file_url: `${API_BASE}/mock/files/file_003/original`,
+    parsed_file_url: null,
     error_msg: '文件格式解析异常：未找到有效的表格数据',
     auto_category_suggestion: null,
     auto_category_name: null,
@@ -130,6 +160,8 @@ export const mockFiles: FileListItem[] = [
     dir_id: 'dir_006',
     dir_name: '其他',
     status: 'extracting',
+    file_url: `${API_BASE}/mock/files/file_004/original`,
+    parsed_file_url: null,
     error_msg: null,
     auto_category_suggestion: 'dir_006',
     auto_category_name: '其他',
@@ -147,6 +179,8 @@ export const mockFiles: FileListItem[] = [
     dir_id: 'dir_005',
     dir_name: '规则',
     status: 'indexing',
+    file_url: `${API_BASE}/mock/files/file_005/original`,
+    parsed_file_url: null,
     error_msg: null,
     auto_category_suggestion: 'dir_005',
     auto_category_name: '规则',
@@ -158,4 +192,10 @@ export const mockFiles: FileListItem[] = [
   },
 ]
 
-export const FILE_STATUS_STEPS: FileStatus[] = ['uploading', 'parsing', 'extracting', 'indexing', 'done']
+export const FILE_STATUS_STEPS: FileStatus[] = [
+  'uploading',
+  'parsing',
+  'extracting',
+  'indexing',
+  'done',
+]

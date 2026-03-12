@@ -1,6 +1,9 @@
 <template>
-  <nav class="page-head flex items-center justify-between h-10">
-    <div class="flex items-center gap-2">
+  <nav
+    class="page-head flex items-center justify-between"
+    :class="hasTitleSlot ? 'min-h-10 py-1' : 'h-10'"
+  >
+    <div class="flex gap-2 min-w-0" :class="hasTitleSlot ? 'items-start' : 'items-center'">
       <a-button
         v-if="headConf.backLeft"
         type="link"
@@ -12,9 +15,14 @@
         </template>
         返回
       </a-button>
-      <span v-if="headConf.title" class="page-head__title text-base font-bold text-slate-800 dark:text-slate-100">
-        {{ headConf.title }}
-      </span>
+      <slot name="title" :title="headConf.title">
+        <span
+          v-if="headConf.title"
+          class="page-head__title text-base font-bold text-slate-800 dark:text-slate-100"
+        >
+          {{ headConf.title }}
+        </span>
+      </slot>
       <a-tooltip v-if="headConf.intro" :title="headConf.intro">
         <QuestionCircleOutlined class="text-slate-400 cursor-help" />
       </a-tooltip>
@@ -60,7 +68,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, useSlots } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowLeftOutlined, QuestionCircleOutlined } from '@ant-design/icons-vue'
 import type { PageHeadConfig, PageHeadBtn } from './types'
@@ -68,6 +76,9 @@ import type { PageHeadConfig, PageHeadBtn } from './types'
 const props = defineProps<{
   headConf: PageHeadConfig
 }>()
+
+const slots = useSlots()
+const hasTitleSlot = computed(() => !!slots.title)
 
 const router = useRouter()
 
