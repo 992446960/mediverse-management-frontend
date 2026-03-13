@@ -721,8 +721,37 @@ Content-Type: application/json
 }
 ```
 
----
 
+#### 2.1.6 我的分身统计2.0
+`GET /api/v1/my/avatar/stats/{owner_type}/{owner_id}`（根据owner_type类型使用不同的owner_id查询分身统计数据）
+
+- 作用：用于多角色用户进入不同角色工作台获取对应分身统计数据
+```json
+{
+  "total_sessions": 1238,
+  "today_sessions": 12,
+  "knowledge_progress": {
+    "indexed_files": 156,
+    "total_files": 190,
+    "percentage": 82.1
+  }
+}
+```
+#### 2.1.7 我的分身配置2.0
+`GET /api/v1/my/avatar/{owner_type}/{owner_id}`
+（根据owner_type类型使用不同的owner_id查询分身配置数据）
+- 作用：用于多角色用户进入不同角色工作台获取对应分身配置数据
+```json
+{
+  "bio": "...",
+  "tags": ["..."],
+  "greeting": "...",
+  "style": "friendly",
+  "style_custom": null,
+  "avatar_url": "https://..."
+}
+```
+---
 ## 三、Management 域 — 会话管理（数字医生对话、知识搜索）
 
 ### 3.1 数字医生对话
