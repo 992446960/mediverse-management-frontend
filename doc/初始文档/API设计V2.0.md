@@ -294,6 +294,22 @@ Content-Type: application/json
 
 ---
 
+#### 1.2.5 启用/停用机构
+
+`PATCH /api/v1/organizations/{id}/status`
+
+**Request Body**
+
+```json
+{
+  "status": "inactive"
+}
+```
+
+**Response `data`**: 返回更新后的完整机构对象
+
+---
+
 ### 1.3 科室管理
 
 #### 1.3.1 查询科室列表
@@ -543,7 +559,23 @@ Content-Type: application/json
 
 ---
 
-#### 1.4.5 通用头像上传接口
+#### 1.4.5 启用/停用用户
+
+`PATCH /api/v1/users/{id}/status`
+
+**Request Body**
+
+```json
+{
+  "status": "inactive"
+}
+```
+
+**Response `data`**: 返回更新后的完整用户对象
+
+---
+
+#### 1.4.6 通用头像上传接口
 
 `POST /api/v1/upload/avatar`
 
@@ -752,6 +784,22 @@ Content-Type: application/json
 }
 ```
 ---
+#### 2.1.8 启用/停用分身
+
+`PATCH /api/v1/avatars/{id}/status`
+
+**Request Body**
+
+```json
+{
+  "status": "inactive"
+}
+```
+
+**Response `data`**: 返回更新后的完整分身对象
+
+---
+
 ## 三、Management 域 — 会话管理（数字医生对话、知识搜索）
 
 ### 3.1 数字医生对话

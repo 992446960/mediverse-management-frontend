@@ -41,13 +41,14 @@
 
 | 编号 | 任务 | 描述 | 涉及文件 |
 |------|------|------|---------|
-| 08-1 | 分身管理 API 层 | getAvatars/createAvatar/updateAvatar/deleteAvatar/updateAvatarStatus | `src/api/avatars.ts` |
-| 08-2 | 分身列表页 | 搜索栏（关键词+类型筛选+机构筛选）+ AvatarTable + 新增按钮 | `src/views/admin/Avatars/index.vue` |
-| 08-3 | AvatarTable 组件 | 配置化列（名称/类型Tag/绑定范围/状态Badge/创建时间/操作） | `src/views/admin/Avatars/components/AvatarTable.vue` |
+| 08-1 | 分身管理 API 层 | getAvatars/createAvatar/updateAvatar/deleteAvatar | `src/api/avatars.ts` |
+| 08-2 | 分身列表页 | 集成 PageHead + PageFilter + PageTable + AvatarWizard + AvatarEditModal + KnowledgeCardList Drawer | `src/views/admin/Avatars/index.vue` |
+| 08-3 | Page 组件配置 | 配置化列（名称/类型Tag/绑定范围/状态Badge/创建时间/操作）；操作列含“知识库”入口 | `src/views/admin/Avatars/index.vue` |
 | 08-4 | AvatarWizard 组件 | 四步向导：选类型 → 绑定范围 → 基础信息 → 确认预览 | `src/views/admin/Avatars/components/AvatarWizard.vue` |
-| 08-5 | 向导步骤子组件 | 每个步骤的表单内容组件 | `src/views/admin/Avatars/components/steps/StepType.vue`、`StepScope.vue`、`StepInfo.vue`、`StepConfirm.vue` |
-| 08-6 | 分身 Mock Handler | 模拟分身 CRUD + 按类型/org_id/dept_id 筛选 | `src/mocks/handlers/avatars.ts` |
-| 08-7 | 分身 Mock 数据 | 三种类型的分身数据 | `src/mocks/data/avatars.ts` |
+| 08-5 | 向导步骤子组件 | 每个步骤的表单内容组件 | `src/views/admin/Avatars/components/steps/*.vue` |
+| 08-6 | KnowledgeCardList | 在分身列表页集成知识卡管理抽屉，直接管理分身关联知识卡 | `src/components/KnowledgeCardList/index.vue` |
+| 08-7 | 分身 Mock Handler | 模拟分身 CRUD + 按类型/org_id/dept_id 筛选 | `src/mocks/handlers/avatars.ts` |
+| 08-8 | 分身 Mock 数据 | 三种类型的分身数据 | `src/mocks/data/avatars.ts` |
 
 ### 3.2 向导式创建步骤
 

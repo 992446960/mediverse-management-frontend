@@ -46,13 +46,14 @@
 | 编号 | 任务 | 描述 | 涉及文件 |
 |------|------|------|---------|
 | 07-1 | 用户管理 API 层 | getUsers（Query: org_id, dept_id, keyword, role, status, page, page_size）/ createUser / updateUser（含 roles）/ resetPass（POST users/:id/reset-pass，无 body，data 为 null） | `src/api/users.ts` |
-| 07-2 | 用户列表页 | 左侧 PageTree 按角色：**sysadmin** title=「全部机构」、搜索「搜索机构或者科室」、树=机构-科室二级树；**org_admin** title=当前机构名称、搜索「搜索科室名称」、树=当前机构下科室一维列表；**dept_admin** 不展示树仅用户列表。树节点选中传 org_id/dept_id 查用户 | `src/views/admin/Users/index.vue` |
-| 07-3 | UserTable 组件 | 配置化列：用户名/真实姓名/手机号/角色 Tag/状态 Badge/操作（编辑、角色、重置密码、停用；无删除） | `src/views/admin/Users/components/UserTable.vue` |
-| 07-4 | UserForm 组件 | 新增：username, real_name, password(可选), org_id, dept_id, roles, remark, status；编辑：real_name, org_id, dept_id, roles, remark, status；**科室管理员不展示角色项**，新增默认 roles=[user]，机构+科室锁定；其他角色按 3.2/3.4 限制可选机构/科室与可分配角色 | `src/views/admin/Users/components/UserForm.vue` |
-| 07-5 | RoleEditor 组件 | 角色编辑弹窗：Checkbox.Group 多选角色，至少保留 user；**可勾选角色按当前用户权限限制**（见 3.4）；科室管理员无此入口（或仅查看不可改）；提交调用 updateUser 传 roles | `src/views/admin/Users/components/RoleEditor.vue` |
-| 07-6 | 密码重置流程 | 二次确认 → 调用 POST /api/v1/users/{id}/reset-pass → 成功提示「密码已重置为默认密码 123456」并可复制 | 集成在 UserTable 操作列 |
-| 07-7 | 用户 Mock Handler | 模拟 getUsers（分页+过滤）/ createUser / updateUser / resetPass（返回 data: null）；无 deleteUser | `src/mocks/handlers/users.ts` |
-| 07-8 | 用户 Mock 数据 | 不同机构/科室下的用户数据（含各角色），与 1.4.1 响应字段一致 | `src/mocks/data/users.ts` |
+| 07-2 | 用户列表页 | 集成 `PageTree`（左侧机构科室树）+ `PageHead` + `PageFilter` + `PageTable`。实现 `highestRole` 逻辑控制树显示与选中节点 | `src/views/admin/Users/index.vue` |
+| 07-3 | PageTree 配置 | 根据角色（sysadmin/org_admin）动态生成树数据、Title 和搜索占位符；dept_admin 不渲染树 | `src/views/admin/Users/index.vue` |
+| 07-4 | PageTable 配置 | 配置化列：用户名/真实姓名/手机号/角色 Tag/状态 Badge/操作（编辑、角色、重置密码、停用；无删除） | `src/views/admin/Users/index.vue` |
+| 07-5 | UserForm 组件 | 新增：username, real_name, password(可选), org_id, dept_id, roles, remark, status；编辑：real_name, org_id, dept_id, roles, remark, status；**科室管理员不展示角色项**，新增默认 roles=[user]，机构+科室锁定；其他角色按 3.2/3.4 限制可选机构/科室与可分配角色 | `src/views/admin/Users/components/UserForm.vue` |
+| 07-6 | RoleEditor 组件 | 角色编辑弹窗：Checkbox.Group 多选角色，至少保留 user；**可勾选角色按当前用户权限限制**（见 3.4）；科室管理员无此入口（或仅查看不可改）；提交调用 updateUser 传 roles | `src/views/admin/Users/components/RoleEditor.vue` |
+| 07-7 | 密码重置流程 | 二次确认 → 调用 POST /api/v1/users/{id}/reset-pass → 成功提示「密码已重置为默认密码 123456」并可复制 | 集成在 PageTable 操作列配置中 |
+| 07-8 | 用户 Mock Handler | 模拟 getUsers（分页+过滤）/ createUser / updateUser / resetPass（返回 data: null）；无 deleteUser | `src/mocks/handlers/users.ts` |
+| 07-9 | 用户 Mock 数据 | 不同机构/科室下的用户数据（含各角色），与 1.4.1 响应字段一致 | `src/mocks/data/users.ts` |
 
 ### 3.2 角色隔离逻辑（列表筛选与树可见范围）
 
