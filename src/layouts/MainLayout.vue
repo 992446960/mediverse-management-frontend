@@ -47,11 +47,13 @@
         <div class="header-right">
           <ThemeSwitcher />
           <LocaleSwitcher />
-          <a-dropdown>
-            <a class="ant-dropdown-link" @click.prevent>
-              {{ user?.full_name || user?.username || t('common.user') }}
-              <DownOutlined />
-            </a>
+          <a-dropdown :trigger="['click']">
+            <div class="user-dropdown-trigger group">
+              <span class="user-name">{{
+                user?.full_name || user?.username || t('common.user')
+              }}</span>
+              <DownOutlined class="arrow-icon" />
+            </div>
             <template #overlay>
               <a-menu @click="handleUserMenuClick">
                 <a-menu-item key="profile">
@@ -252,16 +254,51 @@ watch(
 }
 
 /* 右侧图标与下拉：整体与图标均垂直居中 */
-.header-right :deep(.ant-btn) {
+.header-right .user-dropdown-trigger {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  padding: 0 var(--spacing-sm);
+  padding: 0 12px;
+  height: 36px;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  margin-left: 8px;
 }
-.header-right .ant-dropdown-link {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-xs);
+
+.header-right .user-dropdown-trigger:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.dark .header-right .user-dropdown-trigger:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.header-right .user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569; /* slate-600 */
+  letter-spacing: 0.01em;
+  transition: color 0.2s;
+}
+
+.dark .header-right .user-name {
+  color: #94a3b8;
+}
+
+.header-right .user-dropdown-trigger:hover .user-name {
+  color: var(--color-primary);
+}
+
+.header-right .arrow-icon {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-left: 6px;
+  transition: all 0.3s ease;
+}
+
+.header-right .user-dropdown-trigger:hover .arrow-icon {
+  color: var(--color-primary);
 }
 
 .trigger {
