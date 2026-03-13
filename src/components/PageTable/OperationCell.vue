@@ -36,7 +36,9 @@
           <template #overlay>
             <a-menu class="page-table-more-menu">
               <a-menu-item
-                v-for="(m, mIdx) in btn.moreList?.filter((item) => item.btnIsShow?.(record) !== false) ?? []"
+                v-for="(m, mIdx) in btn.moreList?.filter(
+                  (item) => item.btnIsShow?.(record) !== false
+                ) ?? []"
                 :key="mIdx"
                 @click="onMoreItemClick(m, record, index)"
               >
@@ -92,23 +94,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import { UpOutlined, DownOutlined } from '@ant-design/icons-vue'
 import type { PageTableColumnConfig, PageTableOperationBtn } from './types'
 
 defineProps<{
   column: PageTableColumnConfig
-  record: Record<string, unknown>
+  record: Record<string, any>
   index: number
 }>()
 
 const moreOpen = ref(false)
 
-function onMoreItemClick(
-  m: PageTableOperationBtn,
-  record: Record<string, unknown>,
-  index: number
-) {
+function onMoreItemClick(m: PageTableOperationBtn, record: Record<string, any>, index: number) {
   moreOpen.value = false
   m.handle?.(record, index)
 }
@@ -117,18 +114,18 @@ const DEFAULT_BUTTON_TYPE = 'link'
 const WARNING_COLOR = '#faad14'
 const SUCCESS_COLOR = '#52c41a'
 
-function resolveIcon(btn: PageTableOperationBtn, record: Record<string, unknown>): unknown {
+function resolveIcon(btn: PageTableOperationBtn, record: Record<string, any>): unknown {
   return btn.dynamicIcon?.(record) ?? btn.icon
 }
 
-function getBtnDanger(btn: PageTableOperationBtn, record: Record<string, unknown>): boolean {
+function getBtnDanger(btn: PageTableOperationBtn, record: Record<string, any>): boolean {
   const color = btn.dynamicColor?.(record) ?? btn.color
   return color === 'danger'
 }
 
 function getBtnColorStyle(
   btn: PageTableOperationBtn,
-  record: Record<string, unknown>
+  record: Record<string, any>
 ): Record<string, string> | undefined {
   const color = btn.dynamicColor?.(record) ?? btn.color
   if (!color || color === 'danger') return undefined

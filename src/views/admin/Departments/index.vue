@@ -28,7 +28,7 @@
             ref="pageTableRef"
             :table-conf="tableConf"
             :table-columns="tableColumns"
-            :table-data="tableData as unknown as Record<string, unknown>[]"
+            :table-data="tableData"
             @fetch-table-data="onTableFetch"
           />
         </div>
@@ -51,7 +51,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
 import { message } from 'ant-design-vue'
@@ -64,7 +63,7 @@ import {
   PlayCircleOutlined,
   DeleteOutlined,
 } from '@ant-design/icons-vue'
-import { PageTree } from '@/components/PageTree'
+import PageTree from '@/components/PageTree/index.vue'
 import PageHead from '@/components/PageHead/index.vue'
 import PageFilter from '@/components/PageFilter/index.vue'
 import PageTable from '@/components/PageTable/index.vue'
@@ -235,13 +234,13 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
       },
       {
         text: t('status.inactive'),
-        dynamicText: (row) =>
-          row.status === 'active' ? t('status.inactive') : t('status.active'),
-        dynamicIcon: (row) =>
-          row.status === 'active' ? PauseCircleOutlined : PlayCircleOutlined,
-        dynamicColor: (row) =>
-          row.status === 'active' ? 'warning' : 'success',
-        handle: handleToggleStatus as unknown as (row: Record<string, unknown>, index?: number) => void,
+        dynamicText: (row) => (row.status === 'active' ? t('status.inactive') : t('status.active')),
+        dynamicIcon: (row) => (row.status === 'active' ? PauseCircleOutlined : PlayCircleOutlined),
+        dynamicColor: (row) => (row.status === 'active' ? 'warning' : 'success'),
+        handle: handleToggleStatus as unknown as (
+          row: Record<string, unknown>,
+          index?: number
+        ) => void,
       },
       {
         text: t('common.delete'),
@@ -266,8 +265,7 @@ async function loadData() {
   const pageSize = pageTableRef.value?.pageSize ?? 20
 
   const statusVal = params.status
-  const status =
-    statusVal === 'active' || statusVal === 'inactive' ? statusVal : undefined
+  const status = statusVal === 'active' || statusVal === 'inactive' ? statusVal : undefined
 
   loading.value = true
   try {

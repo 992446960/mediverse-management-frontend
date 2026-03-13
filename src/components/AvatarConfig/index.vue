@@ -173,7 +173,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { EyeOutlined, PlusOutlined, CloseOutlined, UploadOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'

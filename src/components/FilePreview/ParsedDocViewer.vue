@@ -11,8 +11,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { marked } from 'marked'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   parsedFileUrl: string | null | undefined
@@ -25,7 +27,7 @@ const renderedHtml = ref('')
 async function fetchAndRender() {
   if (!props.parsedFileUrl) {
     renderedHtml.value = ''
-    error.value = '暂无解析后文档'
+    error.value = t('knowledge.noParsedDoc')
     return
   }
   loading.value = true
@@ -36,7 +38,7 @@ async function fetchAndRender() {
     const text = await res.text()
     renderedHtml.value = marked.parse(text, { async: false }) as string
   } catch (e) {
-    error.value = e instanceof Error ? e.message : '加载解析文档失败'
+    error.value = e instanceof Error ? e.message : t('knowledge.loadParsedDocFailed')
     renderedHtml.value = ''
   } finally {
     loading.value = false

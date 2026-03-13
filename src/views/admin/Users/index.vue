@@ -28,7 +28,7 @@
             ref="pageTableRef"
             :table-conf="tableConf"
             :table-columns="tableColumns"
-            :table-data="tableData as unknown as Record<string, unknown>[]"
+            :table-data="tableData"
             @fetch-table-data="onTableFetch"
           >
             <template #roles="{ row }">
@@ -61,7 +61,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
 import { message } from 'ant-design-vue'
@@ -75,7 +74,7 @@ import {
   StopOutlined,
   CheckCircleOutlined,
 } from '@ant-design/icons-vue'
-import { PageTree } from '@/components/PageTree'
+import PageTree from '@/components/PageTree/index.vue'
 import PageHead from '@/components/PageHead/index.vue'
 import PageFilter from '@/components/PageFilter/index.vue'
 import PageTable from '@/components/PageTable/index.vue'
@@ -83,12 +82,7 @@ import UserForm from './components/UserForm.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useOrgDeptFromTree } from '@/composables/useOrgDeptFromTree'
 import { getDepartmentsTree } from '@/api/departments'
-import {
-  getUsers,
-  createUser,
-  updateUser,
-  resetPass,
-} from '@/api/users'
+import { getUsers, createUser, updateUser, resetPass } from '@/api/users'
 import { confirmDelete } from '@/utils/confirm'
 import type { PageHeadConfig } from '@/components/PageHead/types'
 import type { PageFilterConfig } from '@/components/PageFilter/types'
@@ -117,7 +111,9 @@ const highestRole = computed<UserRole>(() => {
   return 'user'
 })
 
-const showTree = computed(() => highestRole.value === 'sysadmin' || highestRole.value === 'org_admin')
+const showTree = computed(
+  () => highestRole.value === 'sysadmin' || highestRole.value === 'org_admin'
+)
 
 // ----- 左侧树 -----
 const treeLoading = ref(false)
@@ -238,8 +234,10 @@ function onTreeSelect(payload: { key: string; label: string; level: 'root' | 'br
 }
 
 /** 有树时需选中节点；无树（dept_admin）时直接展示本科室用户列表 */
-const hasSelection = computed(
-  () => showTree.value ? !!(selectedOrgId.value || selectedDeptId.value) : !!(effectiveOrgId.value || effectiveDeptId.value)
+const hasSelection = computed(() =>
+  showTree.value
+    ? !!(selectedOrgId.value || selectedDeptId.value)
+    : !!(effectiveOrgId.value || effectiveDeptId.value)
 )
 
 // ----- 右侧 PageHead / PageFilter / PageTable -----
@@ -388,7 +386,7 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
           {
             text: t('status.inactive'),
             dynamicText: (row) =>
-              (row.status === 'active' ? t('status.inactive') : t('status.active')),
+              row.status === 'active' ? t('status.inactive') : t('status.active'),
             dynamicIcon: (row) => (row.status === 'active' ? StopOutlined : CheckCircleOutlined),
             dynamicColor: (row) => (row.status === 'active' ? 'danger' : 'success'),
             handle: handleToggleStatus as unknown as (
@@ -417,7 +415,10 @@ async function loadData() {
   const statusVal = params.status as string
   const status = statusVal === 'active' || statusVal === 'inactive' ? statusVal : undefined
   const roleVal = params.role as string
-  const role = roleVal && ['sysadmin', 'org_admin', 'dept_admin', 'user'].includes(roleVal) ? roleVal as UserRole : undefined
+  const role =
+    roleVal && ['sysadmin', 'org_admin', 'dept_admin', 'user'].includes(roleVal)
+      ? (roleVal as UserRole)
+      : undefined
 
   loading.value = true
   try {
@@ -451,7 +452,13 @@ function refresh() {
 }
 
 watch(
-  () => [selectedOrgId.value, selectedDeptId.value, effectiveOrgId.value, effectiveDeptId.value] as const,
+  () =>
+    [
+      selectedOrgId.value,
+      selectedDeptId.value,
+      effectiveOrgId.value,
+      effectiveDeptId.value,
+    ] as const,
   ([selOrg, selDept, effOrg, effDept]) => {
     const has = showTree.value ? !!(selOrg || selDept) : !!(effOrg || effDept)
     if (has) {

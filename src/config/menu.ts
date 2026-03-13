@@ -1,5 +1,5 @@
-import type { VNode } from 'vue';
-import type { UserRole } from '@/types/auth';
+import type { VNode } from 'vue'
+import type { UserRole } from '@/types/auth'
 import {
   DashboardOutlined,
   UserOutlined,
@@ -11,21 +11,21 @@ import {
   SafetyCertificateOutlined,
   ApartmentOutlined,
   IdcardOutlined,
-} from '@ant-design/icons-vue';
-import { h } from 'vue';
+} from '@ant-design/icons-vue'
+import { h } from 'vue'
 
 /** 工作台显示条件：由登录接口 user.has_*_avatar 决定 */
 export type WorkbenchAvatarKind = 'expert' | 'dept' | 'org'
 
 export interface MenuConfig {
-  key: string;
-  label: string; // i18n key
-  icon?: () => VNode;
-  path?: string;
-  requiredRoles?: UserRole[];
+  key: string
+  label: string // i18n key
+  icon?: () => VNode
+  path?: string
+  requiredRoles?: UserRole[]
   /** 存在时按 user.has_*_avatar 显示工作台，不按 requiredRoles */
-  showWhenAvatar?: WorkbenchAvatarKind;
-  children?: MenuConfig[];
+  showWhenAvatar?: WorkbenchAvatarKind
+  children?: MenuConfig[]
 }
 
 export const menuConfig: MenuConfig[] = [
@@ -123,4 +123,4 @@ export const menuConfig: MenuConfig[] = [
       },
     ],
   },
-];
+]

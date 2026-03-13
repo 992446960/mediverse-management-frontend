@@ -11,7 +11,9 @@
         <InboxOutlined class="text-4xl text-primary" />
       </p>
       <p class="ant-upload-text">{{ t('knowledge.uploadDragText') }}</p>
-      <p class="ant-upload-hint">{{ t('knowledge.uploadAcceptHint', { accept: acceptDisplay }) }}</p>
+      <p class="ant-upload-hint">
+        {{ t('knowledge.uploadAcceptHint', { accept: acceptDisplay }) }}
+      </p>
       <p class="ant-upload-hint">{{ t('knowledge.uploadSizeHint', { size: maxSizeDisplay }) }}</p>
     </a-upload-dragger>
 
@@ -48,12 +50,18 @@
         :key="item.uid"
         class="flex items-center gap-3 rounded-lg border border-slate-200 dark:border-slate-700 p-3"
       >
-        <span class="min-w-0 flex-1 truncate text-sm" :title="item.fileName">{{ item.fileName }}</span>
+        <span class="min-w-0 flex-1 truncate text-sm" :title="item.fileName">{{
+          item.fileName
+        }}</span>
         <a-tag :color="queueStatusColor(item.status)">{{ queueStatusLabel(item.status) }}</a-tag>
         <div v-if="item.status === 'uploading'" class="w-24">
           <a-progress :percent="item.percent" size="small" />
         </div>
-        <span v-if="item.status === 'fail' && item.error" class="max-w-32 truncate text-xs text-red-500" :title="item.error">
+        <span
+          v-if="item.status === 'fail' && item.error"
+          class="max-w-32 truncate text-xs text-red-500"
+          :title="item.error"
+        >
           {{ item.error }}
         </span>
       </div>
@@ -62,7 +70,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { InboxOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
@@ -98,6 +105,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   (e: 'success', results: UploadFileResult[]): void
+  (e: 'add-to-queue', item: UploadQueueItem): void
 }>()
 
 const { t } = useI18n()
@@ -178,13 +186,14 @@ function beforeUpload(file: File): boolean {
     return false
   }
   const uid = `upload_${Date.now()}_${Math.random().toString(36).slice(2)}`
-  props.queue.push({
+  const newItem: UploadQueueItem = {
     uid,
     file,
     fileName: file.name,
     status: 'pending',
     percent: 0,
-  })
+  }
+  emit('add-to-queue', newItem)
   processQueue()
   return false
 }
@@ -204,7 +213,12 @@ function processQueue() {
   if (pending.length === 0 && uploading.length === 0) {
     const allDone = props.queue.every((i) => i.status === 'success' || i.status === 'fail')
     if (allDone) {
-      const results = props.queue.filter((i): i is UploadQueueItem & { result: UploadFileResult } => i.status === 'success' && i.result != null).map((i) => i.result!)
+      const results = props.queue
+        .filter(
+          (i): i is UploadQueueItem & { result: UploadFileResult } =>
+            i.status === 'success' && i.result != null
+        )
+        .map((i) => i.result!)
       if (results.length > 0) emit('success', results)
     }
     return
@@ -223,7 +237,8 @@ function processQueue() {
     next.percent = Math.min(90, next.percent + 8)
   }, 150)
 
-  const dirId = uploadMode.value === 'manual' && selectedDirId.value ? selectedDirId.value : undefined
+  const dirId =
+    uploadMode.value === 'manual' && selectedDirId.value ? selectedDirId.value : undefined
   uploadFile(props.ownerType, props.ownerId, next.file, dirId, {
     onUploadProgress: (e) => {
       if (e.total && e.total > 0) next.percent = Math.round((e.loaded / e.total) * 100)

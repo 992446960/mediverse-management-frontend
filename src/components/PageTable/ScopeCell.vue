@@ -4,7 +4,10 @@
       type="link"
       size="small"
       class="page-table__cell-link text-primary hover:underline text-sm font-medium cursor-pointer"
-      :class="{ 'page-table__cell-link--disabled opacity-50 cursor-not-allowed': column.linkDisabled?.(record) }"
+      :class="{
+        'page-table__cell-link--disabled opacity-50 cursor-not-allowed':
+          column.linkDisabled?.(record),
+      }"
       :disabled="column.linkDisabled?.(record)"
       @click="column.linkFn?.(record)"
     >
@@ -28,10 +31,12 @@
   <template v-else-if="column.scopeType === '_switch'">
     <a-switch
       :checked="Boolean(getCellValue(record))"
-      @update:checked="(v: boolean) => {
-        if (column.prop) (record as Record<string, unknown>)[column.prop] = v
-        column.switchFn?.(v, record)
-      }"
+      @update:checked="
+        (v: boolean) => {
+          if (column.prop) (record as Record<string, any>)[column.prop] = v
+          column.switchFn?.(v, record)
+        }
+      "
     />
   </template>
   <template v-else-if="column.scopeType === '_image'">
@@ -46,9 +51,11 @@
       :value="Number(getCellValue(record))"
       :max="column.max ? Number(record[column.max]) : undefined"
       size="small"
-      @update:value="(v: number | null) => {
-        if (column.prop) (record as Record<string, unknown>)[column.prop] = v
-      }"
+      @update:value="
+        (v: number | null) => {
+          if (column.prop) (record as Record<string, any>)[column.prop] = v
+        }
+      "
     />
   </template>
   <template v-else>
@@ -57,12 +64,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import type { PageTableColumnConfig } from './types'
 
 const props = defineProps<{
   column: PageTableColumnConfig
-  record: Record<string, unknown>
+  record: Record<string, any>
   index: number
 }>()
 
@@ -71,7 +77,7 @@ const tags = computed(() => {
   return Array.isArray(v) ? v : v ? [v] : []
 })
 
-function getCellValue(record: Record<string, unknown>): unknown {
+function getCellValue(record: Record<string, any>): unknown {
   const prop = props.column.prop
   if (!prop) return undefined
   return record[prop]

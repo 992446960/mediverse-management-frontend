@@ -8,6 +8,10 @@ import type {
   CreateDirectoryPayload,
   UploadFileResult,
   FileCard,
+  KnowledgeCard,
+  KnowledgeCardVersion,
+  KnowledgeCardListParams,
+  KnowledgeCardPayload,
 } from '@/types/knowledge'
 import type { PaginatedData } from '@/types/api'
 import type { AxiosRequestConfig } from 'axios'
@@ -122,4 +126,82 @@ export function getFileCards(
   fileId: string
 ): Promise<FileCard[]> {
   return request.get<FileCard[]>(`${BASE_URL}/${ownerType}/${ownerId}/files/${fileId}/cards`)
+}
+
+// ─── 知识卡 CRUD ───────────────────────────────────────────
+
+/**
+ * 查询知识卡列表
+ */
+export function getKnowledgeCards(
+  ownerType: OwnerType,
+  ownerId: string,
+  params: KnowledgeCardListParams
+) {
+  return request.get<PaginatedData<KnowledgeCard>>(`${BASE_URL}/${ownerType}/${ownerId}/cards`, {
+    params,
+  })
+}
+
+/**
+ * 获取单个知识卡详情
+ */
+export function getKnowledgeCardDetail(ownerType: OwnerType, ownerId: string, cardId: string) {
+  return request.get<KnowledgeCard>(`${BASE_URL}/${ownerType}/${ownerId}/cards/${cardId}`)
+}
+
+/**
+ * 创建或更新知识卡（payload.id 存在时为更新）
+ */
+export function saveKnowledgeCard(
+  ownerType: OwnerType,
+  ownerId: string,
+  payload: KnowledgeCardPayload
+) {
+  return request.post<KnowledgeCard>(`${BASE_URL}/${ownerType}/${ownerId}/cards`, payload)
+}
+
+/**
+ * 删除知识卡
+ */
+export function deleteKnowledgeCard(ownerType: OwnerType, ownerId: string, cardId: string) {
+  return request.delete(`${BASE_URL}/${ownerType}/${ownerId}/cards/${cardId}`)
+}
+
+/**
+ * 知识卡上下线切换
+ */
+export function toggleKnowledgeCardStatus(
+  ownerType: OwnerType,
+  ownerId: string,
+  cardId: string,
+  status: 'online' | 'offline'
+) {
+  return request.post<KnowledgeCard>(`${BASE_URL}/${ownerType}/${ownerId}/cards/${cardId}/status`, {
+    status,
+  })
+}
+
+/**
+ * 获取知识卡版本历史
+ */
+export function getKnowledgeCardVersions(ownerType: OwnerType, ownerId: string, cardId: string) {
+  return request.get<KnowledgeCardVersion[]>(
+    `${BASE_URL}/${ownerType}/${ownerId}/cards/${cardId}/versions`
+  )
+}
+
+/**
+ * 知识卡版本回退
+ */
+export function rollbackKnowledgeCard(
+  ownerType: OwnerType,
+  ownerId: string,
+  cardId: string,
+  version: string
+) {
+  return request.post<KnowledgeCard>(
+    `${BASE_URL}/${ownerType}/${ownerId}/cards/${cardId}/rollback`,
+    { version }
+  )
 }

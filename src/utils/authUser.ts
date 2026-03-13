@@ -36,8 +36,7 @@ export function normalizeAuthUser(raw: unknown): User {
       ? (o.role as UserRole)
       : pickPrimaryRole(o.roles as UserRole[] | undefined)
   const status = o.status as string | undefined
-  const is_active =
-    typeof o.is_active === 'boolean' ? o.is_active : status === 'active'
+  const is_active = typeof o.is_active === 'boolean' ? o.is_active : status === 'active'
   const now = new Date().toISOString()
   const has_expert_avatar = o.has_expert_avatar === true
   const has_dept_avatar = o.has_dept_avatar === true
@@ -58,8 +57,7 @@ export function normalizeAuthUser(raw: unknown): User {
     has_expert_avatar,
     has_dept_avatar,
     has_org_avatar,
-    last_login_at:
-      typeof o.last_login_at === 'string' ? o.last_login_at : undefined,
+    last_login_at: typeof o.last_login_at === 'string' ? o.last_login_at : undefined,
     created_at: typeof o.created_at === 'string' ? o.created_at : now,
     updated_at: typeof o.updated_at === 'string' ? o.updated_at : now,
   }

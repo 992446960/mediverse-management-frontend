@@ -9,7 +9,10 @@
   >
     <template #bodyCell="{ column, record }">
       <template v-if="column.key === 'status'">
-        <a-badge :status="getStatusBadgeStatus(record.status)" :text="t(getStatusLabelKey(record.status))" />
+        <a-badge
+          :status="getStatusBadgeStatus(record.status)"
+          :text="t(getStatusLabelKey(record.status))"
+        />
       </template>
       <template v-else-if="column.key === 'created_at'">
         {{ formatDate(record.created_at) }}
@@ -32,7 +35,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
 import { getStatusColor, getStatusLabelKey } from '@/utils/status'

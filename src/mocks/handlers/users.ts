@@ -2,22 +2,18 @@ import { http, HttpResponse } from 'msw'
 import { users as initialUsers } from '../data/users'
 import { organizations } from '../data/organizations'
 import { departments } from '../data/departments'
-import type {
-  UserListItem,
-  CreateUserPayload,
-  UpdateUserPayload,
-} from '@/types/user'
+import type { UserListItem, CreateUserPayload, UpdateUserPayload } from '@/types/user'
 import type { UserRole } from '@/types/auth'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 
-const mutableUsers: UserListItem[] = initialUsers.map(u => ({ ...u }))
+const mutableUsers: UserListItem[] = initialUsers.map((u) => ({ ...u }))
 
-const orgMap = new Map(organizations.map(o => [o.id, o]))
-const deptMap = new Map(departments.map(d => [d.id, d]))
+const orgMap = new Map(organizations.map((o) => [o.id, o]))
+const deptMap = new Map(departments.map((d) => [d.id, d]))
 
 function delay(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms))
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 export const userHandlers = [
@@ -25,7 +21,10 @@ export const userHandlers = [
     await delay(250)
     const url = new URL(request.url)
     const page = Math.max(1, Number.parseInt(url.searchParams.get('page') || '1', 10))
-    const pageSize = Math.min(100, Math.max(1, Number.parseInt(url.searchParams.get('page_size') || '20', 10)))
+    const pageSize = Math.min(
+      100,
+      Math.max(1, Number.parseInt(url.searchParams.get('page_size') || '20', 10))
+    )
     const orgId = url.searchParams.get('org_id')?.trim() || ''
     const deptId = url.searchParams.get('dept_id')?.trim() || ''
     const keyword = url.searchParams.get('keyword')?.trim() || ''
@@ -33,18 +32,16 @@ export const userHandlers = [
     const status = url.searchParams.get('status') as 'active' | 'inactive' | null
 
     let list = [...mutableUsers]
-    if (orgId) list = list.filter(u => u.org_id === orgId)
-    if (deptId) list = list.filter(u => u.dept_id === deptId)
+    if (orgId) list = list.filter((u) => u.org_id === orgId)
+    if (deptId) list = list.filter((u) => u.dept_id === deptId)
     if (keyword) {
       const k = keyword.toLowerCase()
       list = list.filter(
-        u =>
-          u.real_name.toLowerCase().includes(k) ||
-          u.username.toLowerCase().includes(k)
+        (u) => u.real_name.toLowerCase().includes(k) || u.username.toLowerCase().includes(k)
       )
     }
-    if (role) list = list.filter(u => u.roles.includes(role))
-    if (status === 'active' || status === 'inactive') list = list.filter(u => u.status === status)
+    if (role) list = list.filter((u) => u.roles.includes(role))
+    if (status === 'active' || status === 'inactive') list = list.filter((u) => u.status === status)
 
     const total = list.length
     const start = (page - 1) * pageSize
@@ -74,7 +71,7 @@ export const userHandlers = [
         data: null,
       })
     }
-    const existing = mutableUsers.find(u => u.username === body.username.trim())
+    const existing = mutableUsers.find((u) => u.username === body.username.trim())
     if (existing) {
       return HttpResponse.json({
         code: 40003,
@@ -116,7 +113,7 @@ export const userHandlers = [
     await delay(200)
     const id = params.id as string
     const body = (await request.json()) as UpdateUserPayload
-    const idx = mutableUsers.findIndex(u => u.id === id)
+    const idx = mutableUsers.findIndex((u) => u.id === id)
     if (idx === -1) {
       return HttpResponse.json({
         code: 40002,
@@ -158,7 +155,7 @@ export const userHandlers = [
   http.post(`${API_BASE}/users/:id/reset-pass`, async ({ params }) => {
     await delay(200)
     const id = params.id as string
-    const idx = mutableUsers.findIndex(u => u.id === id)
+    const idx = mutableUsers.findIndex((u) => u.id === id)
     if (idx === -1) {
       return HttpResponse.json({
         code: 40002,

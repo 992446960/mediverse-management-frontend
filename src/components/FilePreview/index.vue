@@ -13,14 +13,14 @@
               {{ WORKSPACE_LABELS[ownerType] }} · {{ dayjs(file.created_at).format('YYYY-MM-DD') }}
             </div>
           </div>
-          <span v-else class="text-base font-bold text-slate-800 dark:text-slate-100"
-            >文件预览</span
-          >
+          <span v-else class="text-base font-bold text-slate-800 dark:text-slate-100">
+            {{ t('knowledge.filePreview') }}
+          </span>
         </template>
         <template v-if="file">
           <div class="flex items-center gap-3">
             <a-tag :color="getStatusBadgeColor(file.status)">
-              {{ STATUS_BADGE[file.status] ?? '处理中' }}
+              {{ STATUS_BADGE[file.status] ?? t('knowledge.statusProcessing') }}
             </a-tag>
             <a-button
               type="primary"
@@ -28,7 +28,7 @@
               @click="handleDownload"
             >
               <template #icon><DownloadOutlined /></template>
-              原文件下载
+              {{ t('knowledge.downloadOriginal') }}
             </a-button>
           </div>
         </template>
@@ -39,15 +39,17 @@
       <!-- 左侧：文件内容预览 -->
       <div class="app-container flex-[2] flex flex-col min-w-0 p-4">
         <section class="flex flex-col flex-1 min-h-0">
-          <h3 class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">文件内容预览</h3>
+          <h3 class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+            {{ t('knowledge.fileContentPreview') }}
+          </h3>
           <a-tabs
             v-if="showPdfTabs"
             v-model:active-key="activeView"
             type="line"
             class="file-preview__tabs mb-3"
           >
-            <a-tab-pane key="parsed" tab="解析视图" />
-            <a-tab-pane key="original" tab="原文视图" />
+            <a-tab-pane key="parsed" :tab="t('knowledge.parsedView')" />
+            <a-tab-pane key="original" :tab="t('knowledge.rawView')" />
           </a-tabs>
           <div
             class="flex-1 min-h-[400px] overflow-hidden border border-slate-200 dark:border-slate-700 rounded-lg"
@@ -79,7 +81,10 @@
               :file-url="file.file_url"
               :file-type="file.file_type"
             />
-            <a-empty v-else-if="!loading && file" description="暂不支持该类型预览" />
+            <a-empty
+              v-else-if="!loading && file"
+              :description="t('knowledge.unsupportedPreview')"
+            />
             <a-spin v-else-if="loading" class="w-full py-12" />
             <a-empty v-else-if="error" :description="error" />
           </div>
@@ -101,7 +106,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
 import { DownloadOutlined } from '@ant-design/icons-vue'
 import PageHead from '@/components/PageHead/index.vue'
@@ -114,6 +119,8 @@ import KnowledgeCardSidebar from './KnowledgeCardSidebar.vue'
 import { getFileDetail, getFileCards } from '@/api/knowledge'
 import type { PageHeadConfig } from '@/components/PageHead/types'
 import type { OwnerType, FileListItem, FileStatus, FileCard } from '@/types/knowledge'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   ownerType: OwnerType
@@ -128,25 +135,25 @@ const cardsLoading = ref(false)
 const error = ref<string | null>(null)
 const activeView = ref<'parsed' | 'original'>('parsed')
 
-const WORKSPACE_LABELS: Record<OwnerType, string> = {
-  personal: '个人',
-  dept: '科室',
-  org: '机构',
-  avatar: '分身',
-}
+const WORKSPACE_LABELS = computed<Record<OwnerType, string>>(() => ({
+  personal: t('knowledge.ownerPersonal'),
+  dept: t('knowledge.ownerDept'),
+  org: t('knowledge.ownerOrg'),
+  avatar: t('knowledge.ownerAvatar'),
+}))
 
-const STATUS_BADGE: Record<FileStatus, string> = {
-  uploading: '处理中',
-  parsing: '处理中',
-  extracting: '处理中',
-  indexing: '处理中',
-  done: '已解析',
-  failed: '解析失败',
-}
+const STATUS_BADGE = computed<Record<FileStatus, string>>(() => ({
+  uploading: t('knowledge.statusProcessing'),
+  parsing: t('knowledge.statusProcessing'),
+  extracting: t('knowledge.statusProcessing'),
+  indexing: t('knowledge.statusProcessing'),
+  done: t('knowledge.statusBadgeParsed'),
+  failed: t('knowledge.statusBadgeFailed'),
+}))
 
 const isTextType = computed(() => {
-  const t = file.value?.file_type?.toLowerCase()
-  return ['txt', 'md', 'json', 'jsonl', 'csv'].includes(t ?? '')
+  const fileType = file.value?.file_type?.toLowerCase()
+  return ['txt', 'md', 'json', 'jsonl', 'csv'].includes(fileType ?? '')
 })
 
 const showPdfTabs = computed(() => file.value?.file_type?.toLowerCase() === 'pdf')
@@ -174,16 +181,16 @@ function getStatusBadgeColor(status: FileStatus): string {
 
 const headConf = computed<PageHeadConfig>(() => {
   const subtitle = file.value
-    ? `${WORKSPACE_LABELS[props.ownerType]} · ${dayjs(file.value.created_at).format('YYYY-MM-DD')}`
+    ? `${WORKSPACE_LABELS.value[props.ownerType]} · ${dayjs(file.value.created_at).format('YYYY-MM-DD')}`
     : ''
   const title = file.value
     ? `${file.value.file_name}${subtitle ? ` · ${subtitle}` : ''}`
-    : '文件预览'
+    : t('knowledge.filePreview')
 
   const tabsOptions = showPdfTabs.value
     ? [
-        { label: '解析视图', value: 'parsed' },
-        { label: '原文视图', value: 'original' },
+        { label: t('knowledge.parsedView'), value: 'parsed' },
+        { label: t('knowledge.rawView'), value: 'original' },
       ]
     : undefined
 
@@ -204,7 +211,7 @@ async function loadFile() {
   try {
     file.value = await getFileDetail(props.ownerType, props.ownerId, props.fileId)
   } catch (e) {
-    error.value = e instanceof Error ? e.message : '加载文件失败'
+    error.value = e instanceof Error ? e.message : t('knowledge.loadFileFailed')
     file.value = null
   } finally {
     loading.value = false

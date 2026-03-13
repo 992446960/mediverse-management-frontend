@@ -5,7 +5,9 @@
   >
     <div class="px-5 pt-6 pb-4">
       <div class="flex items-center justify-between mb-5">
-        <h2 class="text-[15px] font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+        <h2
+          class="text-[15px] font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"
+        >
           <span class="w-1 h-4 bg-primary rounded-full" />
           {{ title }}
         </h2>
@@ -60,8 +62,18 @@
         <!-- 虚拟节点：未分类 -->
         <div
           class="flex items-center gap-3 px-5 py-3 cursor-pointer transition-all hover:bg-slate-50 dark:hover:bg-slate-800/50 group border-l-[3px] border-transparent"
-          :class="selectedKey === '__uncategorized__' ? 'item-active' : 'text-slate-600 dark:text-slate-400'"
-          @click="onNodeClick({ key: '__uncategorized__', label: t('knowledge.uncategorized'), level: 'virtual' })"
+          :class="
+            selectedKey === '__uncategorized__'
+              ? 'item-active'
+              : 'text-slate-600 dark:text-slate-400'
+          "
+          @click="
+            onNodeClick({
+              key: '__uncategorized__',
+              label: t('knowledge.uncategorized'),
+              level: 'virtual',
+            })
+          "
         >
           <InboxOutlined class="text-[18px] text-slate-400" />
           <span class="text-[14px] font-medium">{{ t('knowledge.uncategorized') }}</span>
@@ -89,12 +101,15 @@
     <a-modal
       v-model:open="addModalVisible"
       :title="addModalTitle"
-      @ok="handleAddDirectory"
       :confirm-loading="addLoading"
+      @ok="handleAddDirectory"
     >
       <a-form layout="vertical">
         <a-form-item :label="t('knowledge.directoryName')" required>
-          <a-input v-model:value="newDirName" :placeholder="t('knowledge.directoryNamePlaceholder')" />
+          <a-input
+            v-model:value="newDirName"
+            :placeholder="t('knowledge.directoryNamePlaceholder')"
+          />
         </a-form-item>
       </a-form>
     </a-modal>
@@ -102,7 +117,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   ReloadOutlined,
@@ -144,7 +158,10 @@ const treeStyle = computed(() => ({ height: props.maxHeight }))
 const filteredTree = computed(() => {
   const transform = (nodes: DirectoryNode[]): DirectoryTreeNode[] => {
     return nodes
-      .filter((n) => !searchKeyword.value || n.name.toLowerCase().includes(searchKeyword.value.toLowerCase()))
+      .filter(
+        (n) =>
+          !searchKeyword.value || n.name.toLowerCase().includes(searchKeyword.value.toLowerCase())
+      )
       .map((n) => ({
         ...n,
         key: n.id,

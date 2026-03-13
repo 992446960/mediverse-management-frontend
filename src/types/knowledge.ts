@@ -67,6 +67,8 @@ export interface KnowledgeCard {
   audit_status: AuditStatus
   reference_count: number
   source_files: { id: string; name: string }[]
+  owner_type: OwnerType
+  owner_id: string
   created_by: string
   created_by_name: string
   created_at: string
@@ -148,39 +150,11 @@ export const AUDIT_STATUS_CONFIG: Record<AuditStatus, { color: string; label: st
   rejected: { color: 'error', label: '已驳回' },
 }
 
-// 保持向下兼容
-export interface KnowledgeFile {
-  id: string
-  name: string
-  size: number
-  type: string
-  url: string
-  status: FileStatus
-  error_message?: string
-  owner_type: OwnerType
-  owner_id: string
-  uploaded_by: string
-  created_at: string
-  updated_at: string
-}
-
-export interface KnowledgeCard {
-  id: string
+/** 创建/更新知识卡请求负载 */
+export interface KnowledgeCardPayload {
+  id?: string
   title: string
   content: string
   type: CardType
   tags: string[]
-  source_file_id?: string
-  owner_type: OwnerType
-  owner_id: string
-  created_by: string
-  created_at: string
-  updated_at: string
-}
-
-export interface DirectoryTree {
-  id: string
-  name: string
-  type: 'file' | 'folder'
-  children?: DirectoryTree[]
 }

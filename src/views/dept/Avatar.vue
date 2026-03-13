@@ -27,7 +27,6 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
 import { AVATAR_PAGE_TITLE } from '@/constants/avatar'
 import AvatarConfig from '@/components/AvatarConfig/index.vue'

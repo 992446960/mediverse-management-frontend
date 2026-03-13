@@ -2,7 +2,7 @@
   <div class="num-range flex items-center gap-2">
     <a-input-number
       :value="minValue"
-      :placeholder="minPh ?? '最小值'"
+      :placeholder="minPh ?? t('common.minValue')"
       :min="min"
       :max="max"
       class="flex-1"
@@ -11,7 +11,7 @@
     <span class="text-slate-400">~</span>
     <a-input-number
       :value="maxValue"
-      :placeholder="maxPh ?? '最大值'"
+      :placeholder="maxPh ?? t('common.maxValue')"
       :min="min"
       :max="max"
       class="flex-1"
@@ -21,7 +21,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = withDefaults(
   defineProps<{

@@ -10,7 +10,8 @@ function withWorkbenchAvatars(u: UserListItem) {
   return {
     ...u,
     has_expert_avatar: true,
-    has_dept_avatar: roles.includes('sysadmin') || roles.includes('org_admin') || roles.includes('dept_admin'),
+    has_dept_avatar:
+      roles.includes('sysadmin') || roles.includes('org_admin') || roles.includes('dept_admin'),
     has_org_avatar: roles.includes('sysadmin') || roles.includes('org_admin'),
   }
 }

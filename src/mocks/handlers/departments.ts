@@ -5,21 +5,21 @@ import type { Department, DepartmentForm, OrgDeptTreeNode } from '@/types/depart
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 
-const mutableDepts: Department[] = initialDepts.map(d => ({ ...d }))
+const mutableDepts: Department[] = initialDepts.map((d) => ({ ...d }))
 
-const orgMap = new Map(organizations.map(o => [o.id, o]))
+const orgMap = new Map(organizations.map((o) => [o.id, o]))
 
 function delay(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms))
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 function buildTree(): OrgDeptTreeNode[] {
   return organizations
-    .filter(org => org.status === 'active')
-    .map(org => {
+    .filter((org) => org.status === 'active')
+    .map((org) => {
       const children = mutableDepts
-        .filter(d => d.org_id === org.id)
-        .map(d => ({ id: d.id, name: d.name, type: 'dept' as const }))
+        .filter((d) => d.org_id === org.id)
+        .map((d) => ({ id: d.id, name: d.name, type: 'dept' as const }))
       return {
         id: org.id,
         name: org.name,
@@ -34,16 +34,19 @@ export const departmentHandlers = [
     await delay(200)
     const url = new URL(request.url)
     const page = Math.max(1, Number.parseInt(url.searchParams.get('page') || '1', 10))
-    const pageSize = Math.min(100, Math.max(1, Number.parseInt(url.searchParams.get('page_size') || '20', 10)))
+    const pageSize = Math.min(
+      100,
+      Math.max(1, Number.parseInt(url.searchParams.get('page_size') || '20', 10))
+    )
     const orgId = url.searchParams.get('org_id')?.trim() || ''
     const name = url.searchParams.get('name')?.trim() || ''
     const status = url.searchParams.get('status') as 'active' | 'inactive' | null
 
     let list = mutableDepts
 
-    if (orgId) list = list.filter(d => d.org_id === orgId)
-    if (name) list = list.filter(d => d.name.includes(name))
-    if (status === 'active' || status === 'inactive') list = list.filter(d => d.status === status)
+    if (orgId) list = list.filter((d) => d.org_id === orgId)
+    if (name) list = list.filter((d) => d.name.includes(name))
+    if (status === 'active' || status === 'inactive') list = list.filter((d) => d.status === status)
 
     const total = list.length
     const start = (page - 1) * pageSize
@@ -101,7 +104,7 @@ export const departmentHandlers = [
     await delay(200)
     const id = params.id as string
     const body = (await request.json()) as Partial<DepartmentForm>
-    const idx = mutableDepts.findIndex(d => d.id === id)
+    const idx = mutableDepts.findIndex((d) => d.id === id)
     if (idx === -1) {
       return HttpResponse.json({
         code: 40002,
@@ -124,7 +127,7 @@ export const departmentHandlers = [
   http.delete(`${API_BASE}/departments/:id`, async ({ params }) => {
     await delay(200)
     const id = params.id as string
-    const idx = mutableDepts.findIndex(d => d.id === id)
+    const idx = mutableDepts.findIndex((d) => d.id === id)
     if (idx === -1) {
       return HttpResponse.json({
         code: 40002,
@@ -144,7 +147,7 @@ export const departmentHandlers = [
     await delay(200)
     const id = params.id as string
     const body = (await request.json()) as { status: 'active' | 'inactive' }
-    const idx = mutableDepts.findIndex(d => d.id === id)
+    const idx = mutableDepts.findIndex((d) => d.id === id)
     if (idx === -1) {
       return HttpResponse.json({
         code: 40002,

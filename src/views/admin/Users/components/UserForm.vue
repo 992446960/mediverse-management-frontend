@@ -1,7 +1,7 @@
 <template>
   <a-modal
     :open="open"
-    :title="viewOnly ? t('common.detail') : (isEdit ? t('user.editUser') : t('user.addUser'))"
+    :title="viewOnly ? t('common.detail') : isEdit ? t('user.editUser') : t('user.addUser')"
     :confirm-loading="confirmLoading"
     :ok-text="t('common.confirm')"
     :cancel-text="t('common.cancel')"
@@ -91,7 +91,12 @@
         />
       </a-form-item>
       <a-form-item :label="t('user.realName')" name="real_name">
-        <a-input v-model:value="formState.real_name" :placeholder="t('user.realName')" :maxlength="50" show-count />
+        <a-input
+          v-model:value="formState.real_name"
+          :placeholder="t('user.realName')"
+          :maxlength="50"
+          show-count
+        />
       </a-form-item>
       <a-form-item v-if="!isEdit" :label="t('user.initialPasswordLabel')" name="password">
         <a-input-password
@@ -102,11 +107,7 @@
       </a-form-item>
       <a-form-item v-if="!isEdit && showRoleField" :label="t('user.roles')" name="roles">
         <a-checkbox-group v-model:value="formState.roles" class="flex flex-col gap-2">
-          <a-checkbox
-            v-for="r in assignableRoles"
-            :key="r"
-            :value="r"
-          >
+          <a-checkbox v-for="r in assignableRoles" :key="r" :value="r">
             {{ t(ROLE_LABEL_KEYS[r] ?? r) }}
           </a-checkbox>
         </a-checkbox-group>
@@ -142,11 +143,7 @@
       </a-form-item>
       <a-form-item v-if="isEdit && showRoleField" :label="t('user.roles')" name="roles">
         <a-checkbox-group v-model:value="formState.roles" class="flex flex-col gap-2">
-          <a-checkbox
-            v-for="r in assignableRoles"
-            :key="r"
-            :value="r"
-          >
+          <a-checkbox v-for="r in assignableRoles" :key="r" :value="r">
             {{ t(ROLE_LABEL_KEYS[r] ?? r) }}
           </a-checkbox>
         </a-checkbox-group>
@@ -174,7 +171,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
 import { useAuthStore } from '@/stores/auth'
@@ -251,7 +247,11 @@ const formState = ref({
 
 const rules = computed(() => ({
   username: [
-    { required: !isEdit.value, message: t('user.username') + ' ' + t('common.required'), trigger: 'blur' },
+    {
+      required: !isEdit.value,
+      message: t('user.username') + ' ' + t('common.required'),
+      trigger: 'blur',
+    },
     { min: 4, max: 50, message: t('user.usernameLength'), trigger: 'blur' },
   ],
   real_name: [
@@ -309,7 +309,9 @@ watch(
       if (record) {
         const orgId = authStore.isDeptAdmin
           ? (authStore.currentOrgId ?? record.org_id)
-          : (authStore.isOrgAdmin ? (authStore.currentOrgId ?? record.org_id) : record.org_id)
+          : authStore.isOrgAdmin
+            ? (authStore.currentOrgId ?? record.org_id)
+            : record.org_id
         const deptId = authStore.isDeptAdmin
           ? (authStore.currentDeptId ?? record.dept_id)
           : record.dept_id
@@ -326,13 +328,13 @@ watch(
         await loadOrgOptionsForEdit()
         await loadDeptOptions(orgId)
         if (authStore.isDeptAdmin && authStore.currentDeptId) {
-          deptOptionsForEdit.value = deptOptions.value.filter((d) => d.id === authStore.currentDeptId)
-        }
-        else {
+          deptOptionsForEdit.value = deptOptions.value.filter(
+            (d) => d.id === authStore.currentDeptId
+          )
+        } else {
           deptOptionsForEdit.value = deptOptions.value
         }
-      }
-      else {
+      } else {
         const orgId = lockOrg.value ? (authStore.currentOrgId ?? '') : (defaultOrgId ?? '')
         const deptId = lockDept.value ? (authStore.currentDeptId ?? '') : (defaultDeptId ?? '')
         formState.value = {
@@ -347,7 +349,8 @@ watch(
         }
         await loadOrgOptions()
         if (orgId) await loadDeptOptions(orgId)
-        if (authStore.isOrgAdmin && !formState.value.org_id) formState.value.org_id = authStore.currentOrgId ?? ''
+        if (authStore.isOrgAdmin && !formState.value.org_id)
+          formState.value.org_id = authStore.currentOrgId ?? ''
         if (authStore.isDeptAdmin && authStore.currentDeptId) {
           deptOptions.value = deptOptions.value.filter((d) => d.id === authStore.currentDeptId)
         }
@@ -373,14 +376,15 @@ async function handleOk() {
         real_name: formState.value.real_name.trim(),
         org_id: formState.value.org_id || undefined,
         dept_id: formState.value.dept_id || undefined,
-        roles: showRoleField.value && formState.value.roles.length ? formState.value.roles : undefined,
+        roles:
+          showRoleField.value && formState.value.roles.length ? formState.value.roles : undefined,
         remark: formState.value.remark?.trim() || undefined,
         status: formState.value.status,
       }
       emit('submit', payload)
-    }
-    else {
-      const roles: UserRole[] = showRoleField.value && formState.value.roles.length ? formState.value.roles : ['user']
+    } else {
+      const roles: UserRole[] =
+        showRoleField.value && formState.value.roles.length ? formState.value.roles : ['user']
       if (!roles.includes('user')) roles.push('user')
       const payload: CreateUserPayload = {
         username: formState.value.username.trim(),
@@ -395,11 +399,9 @@ async function handleOk() {
       emit('submit', payload)
     }
     emit('update:open', false)
-  }
-  catch {
+  } catch {
     // validation failed
-  }
-  finally {
+  } finally {
     confirmLoading.value = false
   }
 }

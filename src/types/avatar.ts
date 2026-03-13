@@ -26,9 +26,21 @@ export const AVATAR_WIZARD_TYPE_OPTIONS: {
   titleKey: string
   detailKey: string
 }[] = [
-  { value: 'general', titleKey: 'avatar.wizard.descGeneral', detailKey: 'avatar.wizard.descGeneralDetail' },
-  { value: 'specialist', titleKey: 'avatar.wizard.descSpecialist', detailKey: 'avatar.wizard.descSpecialistDetail' },
-  { value: 'expert', titleKey: 'avatar.wizard.descExpert', detailKey: 'avatar.wizard.descExpertDetail' },
+  {
+    value: 'general',
+    titleKey: 'avatar.wizard.descGeneral',
+    detailKey: 'avatar.wizard.descGeneralDetail',
+  },
+  {
+    value: 'specialist',
+    titleKey: 'avatar.wizard.descSpecialist',
+    detailKey: 'avatar.wizard.descSpecialistDetail',
+  },
+  {
+    value: 'expert',
+    titleKey: 'avatar.wizard.descExpert',
+    detailKey: 'avatar.wizard.descExpertDetail',
+  },
 ]
 
 /** 类型收窄：判断是否为有效分身类型（筛选、表单等复用） */

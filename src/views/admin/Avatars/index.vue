@@ -9,7 +9,7 @@
         ref="pageTableRef"
         :table-conf="tableConf"
         :table-columns="tableColumns"
-        :table-data="tableData as unknown as Record<string, unknown>[]"
+        :table-data="tableData"
         @fetch-table-data="onTableFetch"
       />
     </div>
@@ -31,7 +31,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
 import { message } from 'ant-design-vue'

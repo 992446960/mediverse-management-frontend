@@ -9,13 +9,15 @@
       @rendered="onRendered"
       @error="onError"
     />
-    <a-empty v-else description="暂无预览地址" />
+    <a-empty v-else :description="t('knowledge.noPreviewUrl')" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import VueOfficePdf from '@vue-office/pdf'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   fileUrl: string
@@ -41,8 +43,8 @@ function onRendered() {
 }
 
 function onError(err: unknown) {
-  const msg = err instanceof Error ? err.message : String(err ?? '未知错误')
-  errorMessage.value = `PDF 加载失败：${msg}`
+  const msg = err instanceof Error ? err.message : t('knowledge.pdfUnknownError')
+  errorMessage.value = t('knowledge.pdfLoadFailed', { msg })
   emit('error', err)
 }
 </script>

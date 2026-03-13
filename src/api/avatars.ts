@@ -1,6 +1,11 @@
 import { request } from '@/api/index'
 import type { PaginatedData } from '@/types/api'
-import type { Avatar, AvatarListParams, CreateAvatarParams, UpdateAvatarParams } from '@/types/avatar'
+import type {
+  Avatar,
+  AvatarListParams,
+  CreateAvatarParams,
+  UpdateAvatarParams,
+} from '@/types/avatar'
 
 /** 分页查询分身列表（支持 type / org_id / dept_id / keyword 筛选） */
 export function getAvatars(params: AvatarListParams) {

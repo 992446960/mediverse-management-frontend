@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { onErrorCaptured, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const hasError = ref(false)
 const error = ref<Error | null>(null)
@@ -13,7 +15,7 @@ onErrorCaptured((err: Error) => {
 
 <template>
   <div v-if="hasError && error" class="error-boundary">
-    <p class="text-red-600">加载出错：{{ error?.message }}</p>
+    <p class="text-red-600">{{ t('common.loadError') }}：{{ error?.message }}</p>
   </div>
   <slot v-else />
 </template>

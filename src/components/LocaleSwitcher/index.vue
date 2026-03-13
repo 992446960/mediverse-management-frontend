@@ -37,7 +37,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useLocaleStore } from '@/stores/locale'
 import { DownOutlined } from '@ant-design/icons-vue'
 

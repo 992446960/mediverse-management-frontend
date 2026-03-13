@@ -18,27 +18,27 @@ export function useOrgDeptFromTree() {
   /** 从树解析出的机构列表（id + name，供下拉用） */
   const orgListFromTree = computed((): Pick<Organization, 'id' | 'name'>[] => {
     const tree = treeRef.value
-    return tree
-      .filter((n) => n.type === 'org')
-      .map((n) => ({ id: n.id, name: n.name }))
+    return tree.filter((n) => n.type === 'org').map((n) => ({ id: n.id, name: n.name }))
   })
 
   /** 从树解析出的 机构ID -> 科室列表（id + name + org_id，供下拉用） */
-  const deptMapFromTree = computed((): Map<string, Pick<Department, 'id' | 'name' | 'org_id'>[]> => {
-    const tree = treeRef.value
-    const map = new Map<string, Pick<Department, 'id' | 'name' | 'org_id'>[]>()
-    tree
-      .filter((n) => n.type === 'org')
-      .forEach((org) => {
-        const depts = (org.children ?? []).map((d) => ({
-          id: d.id,
-          name: d.name,
-          org_id: org.id,
-        }))
-        map.set(org.id, depts)
-      })
-    return map
-  })
+  const deptMapFromTree = computed(
+    (): Map<string, Pick<Department, 'id' | 'name' | 'org_id'>[]> => {
+      const tree = treeRef.value
+      const map = new Map<string, Pick<Department, 'id' | 'name' | 'org_id'>[]>()
+      tree
+        .filter((n) => n.type === 'org')
+        .forEach((org) => {
+          const depts = (org.children ?? []).map((d) => ({
+            id: d.id,
+            name: d.name,
+            org_id: org.id,
+          }))
+          map.set(org.id, depts)
+        })
+      return map
+    }
+  )
 
   /** 按角色返回可选的机构列表（登录 org_id/dept_id 清洗），仅含 id/name 供下拉用 */
   function getOrgOptions(): Promise<Organization[]> {
@@ -46,8 +46,7 @@ export function useOrgDeptFromTree() {
     let result = list
     if (!authStore.isSysAdmin && authStore.currentOrgId) {
       result = list.filter((o) => o.id === authStore.currentOrgId)
-    }
-    else if (!authStore.isSysAdmin) {
+    } else if (!authStore.isSysAdmin) {
       result = []
     }
     return Promise.resolve(result as Organization[])

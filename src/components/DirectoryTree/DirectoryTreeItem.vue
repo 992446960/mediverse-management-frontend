@@ -57,7 +57,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   FolderOutlined,
@@ -67,7 +66,7 @@ import {
 } from '@ant-design/icons-vue'
 import type { DirectoryTreeNode } from './types'
 
-const props = defineProps<{
+defineProps<{
   node: DirectoryTreeNode
   level: number
   selectedKey: string

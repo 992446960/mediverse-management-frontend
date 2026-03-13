@@ -26,7 +26,7 @@
           ref="pageTableRef"
           :table-conf="tableConf"
           :table-columns="tableColumns"
-          :table-data="tableData as unknown as Record<string, unknown>[]"
+          :table-data="tableData"
           @fetch-table-data="onTableFetch"
         >
           <template #status="{ row }">
@@ -59,6 +59,7 @@
         :owner-id="props.ownerId"
         :queue="uploadQueue"
         :tree-data="treeData"
+        @add-to-queue="(item) => uploadQueue.value.push(item)"
         @success="onUploadSuccess"
       />
     </a-modal>
@@ -66,11 +67,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
 import { message, Modal } from 'ant-design-vue'
-import { useRouter } from 'vue-router'
 import {
   SearchOutlined,
   ReloadOutlined,

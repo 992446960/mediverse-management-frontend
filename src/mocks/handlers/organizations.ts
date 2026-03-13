@@ -4,10 +4,10 @@ import type { Organization, OrganizationForm } from '@/types/organization'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 
-const mutableOrgs: Organization[] = initialOrgs.map(o => ({ ...o }))
+const mutableOrgs: Organization[] = initialOrgs.map((o) => ({ ...o }))
 
 function delay(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms))
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 export const organizationHandlers = [
@@ -15,17 +15,20 @@ export const organizationHandlers = [
     await delay(200)
     const url = new URL(request.url)
     const page = Math.max(1, Number.parseInt(url.searchParams.get('page') || '1', 10))
-    const pageSize = Math.min(100, Math.max(1, Number.parseInt(url.searchParams.get('page_size') || '20', 10)))
+    const pageSize = Math.min(
+      100,
+      Math.max(1, Number.parseInt(url.searchParams.get('page_size') || '20', 10))
+    )
     const name = url.searchParams.get('name')?.trim() || ''
     const status = url.searchParams.get('status') as 'active' | 'inactive' | null
 
     let list = mutableOrgs
 
     if (name) {
-      list = list.filter(o => o.name.includes(name))
+      list = list.filter((o) => o.name.includes(name))
     }
     if (status === 'active' || status === 'inactive') {
-      list = list.filter(o => o.status === status)
+      list = list.filter((o) => o.status === status)
     }
 
     const total = list.length
@@ -78,7 +81,7 @@ export const organizationHandlers = [
     await delay(200)
     const id = params.id as string
     const body = (await request.json()) as Partial<OrganizationForm>
-    const idx = mutableOrgs.findIndex(o => o.id === id)
+    const idx = mutableOrgs.findIndex((o) => o.id === id)
     if (idx === -1) {
       return HttpResponse.json({
         code: 404,
@@ -102,7 +105,7 @@ export const organizationHandlers = [
   http.delete(`${API_BASE}/organizations/:id`, async ({ params }) => {
     await delay(200)
     const id = params.id as string
-    const idx = mutableOrgs.findIndex(o => o.id === id)
+    const idx = mutableOrgs.findIndex((o) => o.id === id)
     if (idx === -1) {
       return HttpResponse.json({
         code: 404,
@@ -122,7 +125,7 @@ export const organizationHandlers = [
     await delay(200)
     const id = params.id as string
     const body = (await request.json()) as { status: 'active' | 'inactive' }
-    const idx = mutableOrgs.findIndex(o => o.id === id)
+    const idx = mutableOrgs.findIndex((o) => o.id === id)
     if (idx === -1) {
       return HttpResponse.json({
         code: 404,

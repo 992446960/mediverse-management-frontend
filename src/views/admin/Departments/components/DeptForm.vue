@@ -17,20 +17,28 @@
         <a-input :value="defaultOrgName" disabled />
       </a-form-item>
       <a-form-item :label="t('dept.name')" name="name">
-        <a-input v-model:value="formState.name" :placeholder="t('dept.namePlaceholder')" :maxlength="100" show-count />
+        <a-input
+          v-model:value="formState.name"
+          :placeholder="t('dept.namePlaceholder')"
+          :maxlength="100"
+          show-count
+        />
       </a-form-item>
       <a-form-item :label="t('dept.code')" name="code">
         <a-input v-model:value="formState.code" :placeholder="t('dept.code')" />
       </a-form-item>
       <a-form-item :label="t('dept.description')" name="description">
-        <a-textarea v-model:value="formState.description" :placeholder="t('dept.description')" :rows="3" />
+        <a-textarea
+          v-model:value="formState.description"
+          :placeholder="t('dept.description')"
+          :rows="3"
+        />
       </a-form-item>
     </a-form>
   </a-modal>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { FormInstance } from 'ant-design-vue'
 import type { Department, DepartmentForm } from '@/types/department'

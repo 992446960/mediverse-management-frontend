@@ -8,12 +8,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import FilePreview from '@/components/FilePreview/index.vue'
 import { useAuthStore } from '@/stores/auth'
 import type { OwnerType } from '@/types/knowledge'
 
+const { t } = useI18n()
 const route = useRoute()
 const authStore = useAuthStore()
 
@@ -46,10 +46,10 @@ const ready = computed(() => {
 })
 
 const notReadyReason = computed(() => {
-  if (!fileId.value) return '缺少文件 ID'
-  if (ownerType.value === 'dept' && !authStore.currentDeptId) return '无科室权限'
-  if (ownerType.value === 'org' && !authStore.currentOrgId) return '无机构权限'
-  if (ownerType.value === 'personal' && !authStore.user?.id) return '请先登录'
-  return '加载中...'
+  if (!fileId.value) return t('knowledge.missingFileId')
+  if (ownerType.value === 'dept' && !authStore.currentDeptId) return t('knowledge.noDeptPermission')
+  if (ownerType.value === 'org' && !authStore.currentOrgId) return t('knowledge.noOrgPermission')
+  if (ownerType.value === 'personal' && !authStore.user?.id) return t('knowledge.pleaseLogin')
+  return t('common.loading')
 })
 </script>

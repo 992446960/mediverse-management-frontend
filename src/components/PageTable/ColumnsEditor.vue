@@ -1,10 +1,5 @@
 <template>
-  <a-modal
-    v-model:open="open"
-    title="列设置"
-    :width="480"
-    @ok="applyColumns"
-  >
+  <a-modal v-model:open="open" :title="t('common.columnSettings')" :width="480" @ok="applyColumns">
     <div class="columns-editor">
       <div
         v-for="(col, index) in editableColumns"
@@ -22,19 +17,21 @@
         >
           {{ col.label }}
         </a-checkbox>
-        <span v-if="col.lock" class="text-xs text-slate-400">(锁定)</span>
+        <span v-if="col.lock" class="text-xs text-slate-400">({{ t('common.locked') }})</span>
       </div>
     </div>
     <template #footer>
-      <a-button @click="resetColumns">重置</a-button>
-      <a-button type="primary" @click="applyColumns">确定</a-button>
+      <a-button @click="resetColumns">{{ t('common.reset') }}</a-button>
+      <a-button type="primary" @click="applyColumns">{{ t('common.confirm') }}</a-button>
     </template>
   </a-modal>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { PageTableColumnConfig } from './types'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   open: boolean
@@ -70,7 +67,7 @@ function onDragStart(e: DragEvent, index: number) {
   e.dataTransfer?.setData('text/plain', String(index))
 }
 
-function onDragOver(e: DragEvent, _index: number) {
+function onDragOver(e: DragEvent) {
   e.preventDefault()
 }
 

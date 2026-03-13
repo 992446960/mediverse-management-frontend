@@ -61,7 +61,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
 import type { FormInstance } from 'ant-design-vue'
 import type { ModalFormItemConfig } from './types'
 
@@ -89,15 +88,12 @@ const emit = defineEmits<{
 const formRef = ref<FormInstance>()
 const formState = ref<Record<string, unknown>>({})
 
-const visibleFormItems = computed(() =>
-  props.formItems.filter(item => !item.hidden),
-)
+const visibleFormItems = computed(() => props.formItems.filter((item) => !item.hidden))
 
 const mergedRules = computed(() => {
   const rules: Record<string, unknown[]> = {}
   for (const item of props.formItems) {
-    if (item.rules?.length)
-      rules[item.name] = item.rules
+    if (item.rules?.length) rules[item.name] = item.rules
   }
   return rules
 })
@@ -115,7 +111,7 @@ watch(
       formRef.value?.clearValidate()
     }
   },
-  { immediate: true },
+  { immediate: true }
 )
 
 function handleCancel() {
@@ -128,13 +124,11 @@ async function handleOk() {
     const values: Record<string, unknown> = {}
     for (const key of Object.keys(formState.value)) {
       const v = formState.value[key]
-      if (v !== '' && v !== undefined && v !== null)
-        values[key] = v
+      if (v !== '' && v !== undefined && v !== null) values[key] = v
     }
     emit('submit', values)
     emit('update:open', false)
-  }
-  catch {
+  } catch {
     // 校验未通过，不关闭
   }
 }

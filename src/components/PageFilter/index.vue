@@ -2,11 +2,7 @@
   <div class="page-filter mt-5" style="background-color: var(--color-bg-container)">
     <a-form ref="formRef" :model="formData" layout="inline">
       <a-row :gutter="[16, 16]" class="w-full">
-        <a-col
-          v-for="field in visibleFields"
-          :key="field.key"
-          :span="field.col ?? 6"
-        >
+        <a-col v-for="field in visibleFields" :key="field.key" :span="field.col ?? 6">
           <a-form-item :label="field.label" :name="field.key">
             <!-- type === 'input' 或 默认 -->
             <a-input
@@ -52,7 +48,7 @@
               v-model:value="formData[field.key]"
               :format="field.format ?? 'YYYY-MM-DD'"
               :value-format="field.format ?? 'YYYY-MM-DD'"
-              :placeholder="[field.sph ?? '开始日期', field.eph ?? '结束日期']"
+              :placeholder="[field.sph ?? t('common.startDate'), field.eph ?? t('common.endDate')]"
               :disabled-date="field.disabledDate"
               :show-time="field.dateType === 'datetimerange'"
               class="w-full"
@@ -62,12 +58,17 @@
             <!-- type === 'number-input' -->
             <NumRange
               v-else-if="field.type === 'number-input'"
-              :model-value="(formData[field.key] as { min?: number; max?: number } | null | undefined)"
+              :model-value="getNumRangeValue(field.key)"
               :min-ph="field.minPh"
               :max-ph="field.maxPh"
               :min="field.min"
               :max="field.max"
-              @update:model-value="(v) => { formData[field.key] = v; onChangeFilter() }"
+              @update:model-value="
+                (v) => {
+                  formData[field.key] = v
+                  onChangeFilter()
+                }
+              "
               @change="onChangeFilter"
             />
 
@@ -85,7 +86,7 @@
         <!-- 更多筛选按钮 -->
         <a-col v-if="hasMoreFields" :span="2">
           <a-button type="link" @click="onToggleMore">
-            {{ moreVisible ? '收起' : '更多筛选' }}
+            {{ moreVisible ? t('common.collapse') : t('common.moreFilters') }}
             <DownOutlined v-if="!moreVisible" />
             <UpOutlined v-else />
           </a-button>
@@ -113,7 +114,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
 import { DownOutlined, UpOutlined } from '@ant-design/icons-vue'
 import NumRange from './slots/NumRange.vue'
@@ -121,12 +122,14 @@ import type { FormInstance } from 'ant-design-vue'
 import type { PageFilterConfig, PageFilterField } from './types'
 import type { PageTableColumnConfig } from '@/components/PageTable/types'
 
-const datePresets = [
-  { label: '今天', value: dayjs() },
-  { label: '昨天', value: dayjs().subtract(1, 'day') },
-  { label: '最近7天', value: dayjs().subtract(7, 'day') },
-  { label: '最近30天', value: dayjs().subtract(30, 'day') },
-]
+const { t } = useI18n()
+
+const datePresets = computed(() => [
+  { label: t('common.today'), value: dayjs() },
+  { label: t('common.yesterday'), value: dayjs().subtract(1, 'day') },
+  { label: t('common.last7Days'), value: dayjs().subtract(7, 'day') },
+  { label: t('common.last30Days'), value: dayjs().subtract(30, 'day') },
+])
 
 const props = withDefaults(
   defineProps<{
@@ -171,9 +174,7 @@ const visibleFields = computed<PageFilterField[]>(() => {
   return form.filter((f) => {
     if (f.hide) return false
     if (f.tableLink) {
-      const col = cols.find(
-        (c) => c.prop === f.tableLink || c._id === f.tableLink
-      )
+      const col = cols.find((c) => c.prop === f.tableLink || c._id === f.tableLink)
       if (col && col._visible === false) return false
     }
     if (f._usual === false && !moreVisible.value) return false
@@ -196,6 +197,11 @@ const filteParams = computed<Record<string, unknown>>(() => {
   }
   return params
 })
+
+function getNumRangeValue(key: string): { min?: number; max?: number } | null | undefined {
+  const v = formData[key]
+  return v as { min?: number; max?: number } | null | undefined
+}
 
 function onChangeFilter() {
   emit('fetch-table-data')

@@ -5,8 +5,7 @@
     <!-- 顶部工具栏 -->
     <div
       v-if="!tableConf?.hideTableBar"
-      class="page-table__toolbar px-6 py-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 shrink-0"
-      style="height: 52px"
+      class="page-table__toolbar h-[52px] px-6 py-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 shrink-0"
     >
       <div class="flex items-center gap-2">
         <span v-if="(tableConf?.total ?? 0) > 0" class="text-sm text-slate-500">
@@ -40,7 +39,7 @@
         :columns="antdvColumns"
         :data-source="tableData"
         :loading="tableConf?.isLoading"
-        :row-key="(r: Record<string, unknown>) => String(r[tableConf?.rowKey ?? 'id'])"
+        :row-key="(r: Record<string, any>) => String(r[tableConf?.rowKey ?? 'id'])"
         :row-selection="rowSelectionConfig"
         :scroll="scrollConfig"
         :pagination="false"
@@ -108,7 +107,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { Key } from 'ant-design-vue/es/table/interface'
 import type { ColumnsType } from 'ant-design-vue/es/table'
@@ -127,7 +125,7 @@ const props = withDefaults(
   defineProps<{
     tableConf?: PageTableConfig
     tableColumns: PageTableColumnConfig[]
-    tableData?: Record<string, unknown>[]
+    tableData?: Record<string, any>[]
   }>(),
   {
     tableConf: undefined,
@@ -142,7 +140,7 @@ const emit = defineEmits<{
 
 const currentPage = ref(1)
 const pageSize = ref(props.tableConf?.paginationSizes?.[0] ?? 20)
-const multipleSelection = ref<Record<string, unknown>[]>([])
+const multipleSelection = ref<Record<string, any>[]>([])
 const selectedRowKeys = ref<Key[]>([])
 const sortParams = ref<{ prop: string; order: string } | null>(null)
 const columnsEditorVisible = ref(false)
@@ -239,10 +237,10 @@ const rowSelectionConfig = computed(() => {
   return {
     selectedRowKeys: selectedRowKeys.value,
     preserveSelectedRowKeys: col.reserveSelection,
-    getCheckboxProps: (record: Record<string, unknown>) => ({
+    getCheckboxProps: (record: Record<string, any>) => ({
       disabled: col.selectDisabled?.(record),
     }),
-    onChange: (keys: Key[], rows: Record<string, unknown>[]) => {
+    onChange: (keys: Key[], rows: Record<string, any>[]) => {
       selectedRowKeys.value = keys
       multipleSelection.value = rows
       emit('fetch-table-data')
@@ -267,25 +265,25 @@ const scrollConfig = computed(() => {
   return { y: DEFAULT_SCROLL_Y }
 })
 
-function getColExt(column: Record<string, unknown>): PageTableColumnConfig {
-  return column as unknown as PageTableColumnConfig
+function getColExt(column: Record<string, any>): PageTableColumnConfig {
+  return column as PageTableColumnConfig
 }
 
-function getCellValue(record: Record<string, unknown>, column: Record<string, unknown>): unknown {
+function getCellValue(record: Record<string, any>, column: Record<string, any>): unknown {
   const prop = column.dataIndex ?? column.prop
   if (prop == null) return undefined
   const key = Array.isArray(prop) ? prop.join('.') : prop
   return record[key as string]
 }
 
-function getCellText(record: Record<string, unknown>, column: Record<string, unknown>): string {
+function getCellText(record: Record<string, any>, column: Record<string, any>): string {
   const ext = getColExt(column)
   const value = ext.formatter?.(record) ?? getCellValue(record, column)
   if (value == null) return ''
   return typeof value === 'object' ? JSON.stringify(value) : String(value)
 }
 
-function getIndexDisplay(column: Record<string, unknown>, index: number): number | string {
+function getIndexDisplay(column: Record<string, any>, index: number): number | string {
   const ext = getColExt(column)
   if (ext.indexMethod) return ext.indexMethod(index)
   return (currentPage.value - 1) * pageSize.value + index + 1

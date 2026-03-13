@@ -14,13 +14,22 @@
       @submit.prevent="handleOk"
     >
       <a-form-item :label="t('org.name')" name="name">
-        <a-input v-model:value="formState.name" :placeholder="t('org.name')" :maxlength="100" show-count />
+        <a-input
+          v-model:value="formState.name"
+          :placeholder="t('org.name')"
+          :maxlength="100"
+          show-count
+        />
       </a-form-item>
       <a-form-item :label="t('org.code')" name="code">
         <a-input v-model:value="formState.code" :placeholder="t('org.code')" />
       </a-form-item>
       <a-form-item :label="t('org.description')" name="description">
-        <a-textarea v-model:value="formState.description" :placeholder="t('org.description')" :rows="3" />
+        <a-textarea
+          v-model:value="formState.description"
+          :placeholder="t('org.description')"
+          :rows="3"
+        />
       </a-form-item>
       <a-form-item :label="t('org.logo')" name="logo_url">
         <a-input v-model:value="formState.logo_url" placeholder="https://..." />
@@ -30,7 +39,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { FormInstance } from 'ant-design-vue'
 import type { Organization, OrganizationForm } from '@/types/organization'
@@ -81,8 +89,7 @@ watch(
           description: record.description ?? '',
           logo_url: record.logo_url ?? '',
         }
-      }
-      else {
+      } else {
         formState.value = { name: '', code: '', description: '', logo_url: '' }
       }
       formRef.value?.clearValidate()
@@ -103,11 +110,9 @@ async function handleOk() {
     }
     emit('submit', values)
     emit('update:open', false)
-  }
-  catch {
+  } catch {
     // validation failed
-  }
-  finally {
+  } finally {
     confirmLoading.value = false
   }
 }

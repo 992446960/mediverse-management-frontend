@@ -11,7 +11,6 @@ import {
   CodeOutlined,
   LineOutlined,
 } from '@ant-design/icons-vue'
-import { watch } from 'vue'
 
 const props = defineProps<{
   modelValue: string

@@ -1,5 +1,5 @@
 <template>
-  <div class="table-filter  app-container">
+  <div class="table-filter app-container">
     <!-- 可选标题区：标题 + 主操作按钮 -->
     <div v-if="title || primaryAction" class="table-filter__header">
       <h2 v-if="title" class="table-filter__title">{{ title }}</h2>
@@ -43,7 +43,7 @@
               :class="field.inputClass"
               :options="selectOptions(field)"
               allow-clear
-              style="min-width: 140px"
+              class="min-w-[140px]"
               @update:value="onSelectChange(field.key, $event)"
             />
           </template>
@@ -118,8 +118,8 @@ function onSelectChange(key: string, value: string | number | undefined) {
     emit('update:modelValue', { ...props.modelValue, [key]: undefined })
   } else {
     const opt = props.fields
-      .find(f => f.key === key)
-      ?.options?.find(o => o.value === value || String(o.value) === String(value))
+      .find((f) => f.key === key)
+      ?.options?.find((o) => o.value === value || String(o.value) === String(value))
     emit('update:modelValue', { ...props.modelValue, [key]: opt?.value ?? value })
   }
   emit('search')
@@ -131,8 +131,7 @@ function onReset() {
     if (f.type === 'select' && f.options?.length) {
       const first = f.options[0]
       initial[f.key] = first?.value
-    }
-    else {
+    } else {
       initial[f.key] = undefined
     }
   }
@@ -142,7 +141,7 @@ function onReset() {
 </script>
 
 <style scoped>
-.table-filter{
+.table-filter {
   background-color: var(--color-bg-container);
   padding-bottom: calc(var(--spacing-xl) + 24px);
 }

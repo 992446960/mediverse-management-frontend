@@ -139,7 +139,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
 import { message } from 'ant-design-vue'
 import type { FormInstance } from 'ant-design-vue'
 import { EyeOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons-vue'

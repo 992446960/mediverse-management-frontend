@@ -72,7 +72,6 @@
 
 <script setup lang="ts">
 import { useThemeStore } from '@/stores/theme'
-import { storeToRefs } from 'pinia'
 
 const themeStore = useThemeStore()
 const { isDark } = storeToRefs(themeStore)

@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useThemeStore } from '@/stores/theme'
@@ -83,7 +81,7 @@ const handleLogin = async () => {
     <div class="bg-orb bg-orb--2" aria-hidden="true" />
     <div class="bg-orb bg-orb--3" aria-hidden="true" />
 
-    <div class="mode-toggle" role="region" aria-label="切换明暗模式">
+    <div class="mode-toggle" role="region" :aria-label="t('auth.toggleThemeAria')">
       <ThemeSwitcher />
     </div>
 
@@ -107,18 +105,32 @@ const handleLogin = async () => {
           </svg>
         </div>
         <h2 class="title">Mediverse</h2>
-        <p class="subtitle">数字分身管理平台</p>
+        <p class="subtitle">{{ t('auth.subtitle') }}</p>
       </div>
 
       <a-form :model="formState" name="login" class="login-form" @finish="handleLogin">
-        <a-form-item name="username" :rules="[{ required: true, message: '请输入用户名' }]">
-          <a-input v-model:value="formState.username" placeholder="用户名" size="large">
+        <a-form-item
+          name="username"
+          :rules="[{ required: true, message: t('auth.usernamePlaceholder') }]"
+        >
+          <a-input
+            v-model:value="formState.username"
+            :placeholder="t('auth.username')"
+            size="large"
+          >
             <template #prefix><UserOutlined /></template>
           </a-input>
         </a-form-item>
 
-        <a-form-item name="password" :rules="[{ required: true, message: '请输入密码' }]">
-          <a-input-password v-model:value="formState.password" placeholder="密码" size="large">
+        <a-form-item
+          name="password"
+          :rules="[{ required: true, message: t('auth.passwordPlaceholder') }]"
+        >
+          <a-input-password
+            v-model:value="formState.password"
+            :placeholder="t('auth.password')"
+            size="large"
+          >
             <template #prefix><LockOutlined /></template>
           </a-input-password>
         </a-form-item>
@@ -138,12 +150,12 @@ const handleLogin = async () => {
             size="large"
             block
           >
-            登 录
+            {{ t('auth.loginButton') }}
           </a-button>
         </a-form-item>
       </a-form>
 
-      <p class="login-footer">© 2026 Mediverse · 医疗数字化平台</p>
+      <p class="login-footer">{{ t('auth.footer') }}</p>
     </div>
   </div>
 </template>

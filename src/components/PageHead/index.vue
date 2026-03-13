@@ -13,7 +13,7 @@
         <template #icon>
           <ArrowLeftOutlined />
         </template>
-        返回
+        {{ t('common.back') }}
       </a-button>
       <slot name="title" :title="headConf.title">
         <span
@@ -68,10 +68,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, useSlots } from 'vue'
-import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { ArrowLeftOutlined, QuestionCircleOutlined } from '@ant-design/icons-vue'
 import type { PageHeadConfig, PageHeadBtn } from './types'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   headConf: PageHeadConfig

@@ -21,7 +21,7 @@ async function enableMocking() {
     const { worker } = await import('./mocks/browser')
     await worker.start({ quiet: true })
     // 等待 Service Worker 接管后再挂载，避免刷新时 /auth/me 请求命中 Vite 代理导致 ECONNREFUSED
-    await new Promise(resolve => setTimeout(resolve, 100))
+    await new Promise((resolve) => setTimeout(resolve, 100))
   }
 }
 

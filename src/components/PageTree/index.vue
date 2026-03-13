@@ -114,7 +114,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
 import { ReloadOutlined, SearchOutlined, DownOutlined } from '@ant-design/icons-vue'
 import { TABLE_TREE_HEIGHT_CALC } from '@/constants/layout'
 import { tableTreeIconMap } from './icons'
@@ -187,9 +186,7 @@ const filteredTree = computed(() => {
       if (!node.children?.length) {
         return node.label.toLowerCase().includes(kw) ? node : null
       }
-      const matchedChildren = node.children.filter((c) =>
-        c.label.toLowerCase().includes(kw)
-      )
+      const matchedChildren = node.children.filter((c) => c.label.toLowerCase().includes(kw))
       const rootMatch = node.label.toLowerCase().includes(kw)
       if (rootMatch || matchedChildren.length > 0) {
         return {
@@ -284,4 +281,3 @@ function onNodeClick(node: TableTreeNode, level: TableTreeClickPayload['level'])
   background-color: #334155;
 }
 </style>
-

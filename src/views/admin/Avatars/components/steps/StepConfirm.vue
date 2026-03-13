@@ -26,16 +26,16 @@
             <template v-else-if="row.key === 'tags'">
               <span class="step-confirm-tags">
                 <a-tag
-                  v-for="(tag, i) in (modelValue.tags ?? [])"
+                  v-for="(tag, i) in modelValue.tags ?? []"
                   :key="tag"
                   :color="TAG_COLORS[i % TAG_COLORS.length]"
                 >
                   {{ tag }}
                 </a-tag>
               </span>
-              <span v-if="!(modelValue.tags?.length)" class="step-confirm-empty">{{
-                  t('common.noData')
-                }}</span>
+              <span v-if="!modelValue.tags?.length" class="step-confirm-empty">{{
+                t('common.noData')
+              }}</span>
             </template>
             <!-- 普通文案 -->
             <template v-else>
@@ -49,7 +49,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { getOrganizations } from '@/api/organizations'
 import { getDepartments } from '@/api/departments'

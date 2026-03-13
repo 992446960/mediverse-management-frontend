@@ -16,7 +16,10 @@
         </a-space>
       </template>
       <template v-else-if="column.key === 'status'">
-        <a-badge :status="getStatusBadgeStatus(record.status)" :text="t(getStatusLabelKey(record.status))" />
+        <a-badge
+          :status="getStatusBadgeStatus(record.status)"
+          :text="t(getStatusLabelKey(record.status))"
+        />
       </template>
       <template v-else-if="column.key === 'actions'">
         <a-space wrap>
@@ -39,7 +42,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { getStatusColor, getStatusLabelKey } from '@/utils/status'
 import type { UserListItem } from '@/types/user'
@@ -76,7 +78,13 @@ function roleLabelKey(role: UserRole): string {
 
 const columns = computed(() => [
   { title: t('user.username'), dataIndex: 'username', key: 'username', width: 120, ellipsis: true },
-  { title: t('user.realName'), dataIndex: 'real_name', key: 'real_name', width: 100, ellipsis: true },
+  {
+    title: t('user.realName'),
+    dataIndex: 'real_name',
+    key: 'real_name',
+    width: 100,
+    ellipsis: true,
+  },
   { title: t('user.phone'), dataIndex: 'phone', key: 'phone', width: 130 },
   { title: t('user.org'), dataIndex: 'org_name', key: 'org_name', width: 160, ellipsis: true },
   { title: t('user.dept'), dataIndex: 'dept_name', key: 'dept_name', width: 100, ellipsis: true },

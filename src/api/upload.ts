@@ -12,4 +12,3 @@ export function uploadAvatar(file: File) {
   formData.append('file', file)
   return request.post<UploadAvatarResponse>('/upload/avatar', formData)
 }
-

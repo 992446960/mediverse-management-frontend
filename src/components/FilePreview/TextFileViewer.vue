@@ -15,8 +15,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { marked } from 'marked'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   fileUrl: string
@@ -37,7 +39,7 @@ const renderedHtml = computed(() => {
 async function fetchContent() {
   if (!props.fileUrl) {
     rawContent.value = ''
-    error.value = '暂无预览地址'
+    error.value = t('knowledge.noPreviewUrl')
     return
   }
   loading.value = true
@@ -47,7 +49,7 @@ async function fetchContent() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     rawContent.value = await res.text()
   } catch (e) {
-    error.value = e instanceof Error ? e.message : '加载文件失败'
+    error.value = e instanceof Error ? e.message : t('knowledge.loadFileFailed')
     rawContent.value = ''
   } finally {
     loading.value = false

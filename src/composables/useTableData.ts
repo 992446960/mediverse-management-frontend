@@ -1,3 +1,8 @@
+/**
+ * @deprecated 该 composable 与 PageTable 三件套架构存在分页状态冲突（双方各自管理 currentPage/pageSize），
+ * 当前所有列表页均直接使用 PageTable expose 接口，暂不推荐使用此 composable。
+ * 如需复用列表逻辑，请基于 PageTable.expose({ currentPage, pageSize }) 重新设计。
+ */
 import { ref, reactive, onMounted } from 'vue'
 import type { Ref } from 'vue'
 import type { PaginationParams, PaginatedData } from '@/types/api'

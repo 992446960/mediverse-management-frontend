@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message } from 'ant-design-vue'
 import {
   PlusOutlined,
@@ -24,12 +24,15 @@ import KnowledgeCardViewer from '../KnowledgeCardViewer/index.vue'
 import PageHead from '@/components/PageHead/index.vue'
 import PageFilter from '@/components/PageFilter/index.vue'
 import PageTable from '@/components/PageTable/index.vue'
+import { getKnowledgeCards, deleteKnowledgeCard, toggleKnowledgeCardStatus } from '@/api/knowledge'
 import type { PageHeadConfig } from '@/components/PageHead/types'
 import type { PageFilterConfig } from '@/components/PageFilter/types'
 import type { PageTableConfig, PageTableColumnConfig } from '@/components/PageTable/types'
 import dayjs from 'dayjs'
 
-defineProps<{
+const { t } = useI18n()
+
+const props = defineProps<{
   ownerType: OwnerType
   ownerId: string
 }>()
@@ -46,27 +49,26 @@ const loading = ref(false)
 const tableData = ref<KnowledgeCard[]>([])
 const total = ref(0)
 
-// 编辑器和查看器状态
-const editorVisible = ref(false)
+const editorOpen = ref(false)
 const editingCard = ref<KnowledgeCard | undefined>(undefined)
-const viewerVisible = ref(false)
+const viewerOpen = ref(false)
 const viewingCardId = ref<string | null>(null)
 
 const headConf = computed<PageHeadConfig>(() => ({
-  title: '知识卡管理',
+  title: t('knowledge.card.title'),
   btns: [
     {
-      text: '新建知识卡',
+      text: t('knowledge.card.create'),
       type: 'primary',
       icon: PlusOutlined,
       handle: handleCreate,
     },
   ],
   tabsOptions: [
-    { label: '全部', value: 'all' },
-    { label: '循证卡', value: 'evidence' },
-    { label: '规则卡', value: 'rule' },
-    { label: '经验卡', value: 'experience' },
+    { label: t('common.all'), value: 'all' },
+    { label: t('knowledge.card.typeEvidence'), value: 'evidence' },
+    { label: t('knowledge.card.typeRule'), value: 'rule' },
+    { label: t('knowledge.card.typeExperience'), value: 'experience' },
   ],
   defaultTab: activeTab.value,
   tabChangeHandle: (val) => {
@@ -79,17 +81,17 @@ const filterConf = computed<PageFilterConfig>(() => ({
   filterForm: [
     {
       key: 'keyword',
-      label: '搜索',
+      label: t('knowledge.card.searchLabel'),
       type: 'input',
-      ph: '搜索标题或内容',
+      ph: t('knowledge.card.searchPlaceholder'),
       col: 8,
       icon: SearchOutlined,
     },
     {
       key: 'online_status',
-      label: '上线状态',
+      label: t('knowledge.card.onlineStatus'),
       type: 'select',
-      ph: '全部',
+      ph: t('common.all'),
       col: 6,
       options: Object.entries(ONLINE_STATUS_CONFIG).map(([value, cfg]) => ({
         label: cfg.label,
@@ -99,9 +101,9 @@ const filterConf = computed<PageFilterConfig>(() => ({
     },
     {
       key: 'audit_status',
-      label: '审核状态',
+      label: t('knowledge.card.auditStatus'),
       type: 'select',
-      ph: '全部',
+      ph: t('common.all'),
       col: 6,
       options: Object.entries(AUDIT_STATUS_CONFIG).map(([value, cfg]) => ({
         label: cfg.label,
@@ -112,13 +114,13 @@ const filterConf = computed<PageFilterConfig>(() => ({
   ],
   btns: [
     {
-      text: '查询',
+      text: t('common.query'),
       type: 'primary',
       icon: SearchOutlined,
       handle: handleSearch,
     },
     {
-      text: '重置',
+      text: t('common.reset'),
       icon: ReloadOutlined,
       handle: () => {
         pageFilterRef.value?.filterFormReset()
@@ -138,14 +140,14 @@ const tableConf = computed<PageTableConfig>(() => ({
 
 const tableColumns = computed<PageTableColumnConfig[]>(() => [
   {
-    label: '标题',
+    label: t('knowledge.card.columnTitle'),
     prop: 'title',
     width: 250,
     type: 'slot',
     slotName: 'title',
   },
   {
-    label: '类型',
+    label: t('knowledge.card.columnType'),
     prop: 'type',
     width: 100,
     type: 'scope',
@@ -154,7 +156,7 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
     tagText: (row) => CARD_TYPE_CONFIG[row.type as CardType].label,
   },
   {
-    label: '状态',
+    label: t('knowledge.card.columnStatus'),
     prop: 'online_status',
     width: 120,
     type: 'scope',
@@ -163,7 +165,7 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
     tagText: (row) => ONLINE_STATUS_CONFIG[row.online_status as OnlineStatus].label,
   },
   {
-    label: '审核状态',
+    label: t('knowledge.card.columnAuditStatus'),
     prop: 'audit_status',
     width: 120,
     type: 'scope',
@@ -172,50 +174,53 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
     tagText: (row) => AUDIT_STATUS_CONFIG[row.audit_status as AuditStatus].label,
   },
   {
-    label: '引用次数',
+    label: t('knowledge.card.columnReferenceCount'),
     prop: 'reference_count',
     width: 100,
     align: 'center',
   },
   {
-    label: '更新时间',
+    label: t('knowledge.card.columnUpdatedAt'),
     prop: 'updated_at',
     width: 160,
     formatter: (row) => dayjs(row.updated_at as string).format('YYYY-MM-DD HH:mm'),
   },
   {
-    label: '操作',
+    label: t('common.actions'),
     type: 'operation',
     width: 240,
     fixed: 'right',
     btns: [
       {
-        text: '详情',
+        text: t('common.detail'),
         icon: EyeOutlined,
-        handle: (row) => handleView(row as unknown as KnowledgeCard),
+        handle: (row) => handleView(row as KnowledgeCard),
       },
       {
-        text: '编辑',
+        text: t('common.edit'),
         icon: EditOutlined,
-        handle: (row) => handleEdit(row as unknown as KnowledgeCard),
+        handle: (row) => handleEdit(row as KnowledgeCard),
       },
       {
-        text: '上下线',
-        dynamicText: (row) => (row.online_status === 'online' ? '下线' : '上线'),
+        text: t('knowledge.card.onlineToggle'),
+        dynamicText: (row) =>
+          row.online_status === 'online' ? t('knowledge.card.offline') : t('knowledge.card.online'),
         dynamicIcon: (row) =>
           row.online_status === 'online' ? CloudDownloadOutlined : CloudUploadOutlined,
         type: 'popconfirm',
         dynamicPopconfirmTitle: (row) =>
-          `确定要${row.online_status === 'online' ? '下线' : '上线'}该知识卡吗？`,
-        handle: (row) => handleStatusToggle(row as unknown as KnowledgeCard),
+          row.online_status === 'online'
+            ? t('knowledge.card.confirmToggleOffline')
+            : t('knowledge.card.confirmToggleOnline'),
+        handle: (row) => handleStatusToggle(row as KnowledgeCard),
       },
       {
-        text: '删除',
+        text: t('common.delete'),
         icon: DeleteOutlined,
         color: 'danger',
         type: 'popconfirm',
-        popconfirmTitle: '确定要删除吗？',
-        handle: () => handleDelete(),
+        popconfirmTitle: t('common.confirmDeleteContent'),
+        handle: (row) => handleDelete(row as KnowledgeCard),
       },
     ],
   },
@@ -228,29 +233,19 @@ const fetchData = async () => {
 
   loading.value = true
   try {
-    // 这里实际应调用 axios.get
-    const mockCards = (await import('../../mocks/data/knowledgeCards')).mockKnowledgeCards
-    let filtered = [...mockCards]
-
-    if (activeTab.value !== 'all') {
-      filtered = filtered.filter((c) => c.type === activeTab.value)
-    }
-    if (params.keyword) {
-      const kw = String(params.keyword).toLowerCase()
-      filtered = filtered.filter((c) => c.title.toLowerCase().includes(kw))
-    }
-    if (params.online_status) {
-      filtered = filtered.filter((c) => c.online_status === params.online_status)
-    }
-    if (params.audit_status) {
-      filtered = filtered.filter((c) => c.audit_status === params.audit_status)
-    }
-
-    total.value = filtered.length
-    tableData.value = filtered.slice((page - 1) * pageSize, page * pageSize)
+    const result = await getKnowledgeCards(props.ownerType, props.ownerId, {
+      page,
+      page_size: pageSize,
+      type: activeTab.value !== 'all' ? activeTab.value : undefined,
+      keyword: (params.keyword as string) || undefined,
+      online_status: (params.online_status as string) || undefined,
+      audit_status: (params.audit_status as string) || undefined,
+    })
+    tableData.value = result.items
+    total.value = result.total
   } catch (err) {
     console.error('Fetch failed:', err)
-    message.error('获取列表失败')
+    message.error(t('knowledge.card.fetchFailed'))
   } finally {
     loading.value = false
   }
@@ -265,39 +260,43 @@ const handleSearch = () => {
 
 const handleCreate = () => {
   editingCard.value = undefined
-  editorVisible.value = true
+  editorOpen.value = true
 }
 
 const handleEdit = (record: KnowledgeCard) => {
   editingCard.value = record
-  editorVisible.value = true
+  editorOpen.value = true
 }
 
 const handleView = (record: KnowledgeCard) => {
   viewingCardId.value = record.id
-  viewerVisible.value = true
+  viewerOpen.value = true
 }
 
-const handleDelete = async () => {
+const handleDelete = async (record: KnowledgeCard) => {
   try {
-    // 模拟 API 调用
-    message.success('删除成功')
+    await deleteKnowledgeCard(props.ownerType, props.ownerId, record.id)
+    message.success(t('knowledge.card.deleteSuccess'))
     fetchData()
   } catch (err) {
     console.error('Delete failed:', err)
-    message.error('删除失败')
+    message.error(t('knowledge.card.deleteFailed'))
   }
 }
 
 const handleStatusToggle = async (record: KnowledgeCard) => {
   const newStatus = record.online_status === 'online' ? 'offline' : 'online'
   try {
-    // 模拟 API 调用
-    record.online_status = newStatus
-    message.success(`已${newStatus === 'online' ? '上线' : '下线'}`)
+    await toggleKnowledgeCardStatus(props.ownerType, props.ownerId, record.id, newStatus)
+    message.success(
+      newStatus === 'online'
+        ? t('knowledge.card.onlineSuccess')
+        : t('knowledge.card.offlineSuccess')
+    )
+    fetchData()
   } catch (err) {
     console.error('Status toggle failed:', err)
-    message.error('操作失败')
+    message.error(t('common.error'))
   }
 }
 </script>
@@ -314,7 +313,7 @@ const handleStatusToggle = async (record: KnowledgeCard) => {
         ref="pageTableRef"
         :table-conf="tableConf"
         :table-columns="tableColumns"
-        :table-data="tableData as unknown as Record<string, unknown>[]"
+        :table-data="tableData"
         @fetch-table-data="fetchData"
       >
         <template #title="{ row }">
@@ -331,7 +330,7 @@ const handleStatusToggle = async (record: KnowledgeCard) => {
     </div>
 
     <KnowledgeCardEditor
-      v-model:visible="editorVisible"
+      v-model:open="editorOpen"
       :card="editingCard"
       :owner-type="ownerType"
       :owner-id="ownerId"
@@ -339,7 +338,7 @@ const handleStatusToggle = async (record: KnowledgeCard) => {
     />
 
     <KnowledgeCardViewer
-      v-model:visible="viewerVisible"
+      v-model:open="viewerOpen"
       :card-id="viewingCardId"
       :owner-type="ownerType"
       :owner-id="ownerId"

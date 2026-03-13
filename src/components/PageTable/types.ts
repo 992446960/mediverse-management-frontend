@@ -2,7 +2,7 @@ export interface PageTableOperationBtn {
   /** 按钮文案 */
   text: string
   /** 动态文案 */
-  dynamicText?: (row: Record<string, unknown>) => string
+  dynamicText?: (row: Record<string, any>) => string
   /** 按钮形态：'popconfirm' | 'popover' | 默认 link button */
   type?: string
   /** a-button 的 type：primary | default | dashed | link | text，默认 primary */
@@ -10,25 +10,25 @@ export interface PageTableOperationBtn {
   /** 按钮图标（Vue 组件，如 @ant-design/icons-vue 的组件） */
   icon?: unknown
   /** 根据行数据动态返回图标组件 */
-  dynamicIcon?: (row: Record<string, unknown>) => unknown
+  dynamicIcon?: (row: Record<string, any>) => unknown
   /** 按钮字体/图标颜色：CSS 颜色或 'danger' | 'warning' | 'success'，link/text 时生效 */
   color?: string
   /** 根据行数据动态返回颜色（取值同 color） */
-  dynamicColor?: (row: Record<string, unknown>) => string | undefined
+  dynamicColor?: (row: Record<string, any>) => string | undefined
   /** 禁用逻辑 */
-  btnDisabled?: (row: Record<string, unknown>) => boolean
+  btnDisabled?: (row: Record<string, any>) => boolean
   /** 是否显示 */
-  btnIsShow?: (row: Record<string, unknown>) => boolean
+  btnIsShow?: (row: Record<string, any>) => boolean
   /** 点击行为 */
-  handle?: (row: Record<string, unknown>, index?: number) => void
+  handle?: (row: Record<string, any>, index?: number) => void
   /** 二次确认文案 (type === 'popconfirm') */
   popconfirmTitle?: string
   /** 动态确认文案 (type === 'popconfirm') */
-  dynamicPopconfirmTitle?: (row: Record<string, unknown>) => string
+  dynamicPopconfirmTitle?: (row: Record<string, any>) => string
   /** 确认框确认按钮类型 */
   popconfirmType?: string
   /** 取消回调 (type === 'popconfirm') */
-  cancel?: (row: Record<string, unknown>, index?: number) => void
+  cancel?: (row: Record<string, any>, index?: number) => void
   /** 更多操作列表 (type === 'popover') */
   moreList?: PageTableOperationBtn[]
 }
@@ -49,7 +49,7 @@ export interface PageTableColumnConfig {
   /** 超长内容 Tooltip 提示 */
   showOverflowTooltip?: boolean
   /** 文本格式化函数 */
-  formatter?: (row: Record<string, unknown>) => string
+  formatter?: (row: Record<string, any>) => string
   /** 开启自定义排序 */
   sortable?: boolean
   /** 列设置中是否锁定 */
@@ -57,7 +57,7 @@ export interface PageTableColumnConfig {
   /** 多选保留（仅 selection 生效） */
   reserveSelection?: boolean
   /** 多选禁用逻辑（仅 selection 生效） */
-  selectDisabled?: (row: Record<string, unknown>) => boolean
+  selectDisabled?: (row: Record<string, any>) => boolean
   /** 序号格式化（仅 index 生效） */
   indexMethod?: (index: number) => number | string
   /** scope 列渲染分支 */
@@ -77,15 +77,15 @@ export interface PageTableColumnConfig {
   /** 列唯一标识 */
   _id?: string | number
   /** _link: 链接点击回调 */
-  linkFn?: (row: Record<string, unknown>) => void
+  linkFn?: (row: Record<string, any>) => void
   /** _link: 禁用判断 */
-  linkDisabled?: (row: Record<string, unknown>) => boolean
+  linkDisabled?: (row: Record<string, any>) => boolean
   /** _tag: 标签类型 */
-  tagType?: (row: Record<string, unknown>) => string
+  tagType?: (row: Record<string, any>) => string
   /** _tag: 标签文案 */
-  tagText?: (row: Record<string, unknown>) => string
+  tagText?: (row: Record<string, any>) => string
   /** _switch: 开关切换回调 */
-  switchFn?: (value: boolean, row: Record<string, unknown>) => void
+  switchFn?: (value: boolean, row: Record<string, any>) => void
   /** _image: 图片宽度 */
   imageWidth?: number | string
   /** _image: 图片高度 */

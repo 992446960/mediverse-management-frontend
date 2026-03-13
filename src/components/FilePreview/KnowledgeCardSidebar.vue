@@ -3,7 +3,7 @@
     <div class="flex items-center mb-2">
       <BulbOutlined class="text-primary w-5 h-5 mr-2 shrink-0" />
       <h3 class="text-base font-semibold text-slate-800 dark:text-slate-100 m-0">
-        抽取知识卡 ({{ cards.length }})
+        {{ t('knowledge.card.extractedCards', { count: cards.length }) }}
       </h3>
     </div>
     <div class="flex-1 overflow-y-auto space-y-4">
@@ -33,23 +33,26 @@
         </div>
         <div v-if="sourceFileName" class="knowledge-card-sidebar__source">
           <FileTextOutlined class="w-3 h-3 mr-1 shrink-0 opacity-70" />
-          <span>来源：{{ sourceFileName }}</span>
+          <span>{{ t('knowledge.card.source') }}{{ sourceFileName }}</span>
         </div>
       </div>
-      <a-empty v-if="!loading && cards.length === 0" description="暂无知识卡" />
+      <a-empty v-if="!loading && cards.length === 0" :description="t('knowledge.card.noCards')" />
       <a-spin v-if="loading" class="w-full py-8" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { BulbOutlined, FileTextOutlined } from '@ant-design/icons-vue'
 import type { FileCard, CardType } from '@/types/knowledge'
 
-const CARD_TYPE_LABELS: Record<CardType, string> = {
-  evidence: '循证卡',
-  rule: '规则卡',
-  experience: '经验卡',
+const { t } = useI18n()
+
+const CARD_TYPE_LABEL_KEYS: Record<CardType, string> = {
+  evidence: 'knowledge.card.typeEvidence',
+  rule: 'knowledge.card.typeRule',
+  experience: 'knowledge.card.typeExperience',
 }
 
 defineProps<{
@@ -59,7 +62,7 @@ defineProps<{
 }>()
 
 function getTypeLabel(type: CardType): string {
-  return CARD_TYPE_LABELS[type] ?? type
+  return t(CARD_TYPE_LABEL_KEYS[type] ?? type)
 }
 </script>
 

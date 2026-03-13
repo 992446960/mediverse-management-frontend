@@ -8,4 +8,3 @@ export const tableTreeIconMap: Record<string, Component> = {
   team: TeamOutlined,
   down: DownOutlined,
 }
-

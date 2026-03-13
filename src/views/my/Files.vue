@@ -1,10 +1,6 @@
 <template>
   <div v-if="authStore.user?.has_avatar" class="flex flex-1 overflow-hidden">
-    <KnowledgeFiles
-      owner-type="personal"
-      :owner-id="authStore.user.id"
-      :title="t('menu.files')"
-    />
+    <KnowledgeFiles owner-type="personal" :owner-id="authStore.user.id" :title="t('menu.files')" />
   </div>
   <div v-else class="flex flex-1 items-center justify-center bg-white dark:bg-slate-900">
     <a-result
@@ -23,7 +19,6 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
 import KnowledgeFiles from '@/views/shared/KnowledgeFiles.vue'
 import { useAuthStore } from '@/stores/auth'
 

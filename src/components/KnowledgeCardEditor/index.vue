@@ -1,20 +1,94 @@
+<template>
+  <a-modal
+    :open="open"
+    :title="card ? t('knowledge.card.editTitle') : t('knowledge.card.createTitle')"
+    :confirm-loading="loading"
+    width="800px"
+    @ok="handleOk"
+    @cancel="handleCancel"
+  >
+    <a-form ref="formRef" :model="formState" layout="vertical" class="mt-4">
+      <a-form-item
+        name="title"
+        :label="t('knowledge.card.titleLabel')"
+        :rules="[{ required: true, message: t('knowledge.card.titleRequired') }]"
+      >
+        <a-input
+          v-model:value="formState.title"
+          :placeholder="t('knowledge.card.titlePlaceholder')"
+        />
+      </a-form-item>
+
+      <div class="grid grid-cols-2 gap-4">
+        <a-form-item
+          name="type"
+          :label="t('knowledge.card.typeLabel')"
+          :rules="[{ required: true, message: t('knowledge.card.typeRequired') }]"
+        >
+          <a-select v-model:value="formState.type">
+            <a-select-option v-for="(cfg, key) in CARD_TYPE_CONFIG" :key="key" :value="key">
+              {{ cfg.label }}
+            </a-select-option>
+          </a-select>
+        </a-form-item>
+
+        <a-form-item :label="t('knowledge.card.tagsLabel')">
+          <div class="flex flex-wrap gap-2 items-center">
+            <a-tag v-for="tag in formState.tags" :key="tag" closable @close="handleCloseTag(tag)">
+              {{ tag }}
+            </a-tag>
+            <a-input
+              v-if="inputTagVisible"
+              ref="inputTagRef"
+              v-model:value="inputTagValue"
+              type="text"
+              size="small"
+              class="w-[78px]"
+              @blur="handleInputTagConfirm"
+              @keyup.enter="handleInputTagConfirm"
+            />
+            <a-tag v-else style="background: #fff; border-style: dashed" @click="showInputTag">
+              <PlusOutlined /> {{ t('knowledge.card.addTag') }}
+            </a-tag>
+          </div>
+        </a-form-item>
+      </div>
+
+      <a-form-item
+        name="content"
+        :label="t('knowledge.card.contentLabel')"
+        :rules="[{ required: true, message: t('knowledge.card.contentRequired') }]"
+      >
+        <TiptapEditor
+          :model-value="formState.content"
+          :placeholder="t('knowledge.card.contentPlaceholder')"
+          @update:model-value="(val) => (formState.content = val)"
+        />
+      </a-form-item>
+    </a-form>
+  </a-modal>
+</template>
+
 <script setup lang="ts">
-import { ref, reactive, watch } from 'vue'
-import { Modal, Form, Input, Select, Tag, message } from 'ant-design-vue'
+import { useI18n } from 'vue-i18n'
+import { message } from 'ant-design-vue'
 import { PlusOutlined } from '@ant-design/icons-vue'
 import type { KnowledgeCard, CardType, OwnerType } from '@/types/knowledge'
 import { CARD_TYPE_CONFIG } from '@/types/knowledge'
+import { saveKnowledgeCard } from '@/api/knowledge'
 import TiptapEditor from './TiptapEditor.vue'
 
+const { t } = useI18n()
+
 const props = defineProps<{
-  visible: boolean
+  open: boolean
   card?: KnowledgeCard
   ownerType: OwnerType
   ownerId: string
 }>()
 
 const emit = defineEmits<{
-  (e: 'update:visible', visible: boolean): void
+  (e: 'update:open', value: boolean): void
   (e: 'success'): void
 }>()
 
@@ -31,7 +105,7 @@ const formState = reactive({
 })
 
 watch(
-  () => props.visible,
+  () => props.open,
   (val) => {
     if (val) {
       if (props.card) {
@@ -50,7 +124,7 @@ watch(
 )
 
 const handleCancel = () => {
-  emit('update:visible', false)
+  emit('update:open', false)
 }
 
 const handleOk = async () => {
@@ -58,22 +132,18 @@ const handleOk = async () => {
     await formRef.value.validate()
     loading.value = true
 
-    // 模拟 API 调用
-    const payload = {
+    await saveKnowledgeCard(props.ownerType, props.ownerId, {
       ...formState,
       id: props.card?.id,
-      owner_type: props.ownerType,
-      owner_id: props.ownerId,
-    }
+    })
 
-    // 这里实际应该调用 axios.post
-    console.log('Saving card:', payload)
-
-    message.success(props.card ? '更新成功' : '创建成功')
+    message.success(
+      props.card ? t('knowledge.card.saveSuccess') : t('knowledge.card.createSuccess')
+    )
     emit('success')
     handleCancel()
   } catch (err) {
-    console.error('Validate failed:', err)
+    console.error('Save card failed:', err)
   } finally {
     loading.value = false
   }
@@ -96,59 +166,3 @@ const handleInputTagConfirm = () => {
   inputTagValue.value = ''
 }
 </script>
-
-<template>
-  <Modal
-    :open="visible"
-    :title="card ? '编辑知识卡' : '新建知识卡'"
-    :confirm-loading="loading"
-    width="800px"
-    @ok="handleOk"
-    @cancel="handleCancel"
-  >
-    <Form ref="formRef" :model="formState" layout="vertical" class="mt-4">
-      <Form.Item name="title" label="标题" :rules="[{ required: true, message: '请输入标题' }]">
-        <Input v-model:value="formState.title" placeholder="请输入知识卡标题" />
-      </Form.Item>
-
-      <div class="grid grid-cols-2 gap-4">
-        <Form.Item name="type" label="类型" :rules="[{ required: true, message: '请选择类型' }]">
-          <Select v-model:value="formState.type">
-            <Select.Option v-for="(cfg, key) in CARD_TYPE_CONFIG" :key="key" :value="key">
-              {{ cfg.label }}
-            </Select.Option>
-          </Select>
-        </Form.Item>
-
-        <Form.Item label="标签">
-          <div class="flex flex-wrap gap-2 items-center">
-            <Tag v-for="tag in formState.tags" :key="tag" closable @close="handleCloseTag(tag)">
-              {{ tag }}
-            </Tag>
-            <Input
-              v-if="inputTagVisible"
-              ref="inputTagRef"
-              v-model:value="inputTagValue"
-              type="text"
-              size="small"
-              :style="{ width: '78px' }"
-              @blur="handleInputTagConfirm"
-              @keyup.enter="handleInputTagConfirm"
-            />
-            <Tag v-else style="background: #fff; border-style: dashed" @click="showInputTag">
-              <PlusOutlined /> 新增标签
-            </Tag>
-          </div>
-        </Form.Item>
-      </div>
-
-      <Form.Item name="content" label="内容" :rules="[{ required: true, message: '请输入内容' }]">
-        <TiptapEditor
-          :model-value="formState.content"
-          placeholder="请输入知识卡正文内容..."
-          @update:model-value="(val) => (formState.content = val)"
-        />
-      </Form.Item>
-    </Form>
-  </Modal>
-</template>

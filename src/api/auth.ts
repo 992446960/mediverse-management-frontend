@@ -20,5 +20,5 @@ export const authApi = {
 
   changePassword(params: ChangePasswordParams) {
     return request.post<void>('/auth/change-password', params)
-  }
+  },
 }
