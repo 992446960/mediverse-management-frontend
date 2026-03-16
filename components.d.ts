@@ -1,3 +1,4 @@
+/* eslint-disable */
 // @ts-nocheck
 // biome-ignore lint: disable
 // oxlint-disable
@@ -31,6 +32,7 @@ declare module 'vue' {
     AInput: typeof import('ant-design-vue/es')['Input']
     AInputNumber: typeof import('ant-design-vue/es')['InputNumber']
     AInputPassword: typeof import('ant-design-vue/es')['InputPassword']
+    AInputSearch: typeof import('ant-design-vue/es')['InputSearch']
     ALayout: typeof import('ant-design-vue/es')['Layout']
     ALayoutContent: typeof import('ant-design-vue/es')['LayoutContent']
     ALayoutHeader: typeof import('ant-design-vue/es')['LayoutHeader']
@@ -70,6 +72,8 @@ declare module 'vue' {
     AvatarConfig: typeof import('./src/components/AvatarConfig/index.vue')['default']
     AvatarStats: typeof import('./src/components/AvatarStats/index.vue')['default']
     AvatarTestPage: typeof import('./src/components/AvatarTestPage/index.vue')['default']
+    BubbleRenderer: typeof import('./src/components/ChatWindow/BubbleRenderer.vue')['default']
+    CitationLink: typeof import('./src/components/SearchResultThread/CitationLink.vue')['default']
     ColumnsEditor: typeof import('./src/components/PageTable/ColumnsEditor.vue')['default']
     DirectoryTree: typeof import('./src/components/DirectoryTree/index.vue')['default']
     DirectoryTreeItem: typeof import('./src/components/DirectoryTree/DirectoryTreeItem.vue')['default']
@@ -80,6 +84,7 @@ declare module 'vue' {
     FilePreview: typeof import('./src/components/FilePreview/index.vue')['default']
     FileUploader: typeof import('./src/components/FileUploader/index.vue')['default']
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
+    KBSidebar: typeof import('./src/components/KBSidebar/index.vue')['default']
     KnowledgeCardEditor: typeof import('./src/components/KnowledgeCardEditor/index.vue')['default']
     KnowledgeCardList: typeof import('./src/components/KnowledgeCardList/index.vue')['default']
     KnowledgeCardSidebar: typeof import('./src/components/FilePreview/KnowledgeCardSidebar.vue')['default']
@@ -96,12 +101,15 @@ declare module 'vue' {
     ParsedDocViewer: typeof import('./src/components/FilePreview/ParsedDocViewer.vue')['default']
     PdfViewer: typeof import('./src/components/FilePreview/PdfViewer.vue')['default']
     QuickActionGuide: typeof import('./src/components/AvatarConfig/QuickActionGuide.vue')['default']
+    RelatedQuestions: typeof import('./src/components/SearchResultThread/RelatedQuestions.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     ScopeCell: typeof import('./src/components/PageTable/ScopeCell.vue')['default']
+    SearchResultThread: typeof import('./src/components/SearchResultThread/index.vue')['default']
     TableFilter: typeof import('./src/components/TableFilter/index.vue')['default']
     TextFileViewer: typeof import('./src/components/FilePreview/TextFileViewer.vue')['default']
     ThemeSwitcher: typeof import('./src/components/ThemeSwitcher/index.vue')['default']
+    ThinkingProcess: typeof import('./src/components/ChatWindow/ThinkingProcess.vue')['default']
     TiptapEditor: typeof import('./src/components/KnowledgeCardEditor/TiptapEditor.vue')['default']
     VersionTimeline: typeof import('./src/components/KnowledgeCardViewer/VersionTimeline.vue')['default']
   }
