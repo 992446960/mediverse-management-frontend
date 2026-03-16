@@ -31,12 +31,24 @@ export interface LoginParams {
   code?: string // 验证码登录（可选）
 }
 
+/** 登录接口 data：后端可能把 has_* 放在与 user 平级的顶层 */
 export interface LoginResponse {
   access_token: string
   refresh_token: string
   token_type?: string
   expires_in: number
   user: User
+  has_expert_avatar?: boolean
+  has_dept_avatar?: boolean
+  has_org_avatar?: boolean
+}
+
+/** GET /auth/me 的 data：后端返回 { user, has_expert_avatar, has_dept_avatar, has_org_avatar } */
+export interface AuthMeResponse {
+  user: User
+  has_expert_avatar?: boolean
+  has_dept_avatar?: boolean
+  has_org_avatar?: boolean
 }
 
 /** 刷新 Token 接口返回的 data，与 API 文档 1.1.2 一致 */

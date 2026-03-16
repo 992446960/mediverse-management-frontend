@@ -2,6 +2,7 @@ import { request } from './index'
 import type {
   LoginParams,
   LoginResponse,
+  AuthMeResponse,
   RefreshTokenResponse,
   User,
   ChangePasswordParams,
@@ -22,7 +23,7 @@ export const authApi = {
   },
 
   getUserInfo() {
-    return request.get<User>('/auth/me')
+    return request.get<AuthMeResponse>('/auth/me')
   },
 
   changePassword(params: ChangePasswordParams) {

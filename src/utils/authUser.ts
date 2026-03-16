@@ -14,6 +14,26 @@ function pickPrimaryRole(roles: UserRole[] | undefined): UserRole {
 }
 
 /**
+ * 登录与 GET /auth/me 的 data 可能为两种形状：
+ * - { user, has_expert_avatar, has_dept_avatar, has_org_avatar }（has_* 在顶层）
+ * - 或仅 user 对象（has_* 在 user 内）
+ * 合并为单一对象供 normalizeAuthUser 使用，避免工作台菜单与角色丢失。
+ */
+export function mergeUserWithWorkbenchFlags(
+  data: Record<string, unknown>
+): Record<string, unknown> {
+  const user = data.user ?? data
+  if (user === null || typeof user !== 'object') return data as Record<string, unknown>
+  const u = user as Record<string, unknown>
+  return {
+    ...u,
+    has_expert_avatar: data.has_expert_avatar ?? u.has_expert_avatar,
+    has_dept_avatar: data.has_dept_avatar ?? u.has_dept_avatar,
+    has_org_avatar: data.has_org_avatar ?? u.has_org_avatar,
+  }
+}
+
+/**
  * API 返回的用户可能是 User（role, full_name）或列表结构（roles, real_name）。
  * 统一标准化为 Auth 使用的 User 类型，保证菜单与权限判断使用 user.role 正确。
  */

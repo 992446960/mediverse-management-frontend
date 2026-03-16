@@ -10,7 +10,7 @@ import {
   AUTH_STORAGE_KEY,
   clearAuth,
 } from '@/utils/auth'
-import { normalizeAuthUser } from '@/utils/authUser'
+import { normalizeAuthUser, mergeUserWithWorkbenchFlags } from '@/utils/authUser'
 
 export const useAuthStore = defineStore(
   'auth',
@@ -39,7 +39,9 @@ export const useAuthStore = defineStore(
       refreshToken.value = res.refresh_token
       setToken(res.access_token)
       setRefreshToken(res.refresh_token)
-      user.value = normalizeAuthUser(res.user)
+      // 后端可能把 has_expert_avatar 等放在 data 顶层，需合并后再标准化
+      const payload = mergeUserWithWorkbenchFlags(res as Record<string, unknown>)
+      user.value = normalizeAuthUser(payload)
     }
 
     async function logout() {
@@ -66,7 +68,9 @@ export const useAuthStore = defineStore(
     async function fetchUserInfo() {
       try {
         const res = await authApi.getUserInfo()
-        user.value = normalizeAuthUser(res)
+        // 后端 /auth/me 返回 { user, has_expert_avatar, has_dept_avatar, has_org_avatar }，需合并后再标准化
+        const payload = mergeUserWithWorkbenchFlags(res as Record<string, unknown>)
+        user.value = normalizeAuthUser(payload)
       } catch (error) {
         clearAuthOnly()
         throw error
