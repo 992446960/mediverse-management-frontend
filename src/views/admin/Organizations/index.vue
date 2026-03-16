@@ -19,6 +19,7 @@
             :alt="t('org.logo')"
             :width="40"
             :height="40"
+            :preview-mask="false"
             class="org-logo-img rounded-lg object-cover"
           />
           <span v-else class="org-logo-placeholder text-slate-400 dark:text-slate-500">—</span>

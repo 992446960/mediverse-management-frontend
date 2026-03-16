@@ -44,6 +44,7 @@
       :src="getCellValue(record) as string"
       :width="column.imageWidth ?? 40"
       :height="column.imageHeight ?? 40"
+      :preview-mask="false"
     />
   </template>
   <template v-else-if="column.scopeType === '_numInput'">
