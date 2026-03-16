@@ -61,6 +61,7 @@ body {
   background-color: var(--color-bg-container);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-sm);
+  max-height: calc(100vh - 64px - 24px - 24px);
 }
 
 /* 全局 Modal 样式 */
