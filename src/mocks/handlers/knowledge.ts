@@ -179,21 +179,6 @@ export const knowledgeHandlers = [
     }
   }),
 
-  // 查询单个文件详情
-  http.get(`${API_BASE}/knowledge/:ownerType/:ownerId/files/:fileId`, async ({ params }) => {
-    const { fileId } = params
-    const file = mutableFiles.find((f) => f.id === fileId)
-    if (!file) {
-      return HttpResponse.json({ code: 40002, message: 'File not found', data: null })
-    }
-    await delay(200)
-    return HttpResponse.json({
-      code: 0,
-      message: 'ok',
-      data: file,
-    })
-  }),
-
   // 查询文件关联的知识卡
   http.get(`${API_BASE}/knowledge/:ownerType/:ownerId/files/:fileId/cards`, async ({ params }) => {
     const fileId = params.fileId as string
@@ -285,25 +270,6 @@ export const knowledgeHandlers = [
     })
   }),
 
-  // 重试失败的文件处理
-  http.post(`${API_BASE}/knowledge/:ownerType/:ownerId/files/:fileId/retry`, async ({ params }) => {
-    const { fileId } = params
-    const file = mutableFiles.find((f) => f.id === fileId)
-
-    if (!file) {
-      return HttpResponse.json({ code: 404, message: 'File not found', data: null })
-    }
-
-    file.status = 'uploading'
-    file.error_msg = null
-
-    return HttpResponse.json({
-      code: 0,
-      message: 'ok',
-      data: null,
-    })
-  }),
-
   // 删除文件
   http.delete(`${API_BASE}/knowledge/:ownerType/:ownerId/files/:fileId`, async ({ params }) => {
     const { fileId } = params
@@ -341,28 +307,6 @@ export const knowledgeHandlers = [
       },
     })
   }),
-
-  // 下载文件
-  http.get(
-    `${API_BASE}/knowledge/:ownerType/:ownerId/files/:fileId/download`,
-    async ({ params }) => {
-      const { fileId } = params
-      const file = mutableFiles.find((f) => f.id === fileId)
-
-      if (!file) {
-        return HttpResponse.json({ code: 404, message: 'File not found', data: null })
-      }
-
-      // 模拟返回一个简单的 Blob 数据
-      const blob = new Blob(['Mock file content for ' + file.file_name], { type: 'text/plain' })
-      return new HttpResponse(blob, {
-        headers: {
-          'Content-Type': 'application/octet-stream',
-          'Content-Disposition': `attachment; filename="${encodeURIComponent(file.file_name)}"`,
-        },
-      })
-    }
-  ),
 
   // 查询知识卡列表
   http.get(`${API_BASE}/knowledge/:ownerType/:ownerId/cards`, async ({ request }) => {
@@ -424,31 +368,10 @@ export const knowledgeHandlers = [
     })
   }),
 
-  // 创建/更新知识卡
+  // 创建知识卡
   http.post(`${API_BASE}/knowledge/:ownerType/:ownerId/cards`, async ({ request, params }) => {
     const payload = (await request.json()) as any
     const { ownerType, ownerId } = params as { ownerType: OwnerType; ownerId: string }
-    const isUpdate = !!payload.id
-
-    if (isUpdate) {
-      const index = mutableCards.findIndex((c) => c.id === payload.id)
-      const oldCard = mutableCards[index]
-      if (index !== -1 && oldCard) {
-        const versionStr = oldCard.version || 'v1.0.0'
-        const versionParts = versionStr.split('.')
-        const majorVersion = parseInt(versionParts[0]?.slice(1) || '1')
-        const newCard: KnowledgeCard = {
-          ...oldCard,
-          ...payload,
-          updated_at: new Date().toISOString(),
-          version: `v${majorVersion + 1}.0.0`,
-          owner_type: ownerType as any,
-          owner_id: ownerId,
-        }
-        mutableCards[index] = newCard
-        return HttpResponse.json({ code: 0, message: 'updated', data: newCard })
-      }
-    }
 
     const newCard: KnowledgeCard = {
       id: `card_${Date.now()}`,
@@ -472,15 +395,37 @@ export const knowledgeHandlers = [
     return HttpResponse.json({ code: 0, message: 'created', data: newCard })
   }),
 
-  // 知识卡上下线
-  http.post(
+  // 更新知识卡
+  http.put(
+    `${API_BASE}/knowledge/:ownerType/:ownerId/cards/:cardId`,
+    async ({ params, request }) => {
+      const { cardId } = params
+      const payload = (await request.json()) as any
+      const card = mutableCards.find((c) => c.id === cardId)
+      if (card) {
+        const versionStr = card.version || 'v1.0.0'
+        const versionParts = versionStr.split('.')
+        const majorVersion = parseInt(versionParts[0]?.slice(1) || '1')
+        Object.assign(card, {
+          ...payload,
+          updated_at: new Date().toISOString(),
+          version: `v${majorVersion + 1}.0.0`,
+        })
+        return HttpResponse.json({ code: 0, message: 'ok', data: card })
+      }
+      return HttpResponse.json({ code: 404, message: 'not found' })
+    }
+  ),
+
+  // 知识卡上下线（PATCH + online_status）
+  http.patch(
     `${API_BASE}/knowledge/:ownerType/:ownerId/cards/:cardId/status`,
     async ({ params, request }) => {
       const { cardId } = params
-      const { status } = (await request.json()) as { status: 'online' | 'offline' }
+      const { online_status } = (await request.json()) as { online_status: 'online' | 'offline' }
       const card = mutableCards.find((c) => c.id === cardId)
       if (card) {
-        card.online_status = status
+        card.online_status = online_status
         return HttpResponse.json({ code: 0, message: 'ok', data: card })
       }
       return HttpResponse.json({ code: 404, message: 'not found' })
@@ -497,33 +442,23 @@ export const knowledgeHandlers = [
     }
   ),
 
-  // 版本回退
+  // 版本回退（body: target_version 数字）
   http.post(
     `${API_BASE}/knowledge/:ownerType/:ownerId/cards/:cardId/rollback`,
     async ({ params, request }) => {
       const { cardId } = params
-      const { version } = (await request.json()) as { version: string }
+      const { target_version } = (await request.json()) as { target_version: number }
       const card = mutableCards.find((c) => c.id === cardId)
-      const versionData = mockCardVersions[cardId as string]?.find((v) => v.version === version)
+      const versions = mockCardVersions[cardId as string] || []
+      const versionData = versions[target_version - 1] // 1-based index
 
       if (card && versionData) {
         card.content = versionData.content
-        card.version = version
+        card.version = versionData.version
         card.updated_at = new Date().toISOString()
         return HttpResponse.json({ code: 0, message: 'ok', data: card })
       }
       return HttpResponse.json({ code: 404, message: 'not found' })
     }
   ),
-
-  // 删除知识卡
-  http.delete(`${API_BASE}/knowledge/:ownerType/:ownerId/cards/:cardId`, async ({ params }) => {
-    const { cardId } = params
-    const index = mutableCards.findIndex((c) => c.id === cardId)
-    if (index !== -1) {
-      mutableCards.splice(index, 1)
-      return HttpResponse.json({ code: 0, message: 'ok' })
-    }
-    return HttpResponse.json({ code: 404, message: 'not found' })
-  }),
 ]

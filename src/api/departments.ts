@@ -27,7 +27,3 @@ export function updateDepartment(id: string, data: Partial<Omit<DepartmentForm, 
 export function deleteDepartment(id: string) {
   return request.delete<null>(`/departments/${id}`)
 }
-
-export function updateDeptStatus(id: string, data: { status: 'active' | 'inactive' }) {
-  return request.patch<Department>(`/departments/${id}/status`, data)
-}

@@ -5,10 +5,10 @@ import type { OwnerType } from '@/constants/avatar'
 /**
  * 获取分身配置
  * 个人：/api/v1/my/avatar
- * 科室/机构：/api/v1/avatars/config/:owner_type/:owner_id
+ * 科室/机构：/api/v1/my/avatar/{owner_type}/{owner_id}
  */
 export function getAvatarConfig(ownerType: OwnerType, ownerId?: string) {
-  const url = ownerType === 'personal' ? '/my/avatar' : `/avatars/config/${ownerType}/${ownerId}`
+  const url = ownerType === 'personal' ? '/my/avatar' : `/my/avatar/${ownerType}/${ownerId}`
   return request.get<AvatarConfig>(url)
 }
 
@@ -20,6 +20,6 @@ export function updateAvatarConfig(
   ownerId: string | undefined,
   data: UpdateAvatarConfigParams
 ) {
-  const url = ownerType === 'personal' ? '/my/avatar' : `/avatars/config/${ownerType}/${ownerId}`
+  const url = ownerType === 'personal' ? '/my/avatar' : `/my/avatar/${ownerType}/${ownerId}`
   return request.put<AvatarConfig>(url, data)
 }

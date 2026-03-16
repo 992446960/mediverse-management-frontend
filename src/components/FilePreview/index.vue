@@ -116,7 +116,7 @@ import ExcelViewer from './ExcelViewer.vue'
 import ParsedDocViewer from './ParsedDocViewer.vue'
 import TextFileViewer from './TextFileViewer.vue'
 import KnowledgeCardSidebar from './KnowledgeCardSidebar.vue'
-import { getFileDetail, getFileCards } from '@/api/knowledge'
+import { getFileCards } from '@/api/knowledge'
 import type { PageHeadConfig } from '@/components/PageHead/types'
 import type { OwnerType, FileListItem, FileStatus, FileCard } from '@/types/knowledge'
 
@@ -126,9 +126,11 @@ const props = defineProps<{
   ownerType: OwnerType
   ownerId: string
   fileId: string
+  /** 列表项，由父组件通过路由 state 传入，避免单独请求文件详情 */
+  file?: FileListItem | null
 }>()
 
-const file = ref<FileListItem | null>(null)
+const file = computed(() => props.file ?? null)
 const cards = ref<FileCard[]>([])
 const loading = ref(false)
 const cardsLoading = ref(false)
@@ -205,19 +207,6 @@ const headConf = computed<PageHeadConfig>(() => {
   }
 })
 
-async function loadFile() {
-  loading.value = true
-  error.value = null
-  try {
-    file.value = await getFileDetail(props.ownerType, props.ownerId, props.fileId)
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : t('knowledge.loadFileFailed')
-    file.value = null
-  } finally {
-    loading.value = false
-  }
-}
-
 async function loadCards() {
   cardsLoading.value = true
   try {
@@ -237,14 +226,12 @@ function handleDownload() {
 watch(
   () => [props.ownerType, props.ownerId, props.fileId],
   () => {
-    loadFile()
     loadCards()
   },
   { immediate: false }
 )
 
 onMounted(() => {
-  loadFile()
   loadCards()
 })
 </script>

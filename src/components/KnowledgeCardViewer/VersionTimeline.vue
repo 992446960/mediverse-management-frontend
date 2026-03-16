@@ -1,7 +1,7 @@
 <template>
   <div class="version-timeline p-4">
     <a-timeline>
-      <a-timeline-item v-for="v in versions" :key="v.version">
+      <a-timeline-item v-for="(v, index) in versions" :key="v.version">
         <template #dot>
           <HistoryOutlined style="font-size: 16px" />
         </template>
@@ -30,7 +30,7 @@
                 type="link"
                 size="small"
                 danger
-                @click="handleRollback(v.version)"
+                @click="handleRollback(v.version, index + 1)"
               >
                 <template #icon><RollbackOutlined /></template>
                 {{ t('knowledge.card.rollback') }}
@@ -59,17 +59,17 @@ defineProps<{
 
 const emit = defineEmits<{
   (e: 'preview', version: KnowledgeCardVersion): void
-  (e: 'rollback', version: string): void
+  (e: 'rollback', version: string, targetVersion: number): void
 }>()
 
-const handleRollback = (version: string) => {
+const handleRollback = (version: string, targetVersion: number) => {
   Modal.confirm({
     title: t('knowledge.card.rollbackConfirmTitle'),
     content: t('knowledge.card.rollbackConfirmContent', { version }),
     okText: t('common.confirm'),
     cancelText: t('common.cancel'),
     onOk: () => {
-      emit('rollback', version)
+      emit('rollback', version, targetVersion)
     },
   })
 }

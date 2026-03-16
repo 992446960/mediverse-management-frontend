@@ -5,7 +5,6 @@ import {
   PlusOutlined,
   EditOutlined,
   EyeOutlined,
-  DeleteOutlined,
   CloudUploadOutlined,
   CloudDownloadOutlined,
   SearchOutlined,
@@ -24,7 +23,7 @@ import KnowledgeCardViewer from '../KnowledgeCardViewer/index.vue'
 import PageHead from '@/components/PageHead/index.vue'
 import PageFilter from '@/components/PageFilter/index.vue'
 import PageTable from '@/components/PageTable/index.vue'
-import { getKnowledgeCards, deleteKnowledgeCard, toggleKnowledgeCardStatus } from '@/api/knowledge'
+import { getKnowledgeCards, toggleKnowledgeCardStatus } from '@/api/knowledge'
 import type { PageHeadConfig } from '@/components/PageHead/types'
 import type { PageFilterConfig } from '@/components/PageFilter/types'
 import type { PageTableConfig, PageTableColumnConfig } from '@/components/PageTable/types'
@@ -214,14 +213,6 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
             : t('knowledge.card.confirmToggleOnline'),
         handle: (row) => handleStatusToggle(row as KnowledgeCard),
       },
-      {
-        text: t('common.delete'),
-        icon: DeleteOutlined,
-        color: 'danger',
-        type: 'popconfirm',
-        popconfirmTitle: t('common.confirmDeleteContent'),
-        handle: (row) => handleDelete(row as KnowledgeCard),
-      },
     ],
   },
 ])
@@ -271,17 +262,6 @@ const handleEdit = (record: KnowledgeCard) => {
 const handleView = (record: KnowledgeCard) => {
   viewingCardId.value = record.id
   viewerOpen.value = true
-}
-
-const handleDelete = async (record: KnowledgeCard) => {
-  try {
-    await deleteKnowledgeCard(props.ownerType, props.ownerId, record.id)
-    message.success(t('knowledge.card.deleteSuccess'))
-    fetchData()
-  } catch (err) {
-    console.error('Delete failed:', err)
-    message.error(t('knowledge.card.deleteFailed'))
-  }
 }
 
 const handleStatusToggle = async (record: KnowledgeCard) => {

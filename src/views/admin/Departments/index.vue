@@ -73,7 +73,6 @@ import {
   createDepartment,
   updateDepartment,
   deleteDepartment,
-  updateDeptStatus,
 } from '@/api/departments'
 import { confirmDelete } from '@/utils/confirm'
 import type { PageHeadConfig } from '@/components/PageHead/types'
@@ -340,7 +339,7 @@ function handleToggleStatus(record: Department) {
     okText: t('common.confirm'),
     cancelText: t('common.cancel'),
     onOk: async () => {
-      await updateDeptStatus(record.id, { status: nextStatus })
+      await updateDepartment(record.id, { status: nextStatus })
       message.success(t('common.success'))
       refresh()
     },

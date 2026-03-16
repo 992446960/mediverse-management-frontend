@@ -116,6 +116,7 @@ export const departmentHandlers = [
     if (body.name !== undefined) cur.name = body.name.trim()
     if (body.code !== undefined) cur.code = body.code?.trim() ?? ''
     if (body.description !== undefined) cur.description = body.description?.trim() ?? ''
+    if (body.status !== undefined) cur.status = body.status
     cur.updated_at = new Date().toISOString()
     return HttpResponse.json({
       code: 0,
@@ -140,28 +141,6 @@ export const departmentHandlers = [
       code: 0,
       message: 'ok',
       data: null,
-    })
-  }),
-
-  http.patch(`${API_BASE}/departments/:id/status`, async ({ request, params }) => {
-    await delay(200)
-    const id = params.id as string
-    const body = (await request.json()) as { status: 'active' | 'inactive' }
-    const idx = mutableDepts.findIndex((d) => d.id === id)
-    if (idx === -1) {
-      return HttpResponse.json({
-        code: 40002,
-        message: '科室不存在',
-        data: null,
-      })
-    }
-    const cur = mutableDepts[idx]!
-    cur.status = body.status
-    cur.updated_at = new Date().toISOString()
-    return HttpResponse.json({
-      code: 0,
-      message: 'ok',
-      data: { ...cur },
     })
   }),
 ]

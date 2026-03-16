@@ -85,14 +85,7 @@ import PageFilter from '@/components/PageFilter/index.vue'
 import PageTable from '@/components/PageTable/index.vue'
 import { useFileStatusPoll } from '@/composables/useFileStatusPoll'
 import type { UploadQueueItem } from '@/components/FileUploader/types'
-import {
-  getDirectoryTree,
-  createDirectory,
-  getFileList,
-  retryFile,
-  deleteFile,
-  downloadFile,
-} from '@/api/knowledge'
+import { getDirectoryTree, createDirectory, getFileList, deleteFile } from '@/api/knowledge'
 import { confirmDelete } from '@/utils/confirm'
 import { FILE_STATUS_CONFIG } from '@/types/knowledge'
 import type { PageHeadConfig } from '@/components/PageHead/types'
@@ -377,12 +370,6 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
             color: 'danger',
             handle: (row: Record<string, unknown>) => handleDelete(row as unknown as FileListItem),
           },
-          {
-            text: t('knowledge.retry'),
-            icon: ReloadOutlined,
-            btnIsShow: (row) => (row.status as string) === 'failed',
-            handle: (row: Record<string, unknown>) => handleRetry(row as unknown as FileListItem),
-          },
         ],
       },
     ],
@@ -449,7 +436,7 @@ const PREVIEW_ROUTE_NAMES: Record<OwnerType, string> = {
 
 function handlePreview(record: FileListItem) {
   const name = PREVIEW_ROUTE_NAMES[props.ownerType]
-  router.push({ name, params: { id: record.id } })
+  router.push({ name, params: { id: record.id }, state: { file: record } })
 }
 
 function handleDelete(record: FileListItem) {
@@ -466,29 +453,11 @@ function handleDelete(record: FileListItem) {
   })
 }
 
-async function handleDownload(record: FileListItem) {
-  try {
-    const blob = await downloadFile(props.ownerType, props.ownerId, record.id)
-    const url = window.URL.createObjectURL(new Blob([blob]))
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', record.file_name)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    window.URL.revokeObjectURL(url)
-  } catch {
+function handleDownload(record: FileListItem) {
+  if (record.file_url) {
+    window.open(record.file_url, '_blank')
+  } else {
     message.error(t('knowledge.downloadFailed'))
-  }
-}
-
-async function handleRetry(record: FileListItem) {
-  try {
-    await retryFile(props.ownerType, props.ownerId, record.id)
-    message.success(t('common.success'))
-    loadData()
-  } catch {
-    // 错误已由拦截器处理
   }
 }
 

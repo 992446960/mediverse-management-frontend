@@ -26,6 +26,7 @@ export interface DepartmentForm {
   name: string
   code?: string
   description?: string
+  status?: 'active' | 'inactive'
 }
 
 /** 机构-科室树节点（API GET /departments/tree） */

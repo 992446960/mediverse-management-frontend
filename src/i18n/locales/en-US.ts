@@ -224,6 +224,7 @@ export default {
     statusBadgeParsed: 'Parsed',
     statusBadgeFailed: 'Parse Failed',
     missingFileId: 'Missing file ID',
+    enterPreviewFromList: 'Please open preview from the file list',
     noDeptPermission: 'No department permission',
     noOrgPermission: 'No organization permission',
     pleaseLogin: 'Please login first',

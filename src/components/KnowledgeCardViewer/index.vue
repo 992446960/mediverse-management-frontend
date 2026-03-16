@@ -208,10 +208,10 @@ const handlePreviewVersion = (v: KnowledgeCardVersion) => {
   activeTab.value = 'content'
 }
 
-const handleRollback = async (version: string) => {
+const handleRollback = async (version: string, targetVersion: number) => {
   if (!props.cardId) return
   try {
-    await rollbackKnowledgeCard(props.ownerType, props.ownerId, props.cardId, version)
+    await rollbackKnowledgeCard(props.ownerType, props.ownerId, props.cardId, targetVersion)
     message.success(t('knowledge.card.rollbackSuccess', { version }))
     emit('rollback-success')
     handleClose()

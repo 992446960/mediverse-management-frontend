@@ -75,7 +75,7 @@ import { message } from 'ant-design-vue'
 import { PlusOutlined } from '@ant-design/icons-vue'
 import type { KnowledgeCard, CardType, OwnerType } from '@/types/knowledge'
 import { CARD_TYPE_CONFIG } from '@/types/knowledge'
-import { saveKnowledgeCard } from '@/api/knowledge'
+import { saveKnowledgeCard, updateKnowledgeCard } from '@/api/knowledge'
 import TiptapEditor from './TiptapEditor.vue'
 
 const { t } = useI18n()
@@ -132,10 +132,18 @@ const handleOk = async () => {
     await formRef.value.validate()
     loading.value = true
 
-    await saveKnowledgeCard(props.ownerType, props.ownerId, {
-      ...formState,
-      id: props.card?.id,
-    })
+    if (props.card?.id) {
+      await updateKnowledgeCard(props.ownerType, props.ownerId, props.card.id, {
+        title: formState.title,
+        content: formState.content,
+        tags: formState.tags,
+      })
+    } else {
+      await saveKnowledgeCard(props.ownerType, props.ownerId, {
+        ...formState,
+        type: formState.type,
+      })
+    }
 
     message.success(
       props.card ? t('knowledge.card.saveSuccess') : t('knowledge.card.createSuccess')

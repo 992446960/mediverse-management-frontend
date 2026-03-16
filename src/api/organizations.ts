@@ -17,7 +17,3 @@ export function updateOrganization(id: string, data: Partial<OrganizationForm>) 
 export function deleteOrganization(id: string) {
   return request.delete<null>(`/organizations/${id}`)
 }
-
-export function updateOrgStatus(id: string, data: { status: 'active' | 'inactive' }) {
-  return request.patch<Organization>(`/organizations/${id}/status`, data)
-}

@@ -1,6 +1,11 @@
 <template>
   <div v-if="ready" class="flex flex-1 overflow-hidden">
-    <FilePreview :owner-type="ownerType" :owner-id="ownerId" :file-id="fileId" />
+    <FilePreview
+      :owner-type="ownerType"
+      :owner-id="ownerId"
+      :file-id="fileId"
+      :file="fileFromState"
+    />
   </div>
   <div v-else class="flex flex-1 items-center justify-center">
     <a-empty :description="notReadyReason" />
@@ -12,6 +17,7 @@ import { useI18n } from 'vue-i18n'
 import FilePreview from '@/components/FilePreview/index.vue'
 import { useAuthStore } from '@/stores/auth'
 import type { OwnerType } from '@/types/knowledge'
+import type { FileListItem } from '@/types/knowledge'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -37,8 +43,15 @@ const ownerId = computed(() => {
 
 const fileId = computed(() => route.params.id as string)
 
+/** 从路由 state 带入的列表项，避免单独请求文件详情 */
+const fileFromState = computed<FileListItem | undefined>(() => {
+  const state = history.state as { file?: FileListItem }
+  return state?.file
+})
+
 const ready = computed(() => {
   if (!fileId.value) return false
+  if (!fileFromState.value) return false
   if (ownerType.value === 'dept' && !authStore.currentDeptId) return false
   if (ownerType.value === 'org' && !authStore.currentOrgId) return false
   if (ownerType.value === 'personal' && !authStore.user?.id) return false
@@ -47,6 +60,7 @@ const ready = computed(() => {
 
 const notReadyReason = computed(() => {
   if (!fileId.value) return t('knowledge.missingFileId')
+  if (!fileFromState.value) return t('knowledge.enterPreviewFromList')
   if (ownerType.value === 'dept' && !authStore.currentDeptId) return t('knowledge.noDeptPermission')
   if (ownerType.value === 'org' && !authStore.currentOrgId) return t('knowledge.noOrgPermission')
   if (ownerType.value === 'personal' && !authStore.user?.id) return t('knowledge.pleaseLogin')

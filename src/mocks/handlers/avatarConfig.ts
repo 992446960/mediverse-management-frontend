@@ -34,7 +34,7 @@ export const avatarConfigHandlers = [
   }),
 
   // 获取科室/机构分身配置
-  http.get('/api/v1/avatars/config/:owner_type/:owner_id', async ({ params }) => {
+  http.get('/api/v1/my/avatar/:owner_type/:owner_id', async ({ params }) => {
     const { owner_type, owner_id } = params
     await delay(300)
     return HttpResponse.json({
@@ -60,7 +60,7 @@ export const avatarConfigHandlers = [
     })
   }),
 
-  http.put('/api/v1/avatars/config/:owner_type/:owner_id', async ({ request }) => {
+  http.put('/api/v1/my/avatar/:owner_type/:owner_id', async ({ request }) => {
     const data = (await request.json()) as Partial<AvatarConfig>
     await delay(500)
     return HttpResponse.json({

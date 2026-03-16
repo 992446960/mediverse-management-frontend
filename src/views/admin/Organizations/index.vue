@@ -39,7 +39,6 @@ import {
   createOrganization,
   updateOrganization,
   deleteOrganization,
-  updateOrgStatus,
 } from '@/api/organizations'
 import { confirmDelete } from '@/utils/confirm'
 import type { PageHeadConfig } from '@/components/PageHead/types'
@@ -247,7 +246,7 @@ function handleToggleStatus(record: Organization) {
     okText: t('common.confirm'),
     cancelText: t('common.cancel'),
     onOk: async () => {
-      await updateOrgStatus(record.id, { status: nextStatus })
+      await updateOrganization(record.id, { status: nextStatus })
       message.success(t('common.success'))
       refresh()
     },

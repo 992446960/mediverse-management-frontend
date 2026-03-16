@@ -94,6 +94,7 @@ export const organizationHandlers = [
     if (body.code !== undefined) cur.code = body.code?.trim() || null
     if (body.description !== undefined) cur.description = body.description?.trim() || null
     if (body.logo_url !== undefined) cur.logo_url = body.logo_url?.trim() || null
+    if (body.status !== undefined) cur.status = body.status
     cur.updated_at = new Date().toISOString()
     return HttpResponse.json({
       code: 0,
@@ -118,28 +119,6 @@ export const organizationHandlers = [
       code: 0,
       message: 'ok',
       data: null,
-    })
-  }),
-
-  http.patch(`${API_BASE}/organizations/:id/status`, async ({ request, params }) => {
-    await delay(200)
-    const id = params.id as string
-    const body = (await request.json()) as { status: 'active' | 'inactive' }
-    const idx = mutableOrgs.findIndex((o) => o.id === id)
-    if (idx === -1) {
-      return HttpResponse.json({
-        code: 404,
-        message: '机构不存在',
-        data: null,
-      })
-    }
-    const cur = mutableOrgs[idx]!
-    cur.status = body.status
-    cur.updated_at = new Date().toISOString()
-    return HttpResponse.json({
-      code: 0,
-      message: 'ok',
-      data: { ...cur },
     })
   }),
 ]

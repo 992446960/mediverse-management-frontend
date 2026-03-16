@@ -74,17 +74,6 @@ export function getFileList(ownerType: OwnerType, ownerId: string, params: FileL
 }
 
 /**
- * 查询单个文件详情（含 file_url、parsed_file_url）
- */
-export function getFileDetail(
-  ownerType: OwnerType,
-  ownerId: string,
-  fileId: string
-): Promise<FileListItem> {
-  return request.get<FileListItem>(`${BASE_URL}/${ownerType}/${ownerId}/files/${fileId}`)
-}
-
-/**
  * 查询文件处理状态（轮询）
  */
 export function getFileStatus(ownerType: OwnerType, ownerId: string, fileId: string) {
@@ -94,26 +83,10 @@ export function getFileStatus(ownerType: OwnerType, ownerId: string, fileId: str
 }
 
 /**
- * 重试失败的文件处理
- */
-export function retryFile(ownerType: OwnerType, ownerId: string, fileId: string) {
-  return request.post(`${BASE_URL}/${ownerType}/${ownerId}/files/${fileId}/retry`)
-}
-
-/**
  * 删除文件
  */
 export function deleteFile(ownerType: OwnerType, ownerId: string, fileId: string) {
   return request.delete(`${BASE_URL}/${ownerType}/${ownerId}/files/${fileId}`)
-}
-
-/**
- * 下载文件
- */
-export function downloadFile(ownerType: OwnerType, ownerId: string, fileId: string) {
-  return request.get(`${BASE_URL}/${ownerType}/${ownerId}/files/${fileId}/download`, {
-    responseType: 'blob',
-  })
 }
 
 /**
@@ -151,7 +124,7 @@ export function getKnowledgeCardDetail(ownerType: OwnerType, ownerId: string, ca
 }
 
 /**
- * 创建或更新知识卡（payload.id 存在时为更新）
+ * 创建知识卡
  */
 export function saveKnowledgeCard(
   ownerType: OwnerType,
@@ -162,14 +135,21 @@ export function saveKnowledgeCard(
 }
 
 /**
- * 删除知识卡
+ * 更新知识卡
  */
-export function deleteKnowledgeCard(ownerType: OwnerType, ownerId: string, cardId: string) {
-  return request.delete(`${BASE_URL}/${ownerType}/${ownerId}/cards/${cardId}`)
+export function updateKnowledgeCard(
+  ownerType: OwnerType,
+  ownerId: string,
+  cardId: string,
+  payload: Partial<
+    Pick<KnowledgeCardPayload, 'title' | 'content' | 'tags'> & { change_summary?: string }
+  >
+) {
+  return request.put<KnowledgeCard>(`${BASE_URL}/${ownerType}/${ownerId}/cards/${cardId}`, payload)
 }
 
 /**
- * 知识卡上下线切换
+ * 知识卡上下线切换（PATCH + online_status）
  */
 export function toggleKnowledgeCardStatus(
   ownerType: OwnerType,
@@ -177,9 +157,10 @@ export function toggleKnowledgeCardStatus(
   cardId: string,
   status: 'online' | 'offline'
 ) {
-  return request.post<KnowledgeCard>(`${BASE_URL}/${ownerType}/${ownerId}/cards/${cardId}/status`, {
-    status,
-  })
+  return request.patch<KnowledgeCard>(
+    `${BASE_URL}/${ownerType}/${ownerId}/cards/${cardId}/status`,
+    { online_status: status }
+  )
 }
 
 /**
@@ -192,16 +173,16 @@ export function getKnowledgeCardVersions(ownerType: OwnerType, ownerId: string, 
 }
 
 /**
- * 知识卡版本回退
+ * 知识卡版本回退（body: target_version 数字）
  */
 export function rollbackKnowledgeCard(
   ownerType: OwnerType,
   ownerId: string,
   cardId: string,
-  version: string
+  targetVersion: number
 ) {
   return request.post<KnowledgeCard>(
     `${BASE_URL}/${ownerType}/${ownerId}/cards/${cardId}/rollback`,
-    { version }
+    { target_version: targetVersion }
   )
 }

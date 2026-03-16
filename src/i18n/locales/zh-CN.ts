@@ -221,6 +221,7 @@ export default {
     statusBadgeParsed: '已解析',
     statusBadgeFailed: '解析失败',
     missingFileId: '缺少文件 ID',
+    enterPreviewFromList: '请从文件列表点击预览进入',
     noDeptPermission: '无科室权限',
     noOrgPermission: '无机构权限',
     pleaseLogin: '请先登录',
