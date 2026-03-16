@@ -1,4 +1,3 @@
-/* eslint-disable */
 // @ts-nocheck
 // biome-ignore lint: disable
 // oxlint-disable
@@ -73,6 +72,7 @@ declare module 'vue' {
     AvatarStats: typeof import('./src/components/AvatarStats/index.vue')['default']
     AvatarTestPage: typeof import('./src/components/AvatarTestPage/index.vue')['default']
     BubbleRenderer: typeof import('./src/components/ChatWindow/BubbleRenderer.vue')['default']
+    ChatWindow: typeof import('./src/components/ChatWindow/index.vue')['default']
     CitationLink: typeof import('./src/components/SearchResultThread/CitationLink.vue')['default']
     ColumnsEditor: typeof import('./src/components/PageTable/ColumnsEditor.vue')['default']
     DirectoryTree: typeof import('./src/components/DirectoryTree/index.vue')['default']
@@ -91,6 +91,8 @@ declare module 'vue' {
     KnowledgeCardViewer: typeof import('./src/components/KnowledgeCardViewer/index.vue')['default']
     LoadingSkeleton: typeof import('./src/components/LoadingSkeleton/index.vue')['default']
     LocaleSwitcher: typeof import('./src/components/LocaleSwitcher/index.vue')['default']
+    MessageInput: typeof import('./src/components/ChatWindow/MessageInput.vue')['default']
+    MessageList: typeof import('./src/components/ChatWindow/MessageList.vue')['default']
     ModalForm: typeof import('./src/components/Form/ModalForm.vue')['default']
     NumRange: typeof import('./src/components/PageFilter/slots/NumRange.vue')['default']
     OperationCell: typeof import('./src/components/PageTable/OperationCell.vue')['default']
@@ -106,6 +108,7 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     ScopeCell: typeof import('./src/components/PageTable/ScopeCell.vue')['default']
     SearchResultThread: typeof import('./src/components/SearchResultThread/index.vue')['default']
+    SourceCitation: typeof import('./src/components/ChatWindow/SourceCitation.vue')['default']
     TableFilter: typeof import('./src/components/TableFilter/index.vue')['default']
     TextFileViewer: typeof import('./src/components/FilePreview/TextFileViewer.vue')['default']
     ThemeSwitcher: typeof import('./src/components/ThemeSwitcher/index.vue')['default']
