@@ -119,7 +119,7 @@ onMounted(() => {
           v-for="avatar in avatars"
           :key="avatar.id"
           hoverable
-          class="cursor-pointer transition-transform hover:-translate-y-1"
+          class="cursor-pointer transition-transform hover:-translate-y-1 overflow-hidden"
           @click="emit('select', avatar)"
         >
           <Card.Meta :title="avatar.name" :description="avatar.description || '暂无简介'">
@@ -129,7 +129,7 @@ onMounted(() => {
               </Avatar>
             </template>
           </Card.Meta>
-          <div class="mt-4 flex gap-2">
+          <div class="mt-4 flex gap-2 flex-wrap">
             <Tag color="blue">{{
               avatar.type === 'org' ? '全科' : avatar.type === 'dept' ? '专科' : '专家'
             }}</Tag>

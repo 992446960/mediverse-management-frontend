@@ -148,6 +148,7 @@ export default {
     orgFilesManagement: '机构文件管理',
     knowledgeCards: '知识卡管理',
     avatarConfig: '分身配置',
+    avatarTest: '对话测试',
   },
   knowledge: {
     directory: '目录管理',

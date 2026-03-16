@@ -34,9 +34,9 @@ const initialPrompts = [
 ]
 
 const handleSend = async (content: string) => {
-  if (!props.sessionId && !currentSessionId.value && !props.isTestMode) {
+  if (!props.sessionId && !currentSessionId.value) {
     // Create new session first if needed
-    await createNewSession(content.slice(0, 20))
+    await createNewSession(content.slice(0, 20), props.avatarId)
     // Wait for session creation then send
   }
 

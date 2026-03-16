@@ -3,7 +3,7 @@ import ChatSidebar from '@/components/ChatSidebar/index.vue'
 </script>
 
 <template>
-  <div class="chat-layout flex h-screen w-full overflow-hidden app-container">
+  <div class="chat-layout flex h-screen w-full overflow-hidden rounded-md">
     <!-- Sidebar -->
     <div class="w-64 flex-shrink-0 border-r border-gray-200 dark:border-gray-800">
       <ChatSidebar />
@@ -15,3 +15,9 @@ import ChatSidebar from '@/components/ChatSidebar/index.vue'
     </div>
   </div>
 </template>
+
+<style scoped>
+.chat-layout {
+  max-height: calc(100vh - 64px - 24px - 24px);
+}
+</style>

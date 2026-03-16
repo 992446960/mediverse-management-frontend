@@ -39,7 +39,7 @@ const { t } = useI18n()
 const router = useRouter()
 
 const handleTest = () => {
-  const path = `/${props.ownerType === 'personal' ? 'my' : props.ownerType}/chat`
+  const path = `/${props.ownerType === 'personal' ? 'my' : props.ownerType}/avatar/test`
   router.push(path)
 }
 </script>

@@ -148,6 +148,7 @@ export default {
     orgFilesManagement: 'Org Files',
     knowledgeCards: 'Knowledge Cards',
     avatarConfig: 'Avatar Config',
+    avatarTest: 'Avatar Test',
   },
   knowledge: {
     directory: 'Directories',
