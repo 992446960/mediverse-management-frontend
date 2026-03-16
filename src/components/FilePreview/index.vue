@@ -3,24 +3,25 @@
     <div class="app-container p-4 mb-4">
       <PageHead :head-conf="headConf">
         <template #title>
-          <div v-if="file" class="flex flex-col min-w-0">
+          <div v-if="currentFile" class="flex flex-col min-w-0">
             <div class="flex items-center gap-2">
               <span class="text-base font-bold text-slate-800 dark:text-slate-100 truncate">
-                {{ file.file_name }}
+                {{ currentFile.file_name }}
               </span>
             </div>
             <div class="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5">
-              {{ WORKSPACE_LABELS[ownerType] }} · {{ dayjs(file.created_at).format('YYYY-MM-DD') }}
+              {{ WORKSPACE_LABELS[ownerType] }} ·
+              {{ dayjs(currentFile.created_at).format('YYYY-MM-DD') }}
             </div>
           </div>
           <span v-else class="text-base font-bold text-slate-800 dark:text-slate-100">
             {{ t('knowledge.filePreview') }}
           </span>
         </template>
-        <template v-if="file">
+        <template v-if="currentFile">
           <div class="flex items-center gap-3">
-            <a-tag :color="getStatusBadgeColor(file.status)">
-              {{ STATUS_BADGE[file.status] ?? t('knowledge.statusProcessing') }}
+            <a-tag :color="getStatusBadgeColor(currentFile.status)">
+              {{ STATUS_BADGE[currentFile.status] ?? t('knowledge.statusProcessing') }}
             </a-tag>
             <a-button
               type="primary"
@@ -57,32 +58,32 @@
             <!-- PDF 解析视图 -->
             <ParsedDocViewer
               v-if="showPdfTabs && activeView === 'parsed'"
-              :parsed-file-url="file?.parsed_file_url ?? null"
+              :parsed-file-url="currentFile?.parsed_file_url ?? null"
             />
             <!-- PDF 原文视图：使用绝对 URL 确保 vue-office 内部 fetch 能命中 MSW -->
             <PdfViewer
-              v-else-if="file?.file_type === 'pdf' && pdfAbsoluteUrl"
-              :key="`pdf-${file?.id ?? ''}-original`"
+              v-else-if="currentFile?.file_type === 'pdf' && pdfAbsoluteUrl"
+              :key="`pdf-${currentFile?.id ?? ''}-original`"
               :file-url="pdfAbsoluteUrl"
             />
             <!-- Docx -->
             <DocxViewer
-              v-else-if="file?.file_type === 'docx' && file?.file_url"
-              :file-url="file.file_url"
+              v-else-if="currentFile?.file_type === 'docx' && currentFile?.file_url"
+              :file-url="currentFile.file_url"
             />
             <!-- Excel -->
             <ExcelViewer
-              v-else-if="file?.file_type === 'xlsx' && file?.file_url"
-              :file-url="file.file_url"
+              v-else-if="currentFile?.file_type === 'xlsx' && currentFile?.file_url"
+              :file-url="currentFile.file_url"
             />
             <!-- 文本型：txt, md, json, jsonl, csv -->
             <TextFileViewer
-              v-else-if="isTextType && file?.file_url"
-              :file-url="file.file_url"
-              :file-type="file.file_type"
+              v-else-if="isTextType && currentFile?.file_url"
+              :file-url="currentFile.file_url"
+              :file-type="currentFile.file_type"
             />
             <a-empty
-              v-else-if="!loading && file"
+              v-else-if="!loading && currentFile"
               :description="t('knowledge.unsupportedPreview')"
             />
             <a-spin v-else-if="loading" class="w-full py-12" />
@@ -96,7 +97,7 @@
         <aside class="h-full flex flex-col">
           <KnowledgeCardSidebar
             :cards="cards"
-            :source-file-name="file?.file_name"
+            :source-file-name="currentFile?.file_name"
             :loading="cardsLoading"
           />
         </aside>
@@ -126,11 +127,10 @@ const props = defineProps<{
   ownerType: OwnerType
   ownerId: string
   fileId: string
-  /** 列表项，由父组件通过路由 state 传入，避免单独请求文件详情 */
   file?: FileListItem | null
 }>()
 
-const file = computed(() => props.file ?? null)
+const currentFile = ref<FileListItem | null>(null)
 const cards = ref<FileCard[]>([])
 const loading = ref(false)
 const cardsLoading = ref(false)
@@ -154,15 +154,16 @@ const STATUS_BADGE = computed<Record<FileStatus, string>>(() => ({
 }))
 
 const isTextType = computed(() => {
-  const fileType = file.value?.file_type?.toLowerCase()
+  const fileType = currentFile.value?.file_type?.toLowerCase()
   return ['txt', 'md', 'json', 'jsonl', 'csv'].includes(fileType ?? '')
 })
 
-const showPdfTabs = computed(() => file.value?.file_type?.toLowerCase() === 'pdf')
+const showPdfTabs = computed(() => currentFile.value?.file_type?.toLowerCase() === 'pdf')
 
 /** 原文视图 PDF 地址：转为绝对 URL，确保 @vue-office/pdf 内部 fetch 能命中 MSW */
 const pdfAbsoluteUrl = computed(() => {
-  const url = file.value?.file_type?.toLowerCase() === 'pdf' ? file.value?.file_url : undefined
+  const url =
+    currentFile.value?.file_type?.toLowerCase() === 'pdf' ? currentFile.value?.file_url : undefined
   if (!url) return ''
   if (url.startsWith('http://') || url.startsWith('https://')) return url
   return new URL(url, window.location.origin).href
@@ -182,11 +183,11 @@ function getStatusBadgeColor(status: FileStatus): string {
 }
 
 const headConf = computed<PageHeadConfig>(() => {
-  const subtitle = file.value
-    ? `${WORKSPACE_LABELS.value[props.ownerType]} · ${dayjs(file.value.created_at).format('YYYY-MM-DD')}`
+  const subtitle = currentFile.value
+    ? `${WORKSPACE_LABELS.value[props.ownerType]} · ${dayjs(currentFile.value.created_at).format('YYYY-MM-DD')}`
     : ''
-  const title = file.value
-    ? `${file.value.file_name}${subtitle ? ` · ${subtitle}` : ''}`
+  const title = currentFile.value
+    ? `${currentFile.value.file_name}${subtitle ? ` · ${subtitle}` : ''}`
     : t('knowledge.filePreview')
 
   const tabsOptions = showPdfTabs.value
@@ -207,6 +208,16 @@ const headConf = computed<PageHeadConfig>(() => {
   }
 })
 
+async function loadFile() {
+  if (props.file) {
+    currentFile.value = props.file
+    return
+  }
+  // 如果没有传入 file 对象，说明是从直接链接进入，暂时无法获取详情（接口已移除）
+  // 实际项目中应该跳转回列表页或提示错误
+  error.value = t('knowledge.loadFileFailed')
+}
+
 async function loadCards() {
   cardsLoading.value = true
   try {
@@ -219,19 +230,21 @@ async function loadCards() {
 }
 
 function handleDownload() {
-  if (!file.value?.file_url) return
-  window.open(file.value.file_url, '_blank')
+  if (!currentFile.value?.file_url) return
+  window.open(currentFile.value.file_url, '_blank')
 }
 
 watch(
   () => [props.ownerType, props.ownerId, props.fileId],
   () => {
+    loadFile()
     loadCards()
   },
   { immediate: false }
 )
 
 onMounted(() => {
+  loadFile()
   loadCards()
 })
 </script>

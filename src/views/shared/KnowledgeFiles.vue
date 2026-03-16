@@ -370,6 +370,12 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
             color: 'danger',
             handle: (row: Record<string, unknown>) => handleDelete(row as unknown as FileListItem),
           },
+          {
+            text: t('knowledge.retry'),
+            icon: ReloadOutlined,
+            btnIsShow: (row) => (row.status as string) === 'failed',
+            handle: (row: Record<string, unknown>) => handleRetry(row as unknown as FileListItem),
+          },
         ],
       },
     ],
@@ -453,12 +459,18 @@ function handleDelete(record: FileListItem) {
   })
 }
 
-function handleDownload(record: FileListItem) {
+async function handleDownload(record: FileListItem) {
   if (record.file_url) {
     window.open(record.file_url, '_blank')
   } else {
     message.error(t('knowledge.downloadFailed'))
   }
+}
+
+async function handleRetry() {
+  // 打开上传弹窗，让用户重新上传
+  openUploadModal()
+  // TODO: 如果需要预填目录，可以在这里设置 selectedDirId 或传递给 FileUploader
 }
 
 onMounted(() => {
