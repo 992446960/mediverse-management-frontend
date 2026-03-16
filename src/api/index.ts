@@ -7,6 +7,7 @@ import axios, {
 import { message } from 'ant-design-vue'
 import { getToken, setToken, getRefreshToken, clearAuth } from '@/utils/auth'
 import type { ApiResponse } from '@/types'
+import type { RefreshTokenResponse } from '@/types/auth'
 
 const baseURL = import.meta.env.VITE_API_BASE_URL
 const useMockFetch = import.meta.env.VITE_ENABLE_MOCK === 'true'
@@ -134,9 +135,12 @@ api.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config
+    const isLoginOrRefresh =
+      originalRequest?.url?.includes?.('/auth/login') ||
+      originalRequest?.url?.includes?.('/auth/refresh')
 
-    // 处理 401 未授权
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // 处理 401 未授权（仅对已携带 token 的请求尝试刷新，登录/刷新接口 401 直接报错）
+    if (error.response?.status === 401 && !originalRequest._retry && !isLoginOrRefresh) {
       if (isRefreshing) {
         return new Promise((resolve) => {
           requestsQueue.push((token: string) => {
@@ -156,7 +160,7 @@ api.interceptors.response.use(
         }
 
         // 调用刷新 Token 接口 (使用独立的 axios 实例避免死循环)
-        const { data } = await axios.post<{ code: number; data: { access_token: string } }>(
+        const { data } = await axios.post<ApiResponse<RefreshTokenResponse>>(
           `${import.meta.env.VITE_API_BASE_URL}/auth/refresh`,
           { refresh_token: refreshToken }
         )
@@ -183,6 +187,13 @@ api.interceptors.response.use(
       } finally {
         isRefreshing = false
       }
+    }
+
+    // 登录或刷新接口 401：直接展示后端错误信息，不刷新页面、不跳转
+    if (error.response?.status === 401 && isLoginOrRefresh) {
+      const errorMsg = error.response?.data?.message || error.message || '请求失败'
+      message.error(errorMsg)
+      return Promise.reject(error)
     }
 
     // /auth/me、/auth/logout 失败时由路由守卫静默跳转登录，不弹 toast（含网络错误与 5xx）

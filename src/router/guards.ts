@@ -1,5 +1,6 @@
 import type { Router } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { getSkipChangePassword } from '@/utils/auth'
 import { hasAnyRole } from '@/utils/permission'
 import type { UserRole } from '@/types/auth'
 
@@ -32,7 +33,11 @@ export function createPermissionGuard(router: Router) {
       }
     }
 
-    if (authStore.user?.must_change_pwd && to.path !== '/change-password') {
+    if (
+      authStore.user?.must_change_pwd &&
+      to.path !== '/change-password' &&
+      !getSkipChangePassword()
+    ) {
       return '/change-password'
     }
 

@@ -62,10 +62,6 @@ const handleLogin = async () => {
     await authStore.login({ username: formState.username, password: formState.password })
     saveRemembered()
     message.success(t('auth.loginSuccess'))
-    if (authStore.user?.must_change_pwd) {
-      router.push('/change-password')
-      return
-    }
     router.push((route.query.redirect as string) || '/')
   } catch (error: unknown) {
     console.error(error)

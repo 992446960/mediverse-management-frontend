@@ -23,13 +23,18 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
-    }
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
   },
   server: {
     port: 3000,
     proxy: {
-      '/api': { target: 'http://localhost:8000', changeOrigin: true },
+      '/api': {
+        target: 'https://mediverse-management.huaxisy.com',
+        changeOrigin: true,
+        secure: false,
+        ws: true,
+      },
     },
   },
 })

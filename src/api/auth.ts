@@ -1,5 +1,11 @@
 import { request } from './index'
-import type { LoginParams, LoginResponse, User, ChangePasswordParams } from '@/types/auth'
+import type {
+  LoginParams,
+  LoginResponse,
+  RefreshTokenResponse,
+  User,
+  ChangePasswordParams,
+} from '@/types/auth'
 
 export const authApi = {
   login(params: LoginParams) {
@@ -11,7 +17,7 @@ export const authApi = {
   },
 
   refreshToken(refreshToken: string) {
-    return request.post<{ access_token: string }>('/auth/refresh', { refresh_token: refreshToken })
+    return request.post<RefreshTokenResponse>('/auth/refresh', { refresh_token: refreshToken })
   },
 
   getUserInfo() {

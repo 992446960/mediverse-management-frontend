@@ -26,8 +26,8 @@ export interface User {
 
 export interface LoginParams {
   username: string
-  password?: string
-  code?: string // 验证码登录
+  password: string
+  code?: string // 验证码登录（可选）
 }
 
 export interface LoginResponse {
@@ -38,7 +38,14 @@ export interface LoginResponse {
   user: User
 }
 
+/** 刷新 Token 接口返回的 data，与 API 文档 1.1.2 一致 */
+export interface RefreshTokenResponse {
+  access_token: string
+  expires_in: number
+}
+
 export interface ChangePasswordParams {
-  old_password?: string
-  new_password?: string
+  old_password: string
+  new_password: string
+  confirm_password: string
 }
