@@ -6,6 +6,7 @@ import { avatarHandlers } from './handlers/avatars'
 import { avatarConfigHandlers } from './handlers/avatarConfig'
 import { knowledgeHandlers } from './handlers/knowledge'
 import { knowledgeSearchHandlers } from './handlers/knowledgeSearch'
+import { handlers as sessionHandlers } from './handlers/sessions'
 
 export const handlers = [
   ...authHandlers,
@@ -16,4 +17,5 @@ export const handlers = [
   ...avatarConfigHandlers,
   ...knowledgeHandlers,
   ...knowledgeSearchHandlers,
+  ...sessionHandlers,
 ]

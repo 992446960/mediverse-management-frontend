@@ -1,72 +1,70 @@
 import { ref } from 'vue'
+import type { Ref } from 'vue'
+import type { ThinkingStep } from '@/types/chat'
 
-export interface ThinkingStep {
-  title: string
-  status: 'pending' | 'success' | 'error'
-  content?: string
-  duration?: number
+export interface UseSSEChatReturn {
+  streaming: Ref<boolean>
+  currentText: Ref<string>
+  thinkingSteps: Ref<ThinkingStep[]>
+  error: Ref<string | null>
+  sendMessage: (
+    url: string,
+    body: Record<string, any>,
+    options?: {
+      onDelta?: (text: string) => void
+      onDone?: (messageId: string) => void
+      onError?: (err: string) => void
+    }
+  ) => Promise<void>
+  stopGeneration: () => void
 }
 
-export interface Citation {
-  id: string
-  title: string
-  content: string
-  url?: string
-}
-
-export interface SSEEvent {
-  type: 'thinking_step' | 'delta' | 'done' | 'error'
-  index?: number
-  content?: string
-  message_id?: string
-  title?: string
-  status?: 'pending' | 'success' | 'error'
-  duration?: number
-  citations?: Citation[]
-  relatedQuestions?: string[]
-}
-
-export function useSSEChat() {
+export function useSSEChat(): UseSSEChatReturn {
   const streaming = ref(false)
   const currentText = ref('')
   const thinkingSteps = ref<ThinkingStep[]>([])
   const error = ref<string | null>(null)
+
   let abortController: AbortController | null = null
+
+  const stopGeneration = () => {
+    if (abortController) {
+      abortController.abort()
+      abortController = null
+    }
+    streaming.value = false
+  }
 
   const sendMessage = async (
     url: string,
-    body: FormData | Record<string, unknown>,
-    options?: {
+    body: Record<string, any>,
+    options: {
       onDelta?: (text: string) => void
-      onThinking?: (steps: ThinkingStep[]) => void
-      onDone?: (messageId: string, event?: SSEEvent) => void
-      headers?: Record<string, string>
-    }
+      onDone?: (messageId: string) => void
+      onError?: (err: string) => void
+    } = {}
   ) => {
+    // Reset state
     streaming.value = true
     currentText.value = ''
     thinkingSteps.value = []
     error.value = null
+
     abortController = new AbortController()
 
     try {
-      const headers = {
-        ...(options?.headers || {}),
+      const token = localStorage.getItem('token')
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
       }
-
-      // If body is not FormData, set Content-Type to application/json
-      let requestBody: BodyInit
-      if (!(body instanceof FormData)) {
-        headers['Content-Type'] = 'application/json'
-        requestBody = JSON.stringify(body)
-      } else {
-        requestBody = body
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
       }
 
       const response = await fetch(url, {
         method: 'POST',
         headers,
-        body: requestBody,
+        body: JSON.stringify(body),
         signal: abortController.signal,
       })
 
@@ -84,85 +82,85 @@ export function useSSEChat() {
 
       while (true) {
         const { done, value } = await reader.read()
-        if (done) break
 
-        buffer += decoder.decode(value, { stream: true })
+        if (done) {
+          break
+        }
+
+        const chunk = decoder.decode(value, { stream: true })
+        buffer += chunk
+
         const lines = buffer.split('\n')
+        // Keep the last potentially incomplete line in buffer
         buffer = lines.pop() || ''
 
         for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const dataStr = line.slice(6)
-            if (dataStr === '[DONE]') continue
+          const trimmedLine = line.trim()
+          if (!trimmedLine || !trimmedLine.startsWith('data: ')) {
+            continue
+          }
 
-            try {
-              const event: SSEEvent = JSON.parse(dataStr)
-              handleSSEEvent(event, options)
-            } catch (e) {
-              console.error('Failed to parse SSE event:', e)
+          const data = trimmedLine.slice(6)
+          if (data === '[DONE]') {
+            continue
+          }
+
+          try {
+            const event = JSON.parse(data)
+
+            switch (event.type) {
+              case 'thinking_step':
+                // Update or add thinking step
+                if (event.index !== undefined) {
+                  const index = event.index
+                  if (!thinkingSteps.value[index]) {
+                    thinkingSteps.value[index] = {
+                      title: event.title || 'Thinking...',
+                      content: '',
+                      status: 'thinking',
+                    }
+                  }
+
+                  if (event.content) {
+                    thinkingSteps.value[index].content += event.content
+                  }
+
+                  if (event.status) {
+                    thinkingSteps.value[index].status = event.status
+                  }
+                }
+                break
+
+              case 'delta':
+                if (event.content) {
+                  currentText.value += event.content
+                  options.onDelta?.(event.content)
+                }
+                break
+
+              case 'done':
+                streaming.value = false
+                options.onDone?.(event.message_id)
+                return // Stop processing
+
+              case 'error':
+                throw new Error(event.message || 'Unknown error')
             }
+          } catch (e) {
+            console.error('Error parsing SSE event:', e)
           }
         }
       }
     } catch (err: any) {
       if (err.name === 'AbortError') {
-        console.log('Generation aborted')
-      } else {
-        error.value = err.message || 'Unknown error'
+        // User aborted, not an error
+        return
       }
+      error.value = err.message || 'Network error'
+      options.onError?.(error.value!)
     } finally {
       streaming.value = false
       abortController = null
-    }
-  }
-
-  const handleSSEEvent = (
-    event: SSEEvent,
-    options?: {
-      onDelta?: (text: string) => void
-      onThinking?: (steps: ThinkingStep[]) => void
-      onDone?: (messageId: string, event?: SSEEvent) => void
-    }
-  ) => {
-    switch (event.type) {
-      case 'thinking_step':
-        if (typeof event.index === 'number') {
-          // Ensure the array is large enough
-          while (thinkingSteps.value.length <= event.index) {
-            thinkingSteps.value.push({ title: '', status: 'pending' })
-          }
-
-          const step = thinkingSteps.value[event.index]
-          if (event.title) step.title = event.title
-          if (event.status) step.status = event.status
-          if (event.content) step.content = (step.content || '') + event.content
-          if (event.duration) step.duration = event.duration
-
-          options?.onThinking?.(thinkingSteps.value)
-        }
-        break
-      case 'delta':
-        if (event.content) {
-          currentText.value += event.content
-          options?.onDelta?.(event.content)
-        }
-        break
-      case 'done':
-        if (event.message_id) {
-          options?.onDone?.(event.message_id, event)
-        }
-        break
-      case 'error':
-        error.value = event.content || 'Unknown error from server'
-        break
-    }
-  }
-
-  const stopGeneration = () => {
-    if (abortController) {
-      abortController.abort()
-      abortController = null
-      streaming.value = false
     }
   }
 

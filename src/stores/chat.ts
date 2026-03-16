@@ -7,6 +7,7 @@ import {
   deleteChatSession,
   renameSession,
   getMessages,
+  rateMessage,
 } from '@/api/sessions'
 import { useSSEChat } from '@/composables/useSSEChat'
 import type { Session, Message } from '@/types/chat'
@@ -23,7 +24,6 @@ export const useChatStore = defineStore('chat', () => {
     sendMessage: sseSendMessage,
     stopGeneration: stopSSEGeneration,
     thinkingSteps: sseThinkingSteps,
-    streaming,
   } = useSSEChat()
 
   const currentSession = computed(
@@ -107,11 +107,8 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
-  async function sendMessage(content: string, _files: File[] = []) {
+  async function sendMessage(content: string) {
     if (!currentSessionId.value) return
-
-    // TODO: Handle files
-    console.log('Sending files:', _files)
 
     const sessionId = currentSessionId.value
 
@@ -185,6 +182,8 @@ export const useChatStore = defineStore('chat', () => {
     updateSessionTitle,
     sendMessage,
     stopGeneration: stopSSEGeneration,
-    streaming,
+    rateMessage: async (messageId: string, rating: 'like' | 'dislike') => {
+      await rateMessage(messageId, rating)
+    },
   }
 })
