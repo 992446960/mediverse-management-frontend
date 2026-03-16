@@ -165,6 +165,7 @@ export const avatarHandlers = [
     if (body.style !== undefined) cur.style = body.style
     if (body.style_custom !== undefined)
       cur.style_custom = body.style_custom ? body.style_custom.trim() : null
+    if (body.status !== undefined) cur.status = body.status
     cur.updated_at = new Date().toISOString()
     return HttpResponse.json({
       code: 0,
@@ -189,28 +190,6 @@ export const avatarHandlers = [
       code: 0,
       message: 'ok',
       data: null,
-    })
-  }),
-
-  http.patch(`${API_BASE}/avatars/:id/status`, async ({ request, params }) => {
-    await delay(200)
-    const id = params.id as string
-    const body = (await request.json()) as { status: 'active' | 'inactive' }
-    const idx = mutableAvatars.findIndex((a) => a.id === id)
-    if (idx === -1) {
-      return HttpResponse.json({
-        code: 40002,
-        message: '分身不存在',
-        data: null,
-      })
-    }
-    const cur = mutableAvatars[idx]!
-    cur.status = body.status
-    cur.updated_at = new Date().toISOString()
-    return HttpResponse.json({
-      code: 0,
-      message: 'ok',
-      data: { ...cur },
     })
   }),
 

@@ -108,6 +108,7 @@ export interface UpdateAvatarParams {
   greeting?: string | null
   style?: AvatarStyle
   style_custom?: string | null
+  status?: 'active' | 'inactive'
 }
 
 /** 向导式创建表单数据（步骤 1～4 汇总） */

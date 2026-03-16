@@ -69,6 +69,7 @@ declare module 'vue' {
     AUploadDragger: typeof import('ant-design-vue/es')['UploadDragger']
     AvatarConfig: typeof import('./src/components/AvatarConfig/index.vue')['default']
     AvatarStats: typeof import('./src/components/AvatarStats/index.vue')['default']
+    AvatarTestPage: typeof import('./src/components/AvatarTestPage/index.vue')['default']
     ColumnsEditor: typeof import('./src/components/PageTable/ColumnsEditor.vue')['default']
     DirectoryTree: typeof import('./src/components/DirectoryTree/index.vue')['default']
     DirectoryTreeItem: typeof import('./src/components/DirectoryTree/DirectoryTreeItem.vue')['default']

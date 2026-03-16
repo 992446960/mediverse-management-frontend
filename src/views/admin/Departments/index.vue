@@ -59,8 +59,6 @@ import {
   SearchOutlined,
   ReloadOutlined,
   EditOutlined,
-  PauseCircleOutlined,
-  PlayCircleOutlined,
   DeleteOutlined,
 } from '@ant-design/icons-vue'
 import PageTree from '@/components/PageTree/index.vue'

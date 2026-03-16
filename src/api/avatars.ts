@@ -26,12 +26,6 @@ export function updateAvatar(id: string, data: UpdateAvatarParams) {
 export function deleteAvatar(id: string) {
   return request.delete<null>(`/avatars/${id}`)
 }
-
-/** 启用/停用分身 */
-export function updateAvatarStatus(id: string, data: { status: 'active' | 'inactive' }) {
-  return request.patch<Avatar>(`/avatars/${id}/status`, data)
-}
-
 /** 查询分身详情（含 knowledge_grants 等） */
 export function getAvatarDetail(id: string) {
   return request.get<Avatar>(`/avatars/${id}`)

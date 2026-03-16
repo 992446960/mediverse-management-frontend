@@ -50,7 +50,7 @@ import PageTable from '@/components/PageTable/index.vue'
 import AvatarWizard from './components/AvatarWizard.vue'
 import AvatarEditModal from './components/AvatarEditModal.vue'
 import KnowledgeCardList from '@/components/KnowledgeCardList/index.vue'
-import { getAvatars, updateAvatarStatus, deleteAvatar } from '@/api/avatars'
+import { getAvatars, updateAvatar, deleteAvatar } from '@/api/avatars'
 import { getOrganizations } from '@/api/organizations'
 import { getDepartments } from '@/api/departments'
 import { confirmDelete } from '@/utils/confirm'
@@ -364,7 +364,7 @@ function handleToggleStatus(record: Avatar) {
     okText: t('common.confirm'),
     cancelText: t('common.cancel'),
     onOk: async () => {
-      await updateAvatarStatus(record.id, { status: nextStatus })
+      await updateAvatar(record.id, { status: nextStatus })
       message.success(t('common.success'))
       loadData()
     },
