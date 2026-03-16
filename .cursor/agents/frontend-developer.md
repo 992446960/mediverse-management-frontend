@@ -237,7 +237,7 @@ bootstrap()
 | `AvatarStats` | 分身统计 | 个人/科室/机构统计看板 |
 | `ChatWindow` | 对话窗口（基于 Ant Design X Vue Bubble/Sender） | 数字医生体验、三个工作台对话测试 |
 | `SessionSidebar` | 会话侧边栏（基于 Ant Design X Vue Conversations） | 数字医生体验、知识库搜索 |
-| `WorkspaceScopeSelector` | 工作台范围选择器 | 科室/机构工作台顶部 |
+| ~~`WorkspaceScopeSelector`~~ | ~~工作台范围选择器~~ | **v1.1 已取消**：ownerId 直接从 auth store 读取，不需要切换选择器 |
 | `useTableData` | CRUD 表格 composable | 机构/科室/用户/分身管理 |
 | `useSSEChat` | SSE 流式对话 composable | 对话窗口、对话测试 |
 | `usePermission` | 权限判断 composable | 菜单渲染、按钮控制 |

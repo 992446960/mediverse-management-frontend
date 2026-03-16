@@ -25,8 +25,8 @@
 - **角色路由**：根据 `has_expert_avatar` / `has_dept_avatar` / `has_org_avatar` 控制工作台菜单展示；系统管理员在 v1.1 中不展示工作台（仅开发环境展示）
 - AvatarConfig：通用分身配置表单组件，个人/科室/机构三处复用
 - AvatarStats：统计卡片组件（纵向列表布局，五项指标带彩色数值与图标）
-- WorkspaceScopeSelector：科室/机构工作台顶部的范围选择器（机构→科室联动）
-- 三个组件均通过 Props 参数化，不耦合特定业务场景
+- ~~WorkspaceScopeSelector~~：**v1.1 决策已取消**。科室/机构工作台不需要范围选择器，ownerId 直接从 auth store 读取当前用户所属的 orgId/deptId（一一对应原则）
+- 两个组件均通过 Props 参数化，不耦合特定业务场景
 
 ### 角色与工作台展示（v1.1）
 

@@ -20,7 +20,7 @@
 - 本计划为**薄壳页面集成**：所有核心逻辑已在 Plan 09/10/11 的通用组件中实现
 - 页面组件仅负责注入 ownerType/ownerId 上下文 + 组合通用组件
 - 三级工作台（机构/科室/个人）每级包含：分身配置页、文件管理页、知识卡管理页
-- 科室/机构工作台顶部使用 WorkspaceScopeSelector
+- 科室/机构工作台的 ownerId 直接从 auth store 读取当前用户所属的 orgId/deptId（v1.1 决策：一一对应，不需要切换选择器）
 - 对话测试页先创建占位，Phase 4 完成后接入
 
 ---
@@ -42,12 +42,12 @@
 | 编号 | 任务 | 描述 | 涉及文件 |
 |------|------|------|---------|
 | **机构工作台** | | | |
-| 12-1 | 机构分身配置页 | 注入 ownerType='org' + WorkspaceScopeSelector(level='org') + AvatarConfig + AvatarStats | `src/views/org/Avatar.vue` |
+| 12-1 | 机构分身配置页 | 注入 ownerType='org'，ownerId 从 auth store 取 currentOrgId + AvatarConfig + AvatarStats | `src/views/org/Avatar.vue` |
 | 12-2 | 机构文件管理页 | 注入 ownerType='org' + DirectoryTree + FileTable + FileUploader | `src/views/org/Files.vue` |
 | 12-3 | 机构知识卡页 | 注入 ownerType='org' + KnowledgeCardList + KnowledgeCardEditor + KnowledgeCardViewer | `src/views/org/KnowledgeCards.vue` |
 | 12-4 | 机构对话测试页（占位） | 占位页面，显示"请先完成 Phase 4"提示 | `src/views/org/AvatarTest.vue` |
 | **科室工作台** | | | |
-| 12-5 | 科室分身配置页 | WorkspaceScopeSelector(level='dept') + AvatarConfig + AvatarStats | `src/views/dept/Avatar.vue` |
+| 12-5 | 科室分身配置页 | 注入 ownerType='dept'，ownerId 从 auth store 取 currentDeptId + AvatarConfig + AvatarStats | `src/views/dept/Avatar.vue` |
 | 12-6 | 科室文件管理页 | 同 12-2 但 ownerType='dept' | `src/views/dept/Files.vue` |
 | 12-7 | 科室知识卡页 | 同 12-3 但 ownerType='dept' | `src/views/dept/KnowledgeCards.vue` |
 | 12-8 | 科室对话测试页（占位） | 占位 | `src/views/dept/AvatarTest.vue` |
@@ -61,21 +61,22 @@
 
 ### 3.2 薄壳页面代码模式
 
+> v1.1 决策：每个角色只能操作自己所属的机构/科室/个人分身，不需要 WorkspaceScopeSelector 切换。
+> ownerId 直接从 auth store 读取（orgId / deptId / userId）。
+
 ```vue
 <!-- 所有工作台页面遵循此模式 -->
 <template>
-  <WorkspaceScopeSelector v-if="needSelector" :level="level" v-model:org-id="orgId" v-model:dept-id="deptId" />
-  <TargetComponent v-if="ownerId" />
+  <TargetComponent v-if="ownerId" owner-type="org" :owner-id="ownerId" />
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { provideWorkspaceContext } from '@/composables/useWorkspaceContext'
+import { storeToRefs } from 'pinia'
+import { useAuthStore } from '@/stores/auth'
 
-provideWorkspaceContext({
-  ownerType: 'org',  // 或 'dept' 或 'personal'
-  ownerId: computed(() => selectedOrgId.value),
-})
+const authStore = useAuthStore()
+const { currentOrgId: ownerId } = storeToRefs(authStore)
+// 科室页面使用 currentDeptId，个人页面使用 user.id
 </script>
 ```
 
@@ -101,11 +102,11 @@ provideWorkspaceContext({
 ## 四、验收效果
 
 - [ ] 机构工作台三个页面（分身配置/文件管理/知识卡）正常渲染
-- [ ] 机构工作台顶部机构选择器工作正常，切换后数据刷新
+- [ ] 机构工作台 ownerId 正确取自 auth store 的 currentOrgId
 - [ ] 科室工作台三个页面正常渲染
-- [ ] 科室工作台联动选择器（机构→科室）工作正常
+- [ ] 科室工作台 ownerId 正确取自 auth store 的 currentDeptId
 - [ ] 个人工作台三个页面 + 文件预览页正常渲染
-- [ ] 所有页面的 ownerType/ownerId 通过 provide/inject 正确传递
+- [ ] 个人工作台 ownerId 正确取自 auth store 的 user.id
 - [ ] 通用组件（DirectoryTree/FileTable/KnowledgeCardList 等）在三级工作台中均可正常使用
 - [ ] 路由权限控制正确：user 角色无法访问科室/机构工作台
 - [ ] 对话测试页占位正常，显示待实现提示
