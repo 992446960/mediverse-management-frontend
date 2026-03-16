@@ -294,19 +294,6 @@ Content-Type: application/json
 
 ---
 
-#### 1.2.5 启用/停用机构
-
-`PATCH /api/v1/organizations/{id}/status`
-
-**Request Body**
-
-```json
-{
-  "status": "inactive"
-}
-```
-
-**Response `data`**: 返回更新后的完整机构对象
 
 ---
 
@@ -746,8 +733,8 @@ Content-Type: application/json
   "total_sessions": 1238,
   "today_sessions": 12,
   "knowledge_progress": {
-    "indexed_cards": 156,
-    "total_cards": 190,
+    "indexed_files": 156,
+    "total_files": 190,
     "percentage": 82.1
   }
 }
