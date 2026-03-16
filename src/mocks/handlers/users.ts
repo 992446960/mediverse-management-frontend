@@ -9,6 +9,35 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 
 const mutableUsers: UserListItem[] = initialUsers.map((u) => ({ ...u }))
 
+/** 供 auth/me 等读取最新用户数据（含 PUT 更新后的 real_name/avatar_url） */
+export function getMutableUserById(id: string): UserListItem | undefined {
+  return mutableUsers.find((u) => u.id === id)
+}
+
+/** PUT /auth/me 更新当前用户：仅允许 real_name, avatar_url, username, phone, email, remark */
+export function updateMutableMe(
+  id: string,
+  patch: {
+    real_name?: string
+    avatar_url?: string
+    username?: string
+    phone?: string
+    email?: string
+    remark?: string
+  }
+): UserListItem | undefined {
+  const idx = mutableUsers.findIndex((u) => u.id === id)
+  if (idx === -1) return undefined
+  const cur = mutableUsers[idx]!
+  if (patch.real_name !== undefined) cur.real_name = patch.real_name.trim()
+  if (patch.avatar_url !== undefined) cur.avatar_url = patch.avatar_url.trim() || undefined
+  if (patch.username !== undefined) cur.username = patch.username.trim()
+  if (patch.phone !== undefined) cur.phone = patch.phone.trim() || undefined
+  if (patch.email !== undefined) cur.email = patch.email.trim() || undefined
+  if (patch.remark !== undefined) cur.remark = patch.remark.trim() || undefined
+  return { ...cur }
+}
+
 const orgMap = new Map(organizations.map((o) => [o.id, o]))
 const deptMap = new Map(departments.map((d) => [d.id, d]))
 
@@ -123,6 +152,7 @@ export const userHandlers = [
     }
     const cur = mutableUsers[idx]!
     if (body.real_name !== undefined) cur.real_name = body.real_name.trim()
+    if (body.avatar_url !== undefined) cur.avatar_url = body.avatar_url.trim() || undefined
     if (body.org_id !== undefined) {
       cur.org_id = body.org_id
       const org = orgMap.get(body.org_id)

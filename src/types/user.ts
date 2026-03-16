@@ -47,6 +47,7 @@ export type CreateUserResponse = UserListItem
 /** 编辑用户请求体（与 API PUT /users/:id 一致，字段可选） */
 export interface UpdateUserPayload {
   real_name?: string
+  avatar_url?: string
   org_id?: string
   dept_id?: string
   roles?: UserRole[]

@@ -73,6 +73,11 @@ export const useAuthStore = defineStore(
       }
     }
 
+    /** 更新当前用户信息（如个人资料页 PUT 后写回，避免再请求 /auth/me） */
+    function setUser(updated: User) {
+      user.value = updated
+    }
+
     return {
       user,
       token,
@@ -91,6 +96,7 @@ export const useAuthStore = defineStore(
       logout,
       clearAuthOnly,
       fetchUserInfo,
+      setUser,
     }
   },
   {

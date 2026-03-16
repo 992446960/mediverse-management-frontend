@@ -22,6 +22,7 @@ export interface User {
   last_login_at?: string
   created_at: string
   updated_at: string
+  remark?: string
 }
 
 export interface LoginParams {
@@ -48,4 +49,14 @@ export interface ChangePasswordParams {
   old_password: string
   new_password: string
   confirm_password: string
+}
+
+/** 修改当前用户 PUT /auth/me 请求体（字段可选，仅传需修改的） */
+export interface UpdateMeParams {
+  real_name?: string
+  avatar_url?: string
+  username?: string
+  phone?: string
+  email?: string
+  remark?: string
 }

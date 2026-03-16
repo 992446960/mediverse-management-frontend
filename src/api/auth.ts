@@ -5,6 +5,7 @@ import type {
   RefreshTokenResponse,
   User,
   ChangePasswordParams,
+  UpdateMeParams,
 } from '@/types/auth'
 
 export const authApi = {
@@ -26,5 +27,10 @@ export const authApi = {
 
   changePassword(params: ChangePasswordParams) {
     return request.post<void>('/auth/change-password', params)
+  },
+
+  /** 修改当前用户 PUT /auth/me，返回更新后的用户对象 */
+  updateMe(params: UpdateMeParams) {
+    return request.put<User>('/auth/me', params)
   },
 }

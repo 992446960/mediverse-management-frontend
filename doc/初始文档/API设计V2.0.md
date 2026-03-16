@@ -194,6 +194,22 @@ Content-Type: application/json
 
 **Response `data`**：当前用户对象（与 1.1.1 登录返回的 `user` 结构一致）。
 
+#### 1.1.6 修改当前用户
+
+`PUT /api/v1/auth/me`
+
+Request Body如下，使用请求头中的 access_token。
+{
+  "real_name": "string",
+  "avatar_url": "string",
+  "username": "string",
+  "phone": "string",
+  "email": "string",
+  "remark": "string"
+}
+
+**Response `data`**：当前用户对象（与 1.1.1 登录返回的 `user` 结构一致）。
+
 ---
 
 ### 1.2 机构管理

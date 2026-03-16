@@ -42,6 +42,12 @@ const routes: RouteRecordRaw[] = [
     },
     children: [
       {
+        path: 'profile',
+        name: 'MyProfile',
+        component: () => import('@/views/my/Profile.vue'),
+        meta: { title: 'menu.profile' },
+      },
+      {
         path: 'files',
         name: 'MyFiles',
         component: () => import('@/views/my/Files.vue'),

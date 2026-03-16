@@ -60,5 +60,6 @@ export function normalizeAuthUser(raw: unknown): User {
     last_login_at: typeof o.last_login_at === 'string' ? o.last_login_at : undefined,
     created_at: typeof o.created_at === 'string' ? o.created_at : now,
     updated_at: typeof o.updated_at === 'string' ? o.updated_at : now,
+    remark: typeof o.remark === 'string' ? o.remark : undefined,
   }
 }

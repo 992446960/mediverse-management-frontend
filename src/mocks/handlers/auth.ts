@@ -1,5 +1,6 @@
 import { http, HttpResponse } from 'msw'
 import { users } from '../data/users'
+import { getMutableUserById, updateMutableMe } from './users'
 import type { UserListItem } from '@/types/user'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1'
@@ -118,9 +119,15 @@ export const authHandlers = [
     const token = authHeader.replace('Bearer ', '')
     // Simple mock token parsing
     const userIdMatch = token.match(/mock_access_token_(.+?)(_refreshed)?$/)
-    const userId = userIdMatch ? userIdMatch[1] : null
-
-    const user = users.find((u) => u.id === userId)
+    const userId = userIdMatch?.[1]
+    if (typeof userId !== 'string') {
+      return HttpResponse.json({
+        code: 401,
+        message: 'Invalid token',
+        data: null,
+      })
+    }
+    const user = getMutableUserById(userId) ?? users.find((u) => u.id === userId)
 
     if (!user) {
       return HttpResponse.json({
@@ -134,6 +141,49 @@ export const authHandlers = [
       code: 0,
       message: 'Success',
       data: withWorkbenchAvatars(user),
+    })
+  }),
+
+  // Update current user (PUT /auth/me)
+  http.put(`${API_BASE}/auth/me`, async ({ request }) => {
+    const authHeader = request.headers.get('Authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return HttpResponse.json({
+        code: 401,
+        message: 'Unauthorized',
+        data: null,
+      })
+    }
+    const token = authHeader.replace('Bearer ', '')
+    const userIdMatch = token.match(/mock_access_token_(.+?)(_refreshed)?$/)
+    const userId = userIdMatch?.[1]
+    if (typeof userId !== 'string') {
+      return HttpResponse.json({
+        code: 401,
+        message: 'Invalid token',
+        data: null,
+      })
+    }
+    const body = (await request.json()) as {
+      real_name?: string
+      avatar_url?: string
+      username?: string
+      phone?: string
+      email?: string
+      remark?: string
+    }
+    const updated = updateMutableMe(userId, body)
+    if (!updated) {
+      return HttpResponse.json({
+        code: 40002,
+        message: 'User not found',
+        data: null,
+      })
+    }
+    return HttpResponse.json({
+      code: 0,
+      message: 'Success',
+      data: withWorkbenchAvatars(updated),
     })
   }),
 

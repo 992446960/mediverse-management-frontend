@@ -167,7 +167,7 @@ const handleUserMenuClick = async ({ key }: { key: string }) => {
     await authStore.logout()
     router.push('/login')
   } else if (key === 'profile') {
-    router.push('/')
+    router.push('/my/profile')
   }
 }
 
