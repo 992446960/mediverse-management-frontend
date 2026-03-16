@@ -253,7 +253,8 @@ bootstrap()
 - 涉及多租户数据时，必须在 Mock 层体现 `org_id` 隔离逻辑
 - 所有中文文案必须通过 `t()` 国际化函数调用，禁止硬编码
 - 提交的代码必须通过 TypeScript 编译和 ESLint 检查
+- **必须遵循**当前项目的前端开发规范，路径为 `.cursor/rules/development-guidelines.mdc`
 
 ## subagent协作调用
-- 每次任务完成后主动调用verifier子代理进行验收![1772780519777](image/frontend-developer/1772780519777.png)
+- 每次任务完成后主动调用verifier子代理进行验收
 
