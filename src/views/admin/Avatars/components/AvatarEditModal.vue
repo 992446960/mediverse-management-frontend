@@ -42,28 +42,22 @@
               @change="onAvatarFileChange"
             />
             <div
-              class="edit-avatar-upload-card group relative w-20 h-20 rounded-lg bg-gray-50 dark:bg-gray-700 flex flex-col items-center justify-center cursor-pointer border border-dashed border-gray-300 dark:border-gray-600 hover:border-[#0ea5e9] hover:text-[#0ea5e9] transition-all overflow-hidden shrink-0"
-              :class="{ 'pointer-events-none opacity-70': avatarUploading }"
+              class="edit-avatar-upload-card group relative w-20 h-20 rounded-lg bg-gray-50 dark:bg-gray-700 flex flex-col items-center justify-center border border-dashed border-gray-300 dark:border-gray-600 overflow-hidden shrink-0"
+              :class="[
+                form.avatar_url
+                  ? ''
+                  : 'cursor-pointer hover:border-[#0ea5e9] hover:text-[#0ea5e9] transition-all',
+                avatarUploading ? 'pointer-events-none opacity-70' : '',
+              ]"
               @click="onAvatarClick"
             >
               <a-spin v-if="avatarUploading" />
               <template v-else-if="form.avatar_url">
-                <img
-                  :src="form.avatar_url"
-                  :alt="t('avatar.avatar')"
-                  class="w-full h-full object-cover"
-                />
-                <!-- 悬浮层：仅在有图片时显示 -->
-                <div
-                  class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 text-white"
-                >
-                  <EyeOutlined
-                    class="text-lg hover:scale-110 transition-transform"
-                    @click.stop="handlePreview"
-                  />
-                  <UploadOutlined
-                    class="text-lg hover:scale-110 transition-transform"
-                    @click.stop="triggerAvatarFileInput"
+                <div class="absolute inset-0 w-full h-full" @click.stop>
+                  <a-image
+                    :src="form.avatar_url"
+                    :alt="t('avatar.avatar')"
+                    class="w-full h-full [&_.ant-image]:block! [&_.ant-image-img]:w-full! [&_.ant-image-img]:h-full! [&_.ant-image-img]:object-cover!"
                   />
                 </div>
               </template>
@@ -74,6 +68,18 @@
                 }}</span>
               </template>
             </div>
+            <template v-if="form.avatar_url">
+              <div class="text-left">
+                <a-button
+                  type="link"
+                  size="small"
+                  class="p-0 h-auto"
+                  @click="triggerAvatarFileInput"
+                >
+                  {{ t('common.selectFile') }}
+                </a-button>
+              </div>
+            </template>
             <p class="text-xs text-gray-400">
               {{ t('avatar.wizard.avatarSizeHint') + '，' + t('avatar.wizard.avatarFormatHint') }}
             </p>
@@ -141,7 +147,7 @@
 <script setup lang="ts">
 import { message } from 'ant-design-vue'
 import type { FormInstance } from 'ant-design-vue'
-import { EyeOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons-vue'
+import { PlusOutlined } from '@ant-design/icons-vue'
 import { useI18n } from 'vue-i18n'
 import { getAvatarDetail, updateAvatar } from '@/api/avatars'
 import { uploadAvatar } from '@/api/upload'
@@ -169,7 +175,6 @@ const avatar = ref<Avatar | null>(null)
 const formRef = ref<FormInstance>()
 const avatarFileRef = ref<HTMLInputElement | null>(null)
 const avatarUploading = ref(false)
-const previewVisible = ref(false)
 
 interface EditFormState {
   name: string
@@ -202,16 +207,9 @@ function triggerAvatarFileInput() {
   avatarFileRef.value?.click()
 }
 
-function handlePreview() {
-  previewVisible.value = true
-}
-
 function onAvatarClick() {
-  if (form.value.avatar_url) {
-    handlePreview()
-  } else {
-    triggerAvatarFileInput()
-  }
+  if (form.value.avatar_url) return
+  triggerAvatarFileInput()
 }
 
 async function onAvatarFileChange(e: Event) {
@@ -325,5 +323,15 @@ async function onSubmit() {
 .edit-avatar-upload-card {
   min-width: 80px;
   min-height: 80px;
+}
+.edit-avatar-upload-card :deep(.ant-image) {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.edit-avatar-upload-card :deep(.ant-image-img) {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
 }
 </style>

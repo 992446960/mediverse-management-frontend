@@ -32,28 +32,22 @@
             @change="onAvatarFileChange"
           />
           <div
-            class="step-info-upload-card group relative w-20 h-20 rounded-lg bg-gray-50 dark:bg-gray-700 flex flex-col items-center justify-center cursor-pointer border border-dashed border-gray-300 dark:border-gray-600 hover:border-[#0ea5e9] hover:text-[#0ea5e9] transition-all overflow-hidden shrink-0"
-            :class="{ 'pointer-events-none opacity-70': avatarUploading }"
+            class="step-info-upload-card group relative w-20 h-20 rounded-lg bg-gray-50 dark:bg-gray-700 flex flex-col items-center justify-center border border-dashed border-gray-300 dark:border-gray-600 overflow-hidden shrink-0"
+            :class="[
+              avatarPreviewUrl
+                ? ''
+                : 'cursor-pointer hover:border-[#0ea5e9] hover:text-[#0ea5e9] transition-all',
+              avatarUploading ? 'pointer-events-none opacity-70' : '',
+            ]"
             @click="onAvatarClick"
           >
             <a-spin v-if="avatarUploading" />
             <template v-else-if="avatarPreviewUrl">
-              <img
-                :src="avatarPreviewUrl"
-                :alt="t('avatar.avatar')"
-                class="w-full h-full object-cover"
-              />
-              <!-- 悬浮层：仅在有图片时显示 -->
-              <div
-                class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 text-white"
-              >
-                <EyeOutlined
-                  class="text-lg hover:scale-110 transition-transform"
-                  @click.stop="handlePreview"
-                />
-                <UploadOutlined
-                  class="text-lg hover:scale-110 transition-transform"
-                  @click.stop="triggerAvatarFileInput"
+              <div class="absolute inset-0 w-full h-full" @click.stop>
+                <a-image
+                  :src="avatarPreviewUrl"
+                  :alt="t('avatar.avatar')"
+                  class="w-full h-full [&_.ant-image]:block! [&_.ant-image-img]:w-full! [&_.ant-image-img]:h-full! [&_.ant-image-img]:object-cover!"
                 />
               </div>
             </template>
@@ -64,6 +58,13 @@
               }}</span>
             </template>
           </div>
+          <template v-if="avatarPreviewUrl">
+            <div class="text-left">
+              <a-button type="link" size="small" class="p-0 h-auto" @click="triggerAvatarFileInput">
+                {{ t('common.selectFile') }}
+              </a-button>
+            </div>
+          </template>
           <div class="flex flex-col gap-0.5">
             <p class="text-xs text-gray-400">
               {{ t('avatar.wizard.avatarSizeHint') + '，' + t('avatar.wizard.avatarFormatHint') }}
@@ -209,7 +210,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { EyeOutlined, PlusOutlined, CloseOutlined, UploadOutlined } from '@ant-design/icons-vue'
+import { PlusOutlined, CloseOutlined } from '@ant-design/icons-vue'
 import type { FormInstance } from 'ant-design-vue'
 import type { AvatarWizardForm, AvatarStyle } from '@/types/avatar'
 import { uploadAvatar } from '@/api/upload'
@@ -235,7 +236,6 @@ const avatarFileRef = ref<HTMLInputElement | null>(null)
 const avatarPreviewUrl = ref('')
 const AVATAR_ACCEPT = 'image/jpeg,image/png,image/gif,image/webp'
 const avatarUploading = ref(false)
-const previewVisible = ref(false)
 
 const local = ref<
   Pick<
@@ -332,16 +332,11 @@ function triggerAvatarFileInput() {
   avatarFileRef.value?.click()
 }
 
-function handlePreview() {
-  previewVisible.value = true
-}
-
 function onAvatarClick() {
   if (avatarPreviewUrl.value) {
-    handlePreview()
-  } else {
-    triggerAvatarFileInput()
+    return
   }
+  triggerAvatarFileInput()
 }
 
 async function onAvatarFileChange(e: Event) {
@@ -398,6 +393,20 @@ defineExpose({
   font-size: 14px;
   font-weight: 500;
   color: var(--ant-color-text, #374151);
+}
+.step-info-upload-card {
+  min-width: 80px;
+  min-height: 80px;
+}
+.step-info-upload-card :deep(.ant-image) {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.step-info-upload-card :deep(.ant-image-img) {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
 }
 /* 表单项间距 12px，错误提示紧贴对应表单项下方 */
 .step-info :deep(.ant-form-item) {

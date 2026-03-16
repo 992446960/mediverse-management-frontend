@@ -21,27 +21,22 @@
                   @change="onAvatarFileChange"
                 />
                 <div
-                  class="avatar-upload-card group relative w-20 h-20 rounded-lg bg-gray-50 dark:bg-gray-700 flex flex-col items-center justify-center cursor-pointer border border-dashed border-gray-300 dark:border-gray-600 hover:border-[#0ea5e9] hover:text-[#0ea5e9] transition-all overflow-hidden shrink-0"
-                  :class="{ 'pointer-events-none opacity-70': avatarUploading }"
+                  class="avatar-upload-card group relative w-20 h-20 rounded-lg bg-gray-50 dark:bg-gray-700 flex flex-col items-center justify-center border border-dashed border-gray-300 dark:border-gray-600 overflow-hidden shrink-0"
+                  :class="[
+                    formData.avatar_url
+                      ? ''
+                      : 'cursor-pointer hover:border-[#0ea5e9] hover:text-[#0ea5e9] transition-all',
+                    avatarUploading ? 'pointer-events-none opacity-70' : '',
+                  ]"
                   @click="onAvatarClick"
                 >
                   <a-spin v-if="avatarUploading" />
                   <template v-else-if="formData.avatar_url">
-                    <img
-                      :src="formData.avatar_url"
-                      :alt="t('avatar.avatar')"
-                      class="w-full h-full object-cover"
-                    />
-                    <div
-                      class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 text-white"
-                    >
-                      <EyeOutlined
-                        class="text-lg hover:scale-110 transition-transform"
-                        @click.stop="handlePreview"
-                      />
-                      <UploadOutlined
-                        class="text-lg hover:scale-110 transition-transform"
-                        @click.stop="triggerAvatarFileInput"
+                    <div class="absolute inset-0 w-full h-full" @click.stop>
+                      <a-image
+                        :src="formData.avatar_url"
+                        :alt="t('avatar.avatar')"
+                        class="w-full h-full [&_.ant-image]:block! [&_.ant-image-img]:w-full! [&_.ant-image-img]:h-full! [&_.ant-image-img]:object-cover!"
                       />
                     </div>
                   </template>
@@ -52,6 +47,18 @@
                     }}</span>
                   </template>
                 </div>
+                <template v-if="formData.avatar_url">
+                  <div class="text-left">
+                    <a-button
+                      type="link"
+                      size="small"
+                      class="p-0 h-auto"
+                      @click="triggerAvatarFileInput"
+                    >
+                      {{ t('common.selectFile') }}
+                    </a-button>
+                  </div>
+                </template>
                 <p class="text-xs text-gray-400">
                   {{
                     t('avatar.wizard.avatarSizeHint') + '，' + t('avatar.wizard.avatarFormatHint')
@@ -174,7 +181,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { EyeOutlined, PlusOutlined, CloseOutlined, UploadOutlined } from '@ant-design/icons-vue'
+import { PlusOutlined, CloseOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import type { OwnerType } from '@/constants/avatar'
 import type { UpdateAvatarConfigParams } from '@/types/avatarConfig'
@@ -201,7 +208,6 @@ const fileInputRef = ref<HTMLInputElement>()
 const tagPopoverVisible = ref(false)
 const newTag = ref('')
 const avatarUploading = ref(false)
-const previewVisible = ref(false)
 
 const AVATAR_ACCEPT = 'image/jpeg,image/png,image/gif,image/webp'
 
@@ -273,16 +279,9 @@ function triggerAvatarFileInput() {
   fileInputRef.value?.click()
 }
 
-function handlePreview() {
-  previewVisible.value = true
-}
-
 function onAvatarClick() {
-  if (formData.avatar_url) {
-    handlePreview()
-  } else {
-    triggerAvatarFileInput()
-  }
+  if (formData.avatar_url) return
+  triggerAvatarFileInput()
 }
 
 const onAvatarFileChange = async (e: Event) => {
@@ -343,6 +342,16 @@ onMounted(fetchConfig)
 .avatar-upload-card {
   min-width: 80px;
   min-height: 80px;
+}
+.avatar-upload-card :deep(.ant-image) {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.avatar-upload-card :deep(.ant-image-img) {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
 }
 
 /* 复用 StepInfo.vue 的样式类名 */

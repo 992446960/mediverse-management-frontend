@@ -11,7 +11,19 @@
         :table-columns="tableColumns"
         :table-data="tableData"
         @fetch-table-data="onTableFetch"
-      />
+      >
+        <template #org-logo="{ row }">
+          <a-image
+            v-if="row.logo_url"
+            :src="toAbsoluteFileUrl(row.logo_url)"
+            :alt="t('org.logo')"
+            :width="40"
+            :height="40"
+            class="org-logo-img rounded-lg object-cover"
+          />
+          <span v-else class="org-logo-placeholder text-slate-400 dark:text-slate-500">—</span>
+        </template>
+      </PageTable>
     </div>
     <OrgForm v-model:open="formOpen" :initial-record="editingRecord" @submit="handleFormSubmit" />
   </div>
@@ -34,6 +46,7 @@ import PageHead from '@/components/PageHead/index.vue'
 import PageFilter from '@/components/PageFilter/index.vue'
 import PageTable from '@/components/PageTable/index.vue'
 import OrgForm from './components/OrgForm.vue'
+import { toAbsoluteFileUrl } from '@/api/upload'
 import {
   getOrganizations,
   createOrganization,
@@ -127,6 +140,7 @@ const tableConf = computed<PageTableConfig>(() => ({
 const tableColumns = computed<PageTableColumnConfig[]>(() => [
   { label: t('org.name'), prop: 'name', width: 160, showOverflowTooltip: true },
   { label: t('org.code'), prop: 'code', width: 120 },
+  { label: t('org.logo'), type: 'slot', slotName: 'org-logo', width: 120 },
   { label: t('org.description'), prop: 'description', width: 200, showOverflowTooltip: true },
   {
     label: t('org.status'),
