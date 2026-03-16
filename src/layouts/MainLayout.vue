@@ -47,7 +47,7 @@
         <div class="header-right">
           <ThemeSwitcher />
           <LocaleSwitcher />
-          <a-dropdown :trigger="['click']">
+          <a-dropdown :trigger="['click']" overlay-class-name="user-menu-overlay">
             <div class="user-dropdown-trigger group">
               <span class="user-name">{{
                 user?.full_name || user?.username || t('common.user')
@@ -55,12 +55,16 @@
               <DownOutlined class="arrow-icon" />
             </div>
             <template #overlay>
-              <a-menu @click="handleUserMenuClick">
+              <a-menu class="user-menu" @click="handleUserMenuClick">
                 <a-menu-item key="profile">
-                  <UserOutlined /> {{ t('common.profile') }}
+                  <UserOutlined />
+                  <span class="user-menu-item-text">{{ t('common.profile') }}</span>
                 </a-menu-item>
                 <a-menu-divider />
-                <a-menu-item key="logout"> <LogoutOutlined /> {{ t('menu.logout') }} </a-menu-item>
+                <a-menu-item key="logout">
+                  <LogoutOutlined />
+                  <span class="user-menu-item-text">{{ t('menu.logout') }}</span>
+                </a-menu-item>
               </a-menu>
             </template>
           </a-dropdown>
@@ -333,5 +337,14 @@ watch(
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+</style>
+
+<style>
+.user-menu-overlay .ant-dropdown-menu-item {
+  .user-menu-item-text {
+    white-space: nowrap;
+    margin-left: var(--spacing-xs);
+  }
 }
 </style>
