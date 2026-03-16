@@ -230,16 +230,6 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
         handle: openEditForm as unknown as (row: Record<string, unknown>, index?: number) => void,
       },
       {
-        text: t('status.inactive'),
-        dynamicText: (row) => (row.status === 'active' ? t('status.inactive') : t('status.active')),
-        dynamicIcon: (row) => (row.status === 'active' ? PauseCircleOutlined : PlayCircleOutlined),
-        dynamicColor: (row) => (row.status === 'active' ? 'warning' : 'success'),
-        handle: handleToggleStatus as unknown as (
-          row: Record<string, unknown>,
-          index?: number
-        ) => void,
-      },
-      {
         text: t('common.delete'),
         icon: DeleteOutlined,
         color: 'danger',
@@ -329,21 +319,6 @@ async function handleFormSubmit(values: DepartmentForm) {
   } catch {
     // error already shown by api interceptor
   }
-}
-
-function handleToggleStatus(record: Department) {
-  const nextStatus = record.status === 'active' ? 'inactive' : 'active'
-  confirmDelete({
-    title: t('common.confirmStatusTitle'),
-    content: t('dept.confirmStatusContent'),
-    okText: t('common.confirm'),
-    cancelText: t('common.cancel'),
-    onOk: async () => {
-      await updateDepartment(record.id, { status: nextStatus })
-      message.success(t('common.success'))
-      refresh()
-    },
-  })
 }
 
 function handleDelete(record: Department) {
