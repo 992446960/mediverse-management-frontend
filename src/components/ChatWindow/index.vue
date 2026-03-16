@@ -77,7 +77,18 @@ watch(
 
       <!-- Empty State / Prompts -->
       <div v-else class="h-full flex flex-col items-center justify-center p-8 text-center">
-        <div class="mb-8">
+        <div class="mb-8 flex flex-col items-center">
+          <div class="mb-6 p-4 rounded-2xl bg-sky-50 dark:bg-sky-900/20 text-primary">
+            <svg width="48" height="48" viewBox="0 0 40 40" fill="none">
+              <rect width="40" height="40" rx="10" fill="currentColor" fill-opacity="0.12" />
+              <path
+                d="M20 8v24M8 20h24"
+                stroke="currentColor"
+                stroke-width="3.5"
+                stroke-linecap="round"
+              />
+            </svg>
+          </div>
           <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">
             Mediverse Digital Doctor
           </h2>
