@@ -171,7 +171,7 @@ function onDeptChange() {
 }
 
 onMounted(() => {
-  getOrganizations({ page: 1, page_size: 500 }).then((res) => {
+  getOrganizations({ page: 1, page_size: 200 }).then((res) => {
     orgOptions.value = res.items.map((o: Organization) => ({ label: o.name, value: o.id }))
   })
   if (props.modelValue.org_id) {

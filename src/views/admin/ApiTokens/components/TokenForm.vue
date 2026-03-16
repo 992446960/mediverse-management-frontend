@@ -23,7 +23,7 @@
             show-count
           />
         </a-form-item>
-        <a-form-item :label="t('apiToken.org')" name="org_id">
+        <a-form-item v-if="!lockOrgToCurrent" :label="t('apiToken.org')" name="org_id">
           <a-select
             v-model:value="formState.org_id"
             :placeholder="t('apiToken.org')"
@@ -46,7 +46,7 @@
     </template>
     <template v-else>
       <a-alert type="warning" :message="t('apiToken.tokenVisibleTip')" show-icon class="mb-4" />
-      <div class="flex items-center gap-2 flex-wrap">
+      <div class="flex items-center gap-2 flex-wrap my-4">
         <a-input :value="createdResult.plain_token" readonly class="flex-1 min-w-200 font-mono" />
         <a-button type="primary" @click="copyToken">
           {{ t('apiToken.copy') }}
@@ -68,8 +68,12 @@ const props = withDefaults(
   defineProps<{
     open: boolean
     orgOptions: Array<{ label: string; value: string }>
+    /** 机构/科室管理员时锁定为当前机构，隐藏机构选择 */
+    lockOrgToCurrent?: boolean
+    /** 锁定机构时的默认机构 ID */
+    defaultOrgId?: string
   }>(),
-  { orgOptions: () => [] }
+  { orgOptions: () => [], lockOrgToCurrent: false, defaultOrgId: '' }
 )
 
 const emit = defineEmits<{
@@ -88,15 +92,23 @@ const formState = ref<CreateApiTokenParams>({
   description: '',
 })
 
-const rules = {
+const rules = computed(() => ({
   name: [
     { required: true, message: t('apiToken.name') + ' ' + t('common.required'), trigger: 'blur' },
     { max: 100, message: t('common.max100'), trigger: 'blur' },
   ],
-  org_id: [
-    { required: true, message: t('apiToken.org') + ' ' + t('common.required'), trigger: 'change' },
-  ],
-} as const
+  ...(props.lockOrgToCurrent
+    ? {}
+    : {
+        org_id: [
+          {
+            required: true,
+            message: t('apiToken.org') + ' ' + t('common.required'),
+            trigger: 'change',
+          },
+        ],
+      }),
+}))
 
 function filterOrgOption(input: string, option: { label?: string; value?: string }) {
   return (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
@@ -107,7 +119,11 @@ watch(
   (open) => {
     if (open) {
       createdResult.value = null
-      formState.value = { org_id: '', name: '', description: '' }
+      formState.value = {
+        org_id: props.lockOrgToCurrent ? props.defaultOrgId || '' : '',
+        name: '',
+        description: '',
+      }
     }
     formRef.value?.clearValidate()
   }
@@ -118,7 +134,9 @@ async function handleOk() {
     await formRef.value?.validate()
     confirmLoading.value = true
     const values: CreateApiTokenParams = {
-      org_id: formState.value.org_id,
+      org_id: props.lockOrgToCurrent
+        ? props.defaultOrgId || formState.value.org_id
+        : formState.value.org_id,
       name: formState.value.name.trim(),
       description: formState.value.description?.trim() || undefined,
     }
@@ -155,7 +173,11 @@ defineExpose({
   showCreatedResult,
   resetForm: () => {
     createdResult.value = null
-    formState.value = { org_id: '', name: '', description: '' }
+    formState.value = {
+      org_id: props.lockOrgToCurrent ? props.defaultOrgId || '' : '',
+      name: '',
+      description: '',
+    }
   },
 })
 </script>

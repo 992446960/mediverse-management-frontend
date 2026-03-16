@@ -144,6 +144,8 @@ const props = withDefaults(
 const emit = defineEmits<{
   'fetch-table-data': []
   'on-more-visible-change': []
+  /** 机构 id 变化时触发（用于父组件按机构加载科室列表） */
+  'org-id-change': [value: string]
 }>()
 
 const formRef = ref<FormInstance | null>(null)
@@ -159,6 +161,17 @@ watch(
         formData[f.key] = f.defaultValue
       }
     }
+  },
+  { immediate: true }
+)
+
+const hasOrgIdField = computed(() =>
+  (props.filterConf.filterForm ?? []).some((f) => f.key === 'org_id')
+)
+watch(
+  () => (hasOrgIdField.value ? formData.org_id : undefined),
+  (val) => {
+    if (hasOrgIdField.value) emit('org-id-change', (val as string) ?? '')
   },
   { immediate: true }
 )
@@ -227,9 +240,17 @@ function filterFormReset(data?: Record<string, unknown>) {
   }
 }
 
+/** 仅更新单个筛选项（如机构变化时清空科室） */
+function setFilterField(key: string, value: unknown) {
+  if (key in formData) {
+    formData[key] = value
+  }
+}
+
 defineExpose({
   filterFormReset,
   filteParams,
+  setFilterField,
 })
 </script>
 

@@ -10,14 +10,22 @@
         :table-conf="tableConf"
         :table-data="tableData"
         @fetch-table-data="onTableFetch"
+        @edit="openEditForm"
         @toggle-status="handleToggleStatus"
         @delete="handleDelete"
       />
     </div>
+    <TokenEditForm
+      v-model:open="editFormOpen"
+      :initial-record="editingRecord"
+      @submit="handleEditSubmit"
+    />
     <TokenForm
       ref="tokenFormRef"
       v-model:open="formOpen"
       :org-options="orgOptions"
+      :lock-org-to-current="authStore.isOrgAdmin || authStore.isDeptAdmin"
+      :default-org-id="authStore.currentOrgId ?? ''"
       @submit="handleFormSubmit"
     />
   </div>
@@ -32,16 +40,25 @@ import PageHead from '@/components/PageHead/index.vue'
 import PageFilter from '@/components/PageFilter/index.vue'
 import TokenTable from './components/TokenTable.vue'
 import TokenForm from './components/TokenForm.vue'
-import { getApiTokens, createApiToken, updateApiTokenStatus, deleteApiToken } from '@/api/apiTokens'
+import TokenEditForm from './components/TokenEditForm.vue'
+import { useAuthStore } from '@/stores/auth'
+import {
+  getApiTokens,
+  createApiToken,
+  updateApiToken,
+  updateApiTokenStatus,
+  deleteApiToken,
+} from '@/api/apiTokens'
 import { getOrganizations } from '@/api/organizations'
 import { confirmDelete } from '@/utils/confirm'
-import type { ApiToken, CreateApiTokenParams } from '@/types/apiTokens'
+import type { ApiToken, CreateApiTokenParams, UpdateApiTokenParams } from '@/types/apiTokens'
 import type { Organization } from '@/types/organization'
 import type { PageHeadConfig } from '@/components/PageHead/types'
 import type { PageFilterConfig } from '@/components/PageFilter/types'
 import type { PageTableConfig } from '@/components/PageTable/types'
 
 const { t } = useI18n()
+const authStore = useAuthStore()
 
 const pageFilterRef = ref<InstanceType<typeof PageFilter> | null>(null)
 const pageTableRef = ref<InstanceType<typeof TokenTable> | null>(null)
@@ -60,7 +77,7 @@ const headConf = computed<PageHeadConfig>(() => ({
       type: 'primary',
       icon: PlusOutlined,
       handle: openCreateForm,
-      permission: ['sysadmin'],
+      permission: ['sysadmin', 'org_admin'],
     },
   ],
 }))
@@ -70,8 +87,9 @@ const orgOptions = computed(() => [
   ...orgList.value.map((o) => ({ label: o.name, value: o.id })),
 ])
 
-const filterConf = computed<PageFilterConfig>(() => ({
-  filterForm: [
+const filterConf = computed<PageFilterConfig>(() => {
+  const showOrgFilter = !authStore.isOrgAdmin && !authStore.isDeptAdmin
+  const filterForm: PageFilterConfig['filterForm'] = [
     {
       key: 'name',
       label: t('apiToken.name'),
@@ -80,7 +98,9 @@ const filterConf = computed<PageFilterConfig>(() => ({
       col: 6,
       defaultValue: '',
     },
-    {
+  ]
+  if (showOrgFilter) {
+    filterForm.push({
       key: 'org_id',
       label: t('apiToken.org'),
       type: 'select',
@@ -89,44 +109,47 @@ const filterConf = computed<PageFilterConfig>(() => ({
       options: orgOptions.value,
       clearable: true,
       defaultValue: '',
-    },
-    {
-      key: 'status',
-      label: t('apiToken.status'),
-      type: 'select',
-      ph: t('common.all'),
-      col: 6,
-      options: [
-        { label: t('common.all'), value: '' },
-        { label: t('status.active'), value: 'active' },
-        { label: t('status.inactive'), value: 'inactive' },
-      ],
-      clearable: true,
-      defaultValue: '',
-    },
-  ],
-  btns: [
-    {
-      text: t('common.search'),
-      type: 'primary',
-      icon: SearchOutlined,
-      handle: () => {
-        pageTableRef.value?.resetCurPage(1)
-        loadData()
+    })
+  }
+  filterForm.push({
+    key: 'status',
+    label: t('apiToken.status'),
+    type: 'select',
+    ph: t('common.all'),
+    col: 6,
+    options: [
+      { label: t('common.all'), value: '' },
+      { label: t('status.active'), value: 'active' },
+      { label: t('status.inactive'), value: 'inactive' },
+    ],
+    clearable: true,
+    defaultValue: '',
+  })
+  return {
+    filterForm,
+    btns: [
+      {
+        text: t('common.search'),
+        type: 'primary',
+        icon: SearchOutlined,
+        handle: () => {
+          pageTableRef.value?.resetCurPage(1)
+          loadData()
+        },
       },
-    },
-    {
-      text: t('common.reset'),
-      icon: ReloadOutlined,
-      handle: () => {
-        pageFilterRef.value?.filterFormReset()
-        pageTableRef.value?.resetCurPage(1)
-        loadData()
+      {
+        text: t('common.reset'),
+        icon: ReloadOutlined,
+        handle: () => {
+          pageFilterRef.value?.filterFormReset()
+          pageTableRef.value?.resetCurPage(1)
+          loadData()
+        },
       },
-    },
-  ],
-  btnsCol: 6,
-}))
+    ],
+    btnsCol: 6,
+  }
+})
 
 const tableConf = computed<PageTableConfig>(() => ({
   isLoading: loading.value,
@@ -142,7 +165,10 @@ async function loadData() {
   const pageSize = pageTableRef.value?.pageSize ?? 20
 
   const name = (params.name as string)?.trim() || undefined
-  const org_id = (params.org_id as string)?.trim() || undefined
+  const org_id =
+    authStore.isOrgAdmin || authStore.isDeptAdmin
+      ? (authStore.currentOrgId ?? undefined)
+      : (params.org_id as string)?.trim() || undefined
   const statusVal = params.status
   const status = statusVal === 'active' || statusVal === 'inactive' ? statusVal : undefined
 
@@ -172,9 +198,28 @@ function onTableFetch() {
 }
 
 const formOpen = ref(false)
+const editFormOpen = ref(false)
+const editingRecord = ref<ApiToken | null>(null)
 
 function openCreateForm() {
   formOpen.value = true
+}
+
+function openEditForm(record: ApiToken) {
+  editingRecord.value = record
+  editFormOpen.value = true
+}
+
+async function handleEditSubmit(id: string, values: UpdateApiTokenParams) {
+  try {
+    await updateApiToken(id, values)
+    message.success(t('apiToken.updateSuccess'))
+    editFormOpen.value = false
+    editingRecord.value = null
+    loadData()
+  } catch {
+    // error already shown by api interceptor
+  }
 }
 
 async function handleFormSubmit(values: CreateApiTokenParams) {
@@ -218,8 +263,14 @@ function handleDelete(record: ApiToken) {
 }
 
 onMounted(() => {
-  getOrganizations({ page: 1, page_size: 500 }).then((res) => {
-    orgList.value = res.items
+  getOrganizations({ page: 1, page_size: 200 }).then((res) => {
+    if (authStore.isOrgAdmin || authStore.isDeptAdmin) {
+      orgList.value = authStore.currentOrgId
+        ? res.items.filter((o) => o.id === authStore.currentOrgId)
+        : []
+    } else {
+      orgList.value = res.items
+    }
   })
   loadData()
 })

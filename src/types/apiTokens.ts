@@ -37,3 +37,9 @@ export interface CreateApiTokenParams {
 export interface UpdateApiTokenStatusParams {
   status: 'active' | 'inactive'
 }
+
+/** 更新 Token 信息（PUT，仅 name、description） */
+export interface UpdateApiTokenParams {
+  name?: string
+  description?: string
+}

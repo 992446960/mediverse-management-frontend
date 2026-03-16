@@ -1,7 +1,12 @@
 import { http, HttpResponse } from 'msw'
 import { apiTokens as initialTokens } from '../data/apiTokens'
 import { organizations } from '../data/organizations'
-import type { ApiToken, ApiTokenCreateResult, CreateApiTokenParams } from '@/types/apiTokens'
+import type {
+  ApiToken,
+  ApiTokenCreateResult,
+  CreateApiTokenParams,
+  UpdateApiTokenParams,
+} from '@/types/apiTokens'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 
@@ -111,6 +116,28 @@ export const apiTokenHandlers = [
       code: 0,
       message: 'ok',
       data: createResult,
+    })
+  }),
+
+  http.put(`${API_BASE}/admin/api-tokens/:id`, async ({ request, params }) => {
+    await delay(200)
+    const id = params.id as string
+    const body = (await request.json()) as UpdateApiTokenParams
+    const idx = mutableTokens.findIndex((t) => t.id === id)
+    if (idx === -1) {
+      return HttpResponse.json({
+        code: 40002,
+        message: 'Token 不存在',
+        data: null,
+      })
+    }
+    const cur = mutableTokens[idx]!
+    if (body.name !== undefined) cur.name = body.name.trim()
+    if (body.description !== undefined) cur.description = body.description?.trim() ?? null
+    return HttpResponse.json({
+      code: 0,
+      message: 'ok',
+      data: { ...cur },
     })
   }),
 

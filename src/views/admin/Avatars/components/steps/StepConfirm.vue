@@ -86,13 +86,13 @@ function getStyleLabelKey(style: AvatarStyle): string {
 function resolveNames(form: AvatarWizardForm) {
   scopeNames.value = {}
   if (form.org_id) {
-    getOrganizations({ page: 1, page_size: 500 }).then((res) => {
+    getOrganizations({ page: 1, page_size: 200 }).then((res) => {
       const org = res.items.find((o: { id: string }) => o.id === form.org_id)
       if (org) scopeNames.value = { ...scopeNames.value, orgName: (org as { name: string }).name }
     })
   }
   if (form.dept_id) {
-    getDepartments({ org_id: form.org_id!, page: 1, page_size: 500 }).then((res) => {
+    getDepartments({ org_id: form.org_id!, page: 1, page_size: 200 }).then((res) => {
       const dept = res.items.find((d: { id: string }) => d.id === form.dept_id)
       if (dept)
         scopeNames.value = { ...scopeNames.value, deptName: (dept as { name: string }).name }

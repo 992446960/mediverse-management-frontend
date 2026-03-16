@@ -2,7 +2,12 @@
   <div class="avatars-page flex flex-1 flex-col overflow-hidden">
     <div class="app-container p-4 mb-4">
       <PageHead :head-conf="headConf" />
-      <PageFilter ref="pageFilterRef" :filter-conf="filterConf" @fetch-table-data="onFilterFetch" />
+      <PageFilter
+        ref="pageFilterRef"
+        :filter-conf="filterConf"
+        @fetch-table-data="onFilterFetch"
+        @org-id-change="onFilterOrgIdChange"
+      />
     </div>
     <div class="app-container p-0 flex-1 flex flex-col min-h-0">
       <PageTable
@@ -50,6 +55,7 @@ import PageTable from '@/components/PageTable/index.vue'
 import AvatarWizard from './components/AvatarWizard.vue'
 import AvatarEditModal from './components/AvatarEditModal.vue'
 import KnowledgeCardList from '@/components/KnowledgeCardList/index.vue'
+import { useAuthStore } from '@/stores/auth'
 import { getAvatars, updateAvatar, deleteAvatar } from '@/api/avatars'
 import { getOrganizations } from '@/api/organizations'
 import { getDepartments } from '@/api/departments'
@@ -68,6 +74,7 @@ import type { PageFilterConfig } from '@/components/PageFilter/types'
 import type { PageTableConfig, PageTableColumnConfig } from '@/components/PageTable/types'
 
 const { t } = useI18n()
+const authStore = useAuthStore()
 
 const pageFilterRef = ref<InstanceType<typeof PageFilter> | null>(null)
 const pageTableRef = ref<InstanceType<typeof PageTable> | null>(null)
@@ -94,8 +101,10 @@ const headConf = computed<PageHeadConfig>(() => ({
   ],
 }))
 
-const filterConf = computed<PageFilterConfig>(() => ({
-  filterForm: [
+const filterConf = computed<PageFilterConfig>(() => {
+  const showOrgFilter = !authStore.isOrgAdmin && !authStore.isDeptAdmin
+  const showDeptFilter = !authStore.isDeptAdmin
+  const filterForm: PageFilterConfig['filterForm'] = [
     {
       key: 'keyword',
       label: t('avatar.name'),
@@ -117,7 +126,9 @@ const filterConf = computed<PageFilterConfig>(() => ({
       clearable: true,
       defaultValue: '',
     },
-    {
+  ]
+  if (showOrgFilter) {
+    filterForm.push({
       key: 'org_id',
       label: t('avatar.org'),
       type: 'select',
@@ -129,8 +140,10 @@ const filterConf = computed<PageFilterConfig>(() => ({
       ],
       clearable: true,
       defaultValue: '',
-    },
-    {
+    })
+  }
+  if (showDeptFilter) {
+    filterForm.push({
       key: 'dept_id',
       label: t('avatar.dept'),
       type: 'select',
@@ -142,44 +155,47 @@ const filterConf = computed<PageFilterConfig>(() => ({
       ],
       clearable: true,
       defaultValue: '',
-    },
-    {
-      key: 'status',
-      label: t('org.status'),
-      type: 'select',
-      ph: t('common.all'),
-      col: 6,
-      options: [
-        { label: t('common.all'), value: '' },
-        { label: t('status.active'), value: 'active' },
-        { label: t('status.inactive'), value: 'inactive' },
-      ],
-      clearable: true,
-      defaultValue: '',
-    },
-  ],
-  btns: [
-    {
-      text: t('common.search'),
-      type: 'primary',
-      icon: SearchOutlined,
-      handle: () => {
-        pageTableRef.value?.resetCurPage(1)
-        loadData()
+    })
+  }
+  filterForm.push({
+    key: 'status',
+    label: t('org.status'),
+    type: 'select',
+    ph: t('common.all'),
+    col: 6,
+    options: [
+      { label: t('common.all'), value: '' },
+      { label: t('status.active'), value: 'active' },
+      { label: t('status.inactive'), value: 'inactive' },
+    ],
+    clearable: true,
+    defaultValue: '',
+  })
+  return {
+    filterForm,
+    btns: [
+      {
+        text: t('common.search'),
+        type: 'primary',
+        icon: SearchOutlined,
+        handle: () => {
+          pageTableRef.value?.resetCurPage(1)
+          loadData()
+        },
       },
-    },
-    {
-      text: t('common.reset'),
-      icon: ReloadOutlined,
-      handle: () => {
-        pageFilterRef.value?.filterFormReset()
-        pageTableRef.value?.resetCurPage(1)
-        loadData()
+      {
+        text: t('common.reset'),
+        icon: ReloadOutlined,
+        handle: () => {
+          pageFilterRef.value?.filterFormReset()
+          pageTableRef.value?.resetCurPage(1)
+          loadData()
+        },
       },
-    },
-  ],
-  btnsCol: 6,
-}))
+    ],
+    btnsCol: 6,
+  }
+})
 
 function formatScope(record: Avatar): string {
   const parts: string[] = [record.org_name]
@@ -278,14 +294,24 @@ async function loadData() {
   const params = pageFilterRef.value?.filteParams ?? {}
   const page = pageTableRef.value?.currentPage ?? 1
   const pageSize = pageTableRef.value?.pageSize ?? 20
-  const orgId = (params.org_id as string) || undefined
+  const effectiveOrgId =
+    authStore.isOrgAdmin || authStore.isDeptAdmin
+      ? (authStore.currentOrgId ?? undefined)
+      : (params.org_id as string) || undefined
+  const effectiveDeptId = authStore.isDeptAdmin
+    ? (authStore.currentDeptId ?? undefined)
+    : (params.dept_id as string) || undefined
 
-  if (orgId && deptListOrgId.value !== orgId) {
-    deptListOrgId.value = orgId
-    const res = await getDepartments({ org_id: orgId, page: 1, page_size: 500 })
+  if (
+    effectiveOrgId &&
+    deptListOrgId.value !== effectiveOrgId &&
+    (authStore.isSysAdmin || authStore.isOrgAdmin)
+  ) {
+    deptListOrgId.value = effectiveOrgId
+    const res = await getDepartments({ org_id: effectiveOrgId, page: 1, page_size: 200 })
     deptList.value = res.items
   }
-  if (!orgId) {
+  if (!effectiveOrgId && authStore.isSysAdmin) {
     deptListOrgId.value = null
     deptList.value = []
   }
@@ -303,8 +329,8 @@ async function loadData() {
       page_size: pageSize,
       keyword: (params.keyword as string)?.trim() || undefined,
       type: type as AvatarType | undefined,
-      org_id: (params.org_id as string) || undefined,
-      dept_id: (params.dept_id as string) || undefined,
+      org_id: effectiveOrgId,
+      dept_id: effectiveDeptId,
       status,
     })
     tableData.value = result.items
@@ -317,6 +343,22 @@ async function loadData() {
 function onFilterFetch() {
   pageTableRef.value?.resetCurPage(1)
   loadData()
+}
+
+/** 机构 id 有值且变化时请求该机构的科室列表（仅系统管理员有机构筛选时生效） */
+async function onFilterOrgIdChange(orgId: string) {
+  const id = orgId?.trim() || ''
+  if (authStore.isOrgAdmin || authStore.isDeptAdmin) return
+  if (id && deptListOrgId.value !== id) {
+    deptListOrgId.value = id
+    pageFilterRef.value?.setFilterField?.('dept_id', '')
+    const res = await getDepartments({ org_id: id, page: 1, page_size: 200 })
+    deptList.value = res.items
+  }
+  if (!id) {
+    deptListOrgId.value = null
+    deptList.value = []
+  }
 }
 
 function onTableFetch() {
@@ -386,8 +428,20 @@ function handleDelete(record: Avatar) {
 }
 
 onMounted(async () => {
-  const res = await getOrganizations({ page: 1, page_size: 500 })
-  orgList.value = res.items
+  if (authStore.isSysAdmin) {
+    const res = await getOrganizations({ page: 1, page_size: 200 })
+    orgList.value = res.items
+  } else if (authStore.isOrgAdmin && authStore.currentOrgId) {
+    const res = await getOrganizations({ page: 1, page_size: 200 })
+    orgList.value = res.items.filter((o) => o.id === authStore.currentOrgId)
+    const deptRes = await getDepartments({
+      org_id: authStore.currentOrgId,
+      page: 1,
+      page_size: 200,
+    })
+    deptList.value = deptRes.items
+    deptListOrgId.value = authStore.currentOrgId
+  }
   loadData()
 })
 </script>

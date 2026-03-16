@@ -13,13 +13,13 @@
     <a-skeleton v-if="loading" active />
 
     <template v-else>
-      <a-alert
-        v-if="avatar"
-        class="mb-4"
-        type="info"
-        :message="t('avatar.scopeDisplay', { scope: formatScope(avatar) })"
-        show-icon
-      />
+      <div v-if="avatar" class="edit-avatar-alert-wrap">
+        <a-alert
+          type="info"
+          :message="t('avatar.scopeDisplay', { scope: formatScope(avatar) })"
+          show-icon
+        />
+      </div>
 
       <a-form ref="formRef" layout="vertical" :model="form" :rules="rules">
         <a-form-item :label="t('avatar.name')" name="name">
@@ -42,7 +42,7 @@
               @change="onAvatarFileChange"
             />
             <div
-              class="edit-avatar-upload-card group relative w-20 h-20 rounded-lg bg-gray-50 dark:bg-gray-700 flex flex-col items-center justify-center border border-dashed border-gray-300 dark:border-gray-600 overflow-hidden shrink-0"
+              class="edit-avatar-upload-card group relative w-20 h-20 rounded-full bg-gray-50 dark:bg-gray-700 flex flex-col items-center justify-center border border-dashed border-gray-300 dark:border-gray-600 overflow-hidden shrink-0"
               :class="[
                 form.avatar_url
                   ? ''
@@ -96,14 +96,63 @@
           />
         </a-form-item>
 
-        <a-form-item :label="t('avatar.tags')" name="tags">
-          <a-select
-            v-model:value="form.tags"
-            mode="tags"
-            :placeholder="t('avatar.tags')"
-            :max-tag-count="10"
-            class="w-full"
-          />
+        <a-form-item name="tags">
+          <template #label>
+            <span class="step-info-label">{{ t('avatar.tags') }}</span>
+          </template>
+          <div class="step-info-tags-wrap flex flex-wrap items-center gap-2">
+            <template v-for="(tag, index) in form.tags" :key="`${tag}-${index}`">
+              <span class="step-info-tag-pill">
+                <span class="step-info-tag-text">{{ tag }}</span>
+                <span
+                  class="step-info-tag-remove"
+                  role="button"
+                  tabindex="0"
+                  :aria-label="t('common.delete')"
+                  @click="removeTag(index)"
+                  @keydown.enter.prevent="removeTag(index)"
+                  @keydown.space.prevent="removeTag(index)"
+                >
+                  <CloseOutlined class="step-info-tag-remove-icon" />
+                </span>
+              </span>
+            </template>
+            <a-popover
+              v-if="form.tags.length < TAG_MAX_COUNT"
+              v-model:open="tagPopoverOpen"
+              trigger="click"
+              overlay-class-name="step-info-tag-popover"
+              @open-change="onTagPopoverOpenChange"
+            >
+              <template #content>
+                <div class="step-info-tag-add-popover p-1">
+                  <a-input
+                    ref="tagInputRef"
+                    v-model:value="tagInputValue"
+                    :placeholder="t('avatar.wizard.tagPlaceholder')"
+                    :maxlength="20"
+                    size="small"
+                    class="w-48"
+                    @keydown.enter.prevent="confirmAddTag"
+                  />
+                  <a-button type="primary" size="small" class="mt-2 w-full" @click="confirmAddTag">
+                    {{ t('common.confirm') }}
+                  </a-button>
+                </div>
+              </template>
+              <span
+                class="step-info-tag-add-pill"
+                role="button"
+                tabindex="0"
+                :aria-label="t('avatar.wizard.addTag')"
+                @keydown.enter.prevent="tagPopoverOpen = true"
+                @keydown.space.prevent="tagPopoverOpen = true"
+              >
+                <PlusOutlined class="step-info-tag-add-icon" />
+                <span>{{ t('avatar.wizard.tagPlaceholderAdd') }}</span>
+              </span>
+            </a-popover>
+          </div>
         </a-form-item>
 
         <a-form-item :label="t('avatar.greeting')" name="greeting">
@@ -147,7 +196,7 @@
 <script setup lang="ts">
 import { message } from 'ant-design-vue'
 import type { FormInstance } from 'ant-design-vue'
-import { PlusOutlined } from '@ant-design/icons-vue'
+import { PlusOutlined, CloseOutlined } from '@ant-design/icons-vue'
 import { useI18n } from 'vue-i18n'
 import { getAvatarDetail, updateAvatar } from '@/api/avatars'
 import { uploadAvatar } from '@/api/upload'
@@ -175,6 +224,10 @@ const avatar = ref<Avatar | null>(null)
 const formRef = ref<FormInstance>()
 const avatarFileRef = ref<HTMLInputElement | null>(null)
 const avatarUploading = ref(false)
+const tagPopoverOpen = ref(false)
+const tagInputValue = ref('')
+const tagInputRef = ref<{ focus: () => void } | null>(null)
+const TAG_MAX_COUNT = 10
 
 interface EditFormState {
   name: string
@@ -201,6 +254,29 @@ function formatScope(record: Avatar): string {
   if (record.dept_name) parts.push(record.dept_name)
   if (record.user_name) parts.push(record.user_name)
   return parts.join(' / ')
+}
+
+function removeTag(index: number) {
+  form.value.tags = form.value.tags.filter((_, i) => i !== index)
+}
+
+function confirmAddTag() {
+  const raw = tagInputValue.value?.trim()
+  if (!raw) return
+  if (form.value.tags.length >= TAG_MAX_COUNT) return
+  if (form.value.tags.includes(raw)) {
+    tagInputValue.value = ''
+    return
+  }
+  form.value = { ...form.value, tags: [...form.value.tags, raw] }
+  tagInputValue.value = ''
+  tagPopoverOpen.value = false
+}
+
+function onTagPopoverOpenChange(open: boolean) {
+  tagPopoverOpen.value = open
+  if (!open) tagInputValue.value = ''
+  else setTimeout(() => tagInputRef.value?.focus(), 80)
 }
 
 function triggerAvatarFileInput() {
@@ -320,18 +396,99 @@ async function onSubmit() {
 </script>
 
 <style scoped>
+.edit-avatar-alert-wrap {
+  margin-bottom: 1rem;
+}
 .edit-avatar-upload-card {
   min-width: 80px;
   min-height: 80px;
+  border-radius: 50%;
 }
 .edit-avatar-upload-card :deep(.ant-image) {
   width: 100%;
   height: 100%;
   display: block;
+  border-radius: 50%;
 }
 .edit-avatar-upload-card :deep(.ant-image-img) {
   width: 100% !important;
   height: 100% !important;
   object-fit: cover !important;
+  border-radius: 50%;
+}
+
+/* 标签：与新增分身 StepInfo 一致 - 已选浅蓝底+蓝边框+蓝字+蓝色 ×，「添加标签」灰虚线边框+灰字 */
+.step-info-label {
+  display: inline-block;
+}
+.step-info-tags-wrap {
+  min-height: 32px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.step-info-tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px 4px 12px;
+  border-radius: 9999px;
+  background: rgba(14, 165, 233, 0.12);
+  border: 1px solid rgba(14, 165, 233, 0.4);
+  color: #0ea5e9;
+  font-size: 12px;
+}
+.step-info-tag-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  color: #0ea5e9;
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    background 0.15s;
+}
+.step-info-tag-remove:hover {
+  color: #0284c7;
+  background: rgba(14, 165, 233, 0.15);
+}
+.step-info-tag-remove-icon {
+  font-size: 10px;
+}
+.step-info-tag-add-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  background: transparent;
+  border: 1px dashed #d1d5db;
+  color: #9ca3af;
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+.step-info-tag-add-pill:hover {
+  border-color: #9ca3af;
+  color: #6b7280;
+}
+.step-info-tag-add-pill .step-info-tag-add-icon,
+.step-info-tag-add-pill :deep(.anticon) {
+  color: inherit;
+  font-size: 12px;
+}
+.dark .step-info-tag-add-pill {
+  border-color: #4b5563;
+  color: #9ca3af;
+}
+.dark .step-info-tag-add-pill:hover {
+  border-color: #6b7280;
+  color: #d1d5db;
 }
 </style>

@@ -5,6 +5,7 @@ import type {
   ApiTokenCreateResult,
   ApiTokenListParams,
   CreateApiTokenParams,
+  UpdateApiTokenParams,
   UpdateApiTokenStatusParams,
 } from '@/types/apiTokens'
 
@@ -16,6 +17,11 @@ export function getApiTokens(params: ApiTokenListParams) {
 /** 创建 API Token（返回含 plain_token，仅此一次） */
 export function createApiToken(data: CreateApiTokenParams) {
   return request.post<ApiTokenCreateResult>('/admin/api-tokens', data)
+}
+
+/** 更新 API Token 信息（名称、描述） */
+export function updateApiToken(id: string, data: UpdateApiTokenParams) {
+  return request.put<ApiToken>(`/admin/api-tokens/${id}`, data)
 }
 
 /** 更新 API Token 状态 */

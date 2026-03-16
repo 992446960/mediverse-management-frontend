@@ -49,6 +49,7 @@ import {
   EyeOutlined,
   EyeInvisibleOutlined,
   CopyOutlined,
+  EditOutlined,
   PauseCircleOutlined,
   PlayCircleOutlined,
   DeleteOutlined,
@@ -67,6 +68,7 @@ defineProps<{
 
 const emit = defineEmits<{
   'fetch-table-data': []
+  edit: [row: ApiToken]
   'toggle-status': [row: ApiToken]
   delete: [row: ApiToken]
 }>()
@@ -133,9 +135,14 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
   {
     label: t('common.actions'),
     type: 'operation',
-    width: 200,
+    width: 260,
     fixed: 'right',
     btns: [
+      {
+        text: t('common.edit'),
+        icon: EditOutlined,
+        handle: (row) => emit('edit', row as ApiToken),
+      },
       {
         text: t('status.inactive'),
         dynamicText: (row) =>

@@ -107,7 +107,7 @@
       </a-form-item>
       <a-form-item v-if="!isEdit && showRoleField" :label="t('user.roles')" name="roles">
         <a-checkbox-group v-model:value="formState.roles" class="flex flex-col gap-2">
-          <a-checkbox v-for="r in assignableRoles" :key="r" :value="r">
+          <a-checkbox v-for="r in assignableRoles" :key="r" :value="r" :disabled="r === 'user'">
             {{ t(ROLE_LABEL_KEYS[r] ?? r) }}
           </a-checkbox>
         </a-checkbox-group>
@@ -143,7 +143,7 @@
       </a-form-item>
       <a-form-item v-if="isEdit && showRoleField" :label="t('user.roles')" name="roles">
         <a-checkbox-group v-model:value="formState.roles" class="flex flex-col gap-2">
-          <a-checkbox v-for="r in assignableRoles" :key="r" :value="r">
+          <a-checkbox v-for="r in assignableRoles" :key="r" :value="r" :disabled="r === 'user'">
             {{ t(ROLE_LABEL_KEYS[r] ?? r) }}
           </a-checkbox>
         </a-checkbox-group>
@@ -315,13 +315,16 @@ watch(
         const deptId = authStore.isDeptAdmin
           ? (authStore.currentDeptId ?? record.dept_id)
           : record.dept_id
+        const roles = record.roles?.includes('user')
+          ? [...record.roles]
+          : ['user', ...(record.roles || [])]
         formState.value = {
           username: record.username,
           real_name: record.real_name,
           password: '',
           org_id: orgId,
           dept_id: deptId,
-          roles: [...record.roles],
+          roles,
           remark: record.remark ?? '',
           status: record.status,
         }

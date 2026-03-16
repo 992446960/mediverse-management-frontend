@@ -118,7 +118,7 @@ export const menuConfig: MenuConfig[] = [
         key: 'admin-token',
         label: 'menu.apiToken',
         path: '/admin/api-tokens',
-        requiredRoles: ['sysadmin'],
+        requiredRoles: ['sysadmin', 'org_admin'],
         icon: () => h(SafetyCertificateOutlined),
       },
     ],

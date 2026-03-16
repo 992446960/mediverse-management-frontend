@@ -251,7 +251,7 @@ const routes: RouteRecordRaw[] = [
         path: 'api-tokens',
         name: 'AdminApiTokens',
         component: () => import('@/views/admin/ApiTokens/index.vue'),
-        meta: { title: 'menu.apiToken', requiredRoles: ['sysadmin'] },
+        meta: { title: 'menu.apiToken', requiredRoles: ['sysadmin', 'org_admin'] },
       },
     ],
   },
