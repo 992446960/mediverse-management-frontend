@@ -122,17 +122,15 @@ onMounted(() => {
           class="cursor-pointer transition-transform hover:-translate-y-1 overflow-hidden"
           @click="emit('select', avatar)"
         >
-          <Card.Meta :title="avatar.name" :description="avatar.description || '暂无简介'">
+          <Card.Meta :title="avatar.name" :description="avatar.bio || '暂无简介'">
             <template #avatar>
-              <Avatar :src="avatar.avatar_url" :size="48">
+              <Avatar :src="avatar.avatar_url || undefined" :size="48">
                 <template #icon><UserOutlined /></template>
               </Avatar>
             </template>
           </Card.Meta>
           <div class="mt-4 flex gap-2 flex-wrap">
-            <Tag color="blue">{{
-              avatar.type === 'org' ? '全科' : avatar.type === 'dept' ? '专科' : '专家'
-            }}</Tag>
+            <Tag color="blue">{{ avatar.type.charAt(0).toUpperCase() + avatar.type.slice(1) }}</Tag>
             <Tag v-if="avatar.org_name">{{ avatar.org_name }}</Tag>
             <Tag v-if="avatar.dept_name">{{ avatar.dept_name }}</Tag>
           </div>
