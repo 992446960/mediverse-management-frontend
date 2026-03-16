@@ -110,7 +110,7 @@ const handleLogin = async () => {
           :rules="[{ required: true, message: t('auth.usernamePlaceholder') }]"
         >
           <a-input
-            v-model:value="formState.username"
+            v-model:value.trim="formState.username"
             :placeholder="t('auth.username')"
             size="large"
           >
@@ -123,7 +123,7 @@ const handleLogin = async () => {
           :rules="[{ required: true, message: t('auth.passwordPlaceholder') }]"
         >
           <a-input-password
-            v-model:value="formState.password"
+            v-model:value.trim="formState.password"
             :placeholder="t('auth.password')"
             size="large"
           >
