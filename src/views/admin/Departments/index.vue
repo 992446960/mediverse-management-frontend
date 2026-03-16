@@ -67,8 +67,8 @@ import PageFilter from '@/components/PageFilter/index.vue'
 import PageTable from '@/components/PageTable/index.vue'
 import DeptForm from './components/DeptForm.vue'
 import { useAuthStore } from '@/stores/auth'
-import { getOrganizations } from '@/api/organizations'
 import {
+  getDepartmentsTree,
   getDepartments,
   createDepartment,
   updateDepartment,
@@ -78,8 +78,7 @@ import { confirmDelete } from '@/utils/confirm'
 import type { PageHeadConfig } from '@/components/PageHead/types'
 import type { PageFilterConfig } from '@/components/PageFilter/types'
 import type { PageTableConfig, PageTableColumnConfig } from '@/components/PageTable/types'
-import type { Organization } from '@/types/organization'
-import type { Department, DepartmentForm } from '@/types/department'
+import type { Department, DepartmentForm, OrgDeptTreeNode } from '@/types/department'
 import type { TableTreeNode } from '@/components/PageTree/types'
 
 const { t } = useI18n()
@@ -92,21 +91,22 @@ const tableData = ref<Department[]>([])
 const loading = ref(false)
 const total = ref(0)
 
-// ----- 左侧树（保持不变） -----
+// ----- 左侧树：使用机构目录树 GET /departments/tree（返回当前用户有权看到的机构，无需额外参数） -----
 const treeLoading = ref(false)
-const organizationsList = ref<Organization[]>([])
+const rawTree = ref<OrgDeptTreeNode[]>([])
 const selectedOrgId = ref<string | null>(null)
 const selectedOrgName = ref<string>('')
 const selectedOrgKey = ref<string>('')
 
+/** 从目录树取机构节点；非系统管理员时仅展示当前用户所属机构 */
 const treeData = computed<TableTreeNode[]>(() => {
-  let list = organizationsList.value
-  if (authStore.isOrgAdmin && authStore.currentOrgId) {
+  let list = rawTree.value.filter((n) => n.type === 'org')
+  if (!authStore.isSysAdmin && authStore.currentOrgId) {
     list = list.filter((o) => o.id === authStore.currentOrgId)
   }
   return list.map((org) => ({
     key: `org_${org.id}`,
-    label: org.code ? `${org.name} (${org.code})` : org.name,
+    label: org.name,
     icon: 'bank',
     children: undefined,
   }))
@@ -115,8 +115,21 @@ const treeData = computed<TableTreeNode[]>(() => {
 async function loadTree() {
   treeLoading.value = true
   try {
-    const res = await getOrganizations({ page: 1, page_size: 500 })
-    organizationsList.value = res?.items ?? []
+    const list = await getDepartmentsTree()
+    rawTree.value = list ?? []
+    let orgNodes = list?.filter((n) => n.type === 'org') ?? []
+    if (!authStore.isSysAdmin && authStore.currentOrgId) {
+      orgNodes = orgNodes.filter((o) => o.id === authStore.currentOrgId)
+    }
+    // 非系统管理员且仅有一个可选机构时自动选中，右侧直接加载该机构科室列表
+    if (orgNodes.length === 1 && !selectedOrgId.value) {
+      const org = orgNodes[0]!
+      selectedOrgId.value = org.id
+      selectedOrgName.value = org.name
+      selectedOrgKey.value = `org_${org.id}`
+    }
+  } catch {
+    rawTree.value = []
   } finally {
     treeLoading.value = false
   }
