@@ -20,6 +20,7 @@
     "@vue-office/excel": "^1.7.14",
     "@vue-office/pdf": "^2.0.10",
     "ant-design-vue": "^4.2.6",
+    "ant-design-x-vue": "^1.6.0",
     "axios": "^1.13.6",
     "dayjs": "^1.11.19",
     "dompurify": "^3.3.3",

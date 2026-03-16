@@ -65,6 +65,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/my/Avatar.vue'),
         meta: { title: 'menu.avatarConfig' },
       },
+      {
+        path: 'avatar/test',
+        name: 'MyAvatarTest',
+        component: () => import('@/views/my/AvatarTest.vue'),
+        meta: { title: 'menu.avatarTest' },
+      },
     ],
   },
   {
@@ -100,6 +106,12 @@ const routes: RouteRecordRaw[] = [
         name: 'DeptAvatar',
         component: () => import('@/views/dept/Avatar.vue'),
         meta: { title: 'menu.avatarConfig' },
+      },
+      {
+        path: 'avatar/test',
+        name: 'DeptAvatarTest',
+        component: () => import('@/views/dept/AvatarTest.vue'),
+        meta: { title: 'menu.avatarTest' },
       },
     ],
   },
@@ -137,28 +149,36 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/org/Avatar.vue'),
         meta: { title: 'menu.avatarConfig' },
       },
+      {
+        path: 'avatar/test',
+        name: 'OrgAvatarTest',
+        component: () => import('@/views/org/AvatarTest.vue'),
+        meta: { title: 'menu.avatarTest' },
+      },
     ],
   },
   {
     path: '/chat',
-    name: 'Chat',
-    component: () => import('@/views/chat/index.vue'),
+    component: () => import('@/views/chat/layout.vue'),
     meta: {
       layout: 'MainLayout',
       title: 'menu.digitalDoctor',
       requiresAuth: true,
     },
-  },
-  {
-    path: '/chat/session/:id',
-    name: 'ChatSession',
-    component: () => import('@/views/chat/Session.vue'),
-    meta: {
-      layout: 'MainLayout',
-      title: 'menu.digitalDoctor',
-      requiresAuth: true,
-      hidden: true,
-    },
+    children: [
+      {
+        path: '',
+        name: 'ChatHome',
+        component: () => import('@/views/chat/index.vue'),
+        meta: { title: 'menu.digitalDoctor' },
+      },
+      {
+        path: 'session/:id',
+        name: 'ChatSession',
+        component: () => import('@/views/chat/Session.vue'),
+        meta: { title: 'menu.digitalDoctor', hidden: true },
+      },
+    ],
   },
   {
     path: '/knowledge-base',

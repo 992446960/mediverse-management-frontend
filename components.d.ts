@@ -1,3 +1,4 @@
+/* eslint-disable */
 // @ts-nocheck
 // biome-ignore lint: disable
 // oxlint-disable
@@ -69,9 +70,11 @@ declare module 'vue' {
     ATreeSelect: typeof import('ant-design-vue/es')['TreeSelect']
     AUploadDragger: typeof import('ant-design-vue/es')['UploadDragger']
     AvatarConfig: typeof import('./src/components/AvatarConfig/index.vue')['default']
+    AvatarSelector: typeof import('./src/components/AvatarSelector/index.vue')['default']
     AvatarStats: typeof import('./src/components/AvatarStats/index.vue')['default']
     AvatarTestPage: typeof import('./src/components/AvatarTestPage/index.vue')['default']
     BubbleRenderer: typeof import('./src/components/ChatWindow/BubbleRenderer.vue')['default']
+    ChatSidebar: typeof import('./src/components/ChatSidebar/index.vue')['default']
     ChatWindow: typeof import('./src/components/ChatWindow/index.vue')['default']
     CitationLink: typeof import('./src/components/SearchResultThread/CitationLink.vue')['default']
     ColumnsEditor: typeof import('./src/components/PageTable/ColumnsEditor.vue')['default']
@@ -103,11 +106,13 @@ declare module 'vue' {
     ParsedDocViewer: typeof import('./src/components/FilePreview/ParsedDocViewer.vue')['default']
     PdfViewer: typeof import('./src/components/FilePreview/PdfViewer.vue')['default']
     QuickActionGuide: typeof import('./src/components/AvatarConfig/QuickActionGuide.vue')['default']
+    RatingDialog: typeof import('./src/components/RatingDialog/index.vue')['default']
     RelatedQuestions: typeof import('./src/components/SearchResultThread/RelatedQuestions.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     ScopeCell: typeof import('./src/components/PageTable/ScopeCell.vue')['default']
     SearchResultThread: typeof import('./src/components/SearchResultThread/index.vue')['default']
+    SessionSidebar: typeof import('./src/components/SessionSidebar/index.vue')['default']
     SourceCitation: typeof import('./src/components/ChatWindow/SourceCitation.vue')['default']
     TableFilter: typeof import('./src/components/TableFilter/index.vue')['default']
     TextFileViewer: typeof import('./src/components/FilePreview/TextFileViewer.vue')['default']

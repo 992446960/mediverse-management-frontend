@@ -83,8 +83,8 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
-  async function createNewSession(title: string = '新会话') {
-    const session = await createChatSession({ title })
+  async function createNewSession(title: string = '新会话', avatarId?: string) {
+    const session = await createChatSession({ title, avatar_id: avatarId })
     sessions.value.unshift(session)
     await selectSession(session.id)
     return session
