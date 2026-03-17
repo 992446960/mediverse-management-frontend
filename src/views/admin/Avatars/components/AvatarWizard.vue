@@ -121,10 +121,11 @@ import StepType from './steps/StepType.vue'
 import StepScope from './steps/StepScope.vue'
 import StepInfo from './steps/StepInfo.vue'
 import StepConfirm from './steps/StepConfirm.vue'
+import { useAvatarCreatePermission } from '@/composables/useAvatarCreatePermission'
 import type { AvatarWizardForm } from '@/types/avatar'
-import { AVATAR_TYPE_VALUES } from '@/types/avatar'
 
 const { t } = useI18n()
+const { defaultTypeForRole } = useAvatarCreatePermission()
 
 const steps = [
   { key: 'type', titleKey: 'avatar.wizard.selectType' },
@@ -133,11 +134,13 @@ const steps = [
   { key: 'confirm', titleKey: 'avatar.wizard.confirm' },
 ]
 
-const defaultForm: AvatarWizardForm = {
-  type: AVATAR_TYPE_VALUES[0],
-  name: '',
-  tags: [],
-  style: 'formal',
+function getDefaultForm(): AvatarWizardForm {
+  return {
+    type: defaultTypeForRole.value,
+    name: '',
+    tags: [],
+    style: 'formal',
+  }
 }
 
 interface Props {
@@ -152,7 +155,7 @@ const emit = defineEmits<{
 }>()
 
 const currentStep = ref(0)
-const form = ref<AvatarWizardForm>({ ...defaultForm })
+const form = ref<AvatarWizardForm>(getDefaultForm())
 const loading = ref(false)
 const submitLoading = ref(false)
 const stepScopeRef = ref<InstanceType<typeof StepScope> | null>(null)
@@ -189,7 +192,7 @@ watch(
   (val) => {
     if (val) {
       currentStep.value = 0
-      form.value = { ...defaultForm }
+      form.value = getDefaultForm()
       setCloseButtonAriaLabel()
     }
   }

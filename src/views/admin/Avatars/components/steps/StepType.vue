@@ -1,11 +1,7 @@
 <template>
   <div class="step-type">
     <div class="space-y-4">
-      <label
-        v-for="opt in AVATAR_WIZARD_TYPE_OPTIONS"
-        :key="opt.value"
-        class="block cursor-pointer group"
-      >
+      <label v-for="opt in allowedTypeOptions" :key="opt.value" class="block cursor-pointer group">
         <input
           type="radio"
           :value="opt.value"
@@ -54,15 +50,31 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { AVATAR_WIZARD_TYPE_OPTIONS, type AvatarWizardForm } from '@/types/avatar'
+import { useAvatarCreatePermission } from '@/composables/useAvatarCreatePermission'
+import type { AvatarWizardForm, AvatarType } from '@/types/avatar'
 
 const { t } = useI18n()
+const { allowedTypeOptions, isTypeAllowed } = useAvatarCreatePermission()
 
-defineProps<{
+const props = defineProps<{
   modelValue: AvatarWizardForm
 }>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: AvatarWizardForm]
 }>()
+
+// 科室管理员打开时，若当前选中 general 则自动重置为第一个允许的类型
+watch(
+  () => [props.modelValue.type, allowedTypeOptions.value] as const,
+  ([type, opts]) => {
+    if (type && opts.length && !isTypeAllowed(type as AvatarType)) {
+      const first = opts[0]
+      if (first) {
+        emit('update:modelValue', { ...props.modelValue, type: first.value })
+      }
+    }
+  },
+  { immediate: true }
+)
 </script>
