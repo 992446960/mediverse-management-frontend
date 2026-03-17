@@ -49,6 +49,13 @@
           <LocaleSwitcher />
           <a-dropdown :trigger="['click']" overlay-class-name="user-menu-overlay">
             <div class="user-dropdown-trigger group">
+              <a-avatar
+                :src="user?.avatar_url ? toAbsoluteFileUrl(user.avatar_url) : undefined"
+                :size="28"
+                class="user-avatar"
+              >
+                <template #icon><UserOutlined /></template>
+              </a-avatar>
               <span class="user-name">{{
                 user?.full_name || user?.username || t('common.user')
               }}</span>
@@ -92,6 +99,7 @@ import {
   UserOutlined,
   LogoutOutlined,
 } from '@ant-design/icons-vue'
+import { toAbsoluteFileUrl } from '@/api/upload'
 import type { ItemType } from 'ant-design-vue'
 
 const collapsed = ref(false)
@@ -265,6 +273,11 @@ watch(
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
   margin-left: 8px;
+}
+
+.header-right .user-avatar {
+  flex-shrink: 0;
+  margin-right: 8px;
 }
 
 .header-right .user-dropdown-trigger:hover {

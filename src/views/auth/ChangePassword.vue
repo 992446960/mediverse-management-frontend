@@ -14,93 +14,23 @@
         <p class="change-pwd-page__subtitle">{{ t('auth.changePasswordSubtitle') }}</p>
       </div>
 
-      <a-form
-        :model="formState"
-        name="change-password"
+      <ChangePasswordForm
+        show-skip
+        size="large"
         class="change-pwd-page__form"
-        layout="vertical"
-        @finish="handleChangePassword"
-      >
-        <a-form-item
-          :label="t('auth.oldPassword')"
-          name="old_password"
-          :rules="[{ required: true, message: t('auth.oldPasswordRequired') }]"
-        >
-          <a-input-password
-            v-model:value="formState.old_password"
-            :placeholder="t('auth.oldPasswordPlaceholder')"
-            size="large"
-          >
-            <template #prefix>
-              <LockOutlined />
-            </template>
-          </a-input-password>
-        </a-form-item>
-
-        <a-form-item
-          :label="t('auth.newPassword')"
-          name="new_password"
-          :rules="[{ required: true, message: t('auth.newPasswordRequired') }]"
-        >
-          <a-input-password
-            v-model:value="formState.new_password"
-            :placeholder="t('auth.newPasswordPlaceholder')"
-            size="large"
-          >
-            <template #prefix>
-              <LockOutlined />
-            </template>
-          </a-input-password>
-        </a-form-item>
-
-        <a-form-item
-          :label="t('auth.confirmPassword')"
-          name="confirm_password"
-          :rules="[{ required: true, message: t('auth.confirmPasswordRequired') }]"
-        >
-          <a-input-password
-            v-model:value="formState.confirm_password"
-            :placeholder="t('auth.confirmPasswordPlaceholder')"
-            size="large"
-          >
-            <template #prefix>
-              <LockOutlined />
-            </template>
-          </a-input-password>
-        </a-form-item>
-
-        <a-form-item>
-          <a-button
-            type="primary"
-            html-type="submit"
-            class="change-pwd-page__submit-btn"
-            :loading="loading"
-            size="large"
-            block
-          >
-            {{ t('auth.confirmChangeButton') }}
-          </a-button>
-        </a-form-item>
-      </a-form>
-
-      <div class="change-pwd-page__skip">
-        <button type="button" class="change-pwd-page__skip-link" @click="goLater">
-          {{ t('auth.changePasswordSkip') }}
-        </button>
-        <p class="change-pwd-page__skip-hint">{{ t('auth.changePasswordSkipHint') }}</p>
-      </div>
+        @success="onSuccess"
+        @skip="goLater"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { message } from 'ant-design-vue'
-import { LockOutlined } from '@ant-design/icons-vue'
-import { authApi } from '@/api/auth'
 import { useAuthStore } from '@/stores/auth'
 import { useThemeStore } from '@/stores/theme'
 import { setSkipChangePassword } from '@/utils/auth'
+import ChangePasswordForm from '@/components/ChangePasswordForm/index.vue'
 import ThemeSwitcher from '@/components/ThemeSwitcher/index.vue'
 
 const router = useRouter()
@@ -111,39 +41,9 @@ const themeStore = useThemeStore()
 
 const isDark = computed(() => themeStore.isDark)
 
-const formState = reactive({
-  old_password: '',
-  new_password: '',
-  confirm_password: '',
-})
-
-const loading = ref(false)
-
-async function handleChangePassword() {
-  if (formState.new_password !== formState.confirm_password) {
-    message.error(t('auth.passwordMismatch'))
-    return
-  }
-  if (formState.new_password.length < 8) {
-    message.error(t('auth.passwordMinLength'))
-    return
-  }
-
-  loading.value = true
-  try {
-    await authApi.changePassword({
-      old_password: formState.old_password,
-      new_password: formState.new_password,
-      confirm_password: formState.confirm_password,
-    })
-    message.success(t('auth.changePasswordSuccess'))
-    await authStore.logout()
-    router.push('/login')
-  } catch (error: unknown) {
-    console.error(error)
-  } finally {
-    loading.value = false
-  }
+async function onSuccess() {
+  await authStore.logout()
+  router.push('/login')
 }
 
 function goLater() {
@@ -249,39 +149,6 @@ function goLater() {
 
 .change-pwd-page__form :deep(.ant-input-password .ant-input-password-icon) {
   color: var(--login-icon-color);
-}
-
-.change-pwd-page__submit-btn {
-  margin-top: var(--spacing-sm);
-}
-
-.change-pwd-page__skip {
-  text-align: center;
-  margin-top: var(--spacing-lg);
-  padding-top: var(--spacing-lg);
-  border-top: 1px solid var(--color-border);
-}
-
-.change-pwd-page__skip-link {
-  color: var(--color-primary);
-  cursor: pointer;
-  font-size: 14px;
-  background: none;
-  border: none;
-  padding: 0;
-  margin: 0;
-  font: inherit;
-  text-decoration: underline;
-}
-
-.change-pwd-page__skip-link:hover {
-  color: var(--color-primary-hover);
-}
-
-.change-pwd-page__skip-hint {
-  margin: var(--spacing-sm) 0 0;
-  font-size: 12px;
-  color: var(--color-text-tertiary);
 }
 
 /* 覆盖浏览器 autofill 默认背景，与登录页一致 */

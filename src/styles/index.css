@@ -59,7 +59,7 @@ body {
 
 .app-container {
   background-color: var(--color-bg-container);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
 }
 

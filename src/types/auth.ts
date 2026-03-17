@@ -9,7 +9,9 @@ export interface User {
   avatar_url?: string
   role: UserRole
   org_id?: string
+  org_name?: string
   dept_id?: string
+  dept_name?: string
   is_active: boolean
   must_change_pwd: boolean
   has_avatar: boolean
@@ -72,3 +74,6 @@ export interface UpdateMeParams {
   email?: string
   remark?: string
 }
+
+/** PUT /auth/me 的 data：可能直接为用户对象，或 { user } 包裹 */
+export type UpdateMeResponse = User | { user: User }

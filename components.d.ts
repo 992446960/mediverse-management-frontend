@@ -1,4 +1,3 @@
-/* eslint-disable */
 // @ts-nocheck
 // biome-ignore lint: disable
 // oxlint-disable
@@ -12,6 +11,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AAlert: typeof import('ant-design-vue/es')['Alert']
+    AAvatar: typeof import('ant-design-vue/es')['Avatar']
     ABreadcrumb: typeof import('ant-design-vue/es')['Breadcrumb']
     ABreadcrumbItem: typeof import('ant-design-vue/es')['BreadcrumbItem']
     AButton: typeof import('ant-design-vue/es')['Button']
@@ -74,6 +74,7 @@ declare module 'vue' {
     AvatarStats: typeof import('./src/components/AvatarStats/index.vue')['default']
     AvatarTestPage: typeof import('./src/components/AvatarTestPage/index.vue')['default']
     BubbleRenderer: typeof import('./src/components/ChatWindow/BubbleRenderer.vue')['default']
+    ChangePasswordForm: typeof import('./src/components/ChangePasswordForm/index.vue')['default']
     ChatSidebar: typeof import('./src/components/ChatSidebar/index.vue')['default']
     ChatWindow: typeof import('./src/components/ChatWindow/index.vue')['default']
     CitationLink: typeof import('./src/components/SearchResultThread/CitationLink.vue')['default']
