@@ -201,6 +201,7 @@ export default {
     uploadSelectDirectoryLabel: 'Select directory',
     uploadQueueHint:
       'You can drag more files to add; category and directory apply to files not yet started.',
+    uploadStart: 'Upload',
     selectDirectory: 'Select directory',
     uploadDragText: 'Click or drag files here to upload',
     uploadAcceptHint: 'Accepted formats: {accept}',

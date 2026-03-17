@@ -49,19 +49,30 @@
     <a-modal
       v-model:open="uploadModalVisible"
       :title="t('knowledge.uploadFile')"
-      :footer="null"
       width="560px"
       :mask-closable="false"
       @cancel="onUploadModalCancel"
     >
       <FileUploader
+        ref="fileUploaderRef"
         :owner-type="props.ownerType"
         :owner-id="props.ownerId"
         :queue="uploadQueue"
         :tree-data="treeData"
-        @add-to-queue="(item) => uploadQueue.value.push(item)"
+        @add-to-queue="addToQueue"
         @success="onUploadSuccess"
       />
+      <template #footer>
+        <a-button @click="onUploadModalCancel">{{ t('common.cancel') }}</a-button>
+        <a-button
+          type="primary"
+          :loading="isUploading"
+          :disabled="pendingCount === 0"
+          @click="onUploadStart"
+        >
+          {{ t('knowledge.uploadStart') }}
+        </a-button>
+      </template>
     </a-modal>
   </div>
 </template>
@@ -160,15 +171,26 @@ function getStatusLabel(status: FileStatus): string {
 }
 
 // ----- 上传队列与弹窗 -----
+const fileUploaderRef = ref<InstanceType<typeof FileUploader> | null>(null)
 const uploadQueue = ref<UploadQueueItem[]>([])
 const uploadModalVisible = ref(false)
 
+const pendingCount = computed(() => uploadQueue.value.filter((i) => i.status === 'pending').length)
+const isUploading = computed(() => uploadQueue.value.some((i) => i.status === 'uploading'))
 const uploadingCount = computed(
   () => uploadQueue.value.filter((i) => i.status === 'pending' || i.status === 'uploading').length
 )
 
 function openUploadModal() {
   uploadModalVisible.value = true
+}
+
+function addToQueue(item: UploadQueueItem) {
+  uploadQueue.value.push(item)
+}
+
+function onUploadStart() {
+  fileUploaderRef.value?.startUpload?.()
 }
 
 function onUploadModalCancel() {

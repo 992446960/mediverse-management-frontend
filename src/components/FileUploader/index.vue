@@ -78,7 +78,7 @@ import type { OwnerType, DirectoryNode } from '@/types/knowledge'
 import type { UploadFileResult } from '@/types/knowledge'
 import type { UploadQueueItem } from './types'
 
-const ACCEPT = '.pdf,.txt,.csv,.json,.md,.xlsx,.docx'
+const ACCEPT = '.pdf,.txt,.csv,.json,.jsonl,.md,.xlsx,.docx'
 const MAX_SIZE_DEFAULT = 50 * 1024 * 1024
 const MAX_COUNT_DEFAULT = 20
 const CONCURRENT = 3
@@ -194,7 +194,6 @@ function beforeUpload(file: File): boolean {
     percent: 0,
   }
   emit('add-to-queue', newItem)
-  processQueue()
   return false
 }
 
@@ -202,14 +201,44 @@ function noopRequest() {
   // 使用 customRequest 阻止默认上传，实际上传由 processQueue 驱动
 }
 
-let processing = false
-/** 模拟进度定时器（fetch 适配器下无 onUploadProgress 时仍能看到进度变化） */
-let progressTimer: ReturnType<typeof setInterval> | null = null
+/** 启动单个文件上传，完成后调用 processQueue 补充下一批 */
+function startOneUpload(item: UploadQueueItem) {
+  item.status = 'uploading'
+  item.percent = 0
 
+  const progressTimer = setInterval(() => {
+    if (item.status !== 'uploading') return
+    item.percent = Math.min(90, item.percent + 8)
+  }, 150)
+
+  const dirId =
+    uploadMode.value === 'manual' && selectedDirId.value ? selectedDirId.value : undefined
+  uploadFile(props.ownerType, props.ownerId, item.file, dirId, {
+    onUploadProgress: (e) => {
+      if (e.total && e.total > 0) item.percent = Math.round((e.loaded / e.total) * 100)
+    },
+  })
+    .then((result) => {
+      item.status = 'success'
+      item.percent = 100
+      item.result = result
+      processQueue()
+    })
+    .catch((err: Error) => {
+      item.status = 'fail'
+      item.error = err.message || t('knowledge.uploadFailed')
+      processQueue()
+    })
+    .finally(() => {
+      clearInterval(progressTimer)
+    })
+}
+
+/** 并发控制：最多同时上传 CONCURRENT 个，完成一个从队列取下一个 */
 function processQueue() {
-  if (processing) return
   const pending = props.queue.filter((i) => i.status === 'pending')
   const uploading = props.queue.filter((i) => i.status === 'uploading')
+
   if (pending.length === 0 && uploading.length === 0) {
     const allDone = props.queue.every((i) => i.status === 'success' || i.status === 'fail')
     if (allDone) {
@@ -223,53 +252,17 @@ function processQueue() {
     }
     return
   }
-  if (uploading.length >= CONCURRENT) return
 
-  const next = pending[0]
-  if (!next) return
-  processing = true
-  next.status = 'uploading'
-  next.percent = 0
+  const slotsAvailable = CONCURRENT - uploading.length
+  if (slotsAvailable <= 0 || pending.length === 0) return
 
-  if (progressTimer) clearInterval(progressTimer)
-  progressTimer = setInterval(() => {
-    if (next.status !== 'uploading') return
-    next.percent = Math.min(90, next.percent + 8)
-  }, 150)
-
-  const dirId =
-    uploadMode.value === 'manual' && selectedDirId.value ? selectedDirId.value : undefined
-  uploadFile(props.ownerType, props.ownerId, next.file, dirId, {
-    onUploadProgress: (e) => {
-      if (e.total && e.total > 0) next.percent = Math.round((e.loaded / e.total) * 100)
-    },
-  })
-    .then((result) => {
-      next.status = 'success'
-      next.percent = 100
-      next.result = result
-      processQueue()
-    })
-    .catch((err: Error) => {
-      next.status = 'fail'
-      next.error = err.message || t('knowledge.uploadFailed')
-      processQueue()
-    })
-    .finally(() => {
-      if (progressTimer) {
-        clearInterval(progressTimer)
-        progressTimer = null
-      }
-      processing = false
-    })
+  const toStart = pending.slice(0, slotsAvailable)
+  for (const item of toStart) {
+    startOneUpload(item)
+  }
 }
 
-watch(
-  () => props.queue.length,
-  () => {
-    const hasPending = props.queue.some((i) => i.status === 'pending' || i.status === 'uploading')
-    if (hasPending) processQueue()
-  },
-  { flush: 'post' }
-)
+defineExpose({
+  startUpload: () => processQueue(),
+})
 </script>

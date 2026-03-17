@@ -8,7 +8,7 @@
       class="page-table__toolbar h-[52px] px-6 py-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 shrink-0"
     >
       <div class="flex items-center gap-2">
-        <span v-if="(tableConf?.total ?? 0) > 0" class="text-sm text-slate-500">
+        <span class="text-sm text-slate-500">
           {{ t('common.totalCount', { count: tableConf?.total ?? 0 }) }}
         </span>
         <a-button type="text" :disabled="tableConf?.isLoading" @click="onRefresh">

@@ -33,7 +33,7 @@ export function uploadFile(
     return Promise.reject(new Error('uploadFile requires a native File object'))
   }
   const form = new FormData()
-  form.append('file', file)
+  form.append('files', file)
   if (dirId) form.append('dir_id', dirId)
   return request
     .post<

@@ -37,7 +37,7 @@ export function useFileStatusPoll(
           console.error(`Failed to poll status for file ${id}:`, error)
         }
       }
-    }, 3000)
+    }, 30_000)
   }
 
   const stopPoll = () => {
