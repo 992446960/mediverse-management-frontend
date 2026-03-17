@@ -30,11 +30,13 @@ export interface UserListParams extends PaginationParams {
   status?: 'active' | 'inactive'
 }
 
-/** 新增用户请求体（与 API POST /users 一致，V2 不含 phone/email） */
+/** 新增用户请求体（与 API POST /users 一致） */
 export interface CreateUserPayload {
   username: string
   real_name: string
   password?: string
+  phone?: string
+  email?: string
   org_id?: string
   dept_id?: string
   roles: UserRole[]
@@ -49,6 +51,8 @@ export type CreateUserResponse = UserListItem
 export interface UpdateUserPayload {
   real_name?: string
   avatar_url?: string
+  phone?: string
+  email?: string
   org_id?: string
   dept_id?: string
   roles?: UserRole[]

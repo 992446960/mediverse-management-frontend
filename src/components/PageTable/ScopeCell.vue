@@ -40,12 +40,15 @@
     />
   </template>
   <template v-else-if="column.scopeType === '_image'">
-    <a-image
-      :src="getCellValue(record) as string"
-      :width="column.imageWidth ?? 40"
-      :height="column.imageHeight ?? 40"
-      :preview-mask="false"
-    />
+    <template v-if="imageSrc">
+      <a-image
+        :src="imageEffectiveSrc"
+        :width="column.imageWidth ?? 40"
+        :height="column.imageHeight ?? 40"
+        :fallback="IMAGE_FALLBACK_URL"
+        @error="imageEffectiveSrc = IMAGE_FALLBACK_URL"
+      />
+    </template>
   </template>
   <template v-else-if="column.scopeType === '_numInput'">
     <a-input-number
@@ -65,7 +68,12 @@
 </template>
 
 <script setup lang="ts">
+import errorImgUrl from '@/assets/error_img.png'
+import { toAbsoluteFileUrl } from '@/api/upload'
 import type { PageTableColumnConfig } from './types'
+
+/** 有数据但加载失败时使用的占位图 */
+const IMAGE_FALLBACK_URL = errorImgUrl
 
 const props = defineProps<{
   column: PageTableColumnConfig
@@ -73,14 +81,35 @@ const props = defineProps<{
   index: number
 }>()
 
+const cellProp = computed(() => {
+  const p = props.column.prop ?? (props.column as { dataIndex?: string }).dataIndex
+  return (Array.isArray(p) ? p.join('.') : p) as string
+})
+
 const tags = computed(() => {
-  const v = props.record[props.column.prop!]
+  const v = cellProp.value ? props.record[cellProp.value] : undefined
   return Array.isArray(v) ? v : v ? [v] : []
 })
 
 function getCellValue(record: Record<string, any>): unknown {
-  const prop = props.column.prop
-  if (!prop) return undefined
-  return record[prop]
+  if (!cellProp.value) return undefined
+  return record[cellProp.value]
 }
+
+const imageSrc = computed(() => {
+  const v = getCellValue(props.record)
+  return typeof v === 'string' && v.trim() ? v.trim() : ''
+})
+
+const imageDisplayUrl = computed(() => toAbsoluteFileUrl(imageSrc.value))
+
+/** 实际展示的图片 src，加载失败时切换为 fallback */
+const imageEffectiveSrc = ref('')
+watch(
+  () => imageDisplayUrl.value,
+  (url) => {
+    imageEffectiveSrc.value = url
+  },
+  { immediate: true }
+)
 </script>

@@ -119,8 +119,8 @@ export const userHandlers = [
       username: body.username.trim(),
       real_name: body.real_name.trim(),
       avatar_url: undefined,
-      phone: undefined,
-      email: undefined,
+      phone: body.phone?.trim() || undefined,
+      email: body.email?.trim() || undefined,
       org_id: orgId,
       org_name: org?.name ?? '',
       dept_id: deptId,
@@ -175,6 +175,8 @@ export const userHandlers = [
     }
     if (body.remark !== undefined) cur.remark = body.remark?.trim()
     if (body.status === 'active' || body.status === 'inactive') cur.status = body.status
+    if (body.phone !== undefined) cur.phone = body.phone?.trim() || undefined
+    if (body.email !== undefined) cur.email = body.email?.trim() || undefined
     return HttpResponse.json({
       code: 0,
       message: 'ok',

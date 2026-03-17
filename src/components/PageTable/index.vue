@@ -206,6 +206,7 @@ const antdvColumns = computed<ColumnsType>(() => {
     title: c.label,
     dataIndex: c.prop,
     key: c._id ?? c.prop ?? String(Math.random()),
+    prop: c.prop,
     width: c.width,
     fixed: c.fixed,
     align: c.align,

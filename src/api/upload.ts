@@ -8,10 +8,13 @@ interface UploadAvatarResponse {
 
 /**
  * 将接口返回的相对路径 url（如 /files/xxx.jpg）拼接为完整地址，用于 img 回显等。
- * 优先使用 VITE_FILE_BASE_URL，否则从 VITE_API_BASE_URL 解析 origin；浏览器环境下再回退到当前页 origin。
+ * - 已是 http/https 网络地址：直接返回
+ * - 相对路径：优先 VITE_FILE_BASE_URL，否则用 VITE_API_BASE_URL 的 origin，再回退到 window.location.origin
  */
 export function toAbsoluteFileUrl(path: string): string {
-  if (!path || !path.startsWith('/')) return path
+  if (!path) return path
+  if (path.startsWith('http://') || path.startsWith('https://')) return path
+  if (!path.startsWith('/')) return path
   const fileBase = import.meta.env.VITE_FILE_BASE_URL
   if (fileBase) return fileBase.replace(/\/$/, '') + path
   try {
