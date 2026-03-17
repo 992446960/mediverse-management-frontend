@@ -175,8 +175,12 @@ const fileUploaderRef = ref<InstanceType<typeof FileUploader> | null>(null)
 const uploadQueue = ref<UploadQueueItem[]>([])
 const uploadModalVisible = ref(false)
 
-const pendingCount = computed(() => uploadQueue.value.filter((i) => i.status === 'pending').length)
-const isUploading = computed(() => uploadQueue.value.some((i) => i.status === 'uploading'))
+const pendingCount = computed(
+  () => uploadQueue.value.filter((i) => i.status === 'pending').length
+)
+const isUploading = computed(
+  () => uploadQueue.value.some((i) => i.status === 'uploading')
+)
 const uploadingCount = computed(
   () => uploadQueue.value.filter((i) => i.status === 'pending' || i.status === 'uploading').length
 )
