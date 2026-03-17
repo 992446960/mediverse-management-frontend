@@ -40,6 +40,7 @@ export const menuConfig: MenuConfig[] = [
     label: 'menu.myWorkbench',
     icon: () => h(UserOutlined),
     showWhenAvatar: 'expert',
+    requiredRoles: ['user'],
     children: [
       { key: 'my-files', label: 'menu.files', path: '/my/files' },
       { key: 'my-knowledge', label: 'menu.knowledgeCards', path: '/my/knowledge-cards' },
@@ -51,6 +52,7 @@ export const menuConfig: MenuConfig[] = [
     label: 'menu.deptWorkbench',
     icon: () => h(TeamOutlined),
     showWhenAvatar: 'dept',
+    requiredRoles: ['dept_admin'],
     children: [
       { key: 'dept-files', label: 'menu.files', path: '/dept/files' },
       { key: 'dept-knowledge', label: 'menu.knowledgeCards', path: '/dept/knowledge-cards' },
@@ -62,6 +64,7 @@ export const menuConfig: MenuConfig[] = [
     label: 'menu.orgWorkbench',
     icon: () => h(BankOutlined),
     showWhenAvatar: 'org',
+    requiredRoles: ['org_admin'],
     children: [
       { key: 'org-files', label: 'menu.files', path: '/org/files' },
       { key: 'org-knowledge', label: 'menu.knowledgeCards', path: '/org/knowledge-cards' },

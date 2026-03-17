@@ -41,10 +41,8 @@ export function createPermissionGuard(router: Router) {
       return '/change-password'
     }
 
-    // 开发环境：系统管理员拥有所有菜单的路由，不做角色校验
-    const isDevSysAdmin =
-      import.meta.env.DEV && authStore.user && hasAnyRole(authStore.user, ['sysadmin'])
-    if (!isDevSysAdmin && to.meta.requiredRoles) {
+    // 按权限矩阵校验路由（所有环境统一，无开发环境 bypass）
+    if (to.meta.requiredRoles) {
       const requiredRoles = to.meta.requiredRoles as UserRole[]
       const hasPermission = hasAnyRole(authStore.user, requiredRoles)
       if (!hasPermission) {

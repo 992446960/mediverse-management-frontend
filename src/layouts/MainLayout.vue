@@ -103,30 +103,29 @@ const router = useRouter()
 const { t } = useI18n()
 const authStore = useAuthStore()
 const themeStore = useThemeStore()
-const { checkRoles, isSysAdmin } = usePermission()
+const { checkRoles } = usePermission()
 
 const user = computed(() => authStore.user)
-
-// 开发环境且为系统管理员：拥有所有菜单路由（含个人工作台）
-const isDevSysAdmin = computed(() => import.meta.env.DEV && isSysAdmin.value)
 
 const breadcrumbs = computed(() => {
   return currentRoute.matched.filter((item) => item.meta && item.meta.title)
 })
 
-// Filter menu items: 工作台按 user.has_*_avatar，其余按 requiredRoles
-// skipRoleCheck：开发环境 sysadmin 时不再按角色过滤，展示除个人工作台外的全部菜单
-const filterMenu = (items: any[], skipRoleCheck = false): ItemType[] => {
+// Filter menu items: 工作台按 user.has_*_avatar + requiredRoles（权限矩阵），其余按 requiredRoles
+const filterMenu = (items: any[]): ItemType[] => {
   return items
     .filter((item) => {
       if (item.showWhenAvatar) {
-        if (item.showWhenAvatar === 'expert') return authStore.hasExpertAvatar
-        if (item.showWhenAvatar === 'dept') return authStore.hasDeptAvatar
-        if (item.showWhenAvatar === 'org') return authStore.hasOrgAvatar
+        let avatarOk = false
+        if (item.showWhenAvatar === 'expert') avatarOk = authStore.hasExpertAvatar
+        else if (item.showWhenAvatar === 'dept') avatarOk = authStore.hasDeptAvatar
+        else if (item.showWhenAvatar === 'org') avatarOk = authStore.hasOrgAvatar
+        if (!avatarOk) return false
+        // 工作台需同时满足角色：我的工作台仅 user，机构工作台仅 org_admin，科室工作台仅 dept_admin
+        if (item.requiredRoles && !checkRoles(item.requiredRoles)) return false
+        return true
       }
-      if (!skipRoleCheck && item.requiredRoles && !checkRoles(item.requiredRoles)) {
-        return false
-      }
+      if (item.requiredRoles && !checkRoles(item.requiredRoles)) return false
       return true
     })
     .map((item) => {
@@ -137,7 +136,7 @@ const filterMenu = (items: any[], skipRoleCheck = false): ItemType[] => {
         title: t(item.label),
       }
       if (item.children) {
-        newItem.children = filterMenu(item.children, skipRoleCheck)
+        newItem.children = filterMenu(item.children)
       }
       return newItem
     })
@@ -148,7 +147,7 @@ const filterMenu = (items: any[], skipRoleCheck = false): ItemType[] => {
     })
 }
 
-const menuItems = computed(() => filterMenu(menuConfig, isDevSysAdmin.value))
+const menuItems = computed(() => filterMenu(menuConfig))
 
 const handleMenuClick = ({ key }: { key: string }) => {
   const findPath = (items: any[]): string | undefined => {

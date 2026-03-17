@@ -5,15 +5,19 @@ import type { UserListItem } from '@/types/user'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 
-/** 为登录/me 返回的用户注入 has_*_avatar（与 API 设计一致，mock 按角色推导） */
+/** 为登录/me 返回的用户注入 has_*_avatar（按权限矩阵：系统管理员不展示工作台） */
 function withWorkbenchAvatars(u: UserListItem) {
   const roles = u.roles || []
+  const isPureUser =
+    roles.includes('user') &&
+    !roles.includes('sysadmin') &&
+    !roles.includes('org_admin') &&
+    !roles.includes('dept_admin')
   return {
     ...u,
-    has_expert_avatar: true,
-    has_dept_avatar:
-      roles.includes('sysadmin') || roles.includes('org_admin') || roles.includes('dept_admin'),
-    has_org_avatar: roles.includes('sysadmin') || roles.includes('org_admin'),
+    has_expert_avatar: isPureUser,
+    has_dept_avatar: roles.includes('dept_admin'),
+    has_org_avatar: roles.includes('org_admin'),
   }
 }
 
