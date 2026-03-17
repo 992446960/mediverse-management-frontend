@@ -15,7 +15,7 @@ export const users: UserListItem[] = [
     dept_name: '内科',
     roles: ['sysadmin'],
     status: 'active',
-    has_avatar: true,
+    has_expert_avatar: true,
     created_at: '2023-01-01T00:00:00Z',
   },
   {
@@ -30,7 +30,7 @@ export const users: UserListItem[] = [
     dept_name: '内科',
     roles: ['org_admin'],
     status: 'active',
-    has_avatar: true,
+    has_expert_avatar: true,
     created_at: '2023-01-02T00:00:00Z',
   },
   {
@@ -45,7 +45,7 @@ export const users: UserListItem[] = [
     dept_name: '内科',
     roles: ['dept_admin'],
     status: 'active',
-    has_avatar: true,
+    has_expert_avatar: true,
     created_at: '2023-01-03T00:00:00Z',
   },
   {
@@ -60,7 +60,7 @@ export const users: UserListItem[] = [
     dept_name: '内科',
     roles: ['user'],
     status: 'active',
-    has_avatar: true,
+    has_expert_avatar: true,
     created_at: '2023-01-04T00:00:00Z',
   },
   {
@@ -75,7 +75,7 @@ export const users: UserListItem[] = [
     dept_name: '外科',
     roles: ['user'],
     status: 'active',
-    has_avatar: false,
+    has_expert_avatar: false,
     created_at: '2023-01-05T00:00:00Z',
   },
   {
@@ -89,7 +89,7 @@ export const users: UserListItem[] = [
     dept_name: '儿科',
     roles: ['user'],
     status: 'inactive',
-    has_avatar: false,
+    has_expert_avatar: false,
     created_at: '2023-01-06T00:00:00Z',
   },
   {
@@ -104,7 +104,7 @@ export const users: UserListItem[] = [
     dept_name: '内科',
     roles: ['org_admin'],
     status: 'active',
-    has_avatar: false,
+    has_expert_avatar: false,
     created_at: '2023-01-07T00:00:00Z',
   },
   {
@@ -118,7 +118,7 @@ export const users: UserListItem[] = [
     dept_name: '内分泌科',
     roles: ['dept_admin'],
     status: 'active',
-    has_avatar: false,
+    has_expert_avatar: false,
     created_at: '2023-01-08T00:00:00Z',
   },
   {
@@ -133,7 +133,7 @@ export const users: UserListItem[] = [
     dept_name: '内科',
     roles: ['user'],
     status: 'active',
-    has_avatar: false,
+    has_expert_avatar: false,
     created_at: '2023-01-09T00:00:00Z',
   },
   {
@@ -147,7 +147,7 @@ export const users: UserListItem[] = [
     dept_name: '心血管科',
     roles: ['user', 'dept_admin'],
     status: 'active',
-    has_avatar: false,
+    has_expert_avatar: false,
     created_at: '2023-01-10T00:00:00Z',
   },
   {
@@ -161,7 +161,7 @@ export const users: UserListItem[] = [
     dept_name: '内科',
     roles: ['user'],
     status: 'active',
-    has_avatar: false,
+    has_expert_avatar: false,
     created_at: '2023-01-11T00:00:00Z',
   },
 ]

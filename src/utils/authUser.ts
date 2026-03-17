@@ -75,7 +75,6 @@ export function normalizeAuthUser(raw: unknown): User {
     dept_name: typeof o.dept_name === 'string' ? o.dept_name : undefined,
     is_active,
     must_change_pwd: o.must_change_pwd === true,
-    has_avatar: o.has_avatar === true,
     has_expert_avatar,
     has_dept_avatar,
     has_org_avatar,

@@ -16,7 +16,8 @@ export interface UserListItem {
   roles: UserRole[]
   remark?: string
   status: 'active' | 'inactive'
-  has_avatar?: boolean
+  /** 是否显示「我的工作台」 */
+  has_expert_avatar?: boolean
   created_at: string
 }
 

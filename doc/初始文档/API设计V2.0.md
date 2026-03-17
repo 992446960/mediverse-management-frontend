@@ -110,14 +110,44 @@ Content-Type: application/json
     "avatar_url": "https://...",
     "org_id": "uuid",
     "dept_id": "uuid",
-    "roles": ["user", "dept_admin"],
+    "roles": ["user", "sysadmin", "org_admin", "dept_admin"],
     "must_change_pwd": false,
-    "has_expert_avatar": true, //决定是否显示「我的工作台」
-    "has_dept_avatar": false, //决定是否显示「科室工作台」
-    "has_org_avatar": true //决定是否显示「机构工作台」
+    "phone": "13800138000",
+    "email": "zhangsan@example.com",
+    "remark": "备注信息",
+    "status": "active",
+    "failed_login_count": 0,
+    "locked_until": null,
+    "org_name": "XX 医院",
+    "dept_name": "内科",
+    "has_expert_avatar": true,
+    "has_dept_avatar": false,
+    "has_org_avatar": true
   }
 }
 ```
+
+| user 字段 | 类型 | 说明 |
+|-----------|------|------|
+| id | string | 用户 ID |
+| username | string | 用户名 |
+| real_name | string | 真实姓名 |
+| avatar_url | string | 头像 URL |
+| org_id | string | 机构 ID |
+| dept_id | string | 科室 ID |
+| roles | string[] | 角色列表：user / sysadmin / org_admin / dept_admin |
+| must_change_pwd | boolean | 是否必须修改密码 |
+| phone | string | 手机号 |
+| email | string | 邮箱 |
+| remark | string | 备注 |
+| status | string | active / inactive |
+| failed_login_count | number | 失败登录次数 |
+| locked_until | string \| null | 锁定截止时间 |
+| org_name | string | 机构名称 |
+| dept_name | string | 科室名称 |
+| has_expert_avatar | boolean | 是否显示「我的工作台」 |
+| has_dept_avatar | boolean | 是否显示「科室工作台」 |
+| has_org_avatar | boolean | 是否显示「机构工作台」 |
 
 **错误场景**
 

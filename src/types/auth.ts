@@ -14,7 +14,6 @@ export interface User {
   dept_name?: string
   is_active: boolean
   must_change_pwd: boolean
-  has_avatar: boolean
   /** 是否显示「我的工作台」 */
   has_expert_avatar: boolean
   /** 是否显示「科室工作台」 */
