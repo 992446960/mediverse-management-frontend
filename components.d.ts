@@ -68,6 +68,7 @@ declare module 'vue' {
     ATimelineItem: typeof import('ant-design-vue/es')['TimelineItem']
     ATooltip: typeof import('ant-design-vue/es')['Tooltip']
     ATreeSelect: typeof import('ant-design-vue/es')['TreeSelect']
+    AUpload: typeof import('ant-design-vue/es')['Upload']
     AUploadDragger: typeof import('ant-design-vue/es')['UploadDragger']
     AvatarConfig: typeof import('./src/components/AvatarConfig/index.vue')['default']
     AvatarSelector: typeof import('./src/components/AvatarSelector/index.vue')['default']
