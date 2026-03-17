@@ -73,6 +73,7 @@ const handleLogin = async () => {
 
 <template>
   <div class="login-container" :class="{ 'is-dark': isDark }">
+    <div class="login-bg-image" aria-hidden="true" />
     <div class="bg-orb bg-orb--1" aria-hidden="true" />
     <div class="bg-orb bg-orb--2" aria-hidden="true" />
     <div class="bg-orb bg-orb--3" aria-hidden="true" />
@@ -169,9 +170,30 @@ const handleLogin = async () => {
   overflow: hidden;
 }
 
+/* ── Background image（科技感数据中心图，cover 适配各尺寸）── */
+.login-bg-image {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: url('/login-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+.login-bg-image::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(2, 6, 23, 0.5) 0%, rgba(2, 6, 23, 0.65) 100%);
+  pointer-events: none;
+}
+
 /* ── Background orbs ── */
 .bg-orb {
   position: absolute;
+  z-index: 0;
   border-radius: 50%;
   filter: blur(80px);
   pointer-events: none;
