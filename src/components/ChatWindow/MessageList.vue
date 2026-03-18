@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { h, computed } from 'vue'
 import { BubbleList, Bubble } from 'ant-design-x-vue'
 import BubbleRenderer from './BubbleRenderer.vue'
 import ThinkingProcess from './ThinkingProcess.vue'
 import SourceCitation from './SourceCitation.vue'
+import SkillCallDisplay from './SkillCallDisplay.vue'
 import type { Message } from '@/types/chat'
+import { getMessageText } from '@/types/chat'
 import { UserOutlined, RobotOutlined } from '@ant-design/icons-vue'
 
 const props = defineProps<{
@@ -16,12 +18,13 @@ const items = computed(() => {
   return props.messages.map((msg) => ({
     key: msg.id,
     role: msg.role,
-    content: msg.content,
-    thinking_steps: msg.thinking_steps,
+    content: getMessageText(msg),
+    thinking_process: msg.thinking_process,
+    tool_calls: msg.tool_calls,
     citations: msg.citations,
     status: msg.status,
     loading: msg.status === 'streaming',
-    avatar: msg.role === 'user' ? { icon: UserOutlined } : { icon: RobotOutlined },
+    avatar: msg.role === 'user' ? { icon: h(UserOutlined) } : { icon: h(RobotOutlined) },
   }))
 })
 
@@ -29,13 +32,13 @@ const roles = {
   user: {
     placement: 'end',
     variant: 'shadow',
-    avatar: { icon: UserOutlined, style: { backgroundColor: '#87d068' } },
+    avatar: { icon: h(UserOutlined), style: { backgroundColor: '#87d068' } },
   },
   assistant: {
     placement: 'start',
     variant: 'outlined',
-    avatar: { icon: RobotOutlined, style: { backgroundColor: '#1890ff' } },
-    typing: { step: 5, interval: 20 }, // Typing effect configuration
+    avatar: { icon: h(RobotOutlined), style: { backgroundColor: '#1890ff' } },
+    typing: { step: 5, interval: 20 },
   },
 }
 </script>
@@ -55,35 +58,32 @@ const roles = {
             <div class="flex flex-col gap-2">
               <!-- Thinking Process -->
               <ThinkingProcess
-                v-if="item.thinking_steps && item.thinking_steps.length > 0"
-                :steps="item.thinking_steps"
+                v-if="item.thinking_process && item.thinking_process.length > 0"
+                :steps="item.thinking_process"
+              />
+
+              <!-- Skill Call Display (tool_calls, 仅历史消息) -->
+              <SkillCallDisplay
+                v-if="item.tool_calls && item.tool_calls.length > 0 && !item.loading"
+                :tool-calls="item.tool_calls"
               />
 
               <!-- Content -->
               <BubbleRenderer :content="content" />
 
-              <!-- Citations -->
+              <!-- Citations (仅历史消息) -->
               <SourceCitation
-                v-if="item.citations && item.citations.length > 0"
+                v-if="item.citations && item.citations.length > 0 && !item.loading"
                 :citations="item.citations"
               />
             </div>
           </template>
 
-          <!-- Actions (Rating, etc.) -->
           <template v-if="item.role === 'assistant' && !item.loading" #actions>
-            <div class="flex gap-2 text-gray-400 text-xs mt-1">
-              <!-- Add rating actions here -->
-            </div>
+            <div class="flex gap-2 text-gray-400 text-xs mt-1" />
           </template>
         </Bubble>
       </template>
     </BubbleList>
   </div>
 </template>
-
-<style scoped>
-.message-list {
-  /* Custom scrollbar styling if needed */
-}
-</style>

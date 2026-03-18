@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { message as antMessage } from 'ant-design-vue'
 import dayjs from 'dayjs'
+import { useI18n } from 'vue-i18n'
 import {
   getChatSessions,
   createChatSession,
@@ -14,16 +16,22 @@ import { useSSEChat } from '@/composables/useSSEChat'
 import type { Session, Message, SessionRating } from '@/types/chat'
 
 export const useChatStore = defineStore('chat', () => {
+  const { t } = useI18n()
+
   const sessions = ref<Session[]>([])
   const currentSessionId = ref<string | null>(null)
   const messages = ref<Record<string, Message[]>>({})
   const loadingSessions = ref(false)
   const loadingMessages = ref(false)
+  const ratedSessionIds = ref<Set<string>>(new Set())
+
+  const isValidSessionId = (id?: string | null): id is string => Boolean(id && id !== 'undefined')
 
   const {
     consumeSSE,
     stopGeneration: stopSSEGeneration,
-    thinkingSteps: sseThinkingSteps,
+    thinkingProcess: sseThinkingProcess,
+    streaming,
   } = useSSEChat()
 
   const currentSession = computed(
@@ -32,30 +40,32 @@ export const useChatStore = defineStore('chat', () => {
 
   const groupedSessions = computed(() => {
     const now = dayjs()
-    const groups = {
-      today: [] as Session[],
-      yesterday: [] as Session[],
-      week: [] as Session[],
-      earlier: [] as Session[],
-    }
+    const groups: Record<string, Session[]> = {}
 
     const sorted = [...sessions.value].sort(
       (a, b) =>
-        dayjs(b.last_message_at || b.updated_at || b.created_at).valueOf() -
-        dayjs(a.last_message_at || a.updated_at || a.created_at).valueOf()
+        dayjs(b.last_message_at || b.created_at).valueOf() -
+        dayjs(a.last_message_at || a.created_at).valueOf()
     )
 
     sorted.forEach((session) => {
-      const date = dayjs(session.last_message_at || session.updated_at || session.created_at)
+      const date = dayjs(session.last_message_at || session.created_at)
+      let groupKey: string
+
       if (date.isSame(now, 'day')) {
-        groups.today.push(session)
+        groupKey = 'today'
       } else if (date.isSame(now.subtract(1, 'day'), 'day')) {
-        groups.yesterday.push(session)
+        groupKey = 'yesterday'
       } else if (date.isAfter(now.subtract(7, 'day'))) {
-        groups.week.push(session)
+        groupKey = 'week'
       } else {
-        groups.earlier.push(session)
+        groupKey = date.format('YYYY-MM-DD')
       }
+
+      if (!groups[groupKey]) {
+        groups[groupKey] = []
+      }
+      groups[groupKey].push(session)
     })
 
     return groups
@@ -65,19 +75,19 @@ export const useChatStore = defineStore('chat', () => {
     loadingSessions.value = true
     try {
       const res = await getChatSessions({ page: 1, page_size: 100 })
-      sessions.value = res.items
+      sessions.value = res.items.filter((session) => isValidSessionId(session.id))
     } finally {
       loadingSessions.value = false
     }
   }
 
   async function selectSession(id: string) {
+    if (!isValidSessionId(id)) return
     currentSessionId.value = id
     if (!messages.value[id]) {
       loadingMessages.value = true
       try {
         const res = await getMessages(id, { limit: 50 })
-        // API 返回 has_more + items；items 按时间升序展示
         messages.value[id] = res.items
       } finally {
         loadingMessages.value = false
@@ -85,21 +95,53 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
-  async function createNewSession(avatarId: string, title?: string) {
-    const session = await createChatSession({
-      avatar_id: avatarId,
-      idempotency_key: crypto.randomUUID(),
-    })
-    // 更新本地 title（API 返回时 title 可能为 null）
-    if (title && !session.title) {
-      session.title = title
+  async function createNewSession(avatarId: string, title?: string): Promise<Session | null> {
+    try {
+      const { session, greeting, quota } = await createChatSession({
+        avatar_id: avatarId,
+        idempotency_key: crypto.randomUUID(),
+      })
+
+      if (!isValidSessionId(session.id)) {
+        throw new Error('创建会话失败：前端未拿到有效的 session.id')
+      }
+
+      if (quota?.is_exhausted) {
+        antMessage.warning(t('chat.quotaExhausted'))
+        return null
+      }
+
+      if (title && !session.title) {
+        session.title = title
+      }
+      sessions.value.unshift(session)
+      await selectSession(session.id)
+
+      if (greeting) {
+        messages.value[session.id] = [
+          {
+            id: `greeting_${session.id}`,
+            session_id: session.id,
+            role: 'assistant',
+            parts: [{ type: 'text', text: greeting }],
+            created_at: session.created_at,
+            status: 'sent',
+          },
+        ]
+      }
+
+      return session
+    } catch (err: any) {
+      if (err?.response?.data?.code === 42901) {
+        antMessage.warning(t('chat.quotaExhausted'))
+        return null
+      }
+      throw err
     }
-    sessions.value.unshift(session)
-    await selectSession(session.id)
-    return session
   }
 
   async function removeSession(id: string) {
+    if (!isValidSessionId(id)) return
     await deleteChatSession(id)
     sessions.value = sessions.value.filter((s) => s.id !== id)
     if (currentSessionId.value === id) {
@@ -109,6 +151,7 @@ export const useChatStore = defineStore('chat', () => {
   }
 
   async function updateSessionTitle(id: string, title: string) {
+    if (!isValidSessionId(id)) return
     await renameSession(id, { title })
     const session = sessions.value.find((s) => s.id === id)
     if (session) {
@@ -121,13 +164,12 @@ export const useChatStore = defineStore('chat', () => {
 
     const sessionId = currentSessionId.value
 
-    // 1. Add user message (optimistic)
     const userMsgId = `msg_${Date.now()}_u`
     const userMessage: Message = {
       id: userMsgId,
       session_id: sessionId,
       role: 'user',
-      content,
+      parts: [{ type: 'text', text: content }],
       created_at: new Date().toISOString(),
       status: 'sent',
     }
@@ -135,20 +177,18 @@ export const useChatStore = defineStore('chat', () => {
     if (!messages.value[sessionId]) messages.value[sessionId] = []
     messages.value[sessionId].push(userMessage)
 
-    // 2. Add placeholder assistant message
     const assistantMsgId = `msg_${Date.now()}_a`
     const assistantMessage: Message = {
       id: assistantMsgId,
       session_id: sessionId,
       role: 'assistant',
-      content: '',
-      thinking_steps: [],
+      parts: [{ type: 'text', text: '' }],
+      thinking_process: [],
       created_at: new Date().toISOString(),
       status: 'streaming',
     }
     messages.value[sessionId].push(assistantMessage)
 
-    // 3. Send via multipart/form-data SSE
     try {
       const response = await sendMessageRaw(sessionId, {
         text: content,
@@ -157,15 +197,17 @@ export const useChatStore = defineStore('chat', () => {
 
       await consumeSSE(response, {
         onDelta: (delta) => {
-          assistantMessage.content += delta
-          assistantMessage.thinking_steps = [...sseThinkingSteps.value]
+          const textPart = assistantMessage.parts[0]
+          if (textPart) {
+            textPart.text = (textPart.text || '') + delta
+          }
+          assistantMessage.thinking_process = [...sseThinkingProcess.value]
         },
         onDone: (finalId, tokensUsed) => {
           assistantMessage.id = finalId
           assistantMessage.status = 'sent'
           assistantMessage.tokens_used = tokensUsed
-          assistantMessage.thinking_steps = [...sseThinkingSteps.value]
-          // Update session last_message_at
+          assistantMessage.thinking_process = [...sseThinkingProcess.value]
           const session = sessions.value.find((s) => s.id === sessionId)
           if (session) {
             session.last_message_at = new Date().toISOString()
@@ -173,7 +215,10 @@ export const useChatStore = defineStore('chat', () => {
         },
         onError: (err) => {
           assistantMessage.status = 'error'
-          assistantMessage.content += `\n[Error: ${err}]`
+          const textPart = assistantMessage.parts[0]
+          if (textPart) {
+            textPart.text = (textPart.text || '') + `\n[Error: ${err}]`
+          }
         },
       })
     } catch {
@@ -183,6 +228,7 @@ export const useChatStore = defineStore('chat', () => {
 
   async function submitRating(sessionId: string, rating: SessionRating) {
     await rateSession(sessionId, rating)
+    ratedSessionIds.value = new Set([...ratedSessionIds.value, sessionId])
   }
 
   return {
@@ -193,6 +239,8 @@ export const useChatStore = defineStore('chat', () => {
     groupedSessions,
     loadingSessions,
     loadingMessages,
+    ratedSessionIds,
+    streaming,
     loadSessions,
     selectSession,
     createNewSession,

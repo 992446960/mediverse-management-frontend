@@ -151,7 +151,7 @@ onMounted(() => {
                 <Avatar
                   :src="avatar.avatar_url || undefined"
                   :size="80"
-                  shape="square"
+                  shape="circle"
                   class="avatar-card__avatar shrink-0"
                 >
                   <template #icon><UserOutlined /></template>

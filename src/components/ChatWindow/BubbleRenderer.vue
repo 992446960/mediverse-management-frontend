@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, h } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import hljs from 'highlight.js'
@@ -7,11 +8,12 @@ import 'highlight.js/styles/github-dark.css'
 import { CopyOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 
+const { t } = useI18n()
+
 const props = defineProps<{
   content: string
 }>()
 
-// Configure marked with highlight.js
 marked.setOptions({
   highlight: function (code, lang) {
     const language = hljs.getLanguage(lang) ? lang : 'plaintext'
@@ -28,9 +30,9 @@ const renderedContent = computed(() => {
 const copyContent = async () => {
   try {
     await navigator.clipboard.writeText(props.content)
-    message.success('已复制')
+    message.success(t('common.copied'))
   } catch {
-    message.error('复制失败')
+    message.error(t('common.copyFailed'))
   }
 }
 </script>

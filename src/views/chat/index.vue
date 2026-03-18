@@ -12,6 +12,7 @@ const { createNewSession } = chatStore
 
 const handleSelectAvatar = async (avatar: ChatAvatar) => {
   const session = await createNewSession(avatar.id, avatar.name)
+  if (!session) return
   router.push(`/chat/session/${session.id}`)
 }
 </script>

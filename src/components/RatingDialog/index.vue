@@ -1,12 +1,19 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Modal, Rate, Input, Form, FormItem, message } from 'ant-design-vue'
 import { useChatStore } from '@/stores/chat'
 
-const props = defineProps<{
-  open: boolean
-  sessionId: string
-}>()
+const { t } = useI18n()
+
+const props = withDefaults(
+  defineProps<{
+    open: boolean
+    sessionId: string
+    hasRated?: boolean
+  }>(),
+  { hasRated: false }
+)
 
 const emit = defineEmits<{
   (e: 'update:open', val: boolean): void
@@ -35,11 +42,11 @@ const handleOk = async () => {
       feedback_text: formState.value.feedback || undefined,
     })
 
-    message.success('感谢您的反馈')
+    message.success(t('rating.submitSuccess'))
     emit('success')
     emit('update:open', false)
   } catch {
-    message.error('提交失败')
+    message.error(t('rating.submitFailed'))
   } finally {
     loading.value = false
   }
@@ -62,22 +69,29 @@ watch(
 <template>
   <Modal
     :open="open"
-    title="评价本次问诊"
+    :title="t('rating.title')"
     :confirm-loading="loading"
     @ok="handleOk"
     @cancel="handleCancel"
   >
+    <a-alert
+      v-if="hasRated"
+      type="info"
+      :message="t('rating.reSubmitHint')"
+      show-icon
+      class="mb-4"
+    />
     <Form layout="vertical">
-      <FormItem label="诊断准确率">
+      <FormItem :label="t('rating.accuracy')">
         <Rate v-model:value="formState.accuracy" />
       </FormItem>
-      <FormItem label="问诊完成度">
+      <FormItem :label="t('rating.completion')">
         <Rate v-model:value="formState.completion" />
       </FormItem>
-      <FormItem label="其他反馈（可选）">
+      <FormItem :label="t('rating.feedback')">
         <Input.TextArea
           v-model:value="formState.feedback"
-          placeholder="请输入您的建议..."
+          :placeholder="t('rating.feedbackPlaceholder')"
           :rows="4"
         />
       </FormItem>

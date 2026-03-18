@@ -1,5 +1,7 @@
 import { http, HttpResponse, delay } from 'msw'
 import { mockSessions, mockMessages } from '../data/sessions'
+import { mockAvatarSkills } from '../data/skills'
+import { avatars as mockAvatars } from '../data/avatars'
 import type { Session, Message } from '@/types/chat'
 
 const BASE_URL = '/api/v1'
@@ -14,8 +16,8 @@ export const handlers = [
 
     const sorted = [...mockSessions].sort(
       (a, b) =>
-        new Date(b.last_message_at || b.updated_at || b.created_at).getTime() -
-        new Date(a.last_message_at || a.updated_at || a.created_at).getTime()
+        new Date(b.last_message_at || b.created_at).getTime() -
+        new Date(a.last_message_at || a.created_at).getTime()
     )
 
     const start = (page - 1) * pageSize
@@ -38,24 +40,38 @@ export const handlers = [
     await delay(300)
     const body = (await request.json()) as { avatar_id: string; idempotency_key?: string }
 
+    const avatar = mockAvatars.find((a) => a.id === body.avatar_id)
+
     const newSession: Session = {
       id: `session_${Date.now()}`,
       title: null,
       avatar_id: body.avatar_id || 'avatar_default',
-      avatar_name: '数字医生',
-      avatar_url: '',
+      avatar_name: avatar?.name ?? '数字医生',
+      avatar_url: avatar?.avatar_url ?? '',
       status: 'active',
       created_at: new Date().toISOString(),
-      last_message_at: new Date().toISOString(),
     }
 
     mockSessions.unshift(newSession)
     mockMessages[newSession.id] = []
 
+    const greeting = avatar?.greeting ?? '您好，我是您的数字医生，请问有什么可以帮助您？'
+
     return HttpResponse.json({
       code: 0,
       message: 'ok',
-      data: newSession,
+      data: {
+        session: newSession,
+        greeting,
+        quota: {
+          avatar_scope: 'custom',
+          max_sessions: null,
+          used_sessions: 1,
+          remaining: null,
+          is_unlimited: true,
+          is_exhausted: false,
+        },
+      },
     })
   }),
 
@@ -118,34 +134,16 @@ export const handlers = [
 
     if (!mockMessages[sessionId]) mockMessages[sessionId] = []
 
-    const userMsg: Message = {
-      id: `msg_${Date.now()}_u`,
-      session_id: sessionId,
-      role: 'user',
-      content: text,
-      created_at: new Date().toISOString(),
-      status: 'sent',
-    }
-    mockMessages[sessionId].push(userMsg)
-
     const assistantMsgId = `msg_${Date.now()}_a`
-    const assistantMsg: Message = {
-      id: assistantMsgId,
-      session_id: sessionId,
-      role: 'assistant',
-      content: '',
-      thinking_steps: [],
-      created_at: new Date().toISOString(),
-      status: 'sent',
-    }
+    let accumulatedText = ''
 
     const encoder = new TextEncoder()
     const stream = new ReadableStream({
       async start(controller) {
         const steps = [
-          { title: '理解意图', description: '正在分析用户问题...' },
-          { title: '检索知识库', description: '正在搜索相关文档...' },
-          { title: '生成回答', description: '正在组织语言...' },
+          { title: '理解意图', description: '正在分析用户问题' },
+          { title: '检索知识库', description: '正在搜索相关文档' },
+          { title: '生成回答', description: '正在组织语言' },
         ]
 
         for (let i = 0; i < steps.length; i++) {
@@ -184,7 +182,7 @@ export const handlers = [
           controller.enqueue(
             encoder.encode(`data: ${JSON.stringify({ type: 'delta', content: char })}\n\n`)
           )
-          assistantMsg.content += char
+          accumulatedText += char
           await delay(30)
         }
 
@@ -199,7 +197,20 @@ export const handlers = [
         )
 
         if (mockMessages[sessionId]) {
-          mockMessages[sessionId].push(assistantMsg)
+          mockMessages[sessionId].push({
+            id: assistantMsgId,
+            session_id: sessionId,
+            role: 'assistant',
+            parts: [{ type: 'text', text: accumulatedText }],
+            thinking_process: steps.map((s) => ({
+              title: s.title,
+              description: s.description,
+              status: 'done' as const,
+              duration: `${Math.floor(Math.random() * 300) + 100}ms`,
+            })),
+            created_at: new Date().toISOString(),
+            status: 'sent',
+          })
         }
 
         const session = mockSessions.find((s) => s.id === sessionId)
@@ -221,8 +232,33 @@ export const handlers = [
   }),
 
   // ── 3.1.7 提交评分 ──────────────────────────────────────────────────
-  http.post(`${BASE_URL}/chat/sessions/:id/ratings`, async () => {
+  http.post(`${BASE_URL}/chat/sessions/:id/ratings`, async ({ params, request }) => {
     await delay(300)
-    return HttpResponse.json({ code: 0, message: 'ok', data: null })
+    const { id } = params
+    const body = (await request.json()) as {
+      scores: Record<string, number>
+      feedback_text?: string
+    }
+    return HttpResponse.json({
+      code: 0,
+      message: 'ok',
+      data: {
+        id: `rating_${Date.now()}`,
+        session_id: id,
+        scores: body.scores ?? {},
+        feedback_text: body.feedback_text ?? null,
+        created_at: new Date().toISOString(),
+      },
+    })
+  }),
+
+  // ── 获取分身可用技能列表（mock）────────────────────────────────────
+  http.get(`${BASE_URL}/chat/avatars/:avatarId/skills`, async () => {
+    await delay(200)
+    return HttpResponse.json({
+      code: 0,
+      message: 'ok',
+      data: mockAvatarSkills,
+    })
   }),
 ]

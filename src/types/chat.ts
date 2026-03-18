@@ -2,13 +2,20 @@ export interface Session {
   id: string
   title: string | null
   avatar_id: string
-  avatar_name?: string
-  avatar_url?: string
-  user_id?: string
-  status?: 'active' | 'closed'
+  avatar_name: string
+  avatar_url: string
+  status: 'active' | 'closed'
   created_at: string
-  updated_at?: string
   last_message_at?: string
+}
+
+export interface SessionQuota {
+  avatar_scope: string
+  max_sessions: number | null
+  used_sessions: number
+  remaining: number | null
+  is_unlimited: boolean
+  is_exhausted: boolean
 }
 
 export interface MessagePart {
@@ -17,21 +24,18 @@ export interface MessagePart {
   url?: string
   file_name?: string
   mime_type?: string
-  /** @deprecated use text or url instead */
-  content?: string
   metadata?: Record<string, any>
 }
 
-export interface ThinkingStep {
+export interface ThinkingProcessStep {
   title: string
-  /** step description, may be incrementally updated */
   description?: string
-  /** @deprecated use description instead */
-  content?: string
   status: 'processing' | 'done'
   duration_ms?: number
+  duration?: string
 }
 
+/** Kept for future card detail API usage */
 export interface SourceCitation {
   id: string
   title: string
@@ -53,15 +57,18 @@ export interface Message {
   session_id: string
   avatar_id?: string
   role: 'user' | 'assistant' | 'tool'
-  /** Flat text content, used for local streaming state */
-  content: string
-  parts?: MessagePart[]
-  thinking_steps?: ThinkingStep[]
+  parts: MessagePart[]
+  thinking_process?: ThinkingProcessStep[]
   tool_calls?: ToolCall[] | null
-  citations?: SourceCitation[]
+  citations?: string[]
+  sources?: unknown
   tokens_used?: number | null
   created_at: string
   status?: 'sending' | 'sent' | 'error' | 'streaming'
+}
+
+export function getMessageText(msg: Message): string {
+  return msg.parts?.find((p) => p.type === 'text')?.text || ''
 }
 
 export interface GetMessagesResponse {
@@ -78,6 +85,14 @@ export interface SessionRating {
   feedback_text?: string
 }
 
+export interface SessionRatingResponse {
+  id: string
+  session_id: string
+  scores: SessionRating['scores']
+  feedback_text?: string
+  created_at: string
+}
+
 // SSE Event Types
 export type SSEEventType = 'thinking_step' | 'delta' | 'done' | 'error'
 
@@ -85,7 +100,6 @@ export interface SSEEventThinkingStep {
   type: 'thinking_step'
   index: number
   title: string
-  /** incremental description for this step */
   description?: string
   status: 'processing' | 'done'
   duration_ms?: number

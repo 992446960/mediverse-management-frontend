@@ -1,19 +1,28 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { ThoughtChain } from 'ant-design-x-vue'
-import type { ThinkingStep } from '@/types/chat'
+import type { ThinkingProcessStep } from '@/types/chat'
 
 const props = defineProps<{
-  steps: ThinkingStep[]
+  steps: ThinkingProcessStep[]
 }>()
 
 const items = computed(() => {
-  return props.steps.map((step) => ({
-    title: step.title,
-    description: step.description ?? step.content,
-    status: step.status === 'processing' ? 'pending' : 'success',
-    extra: step.duration_ms ? `${step.duration_ms}ms` : undefined,
-  }))
+  return props.steps.map((step) => {
+    let extra: string | undefined
+    if (step.duration_ms !== undefined) {
+      extra = `${step.duration_ms}ms`
+    } else if (step.duration) {
+      extra = step.duration
+    }
+
+    return {
+      title: step.title,
+      description: step.description,
+      status: step.status === 'processing' ? 'pending' : 'success',
+      extra,
+    }
+  })
 })
 </script>
 

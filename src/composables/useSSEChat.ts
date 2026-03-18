@@ -1,38 +1,26 @@
 import { ref } from 'vue'
 import type { Ref } from 'vue'
-import type { ThinkingStep } from '@/types/chat'
+import type { ThinkingProcessStep } from '@/types/chat'
 
 export interface SSEChatCallbacks {
   onDelta?: (text: string) => void
   onDone?: (messageId: string, tokensUsed?: number) => void
-  onError?: (err: string) => void
+  onError?: (err: string, code?: number) => void
 }
 
 export interface UseSSEChatReturn {
   streaming: Ref<boolean>
   currentText: Ref<string>
-  thinkingSteps: Ref<ThinkingStep[]>
+  thinkingProcess: Ref<ThinkingProcessStep[]>
   error: Ref<string | null>
-  /**
-   * 消费已有的 SSE Response 流（由 sendMessageRaw 获取）
-   */
   consumeSSE: (response: Response, callbacks?: SSEChatCallbacks) => Promise<void>
-  /**
-   * @deprecated 改为先调 sendMessageRaw 获取 Response，再调 consumeSSE
-   * 保留以兼容 isTestMode 等场景直接传 URL + JSON body
-   */
-  sendMessage: (
-    url: string,
-    body: Record<string, any>,
-    callbacks?: SSEChatCallbacks
-  ) => Promise<void>
   stopGeneration: () => void
 }
 
 export function useSSEChat(): UseSSEChatReturn {
   const streaming = ref(false)
   const currentText = ref('')
-  const thinkingSteps = ref<ThinkingStep[]>([])
+  const thinkingProcess = ref<ThinkingProcessStep[]>([])
   const error = ref<string | null>(null)
 
   let abortController: AbortController | null = null
@@ -76,17 +64,16 @@ export function useSSEChat(): UseSSEChatReturn {
             switch (event.type) {
               case 'thinking_step': {
                 const index: number = event.index ?? 0
-                if (!thinkingSteps.value[index]) {
-                  thinkingSteps.value[index] = {
+                if (!thinkingProcess.value[index]) {
+                  thinkingProcess.value[index] = {
                     title: event.title || '',
                     description: '',
                     status: 'processing',
                   }
                 }
-                const step = thinkingSteps.value[index]!
+                const step = thinkingProcess.value[index]!
                 if (event.title) step.title = event.title
-                if (event.description)
-                  step.description = (step.description || '') + event.description
+                if (event.description !== undefined) step.description = event.description
                 if (event.status) step.status = event.status === 'done' ? 'done' : 'processing'
                 if (event.duration_ms !== undefined) step.duration_ms = event.duration_ms
                 break
@@ -108,7 +95,6 @@ export function useSSEChat(): UseSSEChatReturn {
                 throw new Error(event.message || 'Unknown SSE error')
             }
           } catch (parseErr) {
-            // ignore malformed events
             console.warn('[useSSEChat] Failed to parse SSE event:', parseErr)
           }
         }
@@ -125,7 +111,7 @@ export function useSSEChat(): UseSSEChatReturn {
   ): Promise<void> => {
     streaming.value = true
     currentText.value = ''
-    thinkingSteps.value = []
+    thinkingProcess.value = []
     error.value = null
 
     if (!response.body) {
@@ -146,57 +132,12 @@ export function useSSEChat(): UseSSEChatReturn {
     }
   }
 
-  const sendMessage = async (
-    url: string,
-    body: Record<string, any>,
-    callbacks: SSEChatCallbacks = {}
-  ): Promise<void> => {
-    streaming.value = true
-    currentText.value = ''
-    thinkingSteps.value = []
-    error.value = null
-
-    abortController = new AbortController()
-
-    try {
-      const token = localStorage.getItem('token')
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      }
-      if (token) headers['Authorization'] = `Bearer ${token}`
-
-      const response = await fetch(url, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(body),
-        signal: abortController.signal,
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      if (!response.body) {
-        throw new Error('Response body is null')
-      }
-
-      const reader = response.body.getReader()
-      await processSSEStream(reader, callbacks)
-    } catch (err: any) {
-      if (err?.name === 'AbortError') return
-      error.value = err.message || 'Network error'
-      callbacks.onError?.(error.value!)
-      streaming.value = false
-    }
-  }
-
   return {
     streaming,
     currentText,
-    thinkingSteps,
+    thinkingProcess,
     error,
     consumeSSE,
-    sendMessage,
     stopGeneration,
   }
 }

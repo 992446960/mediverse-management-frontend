@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import zhCN from 'ant-design-vue/es/locale/zh_CN'
 import enUS from 'ant-design-vue/es/locale/en_US'
+import { XProvider } from 'ant-design-x-vue'
 import MainLayout from '@/layouts/MainLayout.vue'
 import FullscreenLayout from '@/layouts/FullscreenLayout.vue'
 import { useThemeStore } from '@/stores/theme'
@@ -23,13 +24,15 @@ const antdLocale = computed<Locale>(() => (localeStore.locale === 'zh-CN' ? zhCN
 
 <template>
   <a-config-provider :theme="currentTheme" :locale="antdLocale">
-    <component :is="layout">
-      <router-view v-slot="{ Component }">
-        <transition name="fade" mode="out-in">
-          <component :is="Component" />
-        </transition>
-      </router-view>
-    </component>
+    <XProvider :theme="currentTheme">
+      <component :is="layout">
+        <router-view v-slot="{ Component }">
+          <transition name="fade" mode="out-in">
+            <component :is="Component" />
+          </transition>
+        </router-view>
+      </component>
+    </XProvider>
   </a-config-provider>
 </template>
 

@@ -1,45 +1,12 @@
-import type { Session, GetMessagesResponse, SessionRating } from '@/types/chat'
-
-function getAuthHeaders(): Record<string, string> {
-  const token = localStorage.getItem('token')
-  return token ? { Authorization: `Bearer ${token}` } : {}
-}
-
-async function request<T>(
-  method: string,
-  path: string,
-  options: { params?: Record<string, any>; body?: Record<string, any> | FormData } = {}
-): Promise<T> {
-  const baseURL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
-  let url = `${baseURL}${path}`
-
-  if (options.params) {
-    const qs = new URLSearchParams(
-      Object.entries(options.params)
-        .filter(([, v]) => v !== undefined && v !== null)
-        .map(([k, v]) => [k, String(v)])
-    ).toString()
-    if (qs) url += `?${qs}`
-  }
-
-  const headers: Record<string, string> = { ...getAuthHeaders() }
-  let body: BodyInit | undefined
-
-  if (options.body instanceof FormData) {
-    body = options.body
-    // Let browser set Content-Type with boundary automatically
-  } else if (options.body) {
-    headers['Content-Type'] = 'application/json'
-    body = JSON.stringify(options.body)
-  }
-
-  const res = await fetch(url, { method, headers, body })
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status}: ${res.statusText}`)
-  }
-  const json = await res.json()
-  return json.data as T
-}
+import { request } from '@/api/index'
+import { getToken } from '@/utils/auth'
+import type {
+  Session,
+  SessionQuota,
+  GetMessagesResponse,
+  SessionRating,
+  SessionRatingResponse,
+} from '@/types/chat'
 
 export interface GetSessionsParams {
   avatar_id?: string
@@ -54,25 +21,39 @@ export interface GetSessionsResponse {
   items: Session[]
 }
 
-export async function getChatSessions(
-  params: GetSessionsParams = {}
-): Promise<GetSessionsResponse> {
-  return request<GetSessionsResponse>('GET', '/chat/sessions', { params })
+export interface CreateChatSessionResponse {
+  session: Session
+  greeting: string | null
+  quota?: SessionQuota
 }
 
+/** 3.1.2 查询会话列表 */
+export function getChatSessions(params: GetSessionsParams = {}): Promise<GetSessionsResponse> {
+  return request.get<GetSessionsResponse>('/chat/sessions', { params })
+}
+
+/** 3.1.3 新建会话 */
 export async function createChatSession(payload: {
   avatar_id: string
   idempotency_key: string
-}): Promise<Session> {
-  return request<Session>('POST', '/chat/sessions', { body: payload })
+}): Promise<CreateChatSessionResponse> {
+  const res = await request.post<CreateChatSessionResponse>('/chat/sessions', payload)
+
+  if (!res?.session?.id) {
+    throw new Error('创建会话失败：后端未返回有效的 session.id')
+  }
+
+  return res
 }
 
-export async function deleteChatSession(id: string): Promise<void> {
-  await request<null>('DELETE', `/chat/sessions/${id}`)
+/** 删除会话 */
+export function deleteChatSession(id: string): Promise<null> {
+  return request.delete<null>(`/chat/sessions/${id}`)
 }
 
-export async function renameSession(id: string, payload: { title: string }): Promise<void> {
-  await request<null>('PATCH', `/chat/sessions/${id}/title`, { body: payload })
+/** 3.1.4 重命名会话 */
+export function renameSession(id: string, payload: { title: string }): Promise<null> {
+  return request.patch<null>(`/chat/sessions/${id}/title`, payload)
 }
 
 export interface GetMessagesParams {
@@ -80,21 +61,37 @@ export interface GetMessagesParams {
   limit?: number
 }
 
-export async function getMessages(
+/** 3.1.5 获取历史消息 */
+export function getMessages(
   sessionId: string,
   params: GetMessagesParams = {}
 ): Promise<GetMessagesResponse> {
-  return request<GetMessagesResponse>('GET', `/chat/sessions/${sessionId}/messages`, { params })
+  return request.get<GetMessagesResponse>(`/chat/sessions/${sessionId}/messages`, { params })
 }
 
-export async function rateSession(sessionId: string, payload: SessionRating): Promise<void> {
-  await request<null>('POST', `/chat/sessions/${sessionId}/ratings`, {
-    body: payload as Record<string, any>,
-  })
+/** 3.1.7 提交评分 */
+export function rateSession(
+  sessionId: string,
+  payload: SessionRating
+): Promise<SessionRatingResponse> {
+  return request.post<SessionRatingResponse>(`/chat/sessions/${sessionId}/ratings`, payload)
+}
+
+export interface AvatarSkill {
+  id: string
+  name: string
+  description: string
+  icon?: string
+}
+
+/** 获取分身可用技能列表（mock） */
+export function getAvatarSkills(avatarId: string): Promise<AvatarSkill[]> {
+  return request.get<AvatarSkill[]>(`/chat/avatars/${avatarId}/skills`)
 }
 
 /**
- * 发送消息（流式）— 返回原始 Response 供 SSE 消费
+ * 3.1.6 发送消息（流式）— 返回原始 Response 供 SSE 消费
+ * 必须使用原生 fetch，axios 适配器会缓冲整个响应体，无法流式读取
  * Content-Type: multipart/form-data
  */
 export async function sendMessageRaw(
@@ -103,7 +100,12 @@ export async function sendMessageRaw(
 ): Promise<Response> {
   const baseURL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
   const url = `${baseURL}/chat/sessions/${sessionId}/messages`
-  const headers = getAuthHeaders()
+
+  const token = getToken()
+  const headers: Record<string, string> = {}
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
 
   const formData = new FormData()
   if (payload.text) {

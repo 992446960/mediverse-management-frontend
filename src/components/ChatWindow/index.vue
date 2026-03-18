@@ -1,11 +1,18 @@
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue'
+import { h, computed, onMounted, watch, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { Prompts } from 'ant-design-x-vue'
-import { BulbOutlined, RocketOutlined, SmileOutlined } from '@ant-design/icons-vue'
+import {
+  BulbOutlined,
+  RocketOutlined,
+  SmileOutlined,
+  StarOutlined,
+  StarFilled,
+} from '@ant-design/icons-vue'
 import MessageList from './MessageList.vue'
 import MessageInput from './MessageInput.vue'
+import RatingDialog from '@/components/RatingDialog/index.vue'
 import { useChatStore } from '@/stores/chat'
 
 const { t } = useI18n()
@@ -16,8 +23,14 @@ const props = defineProps<{
 }>()
 
 const chatStore = useChatStore()
-const { messages, currentSessionId, loadingMessages } = storeToRefs(chatStore)
+const { messages, currentSessionId, currentSession, loadingMessages, ratedSessionIds } =
+  storeToRefs(chatStore)
 const { sendMessage, stopGeneration, selectSession, createNewSession } = chatStore
+
+const ratingOpen = ref(false)
+const hasRated = computed(
+  () => currentSession.value?.id && ratedSessionIds.value.has(currentSession.value.id)
+)
 
 const currentMessages = computed(() => {
   const id = props.sessionId || currentSessionId.value
@@ -30,21 +43,27 @@ const isStreaming = computed(() => {
 })
 
 const initialPrompts = [
-  { key: '1', label: '帮我分析这个病例', icon: BulbOutlined },
-  { key: '2', label: '推荐最新的高血压诊疗指南', icon: RocketOutlined },
-  { key: '3', label: '如何处理医患纠纷？', icon: SmileOutlined },
+  { key: '1', label: t('chat.prompt1'), icon: h(BulbOutlined) },
+  { key: '2', label: t('chat.prompt2'), icon: h(RocketOutlined) },
+  { key: '3', label: t('chat.prompt3'), icon: h(SmileOutlined) },
 ]
 
-const handleSend = async (content: string) => {
+const handleSend = async (
+  content: string,
+  options?: { thinkingMode?: string; webSearch?: boolean; files?: File[] }
+) => {
   if (!props.sessionId && !currentSessionId.value && props.avatarId) {
-    await createNewSession(props.avatarId, content.slice(0, 20))
+    const session = await createNewSession(props.avatarId, content.slice(0, 20))
+    if (!session) return
   }
 
-  await sendMessage(content)
+  await sendMessage(content, options?.files)
 }
 
-const handlePromptClick = (prompt: { label: string }) => {
-  handleSend(prompt.label)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const handlePromptClick = (info: any) => {
+  const label = typeof info?.data?.label === 'string' ? info.data.label : ''
+  handleSend(label)
 }
 
 onMounted(async () => {
@@ -65,7 +84,32 @@ watch(
 
 <template>
   <div class="chat-window flex flex-col h-full bg-white dark:bg-gray-900">
-    <!-- Header (Optional, maybe handled by layout) -->
+    <!-- Header -->
+    <div
+      v-if="currentSession"
+      class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800 shrink-0"
+    >
+      <div class="flex items-center gap-3">
+        <a-avatar :src="currentSession.avatar_url" :size="36">
+          {{ currentSession.avatar_name?.charAt(0) }}
+        </a-avatar>
+        <div>
+          <div class="font-medium text-gray-800 dark:text-gray-100 leading-tight">
+            {{ currentSession.avatar_name }}
+          </div>
+          <div class="text-xs text-gray-400 leading-tight">
+            {{ currentSession.title || t('chat.untitledSession') }}
+          </div>
+        </div>
+      </div>
+      <a-button
+        type="text"
+        :icon="h(hasRated ? StarFilled : StarOutlined)"
+        @click="ratingOpen = true"
+      >
+        {{ hasRated ? t('chat.rated') : t('chat.rateConversation') }}
+      </a-button>
+    </div>
 
     <!-- Messages Area -->
     <div class="flex-1 overflow-hidden relative">
@@ -75,7 +119,7 @@ watch(
         :loading="loadingMessages"
       />
 
-      <!-- Empty State / Prompts（聊天记录为空时展示） -->
+      <!-- Empty State / Prompts -->
       <div v-else class="h-full flex flex-col items-center justify-center p-8 text-center">
         <div class="mb-8 flex flex-col items-center">
           <div class="mb-6 p-4 h-full rounded-2xl bg-sky-50 dark:bg-sky-900/20 text-primary">
@@ -106,12 +150,19 @@ watch(
 
     <!-- Input Area -->
     <MessageInput :loading="isStreaming" @send="handleSend" @stop="stopGeneration" />
+
+    <!-- Rating Dialog -->
+    <RatingDialog
+      v-if="currentSession"
+      v-model:open="ratingOpen"
+      :session-id="currentSession.id"
+      :has-rated="!!hasRated"
+    />
   </div>
 </template>
 
 <style scoped>
 .chat-window {
-  /* Ensure it takes full height of container */
   height: 100%;
 }
 </style>

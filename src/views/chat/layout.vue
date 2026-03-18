@@ -1,17 +1,26 @@
 <script setup lang="ts">
-import ChatSidebar from '@/components/ChatSidebar/index.vue'
+import ChatSidebar from '@/components/SessionSidebar/index.vue'
+import SkillPanel from '@/components/SkillPanel/index.vue'
+
+const route = useRoute()
+const showSkillPanel = computed(() => route.name === 'ChatSession')
 </script>
 
 <template>
-  <div class="chat-layout flex h-screen w-full rounded-md">
-    <!-- Sidebar -->
+  <div class="chat-layout flex h-screen w-full rounded-md overflow-hidden">
+    <!-- Left: Session Sidebar -->
     <div class="w-64 shrink-0 border-r border-gray-200 dark:border-gray-800">
       <ChatSidebar />
     </div>
 
-    <!-- Main Content -->
-    <div class="flex-1 overflow-visible bg-white dark:bg-gray-900 min-w-2xl flex flex-col min-h-0">
+    <!-- Center: Main Content (ChatWindow via router-view) -->
+    <div class="flex-1 overflow-visible bg-white dark:bg-gray-900 min-w-0 flex flex-col min-h-0">
       <router-view />
+    </div>
+
+    <!-- Right: Skill Panel（仅对话页展示） -->
+    <div v-if="showSkillPanel" class="w-72 shrink-0">
+      <SkillPanel />
     </div>
   </div>
 </template>
