@@ -153,3 +153,67 @@ export function unauthPost<T = BaseResponse>(
 ): Promise<AxiosResponse<T>> {
   return rawRequest<T>('POST', url, { data })
 }
+
+// ─── POST FormData + SSE 流式响应（用于发送消息等）────────────────────
+
+/**
+ * 带鉴权的 POST FormData，返回原生 Response（用于 SSE 流式接口）
+ * 调用方自行读取 response.body 并解析 SSE
+ */
+export async function authedPostFormDataStream(url: string, formData: FormData): Promise<Response> {
+  const token = getToken()
+  const res = await fetch(`${getBaseUrl()}${url.startsWith('/') ? url : `/${url}`}`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      // 不设置 Content-Type，让浏览器/Node 自动带 boundary
+    },
+    body: formData,
+  })
+  return res
+}
+
+/**
+ * 不带鉴权 POST FormData（用于测试 401）
+ */
+export async function unauthPostFormDataStream(url: string, formData: FormData): Promise<Response> {
+  const res = await fetch(`${getBaseUrl()}${url.startsWith('/') ? url : `/${url}`}`, {
+    method: 'POST',
+    body: formData,
+  })
+  return res
+}
+
+/** 解析 SSE 流，返回解析到的 data 行 JSON 数组 */
+export async function readSSEEvents(
+  body: ReadableStream<Uint8Array>
+): Promise<Array<Record<string, unknown>>> {
+  const events: Array<Record<string, unknown>> = []
+  const reader = body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      const blocks = buffer.split('\n\n')
+      buffer = blocks.pop() ?? ''
+      for (const block of blocks) {
+        const dataLine = block.split('\n').find((l) => l.startsWith('data: '))
+        if (dataLine) {
+          const json = dataLine.slice(6).trim()
+          if (!json) continue
+          try {
+            events.push(JSON.parse(json) as Record<string, unknown>)
+          } catch {
+            // 忽略非 JSON 行
+          }
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock()
+  }
+  return events
+}
