@@ -372,6 +372,10 @@ export default {
     webSearchOn: '联网搜索：开',
     webSearchOff: '联网搜索：关',
     attachFile: '上传附件',
+    attachmentDuplicate: '「{name}」已存在，已跳过',
+    attachmentMaxCount: '最多上传 {max} 个附件',
+    attachmentFormatInvalid: '「{name}」格式不支持',
+    attachmentSizeExceeded: '「{name}」超出大小限制',
     rateConversation: '评价问诊',
     rated: '已评价',
     prompt1: '帮我分析这个病例',
@@ -386,6 +390,7 @@ export default {
     skillCallDuration: '耗时',
     message: '消息',
     scrollToBottom: '回到底部',
+    thinkingProcessTitle: '思考过程',
   },
   theme: {
     light: '亮色模式',

@@ -18,13 +18,41 @@ export interface SessionQuota {
   is_exhausted: boolean
 }
 
+/** 图片扩展名（API 可能返回 type: 'file' 的图片） */
+const IMAGE_EXT = /\.(jpe?g|png|gif|webp|bmp|svg)(\?|$)/i
+
+/** PDF 扩展名或 mime 类型 */
+const PDF_EXT = /\.pdf(\?|$)/i
+const PDF_MIME = /^application\/pdf$/i
+
 export interface MessagePart {
   type: 'text' | 'image' | 'file'
   text?: string
   url?: string
+  /** 前端/上传使用 */
   file_name?: string
+  /** API 历史消息返回 */
+  name?: string
   mime_type?: string
   metadata?: Record<string, any>
+}
+
+export function isImagePart(p: MessagePart): boolean {
+  if (!p.url) return false
+  if (p.type === 'image') return true
+  if (p.url.startsWith('blob:')) return true
+  if (p.type === 'file' && IMAGE_EXT.test(p.url)) return true
+  const fn = p.file_name ?? p.name ?? ''
+  if (p.type === 'file' && fn && IMAGE_EXT.test(fn)) return true
+  return false
+}
+
+export function isPdfPart(p: MessagePart): boolean {
+  if (p.type === 'file' && p.mime_type && PDF_MIME.test(p.mime_type)) return true
+  const fn = p.file_name ?? p.name ?? ''
+  if (p.type === 'file' && fn && PDF_EXT.test(fn)) return true
+  if (p.url && PDF_EXT.test(p.url)) return true
+  return false
 }
 
 export interface ThinkingProcessStep {

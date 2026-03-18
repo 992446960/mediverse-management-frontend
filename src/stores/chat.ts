@@ -13,7 +13,12 @@ import {
   sendMessageRaw,
 } from '@/api/sessions'
 import { useSSEChat } from '@/composables/useSSEChat'
-import type { Session, Message, SessionRating } from '@/types/chat'
+import type { Session, Message, SessionRating, ThinkingProcessStep } from '@/types/chat'
+
+/** 过滤稀疏数组空位，useSSEChat 按 index 写入可能导致 [empty, empty, step] */
+function filterThinkingSteps(steps: ThinkingProcessStep[]): ThinkingProcessStep[] {
+  return steps.filter((s): s is ThinkingProcessStep => Boolean(s))
+}
 
 export const useChatStore = defineStore('chat', () => {
   const { t } = useI18n()
@@ -171,6 +176,7 @@ export const useChatStore = defineStore('chat', () => {
           type: file.type.startsWith('image/') ? 'image' : 'file',
           file_name: file.name,
           url: file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined,
+          mime_type: file.type,
         })
       }
     }
@@ -229,7 +235,7 @@ export const useChatStore = defineStore('chat', () => {
           if (textPart) textPart.text = text || '[非 SSE 响应]'
         }
         assistantMessage.status = 'sent'
-        messages.value[sessionId] = [...messages.value[sessionId]]
+        messages.value[sessionId] = [...messages.value[sessionId]!]
         const session = sessions.value.find((s) => s.id === sessionId)
         if (session) session.last_message_at = new Date().toISOString()
         return
@@ -241,15 +247,19 @@ export const useChatStore = defineStore('chat', () => {
           if (textPart) {
             textPart.text = (textPart.text || '') + delta
           }
-          assistantMessage.thinking_process = [...sseThinkingProcess.value]
-          messages.value[sessionId] = [...messages.value[sessionId]]
+          assistantMessage.thinking_process = filterThinkingSteps(sseThinkingProcess.value)
+          messages.value[sessionId] = [...messages.value[sessionId]!]
+        },
+        onThinkingStep: () => {
+          assistantMessage.thinking_process = filterThinkingSteps(sseThinkingProcess.value)
+          messages.value[sessionId] = [...messages.value[sessionId]!]
         },
         onDone: (finalId, tokensUsed) => {
           assistantMessage.id = finalId ?? assistantMessage.id
           assistantMessage.status = 'sent'
           assistantMessage.tokens_used = tokensUsed ?? undefined
-          assistantMessage.thinking_process = [...sseThinkingProcess.value]
-          messages.value[sessionId] = [...messages.value[sessionId]]
+          assistantMessage.thinking_process = filterThinkingSteps(sseThinkingProcess.value)
+          messages.value[sessionId] = [...messages.value[sessionId]!]
           const session = sessions.value.find((s) => s.id === sessionId)
           if (session) {
             session.last_message_at = new Date().toISOString()
@@ -258,8 +268,8 @@ export const useChatStore = defineStore('chat', () => {
         onStreamEnd: () => {
           if (assistantMessage.status === 'streaming') {
             assistantMessage.status = 'sent'
-            assistantMessage.thinking_process = [...sseThinkingProcess.value]
-            messages.value[sessionId] = [...messages.value[sessionId]]
+            assistantMessage.thinking_process = filterThinkingSteps(sseThinkingProcess.value)
+            messages.value[sessionId] = [...messages.value[sessionId]!]
             const session = sessions.value.find((s) => s.id === sessionId)
             if (session) {
               session.last_message_at = new Date().toISOString()
@@ -272,12 +282,12 @@ export const useChatStore = defineStore('chat', () => {
           if (textPart) {
             textPart.text = (textPart.text || '') + `\n[Error: ${err}]`
           }
-          messages.value[sessionId] = [...messages.value[sessionId]]
+          messages.value[sessionId] = [...messages.value[sessionId]!]
         },
       })
     } catch {
       assistantMessage.status = 'error'
-      messages.value[sessionId] = [...messages.value[sessionId]]
+      messages.value[sessionId] = [...messages.value[sessionId]!]
     }
   }
 

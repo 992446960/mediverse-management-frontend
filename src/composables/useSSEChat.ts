@@ -4,6 +4,8 @@ import type { ThinkingProcessStep } from '@/types/chat'
 
 export interface SSEChatCallbacks {
   onDelta?: (text: string) => void
+  /** thinking_step 事件到达时调用，用于实时同步思考步骤到消息（符合 API 文档与开发规范） */
+  onThinkingStep?: () => void
   onDone?: (messageId: string, tokensUsed?: number) => void
   /** 流结束但未收到 done 事件时调用（如后端直接关闭连接），用于收尾 UI 状态 */
   onStreamEnd?: () => void
@@ -34,6 +36,9 @@ export function useSSEChat(): UseSSEChatReturn {
     }
     streaming.value = false
   }
+
+  /** 让出事件循环，使 Vue 能 flush 响应式更新并触发渲染（解决流式内容一次性渲染的 bug） */
+  const yieldToEventLoop = () => new Promise<void>((r) => setTimeout(r, 0))
 
   async function processSSEStream(
     reader: ReadableStreamDefaultReader<Uint8Array>,
@@ -89,6 +94,8 @@ export function useSSEChat(): UseSSEChatReturn {
                 if (event.status != null)
                   step.status = event.status === 'done' ? 'done' : 'processing'
                 if (event.duration_ms !== undefined) step.duration_ms = Number(event.duration_ms)
+                callbacks.onThinkingStep?.()
+                await yieldToEventLoop()
                 break
               }
 
@@ -100,6 +107,7 @@ export function useSSEChat(): UseSSEChatReturn {
                 if (str) {
                   currentText.value += str
                   callbacks.onDelta?.(str)
+                  await yieldToEventLoop()
                 }
                 break
               }
@@ -157,12 +165,30 @@ export function useSSEChat(): UseSSEChatReturn {
               )
               return
             }
+            if (eventType === 'thinking_step') {
+              const index: number = Number(event.index ?? 0)
+              if (!thinkingProcess.value[index]) {
+                thinkingProcess.value[index] = {
+                  title: String(event.title ?? ''),
+                  description: '',
+                  status: 'processing',
+                }
+              }
+              const step = thinkingProcess.value[index]!
+              if (event.title != null) step.title = String(event.title)
+              if (event.description !== undefined) step.description = String(event.description)
+              if (event.status != null)
+                step.status = event.status === 'done' ? 'done' : 'processing'
+              if (event.duration_ms !== undefined) step.duration_ms = Number(event.duration_ms)
+              callbacks.onThinkingStep?.()
+            }
             if (eventType === 'delta' || eventType === 'message' || eventType === 'chunk') {
               const content = event.content ?? event.text ?? event.data
               const str = typeof content === 'string' ? content : ''
               if (str) {
                 currentText.value += str
                 callbacks.onDelta?.(str)
+                await yieldToEventLoop()
               }
             }
           } catch {

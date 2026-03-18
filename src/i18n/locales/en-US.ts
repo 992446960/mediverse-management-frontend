@@ -377,6 +377,10 @@ export default {
     webSearchOn: 'Web Search: On',
     webSearchOff: 'Web Search: Off',
     attachFile: 'Attach file',
+    attachmentDuplicate: '"{name}" already exists, skipped',
+    attachmentMaxCount: 'Maximum {max} attachments',
+    attachmentFormatInvalid: '"{name}" format not supported',
+    attachmentSizeExceeded: '"{name}" exceeds size limit',
     rateConversation: 'Rate',
     rated: 'Rated',
     prompt1: 'Help me analyze this case',
@@ -391,6 +395,7 @@ export default {
     skillCallDuration: 'Duration',
     message: 'Message',
     scrollToBottom: 'Scroll to bottom',
+    thinkingProcessTitle: 'Thinking Process',
   },
   theme: {
     light: 'Light Mode',

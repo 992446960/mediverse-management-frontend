@@ -1,18 +1,22 @@
 <script setup lang="ts">
 import { h, computed, ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
-import { BubbleList, Bubble } from 'ant-design-x-vue'
+import { BubbleList } from 'ant-design-x-vue'
 import BubbleRenderer from './BubbleRenderer.vue'
 import ThinkingProcess from './ThinkingProcess.vue'
 import SourceCitation from './SourceCitation.vue'
 import SkillCallDisplay from './SkillCallDisplay.vue'
 import type { Message, MessagePart } from '@/types/chat'
+import { isImagePart, isPdfPart } from '@/types/chat'
 import { getMessageText } from '@/types/chat'
 import {
   UserOutlined,
   RobotOutlined,
   FileOutlined,
+  FilePdfOutlined,
   VerticalAlignBottomOutlined,
+  CopyOutlined,
 } from '@ant-design/icons-vue'
+import { message as antMessage } from 'ant-design-vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
@@ -41,13 +45,32 @@ function getFileParts(msg: Message): MessagePart[] {
   return msg.parts?.filter((p) => p.type === 'file' || p.type === 'image') ?? []
 }
 
+/** 文件名中间省略，保留扩展名（参考图 2） */
+function truncateFilename(str: string, maxLen = 32): string {
+  if (!str || str.length <= maxLen) return str
+  const extIdx = str.lastIndexOf('.')
+  const ext = extIdx >= 0 ? str.slice(extIdx) : ''
+  const namePart = extIdx >= 0 ? str.slice(0, extIdx) : str
+  const maxName = maxLen - ext.length - 3
+  if (maxName <= 0) return str.slice(0, maxLen - 3) + '...' + ext
+  const take = Math.floor(maxName / 2)
+  return namePart.slice(0, take) + '...' + namePart.slice(-(maxName - take)) + ext
+}
+
+/** 过滤稀疏数组中的空位，避免 ThinkingProcess 收到 undefined 导致渲染异常 */
+function getThinkingProcess(
+  steps: Message['thinking_process']
+): NonNullable<Message['thinking_process']> {
+  return (steps ?? []).filter(Boolean) as NonNullable<Message['thinking_process']>
+}
+
 const items = computed(() => {
   return props.messages.map((msg) => ({
     key: msg.id,
     role: msg.role,
     content: getMessageText(msg),
     fileParts: getFileParts(msg),
-    thinking_process: msg.thinking_process,
+    thinking_process: getThinkingProcess(msg.thinking_process),
     tool_calls: msg.tool_calls,
     citations: msg.citations,
     status: msg.status,
@@ -153,15 +176,24 @@ watch(
   { deep: true }
 )
 
+async function copyMessageContent(text: string) {
+  try {
+    await navigator.clipboard.writeText(text)
+    antMessage.success(t('common.copied'))
+  } catch {
+    antMessage.error(t('common.copyFailed'))
+  }
+}
+
 const roles = {
   user: {
-    placement: 'end',
-    variant: 'shadow',
+    placement: 'end' as const,
+    variant: 'shadow' as const,
     avatar: { icon: h(UserOutlined), style: { backgroundColor: '#87d068' } },
   },
   assistant: {
-    placement: 'start',
-    variant: 'outlined',
+    placement: 'start' as const,
+    variant: 'outlined' as const,
     avatar: { icon: h(RobotOutlined), style: { backgroundColor: '#1890ff' } },
     // typing 由 items 中按 msg.status 控制，历史记录不显示打字效果
   },
@@ -172,69 +204,104 @@ const roles = {
   <div class="message-list-wrapper relative h-full pb-4">
     <div ref="listContainerRef" class="message-list h-full overflow-y-auto p-4 pb-0">
       <BubbleList :items="items" :roles="roles" :auto-scroll="true" :on-scroll="handleScroll">
-        <template #item="{ item }">
-          <Bubble
-            :content="item.content"
-            :loading="item.loading"
-            :variant="item.role === 'user' ? 'shadow' : 'outlined'"
-            :placement="item.role === 'user' ? 'end' : 'start'"
-            :avatar="item.avatar"
+        <!-- header: 思考过程在头部 -->
+        <template #header="{ item }">
+          <ThinkingProcess
+            v-if="item.role === 'assistant' && item.thinking_process?.length"
+            :steps="item.thinking_process"
+          />
+        </template>
+        <!-- footer: 复制按钮在底部，hover 展示 -->
+        <template #footer="{ item }">
+          <div v-if="item.role === 'assistant' && item.content" class="bubble-footer-actions">
+            <a-tooltip :title="t('common.copy')">
+              <a-button
+                type="text"
+                size="small"
+                :icon="h(CopyOutlined)"
+                @click="copyMessageContent(item.content)"
+              />
+            </a-tooltip>
+          </div>
+        </template>
+        <!-- message: 内容区（附件在上、文字在下，各自独立盒子） -->
+        <template #message="{ item }">
+          <div
+            class="flex flex-col gap-3"
+            :class="{
+              'message-with-attachments': item.fileParts?.length,
+              'user-message-attachments': item.role === 'user',
+            }"
           >
-            <template #messageRender="{ content }">
-              <div class="flex flex-col gap-2">
-                <!-- Thinking Process -->
-                <ThinkingProcess
-                  v-if="item.thinking_process && item.thinking_process.length > 0"
-                  :steps="item.thinking_process"
+            <SkillCallDisplay
+              v-if="item.tool_calls && item.tool_calls.length > 0 && !item.loading"
+              :tool-calls="item.tool_calls"
+            />
+            <!-- 附件盒子：无背景无边框，控制展示尺寸 用户角色右对齐使用类控制-->
+            <div
+              v-if="item.fileParts && item.fileParts.length"
+              class="message-attachments flex flex-wrap gap-2"
+            >
+              <template
+                v-for="(fp, idx) in item.fileParts"
+                :key="fp.url || fp.file_name || fp.name || idx"
+              >
+                <a-image
+                  v-if="isImagePart(fp)"
+                  :src="fp.url"
+                  :alt="fp.file_name ?? fp.name"
+                  class="chat-attachment-image"
+                  :preview="true"
                 />
-
-                <!-- Skill Call Display (tool_calls, 仅历史消息) -->
-                <SkillCallDisplay
-                  v-if="item.tool_calls && item.tool_calls.length > 0 && !item.loading"
-                  :tool-calls="item.tool_calls"
-                />
-
-                <!-- Content: 文本 -->
-                <BubbleRenderer v-if="content" :content="content" />
-
-                <!-- 用户消息附件展示 -->
-                <div
-                  v-if="item.fileParts && item.fileParts.length"
-                  class="flex flex-wrap gap-2 mt-1"
+                <!-- PDF 附件：参考图 2 卡片样式 -->
+                <component
+                  :is="fp.url ? 'a' : 'span'"
+                  v-else
+                  :href="fp.url || undefined"
+                  :target="fp.url ? '_blank' : undefined"
+                  :rel="fp.url ? 'noopener noreferrer' : undefined"
+                  :title="fp.file_name ?? fp.name"
+                  class="inline-flex items-center gap-2 text-sm"
+                  :class="[
+                    isPdfPart(fp) ? 'message-pdf-attachment' : 'message-file-attachment',
+                    { 'cursor-pointer': !!fp.url },
+                  ]"
                 >
-                  <template
-                    v-for="(fp, idx) in item.fileParts"
-                    :key="fp.url || fp.file_name || idx"
+                  <FilePdfOutlined
+                    v-if="isPdfPart(fp)"
+                    class="message-pdf-attachment__icon shrink-0"
+                  />
+                  <FileOutlined v-else class="shrink-0 text-gray-500" />
+                  <span
+                    :class="
+                      isPdfPart(fp) ? 'message-pdf-attachment__name' : 'truncate max-w-[200px]'
+                    "
+                    :title="fp.file_name ?? fp.name"
                   >
-                    <a-image
-                      v-if="fp.url && (fp.type === 'image' || fp.url.startsWith('blob:'))"
-                      :src="fp.url"
-                      :alt="fp.file_name"
-                      class="chat-attachment-image rounded border border-gray-200 dark:border-gray-600"
-                      :preview="true"
-                    />
-                    <span
-                      v-else
-                      class="inline-flex items-center gap-1 px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-xs text-gray-700 dark:text-gray-300"
-                    >
-                      <FileOutlined />
-                      {{ fp.file_name }}
-                    </span>
-                  </template>
-                </div>
-
-                <!-- Citations (仅历史消息) -->
-                <SourceCitation
-                  v-if="item.citations && item.citations.length > 0 && !item.loading"
-                  :citations="item.citations"
-                />
-              </div>
-            </template>
-
-            <template v-if="item.role === 'assistant' && !item.loading" #actions>
-              <div class="flex gap-2 text-gray-400 text-xs mt-1" />
-            </template>
-          </Bubble>
+                    {{
+                      isPdfPart(fp)
+                        ? truncateFilename(fp.file_name ?? fp.name ?? '')
+                        : (fp.file_name ?? fp.name)
+                    }}
+                  </span>
+                </component>
+              </template>
+            </div>
+            <!-- 文字盒子：独立气泡样式 -->
+            <div v-if="item.content" class="message-text-bubble w-fit">
+              <BubbleRenderer :content="item.content" :show-copy-button="false" />
+            </div>
+            <SourceCitation
+              v-if="item.citations && item.citations.length > 0 && !item.loading"
+              :citations="item.citations"
+            />
+          </div>
+        </template>
+        <!-- loading 仅显示 spin，思考过程已在 header 展示，避免重复 -->
+        <template #loading>
+          <div class="flex flex-col gap-2">
+            <a-spin size="small" />
+          </div>
         </template>
       </BubbleList>
       <div ref="bottomAnchorRef" class="h-px shrink-0" aria-hidden="true" />
@@ -256,11 +323,82 @@ const roles = {
   </div>
 </template>
 
-<style scoped>
-.chat-attachment-image :deep(img) {
-  width: 64px;
-  height: 64px;
-  object-fit: cover;
+<style lang="scss" scoped>
+/* 用户角色右对齐时，附件盒子右对齐 */
+.ant-bubble.ant-bubble-end[role='user'] .message-with-attachments {
+  align-items: flex-end;
+}
+
+/* 附件盒子：无背景、无边框，不撑大文字气泡 */
+.message-attachments {
+  background: transparent;
+  border: none;
+  padding: 0;
+
+  /* 附件图片：控制展示尺寸，参考图 2 避免撑大布局 */
+  :deep(.chat-attachment-image) {
+    max-width: 120px;
+    max-height: 120px;
+    min-height: 90px;
+    width: auto;
+    height: auto;
+    object-fit: cover;
+    border-radius: var(--radius-base);
+  }
+
+  /* PDF 附件：参考 ant-attachment-list-card - 浅灰背景、红图标、最小宽高与图片卡片统一 */
+  .message-pdf-attachment {
+    max-width: 180px;
+    max-height: 180px;
+    min-height: 90px;
+    min-width: 210px;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--color-bg-base);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-base);
+    box-shadow: var(--shadow-sm);
+    color: var(--color-text-base);
+    text-decoration: none;
+    transition: background var(--transition-fast);
+
+    &:hover {
+      background: var(--color-border-secondary);
+    }
+
+    &__icon {
+      color: rgb(255, 77, 79);
+      font-size: 24px;
+    }
+
+    &__name {
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  /* 普通文件附件 */
+  .message-file-attachment {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-base);
+    background: var(--color-bg-layout);
+    color: var(--color-text-base);
+    text-decoration: none;
+
+    &:hover {
+      background: var(--color-border-secondary);
+    }
+  }
+}
+
+/* 文字盒子：独立气泡样式（有附件时生效） */
+.message-with-attachments .message-text-bubble {
+  background: var(--color-bg-container);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-sm) var(--spacing-md);
 }
 
 .scroll-to-bottom-btn {
@@ -274,5 +412,32 @@ const roles = {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+.bubble-footer-actions {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+/* message-list-wrapper 下的深度选择器 */
+.message-list-wrapper {
+  /* 仅带附件时去除外层气泡阴影（文字有独立气泡）；单文本保留默认气泡 */
+  :deep(
+    .ant-bubble.ant-bubble-end[role='user'] .ant-bubble-content:has(.message-with-attachments)
+  ) {
+    box-shadow: none !important;
+  }
+
+  /* 有附件时：Bubble 内容区透明，附件无背景，仅文字有独立气泡 */
+  :deep([class*='bubble-content']:has(.message-with-attachments)) {
+    background: transparent;
+    border: none;
+    padding: 0;
+  }
+
+  /* 气泡 hover 时展示底部复制按钮 */
+  :deep([class*='bubble']:not([class*='list']):hover .bubble-footer-actions) {
+    opacity: 1;
+  }
 }
 </style>
