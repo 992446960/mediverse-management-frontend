@@ -135,8 +135,8 @@ const displaySteps = computed(() =>
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   background: var(--color-border);
   color: white;
@@ -144,7 +144,7 @@ const displaySteps = computed(() =>
 }
 
 .thinking-process-step-dot--done {
-  background: var(--tp-success);
+  background: var(--color-primary);
 }
 
 .thinking-process-step-dot-loading {
@@ -164,8 +164,8 @@ const displaySteps = computed(() =>
 
 .thinking-process-step-line {
   position: absolute;
-  left: 9px;
-  top: 22px;
+  left: 7px;
+  top: 16px;
   bottom: -16px;
   width: 2px;
   background: var(--tp-border);
