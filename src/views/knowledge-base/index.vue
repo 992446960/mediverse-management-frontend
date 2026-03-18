@@ -17,26 +17,36 @@
           @search="handleSearch"
         >
           <template #enterButton>
-            <a-button type="primary" size="large">
+            <a-button type="primary" class="kb-search-btn">
               <SearchOutlined /> {{ t('knowledgeSearch.searchButton') }}
             </a-button>
           </template>
         </a-input-search>
       </div>
 
-      <!-- Recent Searches -->
+      <!-- Recent Searches（支持单项删除与清空） -->
       <div v-if="recentSearches.length > 0" class="space-y-2">
-        <div class="text-sm text-gray-500 font-medium">
-          {{ t('knowledgeSearch.recentSearches') }}:
+        <div class="flex items-center justify-between gap-2">
+          <span class="text-sm text-gray-500 font-medium">
+            {{ t('knowledgeSearch.recentSearches') }}:
+          </span>
+          <a
+            class="text-xs text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+            @click="handleClearRecent"
+          >
+            {{ t('knowledgeSearch.clearRecent') }}
+          </a>
         </div>
         <div class="flex flex-wrap gap-2">
           <a-tag
-            v-for="tag in recentSearches"
-            :key="tag"
-            class="cursor-pointer hover:text-blue-600 hover:border-blue-600 transition-colors"
-            @click="handleSearch(tag)"
+            v-for="session in recentSearches"
+            :key="session.id"
+            closable
+            class="cursor-pointer hover:text-primary hover:border-primary transition-colors"
+            @click.self="handleSearch(session.title)"
+            @close="handleRemoveRecent(session.id)"
           >
-            {{ tag }}
+            {{ session.title }}
           </a-tag>
         </div>
       </div>
@@ -108,7 +118,7 @@ const store = useKnowledgeSearchStore()
 const searchQuery = ref('')
 const loading = ref(false)
 
-const recentSearches = computed(() => store.sessions.slice(0, 8).map((s) => s.title))
+const recentSearches = computed(() => store.sessions.slice(0, 8))
 const recentFiles = ref([
   { id: 1, name: '2025年第一季度院感防控手册.pdf', date: '2小时前' },
   { id: 2, name: '急诊科排班表_3月.xlsx', date: '昨天' },
@@ -134,15 +144,46 @@ const handleSearch = async (query: string) => {
   }
 }
 
+const handleRemoveRecent = (sessionId: string) => {
+  store.deleteSession(sessionId)
+}
+
+const handleClearRecent = () => {
+  const ids = store.sessions.slice(0, 8).map((s) => s.id)
+  ids.forEach((id) => store.deleteSession(id))
+}
+
 onMounted(() => {
   store.fetchSessions()
 })
 </script>
 
 <style scoped>
+.kb-search-input :deep(.ant-input-wrapper) {
+  display: flex;
+  align-items: stretch;
+}
+
 .kb-search-input :deep(.ant-input-lg) {
   font-size: 1.125rem;
   padding-left: 1rem;
   padding-right: 1rem;
+}
+
+.kb-search-input :deep(.ant-input-group-addon) {
+  padding: 0;
+  border: none;
+  background: transparent;
+  display: flex;
+}
+
+.kb-search-btn {
+  height: 100%;
+  margin-left: -1px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>

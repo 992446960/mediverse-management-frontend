@@ -9,24 +9,22 @@
     </div>
 
     <div v-for="msg in messages" :key="msg.id" class="message-item group">
-      <!-- User Message -->
+      <!-- User Message（与分身聊天气泡风格一致，使用主题色） -->
       <div v-if="msg.role === 'user'" class="flex justify-end mb-4">
         <div
-          class="bg-blue-600 text-white px-4 py-2 rounded-2xl rounded-tr-sm max-w-[80%] shadow-sm"
+          class="kb-user-bubble text-white px-4 py-2 rounded-2xl rounded-tr-sm max-w-[80%] shadow-sm"
         >
           {{ msg.content }}
         </div>
       </div>
 
-      <!-- Assistant Message -->
-      <div v-else class="flex gap-3 mb-6">
-        <div
-          class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0"
-        >
+      <!-- Assistant Message（气泡宽度适应内容；复制按钮在气泡下方 hover 展示） -->
+      <div v-else class="kb-assistant-row flex gap-3 mb-6 group">
+        <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
           <RobotOutlined class="text-indigo-600" />
         </div>
 
-        <div class="flex-1 min-w-0">
+        <div class="kb-assistant-content w-fit max-w-full flex flex-col">
           <!-- Thinking Process (API 无 thinkingSteps 时为空) -->
           <ThinkingProcess
             v-if="msg.thinkingSteps && msg.thinkingSteps.length > 0"
@@ -35,10 +33,11 @@
             "
           />
 
-          <!-- Content -->
+          <!-- Content 气泡 -->
           <div class="bg-white border border-gray-100 rounded-2xl rounded-tl-sm p-4 shadow-sm">
             <BubbleRenderer
               :content="msg.content"
+              :show-copy-button="false"
               @citation-click="(index: number) => handleCitationClick(msg, index)"
             />
 
@@ -64,6 +63,22 @@
             <div v-if="msg.relatedQuestions && msg.relatedQuestions.length > 0" class="mt-4">
               <RelatedQuestions :questions="msg.relatedQuestions" @select="handleQuestionSelect" />
             </div>
+          </div>
+
+          <!-- 复制按钮：hover 时显示在气泡下方 -->
+          <div
+            class="kb-copy-below opacity-0 group-hover:opacity-100 transition-opacity mt-1 flex items-center"
+          >
+            <a-tooltip :title="t('common.copy')">
+              <a-button
+                type="text"
+                size="small"
+                class="text-gray-400 hover:text-gray-600"
+                @click="copyMessageContent(msg.content)"
+              >
+                <template #icon><CopyOutlined /></template>
+              </a-button>
+            </a-tooltip>
           </div>
         </div>
       </div>
@@ -91,7 +106,8 @@
 <script setup lang="ts">
 import { ref, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { SearchOutlined, RobotOutlined } from '@ant-design/icons-vue'
+import { message } from 'ant-design-vue'
+import { SearchOutlined, RobotOutlined, CopyOutlined } from '@ant-design/icons-vue'
 import BubbleRenderer from '@/components/ChatWindow/BubbleRenderer.vue'
 import ThinkingProcess from '@/components/ChatWindow/ThinkingProcess.vue'
 import CitationLink from './CitationLink.vue'
@@ -109,6 +125,15 @@ const emit = defineEmits(['question-select'])
 
 const handleQuestionSelect = (question: string) => {
   emit('question-select', question)
+}
+
+const copyMessageContent = async (text: string) => {
+  try {
+    await navigator.clipboard.writeText(text)
+    message.success(t('common.copied'))
+  } catch {
+    message.error(t('common.copyFailed'))
+  }
 }
 
 const handleCitationClick = (msg: SearchMessage, index: number) => {
@@ -143,3 +168,9 @@ watch(
   }
 )
 </script>
+
+<style scoped>
+.kb-user-bubble {
+  background: var(--color-primary);
+}
+</style>

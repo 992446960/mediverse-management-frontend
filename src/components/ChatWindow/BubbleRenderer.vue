@@ -10,9 +10,14 @@ import { message } from 'ant-design-vue'
 
 const { t } = useI18n()
 
-const props = defineProps<{
-  content: string
-}>()
+const props = withDefaults(
+  defineProps<{
+    content: string
+    /** 为 false 时由父组件在气泡下方单独渲染复制按钮（如 SearchResultThread） */
+    showCopyButton?: boolean
+  }>(),
+  { showCopyButton: true }
+)
 
 marked.setOptions({
   highlight: function (code, lang) {
@@ -45,7 +50,10 @@ const copyContent = async () => {
       v-html="renderedContent"
     ></div>
 
-    <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+    <div
+      v-if="showCopyButton"
+      class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+    >
       <a-button type="text" size="small" :icon="h(CopyOutlined)" @click="copyContent" />
     </div>
   </div>

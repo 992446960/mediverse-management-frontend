@@ -1,5 +1,5 @@
 <template>
-  <div class="kb-search-page h-full flex">
+  <div class="kb-search-page h-full flex overflow-hidden rounded-md">
     <!-- Sidebar -->
     <KBSidebar />
 
@@ -7,7 +7,7 @@
     <div class="flex-1 flex flex-col h-full overflow-hidden bg-white">
       <!-- Header -->
       <div
-        class="h-14 border-b border-gray-200 flex items-center justify-between px-6 bg-white flex-shrink-0"
+        class="h-14 border-b border-gray-200 flex items-center justify-between px-6 bg-white shrink-0"
       >
         <div class="font-medium text-gray-900 truncate">
           {{ currentSession?.title || t('knowledgeSearch.noTitle') }}
@@ -24,18 +24,20 @@
         @question-select="handleFollowUp"
       />
 
-      <!-- Input Area -->
-      <div class="p-4 border-t border-gray-200 bg-white flex-shrink-0">
-        <div class="relative max-w-4xl mx-auto">
+      <!-- Input Area（主题色边框 + 发送图标垂直居中） -->
+      <div class="p-4 border-t border-gray-200 bg-white shrink-0">
+        <div class="kb-search-input-wrap relative max-w-4xl mx-auto">
           <a-textarea
             v-model:value="inputContent"
             :placeholder="t('knowledgeSearch.followUpPlaceholder')"
             :auto-size="{ minRows: 1, maxRows: 6 }"
-            class="pr-12 !resize-none !rounded-xl !py-3 !px-4 !border-gray-300 focus:!border-blue-500 focus:!shadow-none"
+            class="kb-search-textarea pr-12 resize-none! rounded-xl! py-3! px-4!"
             :disabled="streaming"
             @keydown.enter.prevent="handleKeydown"
           />
-          <div class="absolute right-2 bottom-2">
+          <div
+            class="kb-search-send-wrap absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center"
+          >
             <a-button
               v-if="streaming"
               type="primary"
@@ -50,7 +52,7 @@
               v-else
               type="primary"
               shape="circle"
-              size="small"
+              size="medium"
               :disabled="!inputContent.trim()"
               @click="handleFollowUp(inputContent)"
             >
@@ -111,3 +113,20 @@ watch(
   { immediate: true }
 )
 </script>
+
+<style scoped>
+.kb-search-input-wrap :deep(.kb-search-textarea.ant-input),
+.kb-search-input-wrap :deep(.kb-search-textarea.ant-input:hover) {
+  border-color: var(--color-border);
+}
+.kb-search-input-wrap :deep(.kb-search-textarea.ant-input:focus) {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+.kb-search-send-wrap {
+  pointer-events: none;
+}
+.kb-search-send-wrap :deep(.ant-btn) {
+  pointer-events: auto;
+}
+</style>

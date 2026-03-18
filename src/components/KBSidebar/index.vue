@@ -1,13 +1,13 @@
 <template>
   <div class="kb-sidebar h-full flex flex-col border-r border-gray-200 bg-gray-50">
-    <div class="p-4">
+    <div class="p-4 border-b border-gray-200">
       <a-button type="primary" block @click="createNewSession">
         <template #icon><PlusOutlined /></template>
         {{ t('knowledgeSearch.newSearch') }}
       </a-button>
     </div>
 
-    <div class="flex-1 overflow-y-auto px-2">
+    <div class="flex-1 overflow-y-auto p-2">
       <div v-if="loading" class="p-4 text-center">
         <a-spin />
       </div>
