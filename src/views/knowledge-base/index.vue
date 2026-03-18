@@ -1,5 +1,7 @@
 <template>
-  <div class="kb-home h-full flex flex-col items-center justify-center bg-white p-8">
+  <div
+    class="kb-home h-full flex flex-col items-center justify-center bg-white dark:bg-gray-900 p-8"
+  >
     <div class="w-full max-w-3xl space-y-8">
       <div class="text-center space-y-2">
         <h1 class="text-3xl font-bold text-gray-900">{{ t('knowledgeSearch.title') }}</h1>
