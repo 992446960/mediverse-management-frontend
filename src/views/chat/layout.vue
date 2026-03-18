@@ -1,9 +1,15 @@
 <script setup lang="ts">
 import ChatSidebar from '@/components/SessionSidebar/index.vue'
 import SkillPanel from '@/components/SkillPanel/index.vue'
+import { useChatStore } from '@/stores/chat'
 
 const route = useRoute()
 const showSkillPanel = computed(() => route.name === 'ChatSession')
+const chatStore = useChatStore()
+
+onMounted(() => {
+  chatStore.loadSessions()
+})
 </script>
 
 <template>
