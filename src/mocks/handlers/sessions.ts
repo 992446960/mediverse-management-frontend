@@ -5,21 +5,21 @@ import type { Session, Message } from '@/types/chat'
 const BASE_URL = '/api/v1'
 
 export const handlers = [
-  // Get sessions
-  http.get(`${BASE_URL}/sessions`, async ({ request }) => {
+  // ── 3.1.2 查询会话列表 ─────────────────────────────────────────────
+  http.get(`${BASE_URL}/chat/sessions`, async ({ request }) => {
     await delay(300)
     const url = new URL(request.url)
     const page = Number(url.searchParams.get('page') || 1)
     const pageSize = Number(url.searchParams.get('page_size') || 20)
 
-    // Sort by updated_at desc
     const sorted = [...mockSessions].sort(
-      (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+      (a, b) =>
+        new Date(b.last_message_at || b.updated_at || b.created_at).getTime() -
+        new Date(a.last_message_at || a.updated_at || a.created_at).getTime()
     )
 
     const start = (page - 1) * pageSize
-    const end = start + pageSize
-    const items = sorted.slice(start, end)
+    const items = sorted.slice(start, start + pageSize)
 
     return HttpResponse.json({
       code: 0,
@@ -33,18 +33,19 @@ export const handlers = [
     })
   }),
 
-  // Create session
-  http.post(`${BASE_URL}/sessions`, async ({ request }) => {
+  // ── 3.1.3 新建会话 ─────────────────────────────────────────────────
+  http.post(`${BASE_URL}/chat/sessions`, async ({ request }) => {
     await delay(300)
-    const body = (await request.json()) as { title?: string; avatar_id?: string }
+    const body = (await request.json()) as { avatar_id: string; idempotency_key?: string }
 
     const newSession: Session = {
       id: `session_${Date.now()}`,
-      title: body.title || '新会话',
+      title: null,
       avatar_id: body.avatar_id || 'avatar_default',
-      user_id: 'user_current',
+      avatar_name: '数字医生',
+      avatar_url: '',
+      status: 'active',
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
       last_message_at: new Date().toISOString(),
     }
 
@@ -58,8 +59,8 @@ export const handlers = [
     })
   }),
 
-  // Delete session
-  http.delete(`${BASE_URL}/sessions/:id`, async ({ params }) => {
+  // ── 3.1.x 删除会话 ─────────────────────────────────────────────────
+  http.delete(`${BASE_URL}/chat/sessions/:id`, async ({ params }) => {
     await delay(300)
     const { id } = params
     const index = mockSessions.findIndex((s) => s.id === id)
@@ -68,15 +69,11 @@ export const handlers = [
       delete mockMessages[id as string]
     }
 
-    return HttpResponse.json({
-      code: 0,
-      message: 'ok',
-      data: null,
-    })
+    return HttpResponse.json({ code: 0, message: 'ok', data: null })
   }),
 
-  // Rename session
-  http.patch(`${BASE_URL}/sessions/:id`, async ({ params, request }) => {
+  // ── 3.1.4 重命名会话 ────────────────────────────────────────────────
+  http.patch(`${BASE_URL}/chat/sessions/:id/title`, async ({ params, request }) => {
     await delay(300)
     const { id } = params
     const body = (await request.json()) as { title: string }
@@ -84,48 +81,53 @@ export const handlers = [
     const session = mockSessions.find((s) => s.id === id)
     if (session) {
       session.title = body.title
-      session.updated_at = new Date().toISOString()
     }
 
-    return HttpResponse.json({
-      code: 0,
-      message: 'ok',
-      data: null,
-    })
+    return HttpResponse.json({ code: 0, message: 'ok', data: null })
   }),
 
-  // Get messages
-  http.get(`${BASE_URL}/sessions/:id/messages`, async ({ params }) => {
+  // ── 3.1.5 获取历史消息 ──────────────────────────────────────────────
+  http.get(`${BASE_URL}/chat/sessions/:id/messages`, async ({ params, request }) => {
     await delay(300)
     const { id } = params
-    const messages = mockMessages[id as string] || []
+    const url = new URL(request.url)
+    const limit = Number(url.searchParams.get('limit') || 50)
+    const beforeId = url.searchParams.get('before_id')
+
+    let msgs: Message[] = mockMessages[id as string] || []
+    if (beforeId) {
+      const idx = msgs.findIndex((m) => m.id === beforeId)
+      if (idx > 0) msgs = msgs.slice(0, idx)
+    }
+    const items = msgs.slice(-limit)
+    const has_more = msgs.length > limit
 
     return HttpResponse.json({
       code: 0,
       message: 'ok',
-      data: messages,
+      data: { has_more, items },
     })
   }),
 
-  // Send message (SSE)
-  http.post(`${BASE_URL}/sessions/:id/messages`, async ({ params, request }) => {
+  // ── 3.1.6 发送消息（SSE 流式）──────────────────────────────────────
+  http.post(`${BASE_URL}/chat/sessions/:id/messages`, async ({ params, request }) => {
     const { id } = params
-    const body = (await request.json()) as { content: string }
     const sessionId = id as string
+    const formData = await request.formData()
+    const text = (formData.get('text') as string) || ''
 
-    // 1. Save user message
     if (!mockMessages[sessionId]) mockMessages[sessionId] = []
+
     const userMsg: Message = {
       id: `msg_${Date.now()}_u`,
       session_id: sessionId,
       role: 'user',
-      content: body.content,
+      content: text,
       created_at: new Date().toISOString(),
       status: 'sent',
     }
     mockMessages[sessionId].push(userMsg)
 
-    // 2. Prepare assistant response
     const assistantMsgId = `msg_${Date.now()}_a`
     const assistantMsg: Message = {
       id: assistantMsgId,
@@ -134,82 +136,64 @@ export const handlers = [
       content: '',
       thinking_steps: [],
       created_at: new Date().toISOString(),
-      status: 'sent', // Will be updated after stream
+      status: 'sent',
     }
 
-    // 3. Stream response
     const encoder = new TextEncoder()
     const stream = new ReadableStream({
       async start(controller) {
-        // Simulate thinking
         const steps = [
-          { title: '理解意图', content: '正在分析用户问题...' },
-          { title: '检索知识库', content: '正在搜索相关文档...' },
-          { title: '生成回答', content: '正在组织语言...' },
+          { title: '理解意图', description: '正在分析用户问题...' },
+          { title: '检索知识库', description: '正在搜索相关文档...' },
+          { title: '生成回答', description: '正在组织语言...' },
         ]
 
         for (let i = 0; i < steps.length; i++) {
-          const step = steps[i]
-          if (!step) continue
+          const step = steps[i]!
 
-          // Start step
           controller.enqueue(
             encoder.encode(
               `data: ${JSON.stringify({
                 type: 'thinking_step',
                 index: i,
                 title: step.title,
-                content: '',
-                status: 'thinking',
+                status: 'processing',
               })}\n\n`
             )
           )
+          await delay(400)
 
-          await delay(500)
-
-          // Step content
           controller.enqueue(
             encoder.encode(
               `data: ${JSON.stringify({
                 type: 'thinking_step',
                 index: i,
-                content: step.content,
+                title: step.title,
+                description: step.description,
                 status: 'done',
+                duration_ms: Math.floor(Math.random() * 300) + 100,
               })}\n\n`
             )
           )
-
-          if (assistantMsg.thinking_steps) {
-            assistantMsg.thinking_steps.push({
-              title: step.title,
-              content: step.content,
-              status: 'done',
-            })
-          }
+          await delay(100)
         }
 
-        // Simulate text generation
-        const responseText = `这是针对"${body.content}"的模拟回答。\n\n这里是流式输出的内容演示：\n1. 第一点...\n2. 第二点...\n3. 总结...`
+        const responseText = `这是针对"${text}"的模拟回答。\n\n这里是流式输出的内容演示：\n1. 第一点...\n2. 第二点...\n3. 总结...`
 
         for (const char of responseText) {
           controller.enqueue(
-            encoder.encode(
-              `data: ${JSON.stringify({
-                type: 'delta',
-                content: char,
-              })}\n\n`
-            )
+            encoder.encode(`data: ${JSON.stringify({ type: 'delta', content: char })}\n\n`)
           )
           assistantMsg.content += char
           await delay(30)
         }
 
-        // Done
         controller.enqueue(
           encoder.encode(
             `data: ${JSON.stringify({
               type: 'done',
               message_id: assistantMsgId,
+              tokens_used: Math.floor(Math.random() * 500) + 100,
             })}\n\n`
           )
         )
@@ -218,11 +202,9 @@ export const handlers = [
           mockMessages[sessionId].push(assistantMsg)
         }
 
-        // Update session last_message_at
         const session = mockSessions.find((s) => s.id === sessionId)
         if (session) {
           session.last_message_at = new Date().toISOString()
-          session.updated_at = new Date().toISOString()
         }
 
         controller.close()
@@ -238,13 +220,9 @@ export const handlers = [
     })
   }),
 
-  // Rate message
-  http.post(`${BASE_URL}/messages/:id/rate`, async () => {
+  // ── 3.1.7 提交评分 ──────────────────────────────────────────────────
+  http.post(`${BASE_URL}/chat/sessions/:id/ratings`, async () => {
     await delay(300)
-    return HttpResponse.json({
-      code: 0,
-      message: 'ok',
-      data: null,
-    })
+    return HttpResponse.json({ code: 0, message: 'ok', data: null })
   }),
 ]

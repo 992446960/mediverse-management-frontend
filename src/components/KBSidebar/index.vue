@@ -3,7 +3,7 @@
     <div class="p-4">
       <a-button type="primary" block @click="createNewSession">
         <template #icon><PlusOutlined /></template>
-        新建搜索
+        {{ t('knowledgeSearch.newSearch') }}
       </a-button>
     </div>
 
@@ -34,7 +34,7 @@
             @click="selectSession(session.id)"
           >
             <div class="flex-1 truncate text-sm">
-              {{ session.title || '无标题会话' }}
+              {{ session.title || t('knowledgeSearch.noTitle') }}
             </div>
             <div class="opacity-0 group-hover:opacity-100 transition-opacity ml-2">
               <a-dropdown :trigger="['click']" @click.stop>
@@ -42,7 +42,7 @@
                 <template #overlay>
                   <a-menu>
                     <a-menu-item key="delete" danger @click="deleteSession(session.id)">
-                      <DeleteOutlined /> 删除会话
+                      <DeleteOutlined /> {{ t('knowledgeSearch.deleteSession') }}
                     </a-menu-item>
                   </a-menu>
                 </template>
@@ -58,6 +58,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { PlusOutlined, EllipsisOutlined, DeleteOutlined } from '@ant-design/icons-vue'
 import { useKnowledgeSearchStore } from '@/stores/knowledgeSearch'
 import { storeToRefs } from 'pinia'
@@ -66,12 +67,13 @@ const router = useRouter()
 const store = useKnowledgeSearchStore()
 const { groupedSessions, currentSessionId, loading } = storeToRefs(store)
 
+const { t } = useI18n()
 const groupLabel = (key: string) => {
   const labels: Record<string, string> = {
-    today: '今天',
-    yesterday: '昨天',
-    week: '过去7天',
-    earlier: '更早',
+    today: t('knowledgeSearch.groupToday'),
+    yesterday: t('knowledgeSearch.groupYesterday'),
+    week: t('knowledgeSearch.groupWeek'),
+    earlier: t('knowledgeSearch.groupEarlier'),
   }
   return labels[key] || key
 }

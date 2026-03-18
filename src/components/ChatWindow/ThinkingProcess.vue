@@ -10,9 +10,9 @@ const props = defineProps<{
 const items = computed(() => {
   return props.steps.map((step) => ({
     title: step.title,
-    description: step.content,
-    status: step.status === 'thinking' ? 'pending' : 'success', // Map to Ant Design X status
-    // Add other properties if needed
+    description: step.description ?? step.content,
+    status: step.status === 'processing' ? 'pending' : 'success',
+    extra: step.duration_ms ? `${step.duration_ms}ms` : undefined,
   }))
 })
 </script>

@@ -26,6 +26,57 @@ function delay(ms: number) {
 }
 
 export const avatarHandlers = [
+  // ── 3.1.1 查询可体验的分身列表（/chat/avatars）──────────────────────
+  http.get(`${API_BASE}/chat/avatars`, async ({ request }) => {
+    await delay(250)
+    const url = new URL(request.url)
+    const page = Math.max(1, Number.parseInt(url.searchParams.get('page') || '1', 10))
+    const pageSize = Math.min(
+      100,
+      Math.max(1, Number.parseInt(url.searchParams.get('page_size') || '20', 10))
+    )
+    const keyword = url.searchParams.get('keyword')?.trim() || ''
+    const type = url.searchParams.get('type') as Avatar['type'] | null
+    const org_id = url.searchParams.get('org_id')?.trim() || ''
+    const dept_id = url.searchParams.get('dept_id')?.trim() || ''
+
+    let list = mutableAvatars.filter((a) => a.status === 'active')
+    if (keyword) list = list.filter((a) => a.name.includes(keyword))
+    if (type === 'general' || type === 'specialist' || type === 'expert') {
+      list = list.filter((a) => a.type === type)
+    }
+    if (org_id) list = list.filter((a) => a.org_id === org_id)
+    if (dept_id) list = list.filter((a) => a.dept_id === dept_id)
+
+    const total = list.length
+    const start = (page - 1) * pageSize
+    const items = list.slice(start, start + pageSize).map((a) => ({
+      id: a.id,
+      type: a.type,
+      name: a.name,
+      avatar_url: a.avatar_url,
+      bio: a.bio,
+      tags: a.tags,
+      org_name: a.org_id ? resolveOrgName(a.org_id) : '',
+      dept_name: a.dept_id ? resolveDeptName(a.dept_id) : '',
+      quota: {
+        avatar_scope: 'org',
+        max_sessions: 50,
+        used_sessions: Math.floor(Math.random() * 10),
+        remaining: 38,
+        is_unlimited: false,
+        is_exhausted: false,
+      },
+    }))
+
+    return HttpResponse.json({
+      code: 0,
+      message: 'ok',
+      data: { total, page, page_size: pageSize, items },
+    })
+  }),
+
+  // ── 管理端分身列表（/avatars）──────────────────────────────────────
   http.get(`${API_BASE}/avatars`, async ({ request }) => {
     await delay(250)
     const url = new URL(request.url)

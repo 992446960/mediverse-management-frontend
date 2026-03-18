@@ -1,3 +1,4 @@
+/* eslint-disable */
 // @ts-nocheck
 // biome-ignore lint: disable
 // oxlint-disable
@@ -105,6 +106,7 @@ declare module 'vue' {
     PageHead: typeof import('./src/components/PageHead/index.vue')['default']
     PageTable: typeof import('./src/components/PageTable/index.vue')['default']
     PageTree: typeof import('./src/components/PageTree/index.vue')['default']
+    PaginationSelect: typeof import('./src/components/AvatarSelector/PaginationSelect.vue')['default']
     ParsedDocViewer: typeof import('./src/components/FilePreview/ParsedDocViewer.vue')['default']
     PdfViewer: typeof import('./src/components/FilePreview/PdfViewer.vue')['default']
     QuickActionGuide: typeof import('./src/components/AvatarConfig/QuickActionGuide.vue')['default']

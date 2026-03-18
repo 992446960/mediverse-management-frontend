@@ -7,10 +7,11 @@ import {
   deleteChatSession,
   renameSession,
   getMessages,
-  rateMessage,
+  rateSession,
+  sendMessageRaw,
 } from '@/api/sessions'
 import { useSSEChat } from '@/composables/useSSEChat'
-import type { Session, Message } from '@/types/chat'
+import type { Session, Message, SessionRating } from '@/types/chat'
 
 export const useChatStore = defineStore('chat', () => {
   const sessions = ref<Session[]>([])
@@ -19,9 +20,8 @@ export const useChatStore = defineStore('chat', () => {
   const loadingSessions = ref(false)
   const loadingMessages = ref(false)
 
-  // Use the SSE composable
   const {
-    sendMessage: sseSendMessage,
+    consumeSSE,
     stopGeneration: stopSSEGeneration,
     thinkingSteps: sseThinkingSteps,
   } = useSSEChat()
@@ -39,13 +39,14 @@ export const useChatStore = defineStore('chat', () => {
       earlier: [] as Session[],
     }
 
-    // Sort sessions by updated_at desc
     const sorted = [...sessions.value].sort(
-      (a, b) => dayjs(b.updated_at).valueOf() - dayjs(a.updated_at).valueOf()
+      (a, b) =>
+        dayjs(b.last_message_at || b.updated_at || b.created_at).valueOf() -
+        dayjs(a.last_message_at || a.updated_at || a.created_at).valueOf()
     )
 
     sorted.forEach((session) => {
-      const date = dayjs(session.updated_at)
+      const date = dayjs(session.last_message_at || session.updated_at || session.created_at)
       if (date.isSame(now, 'day')) {
         groups.today.push(session)
       } else if (date.isSame(now.subtract(1, 'day'), 'day')) {
@@ -63,7 +64,7 @@ export const useChatStore = defineStore('chat', () => {
   async function loadSessions() {
     loadingSessions.value = true
     try {
-      const res = await getChatSessions({ page: 1, page_size: 100 }) // Load all for now
+      const res = await getChatSessions({ page: 1, page_size: 100 })
       sessions.value = res.items
     } finally {
       loadingSessions.value = false
@@ -75,16 +76,24 @@ export const useChatStore = defineStore('chat', () => {
     if (!messages.value[id]) {
       loadingMessages.value = true
       try {
-        const res = await getMessages(id)
-        messages.value[id] = res
+        const res = await getMessages(id, { limit: 50 })
+        // API 返回 has_more + items；items 按时间升序展示
+        messages.value[id] = res.items
       } finally {
         loadingMessages.value = false
       }
     }
   }
 
-  async function createNewSession(title: string = '新会话', avatarId?: string) {
-    const session = await createChatSession({ title, avatar_id: avatarId })
+  async function createNewSession(avatarId: string, title?: string) {
+    const session = await createChatSession({
+      avatar_id: avatarId,
+      idempotency_key: crypto.randomUUID(),
+    })
+    // 更新本地 title（API 返回时 title 可能为 null）
+    if (title && !session.title) {
+      session.title = title
+    }
     sessions.value.unshift(session)
     await selectSession(session.id)
     return session
@@ -107,12 +116,12 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
-  async function sendMessage(content: string) {
+  async function sendMessage(content: string, attachments?: File[]) {
     if (!currentSessionId.value) return
 
     const sessionId = currentSessionId.value
 
-    // 1. Add user message
+    // 1. Add user message (optimistic)
     const userMsgId = `msg_${Date.now()}_u`
     const userMessage: Message = {
       id: userMsgId,
@@ -139,32 +148,41 @@ export const useChatStore = defineStore('chat', () => {
     }
     messages.value[sessionId].push(assistantMessage)
 
-    // 3. Start streaming
+    // 3. Send via multipart/form-data SSE
     try {
-      await sseSendMessage(
-        `/api/v1/sessions/${sessionId}/messages`,
-        { content }, // TODO: Handle files
-        {
-          onDelta: (delta) => {
-            assistantMessage.content += delta
-            // Sync thinking steps
-            assistantMessage.thinking_steps = [...sseThinkingSteps.value]
-          },
-          onDone: (finalId) => {
-            assistantMessage.id = finalId // Update with real ID from server
-            assistantMessage.status = 'sent'
-            // Sync final thinking steps
-            assistantMessage.thinking_steps = [...sseThinkingSteps.value]
-          },
-          onError: (err) => {
-            assistantMessage.status = 'error'
-            assistantMessage.content += `\n[Error: ${err}]`
-          },
-        }
-      )
+      const response = await sendMessageRaw(sessionId, {
+        text: content,
+        attachments,
+      })
+
+      await consumeSSE(response, {
+        onDelta: (delta) => {
+          assistantMessage.content += delta
+          assistantMessage.thinking_steps = [...sseThinkingSteps.value]
+        },
+        onDone: (finalId, tokensUsed) => {
+          assistantMessage.id = finalId
+          assistantMessage.status = 'sent'
+          assistantMessage.tokens_used = tokensUsed
+          assistantMessage.thinking_steps = [...sseThinkingSteps.value]
+          // Update session last_message_at
+          const session = sessions.value.find((s) => s.id === sessionId)
+          if (session) {
+            session.last_message_at = new Date().toISOString()
+          }
+        },
+        onError: (err) => {
+          assistantMessage.status = 'error'
+          assistantMessage.content += `\n[Error: ${err}]`
+        },
+      })
     } catch {
       assistantMessage.status = 'error'
     }
+  }
+
+  async function submitRating(sessionId: string, rating: SessionRating) {
+    await rateSession(sessionId, rating)
   }
 
   return {
@@ -182,8 +200,6 @@ export const useChatStore = defineStore('chat', () => {
     updateSessionTitle,
     sendMessage,
     stopGeneration: stopSSEGeneration,
-    rateMessage: async (messageId: string, rating: 'like' | 'dislike') => {
-      await rateMessage(messageId, rating)
-    },
+    submitRating,
   }
 })

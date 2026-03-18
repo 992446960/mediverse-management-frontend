@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { Prompts } from 'ant-design-x-vue'
 import { BulbOutlined, RocketOutlined, SmileOutlined } from '@ant-design/icons-vue'
@@ -7,6 +8,7 @@ import MessageList from './MessageList.vue'
 import MessageInput from './MessageInput.vue'
 import { useChatStore } from '@/stores/chat'
 
+const { t } = useI18n()
 const props = defineProps<{
   sessionId?: string
   isTestMode?: boolean
@@ -34,10 +36,8 @@ const initialPrompts = [
 ]
 
 const handleSend = async (content: string) => {
-  if (!props.sessionId && !currentSessionId.value) {
-    // Create new session first if needed
-    await createNewSession(content.slice(0, 20), props.avatarId)
-    // Wait for session creation then send
+  if (!props.sessionId && !currentSessionId.value && props.avatarId) {
+    await createNewSession(props.avatarId, content.slice(0, 20))
   }
 
   await sendMessage(content)
@@ -75,10 +75,10 @@ watch(
         :loading="loadingMessages"
       />
 
-      <!-- Empty State / Prompts -->
+      <!-- Empty State / Prompts（聊天记录为空时展示） -->
       <div v-else class="h-full flex flex-col items-center justify-center p-8 text-center">
         <div class="mb-8 flex flex-col items-center">
-          <div class="mb-6 p-4 rounded-2xl bg-sky-50 dark:bg-sky-900/20 text-primary">
+          <div class="mb-6 p-4 h-full rounded-2xl bg-sky-50 dark:bg-sky-900/20 text-primary">
             <svg width="48" height="48" viewBox="0 0 40 40" fill="none">
               <rect width="40" height="40" rx="10" fill="currentColor" fill-opacity="0.12" />
               <path
@@ -90,14 +90,14 @@ watch(
             </svg>
           </div>
           <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">
-            Mediverse Digital Doctor
+            {{ t('chat.emptyMessages') }}
           </h2>
-          <p class="text-gray-500 dark:text-gray-400">您的智能医疗助手，随时为您提供专业支持</p>
+          <p class="text-gray-500 dark:text-gray-400">{{ t('chat.emptyMessagesHint') }}</p>
         </div>
 
         <Prompts
           :items="initialPrompts"
-          title="您可以试着问我："
+          :title="t('chat.tryAsking')"
           class="max-w-md w-full"
           @item-click="handlePromptClick"
         />

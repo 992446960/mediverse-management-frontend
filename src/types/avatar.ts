@@ -13,10 +13,17 @@ export const AVATAR_TYPE_LABEL_KEYS: Record<AvatarType, string> = {
   expert: 'avatar.typeExpert',
 }
 
+/** 数字医生体验列表：type 展示文案（全科分身 / 专科分身 / 专家分身） */
+export const AVATAR_TYPE_DISPLAY_KEYS: Record<AvatarType, string> = {
+  general: 'avatar.typeGeneralAvatar',
+  specialist: 'avatar.typeSpecialistAvatar',
+  expert: 'avatar.typeExpertAvatar',
+}
+
 /** 分身类型对应的表格/标签颜色（列表页、表格组件复用） */
 export const AVATAR_TYPE_TAG_COLORS: Record<AvatarType, string> = {
-  general: 'blue',
-  specialist: 'green',
+  general: 'default',
+  specialist: 'blue',
   expert: 'purple',
 }
 

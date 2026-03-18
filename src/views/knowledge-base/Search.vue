@@ -10,7 +10,7 @@
         class="h-14 border-b border-gray-200 flex items-center justify-between px-6 bg-white flex-shrink-0"
       >
         <div class="font-medium text-gray-900 truncate">
-          {{ currentSession?.title || '新会话' }}
+          {{ currentSession?.title || t('knowledgeSearch.noTitle') }}
         </div>
         <div class="text-xs text-gray-500">
           {{ currentSession?.updatedAt ? new Date(currentSession.updatedAt).toLocaleString() : '' }}
@@ -29,7 +29,7 @@
         <div class="relative max-w-4xl mx-auto">
           <a-textarea
             v-model:value="inputContent"
-            placeholder="追问相关问题..."
+            :placeholder="t('knowledgeSearch.followUpPlaceholder')"
             :auto-size="{ minRows: 1, maxRows: 6 }"
             class="pr-12 !resize-none !rounded-xl !py-3 !px-4 !border-gray-300 focus:!border-blue-500 focus:!shadow-none"
             :disabled="streaming"
@@ -59,7 +59,7 @@
           </div>
         </div>
         <div class="text-center mt-2 text-xs text-gray-400">
-          AI 生成内容仅供参考，请以医生诊断为准
+          {{ t('knowledgeSearch.aiDisclaimer') }}
         </div>
       </div>
     </div>
@@ -69,6 +69,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { SendOutlined, PauseOutlined } from '@ant-design/icons-vue'
 import KBSidebar from '@/components/KBSidebar/index.vue'
@@ -76,6 +77,7 @@ import SearchResultThread from '@/components/SearchResultThread/index.vue'
 import { useKnowledgeSearchStore } from '@/stores/knowledgeSearch'
 
 const route = useRoute()
+const { t } = useI18n()
 const store = useKnowledgeSearchStore()
 const { currentSession, messages, streaming } = storeToRefs(store)
 

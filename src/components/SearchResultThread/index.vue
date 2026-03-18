@@ -5,7 +5,7 @@
       class="flex flex-col items-center justify-center h-full text-gray-400"
     >
       <SearchOutlined class="text-4xl mb-4" />
-      <p>开始新的搜索...</p>
+      <p>{{ t('knowledgeSearch.startNewSearch') }}</p>
     </div>
 
     <div v-for="msg in messages" :key="msg.id" class="message-item group">
@@ -27,17 +27,19 @@
         </div>
 
         <div class="flex-1 min-w-0">
-          <!-- Thinking Process -->
+          <!-- Thinking Process (API 无 thinkingSteps 时为空) -->
           <ThinkingProcess
             v-if="msg.thinkingSteps && msg.thinkingSteps.length > 0"
-            :steps="msg.thinkingSteps"
+            :steps="
+              (msg.thinkingSteps as ThinkingStep[]).map((s) => ({ ...s, content: s.content ?? '' }))
+            "
           />
 
           <!-- Content -->
           <div class="bg-white border border-gray-100 rounded-2xl rounded-tl-sm p-4 shadow-sm">
             <BubbleRenderer
               :content="msg.content"
-              @citation-click="(index) => handleCitationClick(msg, index)"
+              @citation-click="(index: number) => handleCitationClick(msg, index)"
             />
 
             <!-- Citations -->
@@ -45,12 +47,13 @@
               v-if="msg.citations && msg.citations.length > 0"
               class="mt-4 pt-4 border-t border-gray-100"
             >
-              <div class="text-xs font-medium text-gray-500 mb-2">引用来源:</div>
+              <div class="text-xs font-medium text-gray-500 mb-2">
+                {{ t('knowledgeSearch.citationLabel') }}:
+              </div>
               <div class="flex flex-wrap gap-2">
                 <CitationLink
                   v-for="(citation, idx) in msg.citations"
                   :key="citation.id"
-                  ref="citationRefs"
                   :citation="citation"
                   :index="idx + 1"
                 />
@@ -76,9 +79,9 @@
       <div v-if="currentCitation" class="prose prose-sm max-w-none">
         <p class="text-gray-600">{{ currentCitation.content }}</p>
         <div v-if="currentCitation.url" class="mt-4">
-          <a :href="currentCitation.url" target="_blank" class="text-blue-600 hover:underline"
-            >查看原文</a
-          >
+          <a :href="currentCitation.url" target="_blank" class="text-blue-600 hover:underline">{{
+            t('knowledgeSearch.viewOriginal')
+          }}</a>
         </div>
       </div>
     </a-modal>
@@ -87,21 +90,22 @@
 
 <script setup lang="ts">
 import { ref, watch, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { SearchOutlined, RobotOutlined } from '@ant-design/icons-vue'
 import BubbleRenderer from '@/components/ChatWindow/BubbleRenderer.vue'
 import ThinkingProcess from '@/components/ChatWindow/ThinkingProcess.vue'
 import CitationLink from './CitationLink.vue'
 import RelatedQuestions from './RelatedQuestions.vue'
 import type { SearchMessage, Citation } from '@/api/knowledgeSearch'
+import type { ThinkingStep } from '@/types/chat'
 
+const { t } = useI18n()
 const props = defineProps<{
   messages: SearchMessage[]
   loading?: boolean
 }>()
 
 const emit = defineEmits(['question-select'])
-
-const citationRefs = ref<any[]>([])
 
 const handleQuestionSelect = (question: string) => {
   emit('question-select', question)
@@ -116,10 +120,8 @@ const handleCitationClick = (msg: SearchMessage, index: number) => {
   // A simpler way is to emit an event or use a global store/modal for citation details.
   // Or, just find the citation object and open a modal directly here.
 
-  if (msg.citations && msg.citations[index - 1]) {
-    const citation = msg.citations[index - 1]
-    // Open modal directly or trigger method on CitationLink if possible
-    // Since we don't have easy access to the specific component instance, let's just use a local state for modal
+  const citation = msg.citations?.[index - 1]
+  if (citation) {
     currentCitation.value = citation
     detailsVisible.value = true
   }

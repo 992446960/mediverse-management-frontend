@@ -12,7 +12,9 @@
     <div class="prose prose-sm max-w-none">
       <p class="text-gray-600">{{ citation.content }}</p>
       <div v-if="citation.url" class="mt-4">
-        <a :href="citation.url" target="_blank" class="text-blue-600 hover:underline">查看原文</a>
+        <a :href="citation.url" target="_blank" class="text-blue-600 hover:underline">{{
+          t('knowledgeSearch.viewOriginal')
+        }}</a>
       </div>
     </div>
   </a-modal>
@@ -20,7 +22,10 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { Citation } from '@/api/knowledgeSearch'
+
+const { t } = useI18n()
 
 defineProps<{
   citation: Citation

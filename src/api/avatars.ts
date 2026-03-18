@@ -30,3 +30,36 @@ export function deleteAvatar(id: string) {
 export function getAvatarDetail(id: string) {
   return request.get<Avatar>(`/avatars/${id}`)
 }
+
+export interface ChatAvatarQuota {
+  avatar_scope: string
+  max_sessions: number
+  used_sessions: number
+  remaining: number
+  is_unlimited: boolean
+  is_exhausted: boolean
+}
+
+export interface ChatAvatar extends Pick<
+  Avatar,
+  'id' | 'type' | 'name' | 'avatar_url' | 'bio' | 'tags' | 'org_name' | 'dept_name'
+> {
+  quota?: ChatAvatarQuota
+}
+
+export interface ChatAvatarListParams {
+  keyword?: string
+  type?: Avatar['type']
+  org_id?: string
+  dept_id?: string
+  page?: number
+  page_size?: number
+}
+
+/** 查询当前用户可体验的分身列表（/chat/avatars） */
+export function getChatAvatars(params: ChatAvatarListParams) {
+  return request.get<{ total: number; page: number; page_size: number; items: ChatAvatar[] }>(
+    '/chat/avatars',
+    { params }
+  )
+}

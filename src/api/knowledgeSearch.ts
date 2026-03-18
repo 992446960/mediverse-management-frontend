@@ -1,5 +1,45 @@
 import { request } from '@/api'
 
+/** API 返回的引用项（与 API 设计 4.2.1 一致） */
+export interface ApiCitation {
+  index: number
+  card_id: string
+  card_title: string
+  card_type: string
+  relevance_score?: number
+  content_preview: string
+}
+
+/** API 返回的匹配文件 */
+export interface MatchedFile {
+  file_id: string
+  file_name: string
+  relevance_score?: number
+}
+
+/** 搜索/追问响应 */
+export interface SearchResponse {
+  qa_session_id: string
+  answer: string
+  citations: ApiCitation[]
+  matched_files: MatchedFile[]
+}
+
+/** 搜索历史项 */
+export interface HistoryItem {
+  id: string
+  query: string
+  created_at: string
+}
+
+/** 前端使用的引用（映射自 API） */
+export interface Citation {
+  id: string
+  title: string
+  content: string
+  url?: string
+}
+
 export interface SearchSession {
   id: string
   title: string
@@ -17,13 +57,6 @@ export interface SearchMessage {
   thinkingSteps?: ThinkingStep[]
 }
 
-export interface Citation {
-  id: string
-  title: string
-  content: string
-  url?: string
-}
-
 export interface ThinkingStep {
   title: string
   status: 'pending' | 'success' | 'error'
@@ -31,29 +64,47 @@ export interface ThinkingStep {
   duration?: number
 }
 
+/** 将 API 引用转为前端 Citation */
+function mapCitation(api: ApiCitation): Citation {
+  return {
+    id: api.card_id,
+    title: api.card_title,
+    content: api.content_preview,
+  }
+}
+
+/** 知识库搜索 API（对接 /api/v1/knowledge-qa） */
 export const knowledgeSearchApi = {
-  // Create a new search session
-  createSession: (data: { query: string }) => {
-    return request.post<SearchSession>('/knowledge-search/sessions', data)
+  /**
+   * 搜索
+   * POST /knowledge-qa/search
+   */
+  search: (data: { query: string; top_k?: number }) => {
+    return request.post<SearchResponse>('/knowledge-qa/search', data)
   },
 
-  // Get list of search sessions
-  getSessions: (params?: { page?: number; pageSize?: number }) => {
-    return request.get<{ list: SearchSession[]; total: number }>('/knowledge-search/sessions', {
-      params,
-    })
+  /**
+   * 追问
+   * POST /knowledge-qa/follow-up
+   */
+  followUp: (data: { qa_session_id: string; query: string }) => {
+    return request.post<SearchResponse>('/knowledge-qa/follow-up', data)
   },
 
-  // Delete a search session
-  deleteSession: (id: string) => {
-    return request.delete(`/knowledge-search/sessions/${id}`)
+  /**
+   * 查询搜索历史
+   * GET /knowledge-qa/history
+   */
+  getHistory: (params?: { limit?: number }) => {
+    return request.get<HistoryItem[]>('/knowledge-qa/history', { params })
   },
 
-  // Get messages for a session
-  getMessages: (sessionId: string) => {
-    return request.get<SearchMessage[]>(`/knowledge-search/sessions/${sessionId}/messages`)
-  },
-
-  // Send a follow-up message (SSE) - This is handled by useSSEChat, but we might need a helper here for non-streaming or initial setup if needed.
-  // Actually, useSSEChat handles the fetch directly.
+  /** 将 API 响应转为前端 assistant 消息格式 */
+  mapResponseToMessage: (response: SearchResponse, id?: string): SearchMessage => ({
+    id: id ?? `msg-${Date.now()}`,
+    role: 'assistant',
+    content: response.answer,
+    createdAt: new Date().toISOString(),
+    citations: response.citations?.map(mapCitation) ?? [],
+  }),
 }
