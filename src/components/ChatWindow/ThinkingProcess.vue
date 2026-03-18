@@ -87,7 +87,7 @@ const displaySteps = computed(() =>
 }
 
 .thinking-process-header:hover {
-  color: var(--color-text-base);
+  color: var(--color-primary);
 }
 
 .thinking-process-header-icon {
