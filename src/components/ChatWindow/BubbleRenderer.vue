@@ -21,15 +21,32 @@ const props = withDefaults(
 
 marked.setOptions({
   highlight: function (code, lang) {
-    const language = hljs.getLanguage(lang) ? lang : 'plaintext'
-    return hljs.highlight(code, { language }).value
+    try {
+      const language = hljs.getLanguage(lang) ? lang : 'plaintext'
+      return hljs.highlight(code, { language }).value
+    } catch {
+      return code
+    }
   },
   langPrefix: 'hljs language-',
 })
 
+function escapeHtml(text: string): string {
+  const div = document.createElement('div')
+  div.textContent = text
+  return div.innerHTML
+}
+
 const renderedContent = computed(() => {
-  const rawHtml = marked.parse(props.content || '') as string
-  return DOMPurify.sanitize(rawHtml)
+  const raw = String(props.content ?? '')
+  if (!raw.trim()) return ''
+  try {
+    const result = marked.parse(raw)
+    const html = typeof result === 'string' ? result : String(result)
+    return DOMPurify.sanitize(html)
+  } catch {
+    return DOMPurify.sanitize(escapeHtml(raw))
+  }
 })
 
 const copyContent = async () => {

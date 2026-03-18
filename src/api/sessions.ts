@@ -90,9 +90,15 @@ export function getAvatarSkills(avatarId: string): Promise<AvatarSkill[]> {
 }
 
 /**
- * 3.1.6 发送消息（流式）— 返回原始 Response 供 SSE 消费
- * 必须使用原生 fetch，axios 适配器会缓冲整个响应体，无法流式读取
- * Content-Type: multipart/form-data
+ * 3.1.6 发送消息（流式）— 必须使用原生 fetch，返回原始 Response 供 SSE 流式消费
+ *
+ * 流式仅支持 fetch：
+ * - 使用 fetch() 且不调用 response.json()/response.text()，直接交予 consumeSSE 通过
+ *   response.body.getReader() 逐块读取，才能实现打字机效果
+ * - 禁止用 axios/request 发此接口：axios 会缓冲整个响应体，无法流式读取
+ *
+ * 请求：POST multipart/form-data（text + 可选 attachments）
+ * 响应：Content-Type: text/event-stream 时为 SSE 流；否则按 JSON 处理
  */
 export async function sendMessageRaw(
   sessionId: string,
@@ -102,13 +108,16 @@ export async function sendMessageRaw(
   const url = `${baseURL}/chat/sessions/${sessionId}/messages`
 
   const token = getToken()
-  const headers: Record<string, string> = {}
+  const headers: Record<string, string> = {
+    Accept: 'text/event-stream',
+    'Accept-Encoding': 'identity',
+  }
   if (token) {
     headers['Authorization'] = `Bearer ${token}`
   }
 
   const formData = new FormData()
-  if (payload.text) {
+  if (payload.text !== undefined) {
     formData.append('text', payload.text)
   }
   if (payload.attachments?.length) {

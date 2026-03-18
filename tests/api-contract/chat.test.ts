@@ -8,6 +8,7 @@
  *  POST /chat/sessions
  *  PATCH /chat/sessions/{id}/title
  *  GET  /chat/sessions/{id}/messages
+ *  POST /chat/sessions/{id}/messages
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { randomUUID } from 'node:crypto'
@@ -17,6 +18,9 @@ import {
   authedPost,
   authedPatch,
   unauthGet,
+  authedPostFormDataStream,
+  unauthPostFormDataStream,
+  readSSEEvents,
   type BaseResponse,
 } from './setup'
 import {
@@ -169,6 +173,53 @@ describe('Chat 模块', () => {
         'list_chat_messages_api_v1_chat_sessions__id__messages_get',
         res.data
       )
+    })
+  })
+
+  // ─── POST /chat/sessions/{id}/messages ───────────────────
+
+  describe('POST /chat/sessions/{id}/messages', () => {
+    it('缺少 text 和 attachments 应返回 400', async () => {
+      const fakeId = '00000000-0000-0000-0000-000000000000'
+      const formData = new FormData()
+      const res = await authedPostFormDataStream(`/chat/sessions/${fakeId}/messages`, formData)
+      expect(res.status).toBe(400)
+    })
+
+    it('不带 Token 应返回 401', async () => {
+      const fakeId = '00000000-0000-0000-0000-000000000000'
+      const formData = new FormData()
+      formData.append('text', 'hello')
+      const res = await unauthPostFormDataStream(`/chat/sessions/${fakeId}/messages`, formData)
+      expect(res.status).toBe(401)
+    })
+
+    it('已有会话发送 text 应返回 200 且 SSE 包含 delta 或 done', async () => {
+      const sessionsRes = await authedGet('/chat/sessions', { page: 1, page_size: 1 })
+      const sessions = (sessionsRes.data as any).data?.items
+      if (!sessions || sessions.length === 0) {
+        console.warn('跳过: 没有已有会话')
+        return
+      }
+
+      const sessionId = sessions[0].id
+      const formData = new FormData()
+      formData.append('text', '接口测试消息')
+
+      const res = await authedPostFormDataStream(`/chat/sessions/${sessionId}/messages`, formData)
+      expect(res.status).toBe(200)
+      expect(res.headers.get('content-type')).toMatch(/text\/event-stream/)
+      expect(res.body).toBeTruthy()
+
+      const events = await readSSEEvents(res.body!)
+      const hasDeltaOrDone = events.some((e) => e.type === 'delta' || e.type === 'done')
+      expect(hasDeltaOrDone).toBe(true)
+
+      const doneEvent = events.find((e) => e.type === 'done')
+      if (doneEvent) {
+        expect(typeof doneEvent.message_id).toBe('string')
+        expect(typeof doneEvent.tokens_used).toBe('number')
+      }
     })
   })
 })

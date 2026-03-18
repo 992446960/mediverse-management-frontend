@@ -385,6 +385,7 @@ export default {
     skillCallResult: '结果',
     skillCallDuration: '耗时',
     message: '消息',
+    scrollToBottom: '回到底部',
   },
   theme: {
     light: '亮色模式',

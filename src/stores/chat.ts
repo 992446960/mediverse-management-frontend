@@ -164,12 +164,23 @@ export const useChatStore = defineStore('chat', () => {
 
     const sessionId = currentSessionId.value
 
+    const userParts: Message['parts'] = [{ type: 'text', text: content || '' }]
+    if (attachments?.length) {
+      for (const file of attachments) {
+        userParts.push({
+          type: file.type.startsWith('image/') ? 'image' : 'file',
+          file_name: file.name,
+          url: file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined,
+        })
+      }
+    }
+
     const userMsgId = `msg_${Date.now()}_u`
     const userMessage: Message = {
       id: userMsgId,
       session_id: sessionId,
       role: 'user',
-      parts: [{ type: 'text', text: content }],
+      parts: userParts,
       created_at: new Date().toISOString(),
       status: 'sent',
     }
@@ -195,6 +206,35 @@ export const useChatStore = defineStore('chat', () => {
         attachments,
       })
 
+      const contentType = response.headers.get('content-type') ?? ''
+      const isSSE = contentType.includes('text/event-stream')
+      if (!isSSE) {
+        const text = await response.text()
+        try {
+          const data = text ? JSON.parse(text) : null
+          const wrap = data?.data ?? data
+          const contentStr =
+            typeof wrap?.content === 'string'
+              ? wrap.content
+              : typeof wrap?.text === 'string'
+                ? wrap.text
+                : Array.isArray(wrap?.parts)
+                  ? (wrap.parts.find((p: { type?: string; text?: string }) => p.type === 'text')
+                      ?.text ?? '')
+                  : ''
+          const textPart = assistantMessage.parts[0]
+          if (textPart) textPart.text = contentStr || ''
+        } catch {
+          const textPart = assistantMessage.parts[0]
+          if (textPart) textPart.text = text || '[非 SSE 响应]'
+        }
+        assistantMessage.status = 'sent'
+        messages.value[sessionId] = [...messages.value[sessionId]]
+        const session = sessions.value.find((s) => s.id === sessionId)
+        if (session) session.last_message_at = new Date().toISOString()
+        return
+      }
+
       await consumeSSE(response, {
         onDelta: (delta) => {
           const textPart = assistantMessage.parts[0]
@@ -202,15 +242,28 @@ export const useChatStore = defineStore('chat', () => {
             textPart.text = (textPart.text || '') + delta
           }
           assistantMessage.thinking_process = [...sseThinkingProcess.value]
+          messages.value[sessionId] = [...messages.value[sessionId]]
         },
         onDone: (finalId, tokensUsed) => {
-          assistantMessage.id = finalId
+          assistantMessage.id = finalId ?? assistantMessage.id
           assistantMessage.status = 'sent'
-          assistantMessage.tokens_used = tokensUsed
+          assistantMessage.tokens_used = tokensUsed ?? undefined
           assistantMessage.thinking_process = [...sseThinkingProcess.value]
+          messages.value[sessionId] = [...messages.value[sessionId]]
           const session = sessions.value.find((s) => s.id === sessionId)
           if (session) {
             session.last_message_at = new Date().toISOString()
+          }
+        },
+        onStreamEnd: () => {
+          if (assistantMessage.status === 'streaming') {
+            assistantMessage.status = 'sent'
+            assistantMessage.thinking_process = [...sseThinkingProcess.value]
+            messages.value[sessionId] = [...messages.value[sessionId]]
+            const session = sessions.value.find((s) => s.id === sessionId)
+            if (session) {
+              session.last_message_at = new Date().toISOString()
+            }
           }
         },
         onError: (err) => {
@@ -219,10 +272,12 @@ export const useChatStore = defineStore('chat', () => {
           if (textPart) {
             textPart.text = (textPart.text || '') + `\n[Error: ${err}]`
           }
+          messages.value[sessionId] = [...messages.value[sessionId]]
         },
       })
     } catch {
       assistantMessage.status = 'error'
+      messages.value[sessionId] = [...messages.value[sessionId]]
     }
   }
 

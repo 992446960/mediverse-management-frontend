@@ -115,8 +115,11 @@ watch(
     <div class="flex-1 overflow-hidden relative">
       <MessageList
         v-if="currentMessages.length > 0"
+        :key="props.sessionId ?? currentSessionId ?? 'default'"
         :messages="currentMessages"
         :loading="loadingMessages"
+        :streaming="isStreaming"
+        :session-id="props.sessionId ?? currentSessionId"
       />
 
       <!-- Empty State / Prompts -->

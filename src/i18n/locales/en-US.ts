@@ -390,6 +390,7 @@ export default {
     skillCallResult: 'Result',
     skillCallDuration: 'Duration',
     message: 'Message',
+    scrollToBottom: 'Scroll to bottom',
   },
   theme: {
     light: 'Light Mode',
