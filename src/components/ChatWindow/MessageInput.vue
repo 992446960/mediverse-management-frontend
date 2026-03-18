@@ -33,7 +33,6 @@ const fileList = ref<Array<{ uid: number; name: string; status: string; url: str
   []
 )
 const speechRecording = ref(false)
-const senderFocused = ref(false)
 
 const thinkingModeOptions = computed(() => [
   { value: 'high', label: t('chat.thinkingDeep') },
@@ -107,28 +106,6 @@ const onFileChange = (e: Event) => {
     target.value = ''
   }
 }
-
-const senderWrapRef = ref<HTMLElement | null>(null)
-function setSenderFocused(value: boolean) {
-  senderFocused.value = value
-}
-function onSenderMousedown() {
-  setSenderFocused(true)
-}
-function onDocumentClick(e: MouseEvent) {
-  const el = senderWrapRef.value
-  if (el && !el.contains(e.target as Node)) setSenderFocused(false)
-}
-onMounted(() => {
-  const el = senderWrapRef.value
-  if (el) el.addEventListener('mousedown', onSenderMousedown)
-  document.addEventListener('click', onDocumentClick, true)
-})
-onBeforeUnmount(() => {
-  const el = senderWrapRef.value
-  if (el) el.removeEventListener('mousedown', onSenderMousedown)
-  document.removeEventListener('click', onDocumentClick, true)
-})
 </script>
 
 <template>
@@ -143,105 +120,78 @@ onBeforeUnmount(() => {
       @remove="handleRemoveFile"
     />
 
-    <!-- 聚焦态由本层 mousedown + 点击外部 控制，阴影样式写在本层类名上 -->
-    <div
-      ref="senderWrapRef"
-      class="message-input-sender-wrap"
-      :class="{ 'is-focused': senderFocused }"
-    >
-      <Sender
-        v-model:value="inputValue"
-        :loading="loading"
-        :disabled="disabled"
-        :placeholder="t('chat.inputPlaceholder')"
-        :allow-speech="allowSpeechConfig"
-        @submit="handleSend"
-        @cancel="handleStop"
+    <!-- 模式选择 + 联网开关：附件展示区下方、输入框上方 -->
+    <div class="message-input-toolbar flex items-center gap-3 px-1 py-2">
+      <div class="flex items-center gap-1.5">
+        <BulbOutlined class="text-sm text-gray-400" />
+        <a-select
+          v-model:value="thinkingMode"
+          size="small"
+          :options="thinkingModeOptions"
+          :bordered="true"
+          style="font-size: 12px"
+        />
+      </div>
+      <div
+        class="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs cursor-pointer select-none transition-all border border-gray-200 dark:border-gray-700"
+        :style="
+          webSearch
+            ? { borderColor: 'var(--color-primary)', color: 'var(--color-primary)' }
+            : { color: 'var(--color-text-tertiary)' }
+        "
+        :class="webSearch ? 'border' : ''"
+        @click="webSearch = !webSearch"
       >
-        <!-- Header Slot: Toolbar -->
-        <template #header>
-          <div class="flex items-center gap-3 px-3 py-2">
-            <!-- Thinking Mode -->
-            <div class="flex items-center gap-1.5">
-              <BulbOutlined class="text-sm text-gray-400" />
-              <a-select
-                v-model:value="thinkingMode"
-                size="small"
-                :options="thinkingModeOptions"
-                :bordered="true"
-                style="font-size: 12px"
-              />
-            </div>
-
-            <!-- Web Search Toggle (Pill) -->
-            <div
-              class="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs cursor-pointer select-none transition-all border-1 border-gray-200"
-              :style="
-                webSearch
-                  ? { borderColor: 'var(--color-primary)', color: 'var(--color-primary)' }
-                  : { color: 'var(--color-text-tertiary)' }
-              "
-              :class="webSearch ? 'border' : ''"
-              @click="webSearch = !webSearch"
-            >
-              <GlobalOutlined />
-              <span>{{ webSearch ? t('chat.webSearchOn') : t('chat.webSearchOff') }}</span>
-            </div>
-          </div>
-        </template>
-
-        <!-- Prefix Slot: Attachment -->
-        <template #prefix>
-          <div class="relative inline-block mr-1">
-            <input
-              type="file"
-              multiple
-              accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,application/msword,text/plain,.docx"
-              class="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
-              @change="onFileChange"
-            />
-            <a-tooltip :title="t('chat.attachFile')">
-              <a-button type="text" size="small" :icon="h(PaperClipOutlined)" />
-            </a-tooltip>
-          </div>
-        </template>
-
-        <!-- Submit Button -->
-        <template #submitButton>
-          <a-button
-            type="primary"
-            shape="circle"
-            :icon="loading ? h(StopOutlined) : h(SendOutlined)"
-            @click="loading ? handleStop() : handleSend()"
-          />
-        </template>
-      </Sender>
+        <GlobalOutlined />
+        <span>{{ webSearch ? t('chat.webSearchOn') : t('chat.webSearchOff') }}</span>
+      </div>
     </div>
+
+    <!-- Sender 使用组件库自带聚焦效果（蓝色描边 + 阴影），不做覆盖 -->
+    <Sender
+      v-model:value="inputValue"
+      :loading="loading"
+      :disabled="disabled"
+      :placeholder="t('chat.inputPlaceholder')"
+      :allow-speech="allowSpeechConfig"
+      @submit="handleSend"
+      @cancel="handleStop"
+    >
+      <!-- Prefix Slot: Attachment -->
+      <template #prefix>
+        <div class="relative inline-block mr-1">
+          <input
+            type="file"
+            multiple
+            accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,application/msword,text/plain,.docx"
+            class="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
+            @change="onFileChange"
+          />
+          <a-tooltip :title="t('chat.attachFile')">
+            <a-button type="text" size="small" :icon="h(PaperClipOutlined)" />
+          </a-tooltip>
+        </div>
+      </template>
+
+      <!-- Submit Button -->
+      <template #submitButton>
+        <a-button
+          type="primary"
+          shape="circle"
+          :icon="loading ? h(StopOutlined) : h(SendOutlined)"
+          @click="loading ? handleStop() : handleSend()"
+        />
+      </template>
+    </Sender>
   </div>
 </template>
 
 <style scoped>
-.message-input {
-  box-shadow: none;
-}
-
 .message-input :deep(.ant-sender) {
   border-radius: 12px;
-  border: 1px solid var(--ant-color-border);
-  box-shadow: none !important;
-  transition:
-    box-shadow 0.2s ease,
-    border-color 0.2s ease;
 }
 
-/* 仅当包裹层带 is-focused 时显示主题色阴影（mousedown 进、点击外部出） */
-.message-input-sender-wrap.is-focused :deep(.ant-sender) {
-  box-shadow:
-    0 -4px 16px color-mix(in srgb, var(--ant-color-primary) 22%, transparent),
-    0 0 0 1px var(--ant-color-primary) !important;
-  border-color: var(--ant-color-primary) !important;
-}
-
+/* 不覆盖 .ant-sender 的 box-shadow / border，保留组件库自带的 :focus-within 蓝色描边与阴影 */
 .message-input :deep(.ant-sender textarea),
 .message-input :deep(.ant-sender input) {
   outline: none;
