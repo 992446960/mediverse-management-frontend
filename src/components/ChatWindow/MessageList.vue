@@ -95,7 +95,7 @@ function scrollToBottom(immediate = false) {
   if (!immediate && !shouldAutoScroll.value) return
 
   const doScroll = () => {
-    bottomAnchorRef.value?.scrollIntoView({ block: 'end', behavior: 'auto' })
+    bottomAnchorRef.value?.scrollIntoView({ block: 'end', behavior: 'smooth' })
   }
 
   if (immediate) {
