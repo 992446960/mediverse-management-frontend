@@ -33,7 +33,17 @@ const webSearch = ref(false)
 const fileList = ref<
   Array<{ uid: string; name: string; status: string; url: string; file: File; size?: number }>
 >([])
+
+/** true=内置 Web Speech API，false=三方受控模式（需自行实现语音识别并更新 inputValue） */
+const useBuiltInSpeech = ref(true)
 const speechRecording = ref(false)
+
+const allowSpeechConfig = computed(() => ({
+  recording: speechRecording.value,
+  onRecordingChange: (recording: boolean) => {
+    speechRecording.value = recording
+  },
+}))
 
 /** 禁用 Attachments 内置 Upload 的默认请求，仅标记成功（文件在 beforeUpload 中收集） */
 const customUploadRequest = (options: {
@@ -66,13 +76,6 @@ const thinkingModeOptions = computed(() => [
   { value: 'medium', label: t('chat.thinkingBalance') },
   { value: 'low', label: t('chat.thinkingFast') },
 ])
-
-const allowSpeechConfig = computed(() => ({
-  recording: speechRecording.value,
-  onRecordingChange: (recording: boolean) => {
-    speechRecording.value = recording
-  },
-}))
 
 const handleSend = () => {
   if (!inputValue.value.trim() && fileList.value.length === 0) return
@@ -319,7 +322,7 @@ const onFileChange = (e: Event) => {
       :loading="loading"
       :disabled="disabled"
       :placeholder="t('chat.inputPlaceholder')"
-      :allow-speech="allowSpeechConfig"
+      :allow-speech="useBuiltInSpeech ? true : allowSpeechConfig"
       @submit="handleSend"
       @cancel="handleStop"
     >
