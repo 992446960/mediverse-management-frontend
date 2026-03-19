@@ -43,17 +43,6 @@
         <a-tabs v-model:active-key="activeTab">
           <a-tab-pane key="content" :tab="t('knowledge.card.tabContent')">
             <div class="p-4 bg-gray-50 rounded-lg min-h-[400px]">
-              <div
-                v-if="previewVersion"
-                class="mb-4 p-2 bg-blue-50 border border-blue-200 rounded text-blue-600 text-sm flex justify-between items-center"
-              >
-                <span>{{
-                  t('knowledge.card.previewingVersion', { version: previewVersion.version })
-                }}</span>
-                <a-button type="link" size="small" @click="previewVersion = null">
-                  {{ t('knowledge.card.exitPreview') }}
-                </a-button>
-              </div>
               <div class="markdown-body" v-html="renderedContent"></div>
             </div>
 
@@ -62,9 +51,9 @@
                 <FileOutlined /> {{ t('knowledge.card.sourceFile') }}
               </h3>
               <a-list
-                v-if="card.source_files?.length"
+                v-if="card.sources?.length"
                 size="small"
-                :data-source="card.source_files"
+                :data-source="card.sources"
                 class="bg-white border rounded"
               >
                 <template #renderItem="{ item }">
@@ -73,7 +62,10 @@
                       class="flex items-center gap-2 cursor-pointer text-blue-600 hover:underline"
                     >
                       <FileOutlined />
-                      <span>{{ item.name }}</span>
+                      <span>{{ item.file_name }}</span>
+                      <span v-if="item.page_hint" class="text-xs text-gray-400"
+                        >({{ item.page_hint }})</span
+                      >
                     </div>
                   </a-list-item>
                 </template>
@@ -85,8 +77,7 @@
           <a-tab-pane key="versions" :tab="t('knowledge.card.tabVersions')">
             <VersionTimeline
               :versions="versions"
-              :current-version="card.version"
-              @preview="handlePreviewVersion"
+              :current-version="card.current_version"
               @rollback="handleRollback"
             />
           </a-tab-pane>
@@ -163,10 +154,9 @@ const activeTab = ref('content')
 const loading = ref(false)
 const card = ref<KnowledgeCard | null>(null)
 const versions = ref<KnowledgeCardVersion[]>([])
-const previewVersion = ref<KnowledgeCardVersion | null>(null)
 
 const renderedContent = computed(() => {
-  const content = previewVersion.value?.content || card.value?.content || ''
+  const content = card.value?.content || ''
   const html = marked.parse(content) as string
   return DOMPurify.sanitize(html)
 })
@@ -193,7 +183,6 @@ watch(
   (val) => {
     if (val && props.cardId) {
       activeTab.value = 'content'
-      previewVersion.value = null
       fetchCardDetails(props.cardId)
     }
   }
@@ -203,16 +192,11 @@ const handleClose = () => {
   emit('update:open', false)
 }
 
-const handlePreviewVersion = (v: KnowledgeCardVersion) => {
-  previewVersion.value = v
-  activeTab.value = 'content'
-}
-
-const handleRollback = async (version: string, targetVersion: number) => {
+const handleRollback = async (targetVersion: number) => {
   if (!props.cardId) return
   try {
     await rollbackKnowledgeCard(props.ownerType, props.ownerId, props.cardId, targetVersion)
-    message.success(t('knowledge.card.rollbackSuccess', { version }))
+    message.success(t('knowledge.card.rollbackSuccess', { version: targetVersion }))
     emit('rollback-success')
     handleClose()
   } catch (err) {

@@ -56,34 +56,36 @@ export interface FileCard {
   confidence?: number
 }
 
-/** 知识卡详情 */
+/** 知识卡详情（API V2.0） */
 export interface KnowledgeCard {
   id: string
   title: string
+  /** 详情接口返回完整内容；列表接口返回 content_preview */
   content: string
+  content_preview?: string
   type: CardType
   tags: string[]
   online_status: OnlineStatus
   audit_status: AuditStatus
+  /** 当前版本号（整数） */
+  current_version: number
   reference_count: number
-  source_files: { id: string; name: string }[]
-  owner_type: OwnerType
-  owner_id: string
+  /** 来源文件列表（详情接口返回） */
+  sources?: { id: string; file_name: string; page_hint: string }[]
   created_by: string
   created_by_name: string
   created_at: string
   updated_at: string
-  version: string
 }
 
-/** 知识卡版本 */
+/** 知识卡版本历史条目（API V2.0） */
 export interface KnowledgeCardVersion {
-  version: string
-  summary: string
-  created_by: string
-  created_by_name: string
+  id: string
+  version_number: number
+  change_summary: string
+  operated_by: string
+  operated_by_name: string
   created_at: string
-  content: string
 }
 
 /** 文件处理状态响应 */
@@ -104,11 +106,13 @@ export interface FileListParams extends PaginationParams {
   status?: FileStatus
 }
 
-/** 知识卡列表请求参数 */
+/** 知识卡列表请求参数（API V2.0） */
 export interface KnowledgeCardListParams extends PaginationParams {
   type?: CardType | 'all'
   online_status?: OnlineStatus
   audit_status?: AuditStatus
+  source_file_id?: string
+  tag?: string
   keyword?: string
 }
 
@@ -150,11 +154,11 @@ export const AUDIT_STATUS_CONFIG: Record<AuditStatus, { color: string; label: st
   rejected: { color: 'error', label: '已驳回' },
 }
 
-/** 创建/更新知识卡请求负载 */
+/** 创建知识卡请求负载（API V2.0） */
 export interface KnowledgeCardPayload {
-  id?: string
   title: string
   content: string
   type: CardType
   tags: string[]
+  source_file_ids?: string[]
 }
