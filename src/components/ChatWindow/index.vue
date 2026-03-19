@@ -104,6 +104,7 @@ watch(
       </div>
       <a-button
         type="text"
+        :class="{ 'rated-star': hasRated }"
         :icon="h(hasRated ? StarFilled : StarOutlined)"
         @click="ratingOpen = true"
       >
@@ -167,5 +168,10 @@ watch(
 <style scoped>
 .chat-window {
   height: 100%;
+}
+
+/* 已评价星星与 Rate 组件同色（antdv Rate 使用 yellow-6） */
+.rated-star :deep(.anticon) {
+  color: var(--ant-yellow-6, #fadb14);
 }
 </style>

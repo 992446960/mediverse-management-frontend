@@ -96,7 +96,7 @@ async function handleRenameSubmit(title: string) {
 
 <template>
   <div
-    class="session-sidebar h-full flex flex-col bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800"
+    class="session-sidebar h-full flex flex-col bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800"
   >
     <div
       v-if="!isOnChatHome"
@@ -107,7 +107,7 @@ async function handleRenameSubmit(title: string) {
       </a-button>
     </div>
 
-    <div class="flex-1 overflow-y-auto flex flex-col">
+    <div class="flex-1 overflow-y-auto flex flex-col m-2">
       <div v-if="hasSessions" class="sessions-list">
         <div v-for="key in sortedGroupKeys" :key="key" class="session-group">
           <div class="session-group-title">{{ getGroupLabel(key) }}</div>
@@ -169,10 +169,6 @@ async function handleRenameSubmit(title: string) {
 <style scoped>
 .session-sidebar {
   transition: all 0.3s ease;
-}
-
-.sessions-list {
-  padding: 8px;
 }
 
 .session-group-title {
