@@ -1,6 +1,13 @@
 import { http, HttpResponse, delay } from 'msw'
 import { mockDirectories, mockFiles, FILE_STATUS_STEPS, MOCK_PARSED_MD } from '../data/knowledge'
-import type { DirectoryNode, FileListItem, FileCard } from '@/types/knowledge'
+import { mockKnowledgeCards, mockCardVersions } from '../data/knowledgeCards'
+import type {
+  DirectoryNode,
+  FileListItem,
+  FileCard,
+  KnowledgeCard,
+  KnowledgeCardVersion,
+} from '@/types/knowledge'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 
@@ -53,6 +60,12 @@ const mockFileCards: Record<string, FileCard[]> = {
 // 可变数据，模拟增删改
 const mutableDirectories = [...mockDirectories]
 const mutableFiles = [...mockFiles]
+
+// 可变知识卡数据
+const mutableCards: KnowledgeCard[] = mockKnowledgeCards.map((c) => ({ ...c }))
+const mutableVersions: Record<string, KnowledgeCardVersion[]> = Object.fromEntries(
+  Object.entries(mockCardVersions).map(([k, v]) => [k, v.map((ver) => ({ ...ver }))])
+)
 
 export const knowledgeHandlers = [
   // 获取目录树
@@ -299,4 +312,167 @@ export const knowledgeHandlers = [
       },
     })
   }),
+
+  // ─── 知识卡 CRUD ──────────────────────────────────────────
+
+  // 查询知识卡列表
+  http.get(`${API_BASE}/knowledge/:ownerType/:ownerId/cards`, async ({ request }) => {
+    const url = new URL(request.url)
+    const type = url.searchParams.get('type')
+    const onlineStatus = url.searchParams.get('online_status')
+    const auditStatus = url.searchParams.get('audit_status')
+    const keyword = url.searchParams.get('keyword')
+    const page = Number(url.searchParams.get('page') || '1')
+    const pageSize = Number(url.searchParams.get('page_size') || '10')
+
+    let filtered = [...mutableCards]
+    if (type && type !== 'all') filtered = filtered.filter((c) => c.type === type)
+    if (onlineStatus) filtered = filtered.filter((c) => c.online_status === onlineStatus)
+    if (auditStatus) filtered = filtered.filter((c) => c.audit_status === auditStatus)
+    if (keyword) {
+      const kw = keyword.toLowerCase()
+      filtered = filtered.filter(
+        (c) =>
+          c.title.toLowerCase().includes(kw) || c.tags.some((t) => t.toLowerCase().includes(kw))
+      )
+    }
+
+    const total = filtered.length
+    const items = filtered.slice((page - 1) * pageSize, page * pageSize).map((c) => ({
+      ...c,
+      content_preview: c.content.slice(0, 100),
+      content: undefined,
+    }))
+
+    await delay(300)
+    return HttpResponse.json({
+      code: 0,
+      message: 'ok',
+      data: { total, page, page_size: pageSize, items },
+    })
+  }),
+
+  // 获取知识卡详情
+  http.get(`${API_BASE}/knowledge/:ownerType/:ownerId/cards/:cardId`, async ({ params }) => {
+    const card = mutableCards.find((c) => c.id === params.cardId)
+    await delay(200)
+    if (!card) return HttpResponse.json({ code: 404, message: 'Not found', data: null })
+    return HttpResponse.json({ code: 0, message: 'ok', data: card })
+  }),
+
+  // 创建知识卡
+  http.post(`${API_BASE}/knowledge/:ownerType/:ownerId/cards`, async ({ request }) => {
+    const payload = (await request.json()) as any
+    const now = new Date().toISOString()
+    const newCard: KnowledgeCard = {
+      id: `card_${Date.now()}`,
+      title: payload.title,
+      type: payload.type,
+      content: payload.content,
+      tags: payload.tags || [],
+      online_status: 'offline',
+      audit_status: 'pending',
+      current_version: 1,
+      reference_count: 0,
+      sources: [],
+      created_by: 'u_dev_001',
+      created_by_name: 'dev001-dept',
+      created_at: now,
+      updated_at: now,
+    }
+    mutableCards.unshift(newCard)
+    mutableVersions[newCard.id] = [
+      {
+        id: `ver_${newCard.id}_1`,
+        version_number: 1,
+        change_summary: '初始版本',
+        operated_by: 'u_dev_001',
+        operated_by_name: 'dev001-dept',
+        created_at: now,
+      },
+    ]
+    await delay(300)
+    return HttpResponse.json({ code: 0, message: 'ok', data: newCard })
+  }),
+
+  // 更新知识卡
+  http.put(
+    `${API_BASE}/knowledge/:ownerType/:ownerId/cards/:cardId`,
+    async ({ params, request }) => {
+      const idx = mutableCards.findIndex((c) => c.id === params.cardId)
+      if (idx === -1) return HttpResponse.json({ code: 404, message: 'Not found', data: null })
+      const payload = (await request.json()) as any
+      const now = new Date().toISOString()
+      const card = mutableCards[idx]
+      const newVersion = card.current_version + 1
+      Object.assign(card, {
+        title: payload.title ?? card.title,
+        content: payload.content ?? card.content,
+        tags: payload.tags ?? card.tags,
+        current_version: newVersion,
+        updated_at: now,
+      })
+      if (!mutableVersions[card.id]) mutableVersions[card.id] = []
+      mutableVersions[card.id].unshift({
+        id: `ver_${card.id}_${newVersion}`,
+        version_number: newVersion,
+        change_summary: payload.change_summary || '内容更新',
+        operated_by: 'u_dev_001',
+        operated_by_name: 'dev001-dept',
+        created_at: now,
+      })
+      await delay(300)
+      return HttpResponse.json({ code: 0, message: 'ok', data: card })
+    }
+  ),
+
+  // 上下线切换
+  http.patch(
+    `${API_BASE}/knowledge/:ownerType/:ownerId/cards/:cardId/status`,
+    async ({ params, request }) => {
+      const card = mutableCards.find((c) => c.id === params.cardId)
+      if (!card) return HttpResponse.json({ code: 404, message: 'Not found', data: null })
+      const payload = (await request.json()) as any
+      card.online_status = payload.online_status
+      card.updated_at = new Date().toISOString()
+      await delay(200)
+      return HttpResponse.json({ code: 0, message: 'ok', data: card })
+    }
+  ),
+
+  // 查询版本历史
+  http.get(
+    `${API_BASE}/knowledge/:ownerType/:ownerId/cards/:cardId/versions`,
+    async ({ params }) => {
+      const versions = mutableVersions[params.cardId as string] || []
+      await delay(200)
+      return HttpResponse.json({ code: 0, message: 'ok', data: versions })
+    }
+  ),
+
+  // 版本回退
+  http.post(
+    `${API_BASE}/knowledge/:ownerType/:ownerId/cards/:cardId/rollback`,
+    async ({ params, request }) => {
+      const card = mutableCards.find((c) => c.id === params.cardId)
+      if (!card) return HttpResponse.json({ code: 404, message: 'Not found', data: null })
+      const payload = (await request.json()) as any
+      const targetVer = Number(payload.target_version)
+      const now = new Date().toISOString()
+      const newVersion = card.current_version + 1
+      card.current_version = newVersion
+      card.updated_at = now
+      if (!mutableVersions[card.id]) mutableVersions[card.id] = []
+      mutableVersions[card.id].unshift({
+        id: `ver_${card.id}_${newVersion}`,
+        version_number: newVersion,
+        change_summary: `回退至 v${targetVer}`,
+        operated_by: 'u_dev_001',
+        operated_by_name: 'dev001-dept',
+        created_at: now,
+      })
+      await delay(300)
+      return HttpResponse.json({ code: 0, message: 'ok', data: card })
+    }
+  ),
 ]

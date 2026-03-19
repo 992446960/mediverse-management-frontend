@@ -198,7 +198,8 @@ const handleRollback = async (targetVersion: number) => {
     await rollbackKnowledgeCard(props.ownerType, props.ownerId, props.cardId, targetVersion)
     message.success(t('knowledge.card.rollbackSuccess', { version: targetVersion }))
     emit('rollback-success')
-    handleClose()
+    // 留开抽屉，重新加载最新详情和版本历史
+    await fetchCardDetails(props.cardId)
   } catch (err) {
     console.error('Rollback failed:', err)
     message.error(t('knowledge.card.rollbackFailed'))
