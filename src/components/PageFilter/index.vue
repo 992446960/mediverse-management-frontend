@@ -254,8 +254,14 @@ defineExpose({
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .page-filter :deep(.ant-form-item) {
   margin-bottom: 16px;
+  .ant-form-item-row {
+    flex-wrap: nowrap;
+  }
+  .ant-form-item-label {
+    flex-shrink: 0;
+  }
 }
 </style>
