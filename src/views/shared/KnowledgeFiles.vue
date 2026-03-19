@@ -333,6 +333,7 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
     prop: 'file_name',
     width: 200,
     showOverflowTooltip: true,
+    fixed: 'left',
   },
   { label: t('knowledge.fileType'), prop: 'file_type', width: 100 },
   {
