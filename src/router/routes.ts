@@ -50,14 +50,17 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'files',
         name: 'MyFiles',
-        component: () => import('@/views/my/Files.vue'),
+        component: () => import('@/views/shared/FilesLayout.vue'),
         meta: { title: 'menu.files', requiredRoles: ['user'] },
-      },
-      {
-        path: 'files/preview/:id',
-        name: 'MyFilesPreview',
-        component: () => import('@/views/shared/FilePreviewPage.vue'),
-        meta: { title: 'knowledge.preview', hidden: true, requiredRoles: ['user'] },
+        children: [
+          { path: '', component: () => import('@/views/my/Files.vue') },
+          {
+            path: 'preview/:id',
+            name: 'MyFilesPreview',
+            component: () => import('@/views/shared/FilePreviewPage.vue'),
+            meta: { title: 'knowledge.preview', hidden: true, requiredRoles: ['user'] },
+          },
+        ],
       },
       {
         path: 'knowledge-cards',
@@ -92,14 +95,17 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'files',
         name: 'DeptFiles',
-        component: () => import('@/views/dept/Files.vue'),
+        component: () => import('@/views/shared/FilesLayout.vue'),
         meta: { title: 'menu.files' },
-      },
-      {
-        path: 'files/preview/:id',
-        name: 'DeptFilesPreview',
-        component: () => import('@/views/shared/FilePreviewPage.vue'),
-        meta: { title: 'knowledge.preview', hidden: true },
+        children: [
+          { path: '', component: () => import('@/views/dept/Files.vue') },
+          {
+            path: 'preview/:id',
+            name: 'DeptFilesPreview',
+            component: () => import('@/views/shared/FilePreviewPage.vue'),
+            meta: { title: 'knowledge.preview', hidden: true },
+          },
+        ],
       },
       {
         path: 'knowledge-cards',
@@ -134,14 +140,17 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'files',
         name: 'OrgFiles',
-        component: () => import('@/views/org/Files.vue'),
+        component: () => import('@/views/shared/FilesLayout.vue'),
         meta: { title: 'menu.files' },
-      },
-      {
-        path: 'files/preview/:id',
-        name: 'OrgFilesPreview',
-        component: () => import('@/views/shared/FilePreviewPage.vue'),
-        meta: { title: 'knowledge.preview', hidden: true },
+        children: [
+          { path: '', component: () => import('@/views/org/Files.vue') },
+          {
+            path: 'preview/:id',
+            name: 'OrgFilesPreview',
+            component: () => import('@/views/shared/FilePreviewPage.vue'),
+            meta: { title: 'knowledge.preview', hidden: true },
+          },
+        ],
       },
       {
         path: 'knowledge-cards',

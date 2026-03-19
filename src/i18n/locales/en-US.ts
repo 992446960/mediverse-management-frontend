@@ -228,6 +228,7 @@ export default {
     uploadStatusFail: 'Failed',
     uploadSuccess: 'Upload successful',
     uploadFailed: 'Upload failed',
+    pendingUploadCount: 'Pending ({count})',
     uploadingCount: 'Uploading ({count})',
     uploadCloseConfirmTitle: 'Confirm close',
     uploadCloseConfirmContent:
@@ -245,6 +246,7 @@ export default {
     unsupportedPreview: 'Preview not supported for this file type',
     loadFileFailed: 'Failed to load file',
     noPreviewUrl: 'No preview URL',
+    previewNoUrlHint: 'File URL is invalid. Please try again later or contact the administrator.',
     pdfLoadFailed: 'PDF load failed: {msg}',
     pdfUnknownError: 'Unknown error',
     noParsedDoc: 'No parsed document',
