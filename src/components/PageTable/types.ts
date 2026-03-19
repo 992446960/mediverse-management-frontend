@@ -95,6 +95,8 @@ export interface PageTableColumnConfig {
 }
 
 export interface PageTableConfig {
+  /** 表格最小高度 */
+  tableMinHeight?: string | number
   /** 表格加载态 */
   isLoading?: boolean
   /** 最后更新时间 */

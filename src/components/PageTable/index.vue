@@ -1,6 +1,7 @@
 <template>
   <div
     class="page-table p-2.5 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden flex flex-col flex-1 min-h-0"
+    :style="{ '--min-height': tableConf?.tableMinHeight ?? '200px' }"
   >
     <!-- 顶部工具栏 -->
     <div
@@ -128,7 +129,7 @@ const props = withDefaults(
     tableData?: Record<string, any>[]
   }>(),
   {
-    tableConf: undefined,
+    tableConf: () => ({}),
     tableData: () => [],
   }
 )
@@ -381,5 +382,8 @@ defineExpose({
 .page-table :deep(.ant-table-tbody > tr > td) {
   padding: 20px 24px;
   font-size: 13px;
+}
+.page-table__body :deep(.ant-table-body) {
+  min-height: var(--min-height);
 }
 </style>
