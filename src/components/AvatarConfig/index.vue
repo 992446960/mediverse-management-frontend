@@ -21,7 +21,7 @@
                   @change="onAvatarFileChange"
                 />
                 <div
-                  class="avatar-upload-card group relative w-20 h-20 rounded-lg bg-gray-50 dark:bg-gray-700 flex flex-col items-center justify-center border border-dashed border-gray-300 dark:border-gray-600 overflow-hidden shrink-0"
+                  class="avatar-upload-card group relative w-20 h-20 rounded-full bg-gray-50 dark:bg-gray-700 flex flex-col items-center justify-center border border-dashed border-gray-300 dark:border-gray-600 overflow-hidden shrink-0"
                   :class="[
                     formData.avatar_url
                       ? ''

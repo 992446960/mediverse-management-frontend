@@ -81,10 +81,12 @@ const statItems = [
   },
 ]
 
-const formatValue = (val: number) => {
-  if (val >= 1000000) return (val / 1000000).toFixed(1) + 'M'
-  if (val >= 1000) return (val / 1000).toFixed(1) + 'k'
-  return val.toLocaleString()
+const formatValue = (val: number | undefined | null) => {
+  const n = Number(val)
+  if (Number.isNaN(n)) return '0'
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M'
+  if (n >= 1000) return (n / 1000).toFixed(1) + 'k'
+  return n.toLocaleString()
 }
 
 const fetchStats = async () => {
