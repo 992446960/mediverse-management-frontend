@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref, provide } from 'vue'
 import ChatSidebar from '@/components/SessionSidebar/index.vue'
 import SkillPanel from '@/components/SkillPanel/index.vue'
 import { useChatStore } from '@/stores/chat'
@@ -6,6 +7,12 @@ import { useChatStore } from '@/stores/chat'
 const route = useRoute()
 const showSkillPanel = computed(() => route.name === 'ChatSession')
 const chatStore = useChatStore()
+
+const skillInputContext = ref<{ inputText: string; fileList: any[] }>({
+  inputText: '',
+  fileList: [],
+})
+provide('skillInputContext', skillInputContext)
 
 onMounted(() => {
   chatStore.loadSessions()

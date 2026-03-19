@@ -14,6 +14,8 @@ import MessageList from './MessageList.vue'
 import MessageInput from './MessageInput.vue'
 import RatingDialog from '@/components/RatingDialog/index.vue'
 import { useChatStore } from '@/stores/chat'
+import type { Ref } from 'vue'
+import { inject } from 'vue'
 
 const { t } = useI18n()
 const props = defineProps<{
@@ -21,6 +23,21 @@ const props = defineProps<{
   isTestMode?: boolean
   avatarId?: string
 }>()
+
+const messageInputRef = ref<InstanceType<typeof MessageInput> | null>(null)
+
+const skillInputContext = inject<Ref<{ inputText: string; fileList: any[] }>>('skillInputContext')!
+
+watch(
+  () => ({
+    inputText: messageInputRef.value?.inputValue || '',
+    fileList: messageInputRef.value?.fileList || [],
+  }),
+  (v) => {
+    skillInputContext.value = v
+  },
+  { immediate: true, deep: true }
+)
 
 const chatStore = useChatStore()
 const { messages, currentSessionId, currentSession, loadingMessages, ratedSessionIds } =
@@ -153,7 +170,12 @@ watch(
     </div>
 
     <!-- Input Area -->
-    <MessageInput :loading="isStreaming" @send="handleSend" @stop="stopGeneration" />
+    <MessageInput
+      ref="messageInputRef"
+      :loading="isStreaming"
+      @send="handleSend"
+      @stop="stopGeneration"
+    />
 
     <!-- Rating Dialog -->
     <RatingDialog
