@@ -490,15 +490,8 @@ const PREVIEW_ROUTE_NAMES: Record<OwnerType, string> = {
   avatar: 'AvatarFilesPreview',
 }
 
-/** 判断文件是否具备预览条件：后端可能不返回 file_url/parsed_file_url */
-function canPreview(record: FileListItem): boolean {
-  const ft = record.file_type?.toLowerCase()
-  if (ft === 'pdf') return !!(record.file_url || record.parsed_file_url)
-  return !!record.file_url
-}
-
 function handlePreview(record: FileListItem) {
-  if (!canPreview(record)) {
+  if (!(record.file_url || record.parsed_file_url)) {
     message.warning(t('knowledge.previewNoUrlHint'))
     return
   }
