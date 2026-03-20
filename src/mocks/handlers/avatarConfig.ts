@@ -1,5 +1,5 @@
 import { http, HttpResponse, delay } from 'msw'
-import type { AvatarConfig, AvatarStatsData } from '@/types/avatarConfig'
+import type { AvatarConfig } from '@/types/avatarConfig'
 
 const mockAvatarConfig: AvatarConfig = {
   id: 'avatar-1',
@@ -14,12 +14,17 @@ const mockAvatarConfig: AvatarConfig = {
   tags: ['临床', '助手', '专业'],
 }
 
-const mockStats: AvatarStatsData = {
-  totalSessions: 12840,
-  todaySessions: 458,
-  todayTokensUsed: 2500,
-  totalTokensUsed: 84200,
-  totalReferences: 941,
+/** 与线上接口一致：snake_case + Token 为后端已格式化字符串 */
+const mockStats = {
+  total_sessions: 39,
+  today_sessions: 12,
+  today_token: '282.5k',
+  all_token: '18.8million',
+  knowledge_progress: {
+    indexed_files: 0,
+    total_files: 0,
+    percentage: 0,
+  },
 }
 
 export const avatarConfigHandlers = [

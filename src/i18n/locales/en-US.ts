@@ -501,6 +501,8 @@ export default {
         todayTokensUsed: 'Today Tokens Used',
         totalTokensUsed: 'Total Tokens Used',
         totalReferences: 'Knowledge Base References',
+        knowledgeProgress: 'Knowledge indexing progress',
+        knowledgeProgressFiles: '{indexed} / {total} files indexed',
       },
       quickGuide: {
         title: 'Quick Action Guide',

@@ -486,6 +486,8 @@ export default {
         todayTokensUsed: '今日 Token 使用量',
         totalTokensUsed: '累计 Token 使用量',
         totalReferences: '知识库引用次数',
+        knowledgeProgress: '知识库索引进度',
+        knowledgeProgressFiles: '已索引 {indexed} / 共 {total} 个文件',
       },
       quickGuide: {
         title: '快速操作指引',
