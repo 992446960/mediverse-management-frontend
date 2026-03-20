@@ -1,7 +1,13 @@
 <template>
   <div class="avatar-config">
     <a-spin :spinning="loading">
-      <a-form ref="formRef" :model="formData" layout="vertical" class="space-y-8">
+      <a-form
+        ref="formRef"
+        :model="formData"
+        layout="horizontal"
+        class="space-y-8"
+        :label-col="{ span: 3 }"
+      >
         <!-- 分区一：基础信息配置 -->
         <div class="config-section">
           <div class="section-header">
@@ -67,12 +73,24 @@
               </div>
             </a-form-item>
 
-            <!-- 名称（只读，不允许更新） -->
-            <a-form-item :label="t('avatar.name')" name="name">
+            <!-- 名称 -->
+            <a-form-item
+              :label="t('avatar.name')"
+              name="name"
+              :rules="[
+                {
+                  required: true,
+                  whitespace: true,
+                  message: t('avatar.name') + ' ' + t('common.required'),
+                  trigger: 'blur',
+                },
+              ]"
+            >
               <a-input
                 v-model:value="formData.name"
                 :placeholder="t('avatar.wizard.config.placeholderName')"
-                disabled
+                :maxlength="100"
+                show-count
                 class="step-info-input"
               />
             </a-form-item>
@@ -125,10 +143,11 @@
               <!-- 自定义风格输入 -->
               <div v-if="formData.style === 'custom'" class="mt-3">
                 <a-input
-                  v-model:value="formData.style_custom"
+                  :value="formData.style_custom ?? ''"
                   :placeholder="t('avatar.styleCustom')"
                   :maxlength="100"
                   class="step-info-input"
+                  @update:value="(v) => (formData.style_custom = v?.trim() ? v : null)"
                 />
               </div>
             </a-form-item>
@@ -220,7 +239,7 @@ const formData = reactive<UpdateAvatarConfigParams & { tags: string[] }>({
   bio: '',
   greeting: '',
   style: 'formal',
-  style_custom: '',
+  style_custom: null,
   tags: [],
 })
 
@@ -250,7 +269,7 @@ function assignFormFromDetail(res: {
     bio: res.bio,
     greeting: res.greeting,
     style: res.style,
-    style_custom: res.style_custom ?? '',
+    style_custom: res.style_custom ?? null,
     tags: res.tags || [],
   })
 }
@@ -278,8 +297,9 @@ const fetchConfig = async () => {
   }
 }
 
-/** 仅允许更新的字段 */
+/** 提交时随表单携带的字段（含 name，避免后端按部分更新把名称清空） */
 const UPDATE_ALLOWED_KEYS = [
+  'name',
   'bio',
   'tags',
   'greeting',
@@ -293,7 +313,11 @@ const handleSave = async () => {
     await formRef.value.validate()
     saving.value = true
     const payload = Object.fromEntries(
-      UPDATE_ALLOWED_KEYS.map((k) => [k, formData[k] as unknown])
+      UPDATE_ALLOWED_KEYS.map((k) => {
+        const v = formData[k] as unknown
+        if (k === 'name' && typeof v === 'string') return [k, v.trim()]
+        return [k, v]
+      })
     ) as UpdateAvatarParams
     const id = effectiveAvatarId.value
     if (id) {
