@@ -71,14 +71,20 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'avatar',
         name: 'MyAvatar',
-        component: () => import('@/views/my/Avatar.vue'),
+        component: () => import('@/views/shared/AvatarLayout.vue'),
         meta: { title: 'menu.avatarConfig', requiredRoles: ['user'] },
-      },
-      {
-        path: 'avatar/test',
-        name: 'MyAvatarTest',
-        component: () => import('@/views/my/AvatarTest.vue'),
-        meta: { title: 'menu.avatarTest', requiredRoles: ['user'] },
+        children: [
+          {
+            path: '',
+            component: () => import('@/views/my/Avatar.vue'),
+          },
+          {
+            path: 'test',
+            name: 'MyAvatarTest',
+            component: () => import('@/views/my/AvatarTest.vue'),
+            meta: { title: 'menu.avatarTest', requiredRoles: ['user'] },
+          },
+        ],
       },
     ],
   },
@@ -116,14 +122,20 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'avatar',
         name: 'DeptAvatar',
-        component: () => import('@/views/dept/Avatar.vue'),
+        component: () => import('@/views/shared/AvatarLayout.vue'),
         meta: { title: 'menu.avatarConfig' },
-      },
-      {
-        path: 'avatar/test',
-        name: 'DeptAvatarTest',
-        component: () => import('@/views/dept/AvatarTest.vue'),
-        meta: { title: 'menu.avatarTest' },
+        children: [
+          {
+            path: '',
+            component: () => import('@/views/dept/Avatar.vue'),
+          },
+          {
+            path: 'test',
+            name: 'DeptAvatarTest',
+            component: () => import('@/views/dept/AvatarTest.vue'),
+            meta: { title: 'menu.avatarTest' },
+          },
+        ],
       },
     ],
   },
@@ -161,14 +173,20 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'avatar',
         name: 'OrgAvatar',
-        component: () => import('@/views/org/Avatar.vue'),
+        component: () => import('@/views/shared/AvatarLayout.vue'),
         meta: { title: 'menu.avatarConfig' },
-      },
-      {
-        path: 'avatar/test',
-        name: 'OrgAvatarTest',
-        component: () => import('@/views/org/AvatarTest.vue'),
-        meta: { title: 'menu.avatarTest' },
+        children: [
+          {
+            path: '',
+            component: () => import('@/views/org/Avatar.vue'),
+          },
+          {
+            path: 'test',
+            name: 'OrgAvatarTest',
+            component: () => import('@/views/org/AvatarTest.vue'),
+            meta: { title: 'menu.avatarTest' },
+          },
+        ],
       },
     ],
   },

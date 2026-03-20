@@ -404,6 +404,7 @@ export default {
     message: 'Message',
     scrollToBottom: 'Scroll to bottom',
     thinkingProcessTitle: 'Thinking Process',
+    testSessionTitle: 'Avatar test',
   },
   theme: {
     light: 'Light Mode',
@@ -439,6 +440,8 @@ export default {
     addAvatar: 'Add Avatar',
     editAvatar: 'Edit Avatar',
     detailTitle: 'Avatar details',
+    testChatTitle: '{name} chat test',
+    testAvatarIdHint: 'Test avatar ID: {id}',
     knowledgeGrants: 'Knowledge grants',
     grantScope: 'Scope',
     scopeType: 'Scope type',

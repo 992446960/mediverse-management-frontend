@@ -399,6 +399,7 @@ export default {
     message: '消息',
     scrollToBottom: '回到底部',
     thinkingProcessTitle: '思考过程',
+    testSessionTitle: '分身测试',
   },
   theme: {
     light: '亮色模式',
@@ -434,6 +435,8 @@ export default {
     addAvatar: '新增分身',
     editAvatar: '编辑分身',
     detailTitle: '分身详情',
+    testChatTitle: '{name}对话测试',
+    testAvatarIdHint: '当前测试分身 ID：{id}',
     knowledgeGrants: '知识库授权',
     grantScope: '授权范围',
     scopeType: '范围类型',

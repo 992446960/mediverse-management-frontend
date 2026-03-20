@@ -9,6 +9,7 @@ import { Spin, Empty, Button } from 'ant-design-vue'
 const authStore = useAuthStore()
 const { user } = storeToRefs(authStore)
 const avatarId = ref<string>('')
+const avatarName = ref<string>('')
 const loading = ref(true)
 
 onMounted(async () => {
@@ -30,6 +31,7 @@ onMounted(async () => {
     const myAvatar = res.items.find((a) => a.user_id === user.value?.id)
     if (myAvatar) {
       avatarId.value = myAvatar.id
+      avatarName.value = myAvatar.name
     }
   } catch (error) {
     console.error('Failed to fetch avatar', error)
@@ -42,7 +44,7 @@ onMounted(async () => {
 <template>
   <div class="h-full">
     <Spin :spinning="loading" wrapper-class-name="h-full">
-      <AvatarTestPage v-if="avatarId" :avatar-id="avatarId" />
+      <AvatarTestPage v-if="avatarId" :avatar-id="avatarId" :avatar-name="avatarName" />
       <div v-else-if="!loading" class="h-full flex flex-col items-center justify-center">
         <Empty
           image="https://gw.alipayobjects.com/zos/antfincdn/ZHrcdLPrvN/empty.svg"

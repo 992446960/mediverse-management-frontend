@@ -26,7 +26,11 @@ const props = defineProps<{
 
 const messageInputRef = ref<InstanceType<typeof MessageInput> | null>(null)
 
-const skillInputContext = inject<Ref<{ inputText: string; fileList: any[] }>>('skillInputContext')!
+/** 与 SkillPanel 同步输入态；分身测试等场景无 provide 时使用本地 ref，避免 undefined 崩溃 */
+const skillInputContext = inject<Ref<{ inputText: string; fileList: any[] }>>(
+  'skillInputContext',
+  ref({ inputText: '', fileList: [] })
+)
 
 watch(
   () => ({
@@ -43,6 +47,20 @@ const chatStore = useChatStore()
 const { messages, currentSessionId, currentSession, loadingMessages, ratedSessionIds } =
   storeToRefs(chatStore)
 const { sendMessage, stopGeneration, selectSession, createNewSession } = chatStore
+
+/** 分身测试：进入页面时预创建会话，与首条消息路径一致，以便展示接口返回的开场白 */
+const testSessionBootstrap = ref<Promise<void> | null>(null)
+
+function startTestSessionBootstrap() {
+  if (!props.isTestMode || !props.avatarId || props.sessionId) return
+  if (testSessionBootstrap.value) return
+  const p = createNewSession(props.avatarId, t('chat.testSessionTitle'))
+    .then(() => undefined)
+    .finally(() => {
+      testSessionBootstrap.value = null
+    })
+  testSessionBootstrap.value = p
+}
 
 const ratingOpen = ref(false)
 const hasRated = computed(
@@ -69,6 +87,9 @@ const handleSend = async (
   content: string,
   options?: { thinkingMode?: string; webSearch?: boolean; files?: File[] }
 ) => {
+  if (testSessionBootstrap.value) {
+    await testSessionBootstrap.value
+  }
   if (!props.sessionId && !currentSessionId.value && props.avatarId) {
     const session = await createNewSession(props.avatarId, content.slice(0, 20))
     if (!session) return
@@ -86,6 +107,15 @@ const handlePromptClick = (info: any) => {
 onMounted(async () => {
   if (props.sessionId) {
     await selectSession(props.sessionId)
+    return
+  }
+  if (props.isTestMode && props.avatarId) {
+    startTestSessionBootstrap()
+    try {
+      await testSessionBootstrap.value
+    } catch {
+      /* 创建失败时保留空状态，用户可重试发消息再次 create */
+    }
   }
 })
 
@@ -101,9 +131,9 @@ watch(
 
 <template>
   <div class="chat-window flex flex-col h-full bg-white dark:bg-gray-900">
-    <!-- Header -->
+    <!-- Header（数字医生体验页展示；分身测试页已有页标题，不重复展示） -->
     <div
-      v-if="currentSession"
+      v-if="currentSession && !isTestMode"
       class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800 shrink-0"
     >
       <div class="flex items-center gap-3">
@@ -179,7 +209,7 @@ watch(
 
     <!-- Rating Dialog -->
     <RatingDialog
-      v-if="currentSession"
+      v-if="currentSession && !isTestMode"
       v-model:open="ratingOpen"
       :session-id="currentSession.id"
       :has-rated="!!hasRated"
