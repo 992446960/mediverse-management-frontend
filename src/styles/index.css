@@ -61,6 +61,7 @@ body {
   background-color: var(--color-bg-container);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
+  overflow: hidden;
 }
 
 /* 全局 Modal 样式 */

@@ -1,16 +1,24 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import ChatWindow from '@/components/ChatWindow/index.vue'
+
+const { t } = useI18n()
 
 defineProps<{
   avatarId: string
+  avatarName: string
 }>()
 </script>
 
 <template>
-  <div class="avatar-test-page h-full flex flex-col">
-    <div class="p-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
-      <h2 class="text-lg font-medium">分身对话测试</h2>
-      <p class="text-xs text-gray-500">当前测试分身 ID: {{ avatarId }}</p>
+  <div class="avatar-test-page h-full flex flex-col app-container">
+    <div class="avatar-test-page__header p-4">
+      <h2 class="avatar-test-page__title text-lg font-medium">
+        {{ t('avatar.testChatTitle', { name: avatarName }) }}
+      </h2>
+      <p class="avatar-test-page__hint text-xs">
+        {{ t('avatar.testAvatarIdHint', { id: avatarId }) }}
+      </p>
     </div>
 
     <div class="flex-1 overflow-hidden">
@@ -18,3 +26,18 @@ defineProps<{
     </div>
   </div>
 </template>
+
+<style scoped>
+.avatar-test-page__header {
+  border-bottom: 1px solid var(--color-border-secondary);
+  background-color: var(--color-bg-container);
+}
+
+.avatar-test-page__title {
+  color: var(--color-text-base);
+}
+
+.avatar-test-page__hint {
+  color: var(--color-text-secondary);
+}
+</style>

@@ -82,10 +82,28 @@ export interface Avatar {
   updated_at: string
 }
 
+/** 分身详情中的知识库授权项（GET /avatars/:id 扩展字段，见 API 2.1.3） */
+export interface AvatarKnowledgeGrant {
+  id: string
+  scope_type: string
+  scope_id: string
+  scope_name: string
+  granted_by: string
+  granted_by_name: string
+  granted_at: string
+}
+
+/** 分身详情（含 knowledge_grants） */
+export interface AvatarDetail extends Avatar {
+  knowledge_grants?: AvatarKnowledgeGrant[]
+}
+
 /** 分身列表查询参数（与 API 一致） */
 export interface AvatarListParams extends PaginationParams {
   org_id?: string
   dept_id?: string
+  /** 按所属用户过滤（专家分身） */
+  user_id?: string
   type?: AvatarType
   keyword?: string
   status?: 'active' | 'inactive'

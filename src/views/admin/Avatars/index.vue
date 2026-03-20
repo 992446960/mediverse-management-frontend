@@ -24,14 +24,7 @@
       :avatar-id="editingId ?? undefined"
       @success="handleEditSuccess"
     />
-    <a-drawer
-      v-model:open="knowledgeDrawerOpen"
-      :title="t('menu.knowledgeBase') + ' - ' + (currentAvatarName || '')"
-      width="1000px"
-      :destroy-on-close="true"
-    >
-      <KnowledgeCardList v-if="currentAvatarId" owner-type="avatar" :owner-id="currentAvatarId" />
-    </a-drawer>
+    <AvatarDetailModal v-model:open="detailOpen" :avatar-id="detailAvatarId ?? undefined" />
   </div>
 </template>
 
@@ -47,14 +40,14 @@ import {
   PauseCircleOutlined,
   PlayCircleOutlined,
   DeleteOutlined,
-  FileTextOutlined,
+  EyeOutlined,
 } from '@ant-design/icons-vue'
 import PageHead from '@/components/PageHead/index.vue'
 import PageFilter from '@/components/PageFilter/index.vue'
 import PageTable from '@/components/PageTable/index.vue'
 import AvatarWizard from './components/AvatarWizard.vue'
 import AvatarEditModal from './components/AvatarEditModal.vue'
-import KnowledgeCardList from '@/components/KnowledgeCardList/index.vue'
+import AvatarDetailModal from './components/AvatarDetailModal.vue'
 import { useAuthStore } from '@/stores/auth'
 import { getAvatars, updateAvatar, deleteAvatar } from '@/api/avatars'
 import { getOrganizations } from '@/api/organizations'
@@ -255,13 +248,13 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
   {
     label: t('common.actions'),
     type: 'operation',
-    width: 320,
+    width: 300,
     fixed: 'right',
     btns: [
       {
-        text: t('menu.knowledgeBase'),
-        icon: FileTextOutlined,
-        handle: (row) => openKnowledge(row as unknown as Avatar),
+        text: t('common.detail'),
+        icon: EyeOutlined,
+        handle: (row) => openDetail(row as unknown as Avatar),
       },
       {
         text: t('common.edit'),
@@ -368,9 +361,8 @@ function onTableFetch() {
 const wizardOpen = ref(false)
 const editOpen = ref(false)
 const editingId = ref<string | null>(null)
-const knowledgeDrawerOpen = ref(false)
-const currentAvatarId = ref<string | null>(null)
-const currentAvatarName = ref<string | null>(null)
+const detailOpen = ref(false)
+const detailAvatarId = ref<string | null>(null)
 
 function openWizard() {
   wizardOpen.value = true
@@ -381,10 +373,9 @@ function openEditForm(record: Avatar) {
   editOpen.value = true
 }
 
-function openKnowledge(record: Avatar) {
-  currentAvatarId.value = record.id
-  currentAvatarName.value = record.name
-  knowledgeDrawerOpen.value = true
+function openDetail(record: Avatar) {
+  detailAvatarId.value = record.id
+  detailOpen.value = true
 }
 
 function handleWizardSuccess() {

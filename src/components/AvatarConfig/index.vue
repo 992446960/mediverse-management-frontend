@@ -1,7 +1,13 @@
 <template>
   <div class="avatar-config">
     <a-spin :spinning="loading">
-      <a-form ref="formRef" :model="formData" layout="vertical" class="space-y-8">
+      <a-form
+        ref="formRef"
+        :model="formData"
+        layout="horizontal"
+        class="space-y-8"
+        :label-col="{ span: 3 }"
+      >
         <!-- 分区一：基础信息配置 -->
         <div class="config-section">
           <div class="section-header">
@@ -67,12 +73,24 @@
               </div>
             </a-form-item>
 
-            <!-- 名称（只读，不允许更新） -->
-            <a-form-item :label="t('avatar.name')" name="name">
+            <!-- 名称 -->
+            <a-form-item
+              :label="t('avatar.name')"
+              name="name"
+              :rules="[
+                {
+                  required: true,
+                  whitespace: true,
+                  message: t('avatar.name') + ' ' + t('common.required'),
+                  trigger: 'blur',
+                },
+              ]"
+            >
               <a-input
                 v-model:value="formData.name"
                 :placeholder="t('avatar.wizard.config.placeholderName')"
-                disabled
+                :maxlength="100"
+                show-count
                 class="step-info-input"
               />
             </a-form-item>
@@ -125,10 +143,11 @@
               <!-- 自定义风格输入 -->
               <div v-if="formData.style === 'custom'" class="mt-3">
                 <a-input
-                  v-model:value="formData.style_custom"
+                  :value="formData.style_custom ?? ''"
                   :placeholder="t('avatar.styleCustom')"
                   :maxlength="100"
                   class="step-info-input"
+                  @update:value="(v) => (formData.style_custom = v?.trim() ? v : null)"
                 />
               </div>
             </a-form-item>
@@ -185,14 +204,17 @@ import { PlusOutlined, CloseOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import type { OwnerType } from '@/constants/avatar'
 import type { UpdateAvatarConfigParams } from '@/types/avatarConfig'
-import type { AvatarStyle } from '@/types/avatar'
+import type { AvatarStyle, UpdateAvatarParams } from '@/types/avatar'
 import { getAvatarConfig, updateAvatarConfig } from '@/api/avatarConfig'
+import { getAvatarDetail, resolveWorkspaceAvatarId, updateAvatar } from '@/api/avatars'
 import { uploadAvatar } from '@/api/upload'
 
 const props = defineProps<{
   ownerType: OwnerType
   ownerId?: string
   readonly?: boolean
+  /** 已知分身 ID 时直接走 GET/PUT /avatars/:id（2.1.3 / 2.1.9），省略列表解析 */
+  avatarId?: string
 }>()
 
 const emit = defineEmits<{
@@ -217,7 +239,7 @@ const formData = reactive<UpdateAvatarConfigParams & { tags: string[] }>({
   bio: '',
   greeting: '',
   style: 'formal',
-  style_custom: '',
+  style_custom: null,
   tags: [],
 })
 
@@ -229,20 +251,45 @@ const styleOptions: { value: AvatarStyle; labelKey: string }[] = [
   { value: 'custom', labelKey: 'avatar.wizard.styleCustom' },
 ]
 
+/** 当前保存使用的分身 ID（列表解析或 props.avatarId）；无则走 my/avatar */
+const effectiveAvatarId = ref<string | null>(null)
+
+function assignFormFromDetail(res: {
+  name: string
+  avatar_url: string | null
+  bio: string | null
+  greeting: string | null
+  style: AvatarStyle
+  style_custom?: string | null
+  tags?: string[]
+}) {
+  Object.assign(formData, {
+    name: res.name,
+    avatar_url: res.avatar_url,
+    bio: res.bio,
+    greeting: res.greeting,
+    style: res.style,
+    style_custom: res.style_custom ?? null,
+    tags: res.tags || [],
+  })
+}
+
 const fetchConfig = async () => {
   if (props.ownerType !== 'personal' && !props.ownerId) return
   loading.value = true
   try {
-    const res = await getAvatarConfig(props.ownerType, props.ownerId)
-    Object.assign(formData, {
-      name: res.name,
-      avatar_url: res.avatar_url,
-      bio: res.bio,
-      greeting: res.greeting,
-      style: res.style,
-      style_custom: res.style_custom,
-      tags: res.tags || [],
-    })
+    const explicitId = props.avatarId?.trim()
+    const resolved =
+      explicitId || (await resolveWorkspaceAvatarId(props.ownerType, props.ownerId ?? null))
+    effectiveAvatarId.value = resolved ?? null
+
+    if (resolved) {
+      const res = await getAvatarDetail(resolved)
+      assignFormFromDetail(res)
+    } else {
+      const res = await getAvatarConfig(props.ownerType, props.ownerId)
+      assignFormFromDetail(res)
+    }
   } catch (err) {
     console.error('Failed to fetch avatar config:', err)
   } finally {
@@ -250,8 +297,9 @@ const fetchConfig = async () => {
   }
 }
 
-/** 仅允许更新的字段 */
+/** 提交时随表单携带的字段（含 name，避免后端按部分更新把名称清空） */
 const UPDATE_ALLOWED_KEYS = [
+  'name',
   'bio',
   'tags',
   'greeting',
@@ -264,8 +312,19 @@ const handleSave = async () => {
   try {
     await formRef.value.validate()
     saving.value = true
-    const payload = Object.fromEntries(UPDATE_ALLOWED_KEYS.map((k) => [k, formData[k] as unknown]))
-    await updateAvatarConfig(props.ownerType, props.ownerId, payload)
+    const payload = Object.fromEntries(
+      UPDATE_ALLOWED_KEYS.map((k) => {
+        const v = formData[k] as unknown
+        if (k === 'name' && typeof v === 'string') return [k, v.trim()]
+        return [k, v]
+      })
+    ) as UpdateAvatarParams
+    const id = effectiveAvatarId.value
+    if (id) {
+      await updateAvatar(id, payload)
+    } else {
+      await updateAvatarConfig(props.ownerType, props.ownerId, payload)
+    }
     message.success(t('common.success'))
     emit('saved')
   } catch (err) {
@@ -320,7 +379,12 @@ const addTag = () => {
   tagPopoverVisible.value = false
 }
 
-watch(() => props.ownerId, fetchConfig)
+watch(
+  () => [props.ownerType, props.ownerId, props.avatarId],
+  () => {
+    fetchConfig()
+  }
+)
 onMounted(fetchConfig)
 </script>
 
