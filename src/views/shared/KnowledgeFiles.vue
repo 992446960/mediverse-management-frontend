@@ -98,11 +98,18 @@ import { useFileStatusPoll } from '@/composables/useFileStatusPoll'
 import type { UploadQueueItem } from '@/components/FileUploader/types'
 import { getDirectoryTree, createDirectory, getFileList, deleteFile } from '@/api/knowledge'
 import { confirmDelete } from '@/utils/confirm'
+import { sanitizeDownloadFilename, triggerFileDownload } from '@/utils/triggerFileDownload'
 import { FILE_STATUS_CONFIG } from '@/types/knowledge'
 import type { PageHeadConfig } from '@/components/PageHead/types'
 import type { PageFilterConfig } from '@/components/PageFilter/types'
 import type { PageTableConfig, PageTableColumnConfig } from '@/components/PageTable/types'
-import type { OwnerType, DirectoryNode, FileListItem, FileStatus } from '@/types/knowledge'
+import {
+  getFileOriginalUrl,
+  type OwnerType,
+  type DirectoryNode,
+  type FileListItem,
+  type FileStatus,
+} from '@/types/knowledge'
 
 const props = defineProps<{
   ownerType: OwnerType
@@ -491,7 +498,7 @@ const PREVIEW_ROUTE_NAMES: Record<OwnerType, string> = {
 }
 
 function handlePreview(record: FileListItem) {
-  if (!(record.file_url || record.parsed_file_url)) {
+  if (!(getFileOriginalUrl(record) || record.parsed_file_url)) {
     message.warning(t('knowledge.previewNoUrlHint'))
     return
   }
@@ -515,9 +522,14 @@ function handleDelete(record: FileListItem) {
 }
 
 async function handleDownload(record: FileListItem) {
-  if (record.file_url) {
-    window.open(record.file_url, '_blank')
-  } else {
+  const url = getFileOriginalUrl(record)
+  if (!url) {
+    message.error(t('knowledge.downloadFailed'))
+    return
+  }
+  try {
+    await triggerFileDownload(url, sanitizeDownloadFilename(record.file_name))
+  } catch {
     message.error(t('knowledge.downloadFailed'))
   }
 }

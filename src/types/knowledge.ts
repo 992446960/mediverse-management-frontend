@@ -34,7 +34,10 @@ export interface FileListItem {
   dir_id: string
   dir_name: string
   status: FileStatus
+  /** 原文件 URL（部分接口字段名） */
   file_url?: string
+  /** 存储侧原文件 URL（与 file_url 等价，优先任一可用即可） */
+  storage_url?: string | null
   parsed_file_url?: string | null
   error_msg: string | null
   auto_category_suggestion: string | null
@@ -44,6 +47,13 @@ export interface FileListItem {
   created_by_name: string
   created_at: string
   updated_at: string
+}
+
+/** 原文件可下载/预览 URL（兼容 file_url 与 storage_url） */
+export function getFileOriginalUrl(item: FileListItem): string | undefined {
+  const u = item.file_url ?? item.storage_url
+  if (u == null || u === '') return undefined
+  return u
 }
 
 /** 文件关联的知识卡（预览侧栏用） */

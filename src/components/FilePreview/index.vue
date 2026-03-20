@@ -25,7 +25,7 @@
             </a-tag>
             <a-button
               type="primary"
-              :disabled="!currentFile.file_url"
+              :disabled="!originalFileUrl"
               class="transition-colors duration-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               @click="handleDownload"
             >
@@ -69,19 +69,19 @@
             />
             <!-- Docx -->
             <DocxViewer
-              v-else-if="currentFile?.file_type === 'docx' && currentFile?.file_url"
-              :file-url="currentFile.file_url"
+              v-else-if="currentFile?.file_type === 'docx' && originalFileUrl"
+              :file-url="originalFileUrl"
             />
             <!-- Excel -->
             <ExcelViewer
-              v-else-if="currentFile?.file_type === 'xlsx' && currentFile?.file_url"
-              :file-url="currentFile.file_url"
+              v-else-if="currentFile?.file_type === 'xlsx' && originalFileUrl"
+              :file-url="originalFileUrl"
             />
             <!-- 文本型：txt, md, json, jsonl, csv -->
             <TextFileViewer
-              v-else-if="isTextType && currentFile?.file_url"
-              :file-url="currentFile.file_url"
-              :file-type="currentFile.file_type"
+              v-else-if="isTextType && originalFileUrl"
+              :file-url="originalFileUrl"
+              :file-type="currentFile?.file_type ?? ''"
             />
             <!-- 支持的类型但后端未返回 file_url/parsed_file_url -->
             <a-empty
@@ -127,6 +127,8 @@ import KnowledgeCardSidebar from './KnowledgeCardSidebar.vue'
 import { getFileCards } from '@/api/knowledge'
 import type { PageHeadConfig } from '@/components/PageHead/types'
 import type { OwnerType, FileListItem, FileStatus, FileCard } from '@/types/knowledge'
+import { getFileOriginalUrl } from '@/types/knowledge'
+import { sanitizeDownloadFilename, triggerFileDownload } from '@/utils/triggerFileDownload'
 
 const { t } = useI18n()
 
@@ -167,19 +169,25 @@ const isTextType = computed(() => {
 
 const showPdfTabs = computed(() => currentFile.value?.file_type?.toLowerCase() === 'pdf')
 
-/** 是否有预览所需 URL：后端可能不返回 file_url/parsed_file_url */
+const originalFileUrl = computed(() => {
+  const f = currentFile.value
+  return f ? (getFileOriginalUrl(f) ?? '') : ''
+})
+
+/** 是否有预览所需 URL：后端可能返回 file_url / storage_url / parsed_file_url */
 const hasPreviewUrl = computed(() => {
   const f = currentFile.value
   if (!f) return false
   const ft = f.file_type?.toLowerCase()
-  if (ft === 'pdf') return !!(f.file_url || f.parsed_file_url)
-  return !!f.file_url
+  const orig = getFileOriginalUrl(f)
+  if (ft === 'pdf') return !!(orig || f.parsed_file_url)
+  return !!orig
 })
 
 /** 原文视图 PDF 地址：转为绝对 URL，确保 @vue-office/pdf 内部 fetch 能命中 MSW */
 const pdfAbsoluteUrl = computed(() => {
   const url =
-    currentFile.value?.file_type?.toLowerCase() === 'pdf' ? currentFile.value?.file_url : undefined
+    currentFile.value?.file_type?.toLowerCase() === 'pdf' ? originalFileUrl.value : undefined
   if (!url) return ''
   if (url.startsWith('http://') || url.startsWith('https://')) return url
   return new URL(url, window.location.origin).href
@@ -245,12 +253,18 @@ async function loadCards() {
   }
 }
 
-function handleDownload() {
-  if (!currentFile.value?.file_url) {
+async function handleDownload() {
+  const file = currentFile.value
+  const url = file ? getFileOriginalUrl(file) : undefined
+  if (!url) {
     message.warning(t('knowledge.noPreviewUrl'))
     return
   }
-  window.open(currentFile.value.file_url, '_blank')
+  try {
+    await triggerFileDownload(url, sanitizeDownloadFilename(file.file_name))
+  } catch {
+    message.error(t('knowledge.downloadFailed'))
+  }
 }
 
 watch(
