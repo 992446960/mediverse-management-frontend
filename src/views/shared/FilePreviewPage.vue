@@ -43,10 +43,11 @@ const ownerId = computed(() => {
 
 const fileId = computed(() => route.params.id as string)
 
-/** 从路由 state 带入的列表项，避免单独请求文件详情 */
+/** 从路由 state 带入的列表项，避免单独请求文件详情。兼容 history.state 与 route.state */
 const fileFromState = computed<FileListItem | undefined>(() => {
-  const state = history.state as { file?: FileListItem }
-  return state?.file
+  const fromHistory = (history.state as { file?: FileListItem })?.file
+  const fromRoute = (route as { state?: { file?: FileListItem } }).state?.file
+  return fromHistory ?? fromRoute
 })
 
 const ready = computed(() => {

@@ -95,3 +95,8 @@ body {
     }
   }
 }
+
+/* 全局 Alert 样式 */
+.ant-alert{
+  margin-bottom: 14px;
+}

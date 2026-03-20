@@ -25,6 +25,7 @@
             </a-tag>
             <a-button
               type="primary"
+              :disabled="!currentFile.file_url"
               class="transition-colors duration-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               @click="handleDownload"
             >
@@ -82,6 +83,11 @@
               :file-url="currentFile.file_url"
               :file-type="currentFile.file_type"
             />
+            <!-- 支持的类型但后端未返回 file_url/parsed_file_url -->
+            <a-empty
+              v-else-if="!loading && currentFile && !hasPreviewUrl"
+              :description="t('knowledge.noPreviewUrl')"
+            />
             <a-empty
               v-else-if="!loading && currentFile"
               :description="t('knowledge.unsupportedPreview')"
@@ -107,6 +113,7 @@
 </template>
 
 <script setup lang="ts">
+import { message } from 'ant-design-vue'
 import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
 import { DownloadOutlined } from '@ant-design/icons-vue'
@@ -159,6 +166,15 @@ const isTextType = computed(() => {
 })
 
 const showPdfTabs = computed(() => currentFile.value?.file_type?.toLowerCase() === 'pdf')
+
+/** 是否有预览所需 URL：后端可能不返回 file_url/parsed_file_url */
+const hasPreviewUrl = computed(() => {
+  const f = currentFile.value
+  if (!f) return false
+  const ft = f.file_type?.toLowerCase()
+  if (ft === 'pdf') return !!(f.file_url || f.parsed_file_url)
+  return !!f.file_url
+})
 
 /** 原文视图 PDF 地址：转为绝对 URL，确保 @vue-office/pdf 内部 fetch 能命中 MSW */
 const pdfAbsoluteUrl = computed(() => {
@@ -230,7 +246,10 @@ async function loadCards() {
 }
 
 function handleDownload() {
-  if (!currentFile.value?.file_url) return
+  if (!currentFile.value?.file_url) {
+    message.warning(t('knowledge.noPreviewUrl'))
+    return
+  }
   window.open(currentFile.value.file_url, '_blank')
 }
 

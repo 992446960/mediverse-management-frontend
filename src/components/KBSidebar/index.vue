@@ -1,5 +1,5 @@
 <template>
-  <div class="kb-sidebar h-full flex flex-col border-r border-gray-200 bg-gray-50">
+  <div class="kb-sidebar h-full flex flex-col border-r border-gray-200 bg-white">
     <div class="p-4 border-b border-gray-200">
       <a-button type="primary" block @click="createNewSession">
         <template #icon><PlusOutlined /></template>

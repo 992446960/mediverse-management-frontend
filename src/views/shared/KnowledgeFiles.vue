@@ -174,11 +174,18 @@ function getStatusLabel(status: FileStatus): string {
 const fileUploaderRef = ref<InstanceType<typeof FileUploader> | null>(null)
 const uploadQueue = ref<UploadQueueItem[]>([])
 const uploadModalVisible = ref(false)
+const hasUserStartedUpload = ref(false)
 
 const pendingCount = computed(() => uploadQueue.value.filter((i) => i.status === 'pending').length)
 const isUploading = computed(() => uploadQueue.value.some((i) => i.status === 'uploading'))
+/** 实际上传中的个数（status === 'uploading'），用于「上传中 (X)」展示 */
 const uploadingCount = computed(
-  () => uploadQueue.value.filter((i) => i.status === 'pending' || i.status === 'uploading').length
+  () => uploadQueue.value.filter((i) => i.status === 'uploading').length
+)
+const allDone = computed(
+  () =>
+    uploadQueue.value.length > 0 &&
+    uploadQueue.value.every((i) => i.status === 'success' || i.status === 'fail')
 )
 
 function openUploadModal() {
@@ -190,7 +197,13 @@ function addToQueue(item: UploadQueueItem) {
 }
 
 function onUploadStart() {
+  hasUserStartedUpload.value = true
   fileUploaderRef.value?.startUpload?.()
+}
+
+function clearUploadQueue() {
+  uploadQueue.value = []
+  hasUserStartedUpload.value = false
 }
 
 function onUploadModalCancel() {
@@ -207,6 +220,9 @@ function onUploadModalCancel() {
     })
   } else {
     uploadModalVisible.value = false
+    if (allDone.value) {
+      clearUploadQueue()
+    }
   }
 }
 
@@ -239,6 +255,12 @@ watch(
   { immediate: true }
 )
 
+watch([uploadModalVisible, allDone], ([visible, done]) => {
+  if (!visible && done) {
+    clearUploadQueue()
+  }
+})
+
 const headConf = computed<PageHeadConfig>(() => {
   const btns: PageHeadConfig['btns'] = [
     {
@@ -248,9 +270,14 @@ const headConf = computed<PageHeadConfig>(() => {
       handle: openUploadModal,
     },
   ]
-  if (uploadingCount.value > 0) {
+  const hasActive = uploadQueue.value.length > 0 && !allDone.value
+  if (hasActive) {
+    const isPending = !hasUserStartedUpload.value && pendingCount.value > 0
+    const text = isPending
+      ? t('knowledge.pendingUploadCount', { count: pendingCount.value })
+      : t('knowledge.uploadingCount', { count: uploadingCount.value })
     btns.push({
-      text: t('knowledge.uploadingCount', { count: uploadingCount.value }),
+      text,
       type: 'link',
       show: true,
       handle: openUploadModal,
@@ -333,6 +360,7 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
     prop: 'file_name',
     width: 200,
     showOverflowTooltip: true,
+    fixed: 'left',
   },
   { label: t('knowledge.fileType'), prop: 'file_type', width: 100 },
   {
@@ -396,7 +424,7 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
             text: t('knowledge.retry'),
             icon: ReloadOutlined,
             btnIsShow: (row) => (row.status as string) === 'failed',
-            handle: (row: Record<string, unknown>) => handleRetry(row as unknown as FileListItem),
+            handle: () => handleRetry(),
           },
         ],
       },
@@ -462,9 +490,21 @@ const PREVIEW_ROUTE_NAMES: Record<OwnerType, string> = {
   avatar: 'AvatarFilesPreview',
 }
 
+/** 判断文件是否具备预览条件：后端可能不返回 file_url/parsed_file_url */
+function canPreview(record: FileListItem): boolean {
+  const ft = record.file_type?.toLowerCase()
+  if (ft === 'pdf') return !!(record.file_url || record.parsed_file_url)
+  return !!record.file_url
+}
+
 function handlePreview(record: FileListItem) {
+  if (!canPreview(record)) {
+    message.warning(t('knowledge.previewNoUrlHint'))
+    return
+  }
   const name = PREVIEW_ROUTE_NAMES[props.ownerType]
-  router.push({ name, params: { id: record.id }, state: { file: record } })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- FileListItem 需通过 state 传递，HistoryState 类型限制
+  router.push({ name, params: { id: record.id }, state: { file: record } as any })
 }
 
 function handleDelete(record: FileListItem) {

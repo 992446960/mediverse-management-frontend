@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Modal, Rate, Input, Form, FormItem, message } from 'ant-design-vue'
+import { Modal, Rate, message } from 'ant-design-vue'
+import type { FormInstance } from 'ant-design-vue'
 import { useChatStore } from '@/stores/chat'
 
 const { t } = useI18n()
@@ -22,6 +23,7 @@ const emit = defineEmits<{
 
 const chatStore = useChatStore()
 const loading = ref(false)
+const formRef = ref<FormInstance>()
 
 const formState = ref({
   accuracy: 0,
@@ -29,8 +31,30 @@ const formState = ref({
   feedback: '',
 })
 
+const rateRequiredRule = (fieldKey: 'accuracy' | 'completion') => ({
+  required: true,
+  validator: (_rule: unknown, value: number) => {
+    if (value === 0 || value === undefined || value === null) {
+      return Promise.reject(new Error(t('rating.' + fieldKey) + ' ' + t('common.required')))
+    }
+    return Promise.resolve()
+  },
+  trigger: 'change',
+})
+
+const rules = {
+  accuracy: [rateRequiredRule('accuracy')],
+  completion: [rateRequiredRule('completion')],
+}
+
 const handleOk = async () => {
   if (!props.sessionId) return
+
+  try {
+    await formRef.value?.validate()
+  } catch {
+    return
+  }
 
   loading.value = true
   try {
@@ -61,6 +85,7 @@ watch(
   (val) => {
     if (val) {
       formState.value = { accuracy: 0, completion: 0, feedback: '' }
+      formRef.value?.clearValidate()
     }
   }
 )
@@ -74,27 +99,21 @@ watch(
     @ok="handleOk"
     @cancel="handleCancel"
   >
-    <a-alert
-      v-if="hasRated"
-      type="info"
-      :message="t('rating.reSubmitHint')"
-      show-icon
-      class="mb-4"
-    />
-    <Form layout="vertical">
-      <FormItem :label="t('rating.accuracy')">
+    <a-alert v-if="hasRated" type="info" :message="t('rating.reSubmitHint')" show-icon />
+    <a-form ref="formRef" :model="formState" :rules="rules" layout="vertical">
+      <a-form-item :label="t('rating.accuracy')" name="accuracy">
         <Rate v-model:value="formState.accuracy" />
-      </FormItem>
-      <FormItem :label="t('rating.completion')">
+      </a-form-item>
+      <a-form-item :label="t('rating.completion')" name="completion">
         <Rate v-model:value="formState.completion" />
-      </FormItem>
-      <FormItem :label="t('rating.feedback')">
-        <Input.TextArea
+      </a-form-item>
+      <a-form-item :label="t('rating.feedback')" name="feedback">
+        <a-textarea
           v-model:value="formState.feedback"
           :placeholder="t('rating.feedbackPlaceholder')"
           :rows="4"
         />
-      </FormItem>
-    </Form>
+      </a-form-item>
+    </a-form>
   </Modal>
 </template>
