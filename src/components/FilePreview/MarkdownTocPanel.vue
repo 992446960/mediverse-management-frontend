@@ -1,7 +1,7 @@
 <template>
   <div
     v-if="items.length > 0"
-    class="markdown-toc-panel shrink-0 w-44 border border-slate-200 dark:border-slate-600 rounded-lg bg-slate-50/80 dark:bg-slate-800/80 p-2 max-h-[min(60vh,480px)] overflow-y-auto"
+    class="markdown-toc-panel shrink-0 w-44 border border-slate-200 dark:border-slate-600 bg-slate-50/80 dark:bg-slate-800/80 p-2 overflow-y-auto"
   >
     <div class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2 px-1">
       {{ t('knowledge.previewToc') }}

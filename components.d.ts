@@ -110,6 +110,8 @@ declare module 'vue' {
     PageTree: typeof import('./src/components/PageTree/index.vue')['default']
     PaginationSelect: typeof import('./src/components/AvatarSelector/PaginationSelect.vue')['default']
     ParsedDocViewer: typeof import('./src/components/FilePreview/ParsedDocViewer.vue')['default']
+    PdfOriginalTabPanel: typeof import('./src/components/FilePreview/PdfOriginalTabPanel.vue')['default']
+    PdfParsedTabPanel: typeof import('./src/components/FilePreview/PdfParsedTabPanel.vue')['default']
     PdfViewer: typeof import('./src/components/FilePreview/PdfViewer.vue')['default']
     QuickActionGuide: typeof import('./src/components/AvatarConfig/QuickActionGuide.vue')['default']
     RatingDialog: typeof import('./src/components/RatingDialog/index.vue')['default']

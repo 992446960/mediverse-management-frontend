@@ -84,7 +84,7 @@ type PdfOfficeExpose = {
 
 const errorMessage = ref<string | null>(null)
 const pdfOfficeRef = ref<ComponentPublicInstance | null>(null)
-/** 包裹 vue-office 的滚动区；与父级 v-show 配合，用于在可见后单次 rerender */
+/** 包裹 vue-office 的滚动区；ResizeObserver / KeepAlive 激活时用于单次 rerender */
 const scrollRootRef = ref<HTMLElement | null>(null)
 const currentPage = ref(1)
 const pageInput = ref(1)
@@ -437,6 +437,17 @@ watch(totalPages, (n) => {
 onBeforeUnmount(() => {
   teardownObservers()
 })
+
+/** 供父级（如 PdfOriginalTabPanel）在 KeepAlive 激活时调用 */
+function rerenderLayout() {
+  didLayoutBoost.value = false
+  nextTick(() => {
+    tryLayoutBoost()
+    setupLayoutBoostObserver()
+  })
+}
+
+defineExpose({ rerenderLayout })
 </script>
 
 <style scoped>

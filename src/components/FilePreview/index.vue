@@ -56,24 +56,15 @@
           <div
             class="flex-1 min-h-[400px] overflow-hidden border border-slate-200 dark:border-slate-700 rounded-lg"
           >
-            <!-- PDF：双 Tab 并列挂载 + v-show，避免切换时销毁子组件导致重复 fetch / 重新渲染 -->
+            <!-- PDF：KeepAlive + 独立 Tab 面板组件切换，缓存实例、原文首次即在有尺寸容器内挂载 -->
             <div v-if="showPdfTabs" class="relative h-full min-h-[400px] overflow-hidden">
-              <div
-                v-show="activeView === 'parsed'"
-                class="absolute inset-0 flex flex-col min-h-0 overflow-hidden"
-              >
-                <ParsedDocViewer :parsed-file-url="currentFile?.parsed_file_url ?? null" />
-              </div>
-              <div
-                v-show="activeView === 'original'"
-                class="absolute inset-0 flex flex-col min-h-0 overflow-hidden"
-              >
-                <PdfViewer
-                  v-if="pdfAbsoluteUrl"
-                  :key="`pdf-${currentFile?.id ?? ''}-original`"
-                  :file-url="pdfAbsoluteUrl"
+              <KeepAlive>
+                <component
+                  :is="pdfPaneComponent"
+                  class="absolute inset-0 flex flex-col min-h-0 overflow-hidden"
+                  v-bind="pdfPaneProps"
                 />
-              </div>
+              </KeepAlive>
             </div>
             <!-- Docx -->
             <DocxViewer
@@ -126,10 +117,10 @@ import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
 import { DownloadOutlined } from '@ant-design/icons-vue'
 import PageHead from '@/components/PageHead/index.vue'
-import PdfViewer from './PdfViewer.vue'
 import DocxViewer from './DocxViewer.vue'
 import ExcelViewer from './ExcelViewer.vue'
-import ParsedDocViewer from './ParsedDocViewer.vue'
+import PdfOriginalTabPanel from './PdfOriginalTabPanel.vue'
+import PdfParsedTabPanel from './PdfParsedTabPanel.vue'
 import TextFileViewer from './TextFileViewer.vue'
 import KnowledgeCardSidebar from './KnowledgeCardSidebar.vue'
 import { getFileCards } from '@/api/knowledge'
@@ -201,6 +192,20 @@ const pdfAbsoluteUrl = computed(() => {
   return new URL(url, window.location.origin).href
 })
 
+const pdfPaneComponent = computed(() =>
+  activeView.value === 'parsed' ? PdfParsedTabPanel : PdfOriginalTabPanel
+)
+
+const pdfPaneProps = computed(() => {
+  if (activeView.value === 'parsed') {
+    return { parsedFileUrl: currentFile.value?.parsed_file_url ?? null }
+  }
+  return {
+    fileUrl: pdfAbsoluteUrl.value,
+    cacheKey: String(currentFile.value?.id ?? props.fileId ?? ''),
+  }
+})
+
 const STATUS_BADGE_COLORS: Record<FileStatus, string> = {
   uploading: 'blue',
   parsing: 'blue',
@@ -269,7 +274,7 @@ async function handleDownload() {
     return
   }
   try {
-    await triggerFileDownload(url, sanitizeDownloadFilename(file.file_name))
+    await triggerFileDownload(url, sanitizeDownloadFilename(file?.file_name ?? ''))
   } catch {
     message.error(t('knowledge.downloadFailed'))
   }
