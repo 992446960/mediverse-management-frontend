@@ -89,6 +89,7 @@ export const avatarHandlers = [
     const type = url.searchParams.get('type') as Avatar['type'] | null
     const org_id = url.searchParams.get('org_id')?.trim() || ''
     const dept_id = url.searchParams.get('dept_id')?.trim() || ''
+    const user_id = url.searchParams.get('user_id')?.trim() || ''
     const status = url.searchParams.get('status') as 'active' | 'inactive' | null
 
     let list = mutableAvatars
@@ -104,6 +105,9 @@ export const avatarHandlers = [
     }
     if (dept_id) {
       list = list.filter((a) => a.dept_id === dept_id)
+    }
+    if (user_id) {
+      list = list.filter((a) => a.user_id === user_id)
     }
     if (status === 'active' || status === 'inactive') {
       list = list.filter((a) => a.status === status)
@@ -258,7 +262,7 @@ export const avatarHandlers = [
     return HttpResponse.json({
       code: 0,
       message: 'ok',
-      data: { ...avatar },
+      data: { ...avatar, knowledge_grants: [] },
     })
   }),
 

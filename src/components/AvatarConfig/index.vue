@@ -185,14 +185,17 @@ import { PlusOutlined, CloseOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import type { OwnerType } from '@/constants/avatar'
 import type { UpdateAvatarConfigParams } from '@/types/avatarConfig'
-import type { AvatarStyle } from '@/types/avatar'
+import type { AvatarStyle, UpdateAvatarParams } from '@/types/avatar'
 import { getAvatarConfig, updateAvatarConfig } from '@/api/avatarConfig'
+import { getAvatarDetail, resolveWorkspaceAvatarId, updateAvatar } from '@/api/avatars'
 import { uploadAvatar } from '@/api/upload'
 
 const props = defineProps<{
   ownerType: OwnerType
   ownerId?: string
   readonly?: boolean
+  /** 已知分身 ID 时直接走 GET/PUT /avatars/:id（2.1.3 / 2.1.9），省略列表解析 */
+  avatarId?: string
 }>()
 
 const emit = defineEmits<{
@@ -229,20 +232,45 @@ const styleOptions: { value: AvatarStyle; labelKey: string }[] = [
   { value: 'custom', labelKey: 'avatar.wizard.styleCustom' },
 ]
 
+/** 当前保存使用的分身 ID（列表解析或 props.avatarId）；无则走 my/avatar */
+const effectiveAvatarId = ref<string | null>(null)
+
+function assignFormFromDetail(res: {
+  name: string
+  avatar_url: string | null
+  bio: string | null
+  greeting: string | null
+  style: AvatarStyle
+  style_custom?: string | null
+  tags?: string[]
+}) {
+  Object.assign(formData, {
+    name: res.name,
+    avatar_url: res.avatar_url,
+    bio: res.bio,
+    greeting: res.greeting,
+    style: res.style,
+    style_custom: res.style_custom ?? '',
+    tags: res.tags || [],
+  })
+}
+
 const fetchConfig = async () => {
   if (props.ownerType !== 'personal' && !props.ownerId) return
   loading.value = true
   try {
-    const res = await getAvatarConfig(props.ownerType, props.ownerId)
-    Object.assign(formData, {
-      name: res.name,
-      avatar_url: res.avatar_url,
-      bio: res.bio,
-      greeting: res.greeting,
-      style: res.style,
-      style_custom: res.style_custom,
-      tags: res.tags || [],
-    })
+    const explicitId = props.avatarId?.trim()
+    const resolved =
+      explicitId || (await resolveWorkspaceAvatarId(props.ownerType, props.ownerId ?? null))
+    effectiveAvatarId.value = resolved ?? null
+
+    if (resolved) {
+      const res = await getAvatarDetail(resolved)
+      assignFormFromDetail(res)
+    } else {
+      const res = await getAvatarConfig(props.ownerType, props.ownerId)
+      assignFormFromDetail(res)
+    }
   } catch (err) {
     console.error('Failed to fetch avatar config:', err)
   } finally {
@@ -264,8 +292,15 @@ const handleSave = async () => {
   try {
     await formRef.value.validate()
     saving.value = true
-    const payload = Object.fromEntries(UPDATE_ALLOWED_KEYS.map((k) => [k, formData[k] as unknown]))
-    await updateAvatarConfig(props.ownerType, props.ownerId, payload)
+    const payload = Object.fromEntries(
+      UPDATE_ALLOWED_KEYS.map((k) => [k, formData[k] as unknown])
+    ) as UpdateAvatarParams
+    const id = effectiveAvatarId.value
+    if (id) {
+      await updateAvatar(id, payload)
+    } else {
+      await updateAvatarConfig(props.ownerType, props.ownerId, payload)
+    }
     message.success(t('common.success'))
     emit('saved')
   } catch (err) {
@@ -320,7 +355,12 @@ const addTag = () => {
   tagPopoverVisible.value = false
 }
 
-watch(() => props.ownerId, fetchConfig)
+watch(
+  () => [props.ownerType, props.ownerId, props.avatarId],
+  () => {
+    fetchConfig()
+  }
+)
 onMounted(fetchConfig)
 </script>
 
