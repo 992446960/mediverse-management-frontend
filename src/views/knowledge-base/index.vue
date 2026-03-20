@@ -27,7 +27,7 @@
       </div>
 
       <!-- Recent Searches（支持单项删除与清空） -->
-      <div v-if="recentSearches.length > 0" class="space-y-2">
+      <div v-if="recentQueries.length > 0" class="space-y-2">
         <div class="flex items-center justify-between gap-2">
           <span class="text-sm text-gray-500 font-medium">
             {{ t('knowledgeSearch.recentSearches') }}:
@@ -41,14 +41,14 @@
         </div>
         <div class="flex flex-wrap gap-2">
           <a-tag
-            v-for="session in recentSearches"
-            :key="session.id"
+            v-for="q in recentQueries"
+            :key="q"
             closable
             class="cursor-pointer hover:text-primary hover:border-primary transition-colors"
-            @click.self="handleSearch(session.title)"
-            @close="handleRemoveRecent(session.id)"
+            @click.self="handleSearch(q)"
+            @close="handleRemoveRecent(q)"
           >
-            {{ session.title }}
+            {{ q }}
           </a-tag>
         </div>
       </div>
@@ -102,7 +102,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -112,6 +112,12 @@ import {
   IdcardOutlined,
 } from '@ant-design/icons-vue'
 import { useKnowledgeSearchStore } from '@/stores/knowledgeSearch'
+import {
+  addKbRecentSearch,
+  clearKbRecentSearches,
+  getKbRecentSearches,
+  removeKbRecentSearch,
+} from '@/utils/kbRecentSearches'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -120,7 +126,7 @@ const store = useKnowledgeSearchStore()
 const searchQuery = ref('')
 const loading = ref(false)
 
-const recentSearches = computed(() => store.sessions.slice(0, 8))
+const recentQueries = ref<string[]>([])
 const recentFiles = ref([
   { id: 1, name: '2025年第一季度院感防控手册.pdf', date: '2小时前' },
   { id: 2, name: '急诊科排班表_3月.xlsx', date: '昨天' },
@@ -138,6 +144,8 @@ const handleSearch = async (query: string) => {
   loading.value = true
   try {
     const session = await store.createSession(query)
+    addKbRecentSearch(query)
+    recentQueries.value = getKbRecentSearches()
     router.push(`/knowledge-base/search/${session.id}`)
   } catch (error) {
     console.error('Failed to create search session:', error)
@@ -146,17 +154,18 @@ const handleSearch = async (query: string) => {
   }
 }
 
-const handleRemoveRecent = (sessionId: string) => {
-  store.deleteSession(sessionId)
+const handleRemoveRecent = (query: string) => {
+  removeKbRecentSearch(query)
+  recentQueries.value = getKbRecentSearches()
 }
 
 const handleClearRecent = () => {
-  const ids = store.sessions.slice(0, 8).map((s) => s.id)
-  ids.forEach((id) => store.deleteSession(id))
+  clearKbRecentSearches()
+  recentQueries.value = getKbRecentSearches()
 }
 
 onMounted(() => {
-  store.fetchSessions()
+  recentQueries.value = getKbRecentSearches()
 })
 </script>
 
