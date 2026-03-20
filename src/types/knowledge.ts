@@ -88,6 +88,8 @@ export interface KnowledgeCard {
 
 /** 知识卡版本 */
 export interface KnowledgeCardVersion {
+  /** 后端版本行 id（若有） */
+  id?: string
   version: string
   summary: string
   created_by: string
