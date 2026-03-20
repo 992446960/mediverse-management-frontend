@@ -37,7 +37,7 @@
       </PageHead>
     </div>
 
-    <div class="flex-1 flex min-h-0 gap-4">
+    <div class="flex-1 flex min-h-0 gap-4 max-h-[80vh]">
       <!-- 左侧：文件内容预览 -->
       <div class="app-container flex-[2] flex flex-col min-w-0 p-4">
         <section class="flex flex-col flex-1 min-h-0">
@@ -56,17 +56,25 @@
           <div
             class="flex-1 min-h-[400px] overflow-hidden border border-slate-200 dark:border-slate-700 rounded-lg"
           >
-            <!-- PDF 解析视图 -->
-            <ParsedDocViewer
-              v-if="showPdfTabs && activeView === 'parsed'"
-              :parsed-file-url="currentFile?.parsed_file_url ?? null"
-            />
-            <!-- PDF 原文视图：使用绝对 URL 确保 vue-office 内部 fetch 能命中 MSW -->
-            <PdfViewer
-              v-else-if="currentFile?.file_type === 'pdf' && pdfAbsoluteUrl"
-              :key="`pdf-${currentFile?.id ?? ''}-original`"
-              :file-url="pdfAbsoluteUrl"
-            />
+            <!-- PDF：双 Tab 并列挂载 + v-show，避免切换时销毁子组件导致重复 fetch / 重新渲染 -->
+            <div v-if="showPdfTabs" class="relative h-full min-h-[400px] overflow-hidden">
+              <div
+                v-show="activeView === 'parsed'"
+                class="absolute inset-0 flex flex-col min-h-0 overflow-hidden"
+              >
+                <ParsedDocViewer :parsed-file-url="currentFile?.parsed_file_url ?? null" />
+              </div>
+              <div
+                v-show="activeView === 'original'"
+                class="absolute inset-0 flex flex-col min-h-0 overflow-hidden"
+              >
+                <PdfViewer
+                  v-if="pdfAbsoluteUrl"
+                  :key="`pdf-${currentFile?.id ?? ''}-original`"
+                  :file-url="pdfAbsoluteUrl"
+                />
+              </div>
+            </div>
             <!-- Docx -->
             <DocxViewer
               v-else-if="currentFile?.file_type === 'docx' && originalFileUrl"

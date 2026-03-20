@@ -1,4 +1,3 @@
-/* eslint-disable */
 // @ts-nocheck
 // biome-ignore lint: disable
 // oxlint-disable
@@ -97,6 +96,7 @@ declare module 'vue' {
     KnowledgeCardViewer: typeof import('./src/components/KnowledgeCardViewer/index.vue')['default']
     LoadingSkeleton: typeof import('./src/components/LoadingSkeleton/index.vue')['default']
     LocaleSwitcher: typeof import('./src/components/LocaleSwitcher/index.vue')['default']
+    MarkdownTocPanel: typeof import('./src/components/FilePreview/MarkdownTocPanel.vue')['default']
     MessageInput: typeof import('./src/components/ChatWindow/MessageInput.vue')['default']
     MessageList: typeof import('./src/components/ChatWindow/MessageList.vue')['default']
     ModalForm: typeof import('./src/components/Form/ModalForm.vue')['default']

@@ -98,6 +98,7 @@ import { useFileStatusPoll } from '@/composables/useFileStatusPoll'
 import type { UploadQueueItem } from '@/components/FileUploader/types'
 import { getDirectoryTree, createDirectory, getFileList, deleteFile } from '@/api/knowledge'
 import { confirmDelete } from '@/utils/confirm'
+import { stashKnowledgePreviewFile } from '@/utils/knowledgePreviewStash'
 import { sanitizeDownloadFilename, triggerFileDownload } from '@/utils/triggerFileDownload'
 import { FILE_STATUS_CONFIG } from '@/types/knowledge'
 import type { PageHeadConfig } from '@/components/PageHead/types'
@@ -503,6 +504,7 @@ function handlePreview(record: FileListItem) {
     return
   }
   const name = PREVIEW_ROUTE_NAMES[props.ownerType]
+  stashKnowledgePreviewFile(record)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- FileListItem 需通过 state 传递，HistoryState 类型限制
   router.push({ name, params: { id: record.id }, state: { file: record } as any })
 }

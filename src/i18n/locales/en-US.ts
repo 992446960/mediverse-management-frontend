@@ -264,6 +264,11 @@ export default {
     noDeptPermission: 'No department permission',
     noOrgPermission: 'No organization permission',
     pleaseLogin: 'Please login first',
+    previewZoomReset: 'Reset zoom',
+    previewToc: 'Outline',
+    previewScrollPrevScreen: 'Previous screen',
+    previewScrollNextScreen: 'Next screen',
+    previewExcelSheetHint: 'Switch sheets using the tab bar at the bottom of the grid.',
     card: {
       title: 'Knowledge Cards',
       create: 'New Knowledge Card',

@@ -261,6 +261,11 @@ export default {
     noDeptPermission: '无科室权限',
     noOrgPermission: '无机构权限',
     pleaseLogin: '请先登录',
+    previewZoomReset: '重置缩放',
+    previewToc: '目录',
+    previewScrollPrevScreen: '上一屏',
+    previewScrollNextScreen: '下一屏',
+    previewExcelSheetHint: '工作表切换请使用表格底部标签栏。',
     card: {
       title: '知识卡管理',
       create: '新建知识卡',
