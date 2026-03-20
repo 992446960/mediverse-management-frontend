@@ -39,7 +39,7 @@
         <span>/ {{ totalPages }}</span>
       </div>
     </div>
-    <div class="pdf-viewer__scroll flex min-h-0 flex-1 flex-col">
+    <div ref="scrollRootRef" class="pdf-viewer__scroll flex min-h-0 flex-1 flex-col">
       <a-empty v-if="errorMessage" :description="errorMessage" class="py-12" />
       <vue-office-pdf
         v-else-if="fileUrl"
@@ -78,10 +78,14 @@ type PdfOfficeExpose = {
   wrapperRef?: Ref<HTMLElement | null> | HTMLElement | null
   getScale?: () => Ref<number> | number | { value: number }
   setScale?: (n: number) => void
+  /** 在容器从隐藏变为可见后需调用一次以修正虚拟列表与总高度 */
+  rerender?: () => void
 }
 
 const errorMessage = ref<string | null>(null)
 const pdfOfficeRef = ref<ComponentPublicInstance | null>(null)
+/** 包裹 vue-office 的滚动区；与父级 v-show 配合，用于在可见后单次 rerender */
+const scrollRootRef = ref<HTMLElement | null>(null)
 const currentPage = ref(1)
 const pageInput = ref(1)
 const scalePercent = ref(100)
@@ -92,6 +96,15 @@ const ZOOM_STEP = 0.1
 
 let scrollCleanup: (() => void) | null = null
 let ioCleanup: (() => void) | null = null
+let domMutationCleanup: (() => void) | null = null
+let resizeObserverCleanup: (() => void) | null = null
+let layoutBoostRoCleanup: (() => void) | null = null
+
+/** 避免在 @rendered 与 ResizeObserver 中重复 rerender 形成环 */
+const didLayoutBoost = ref(false)
+
+/** 库暴露的 numPages(ref) 在 vue-office-pdf 内可能从未被赋值，必须以 DOM 为准并随子节点更新 */
+const syncedDomPageCount = ref(0)
 
 watch(
   () => props.fileUrl,
@@ -100,6 +113,8 @@ watch(
     currentPage.value = 1
     pageInput.value = 1
     scalePercent.value = 100
+    syncedDomPageCount.value = 0
+    didLayoutBoost.value = false
     teardownObservers()
   }
 )
@@ -136,8 +151,7 @@ const totalPages = computed(() => {
   const inst = getPdfExpose()
   if (!inst) return 0
   const fromApi = readNumPages(inst)
-  if (fromApi > 0) return fromApi
-  return countPagesFromDom()
+  return Math.max(fromApi, syncedDomPageCount.value)
 })
 
 function countPagesFromDom(): number {
@@ -152,6 +166,26 @@ function countPagesFromDom(): number {
     if (!Number.isNaN(id)) max = Math.max(max, id)
   })
   return max
+}
+
+/** 虚拟列表只挂载部分 canvas，总页数需由 wrapper 总高度 / 单页高度推算（与 vue-office 内部公式一致） */
+function inferTotalPagesFromWrapperLayout(): number {
+  const inst = getPdfExpose()
+  const wrap = unwrapEl(inst?.wrapperRef ?? null)
+  if (!wrap) return 0
+  const hStyle = wrap.style.height
+  const totalH = hStyle ? parseFloat(hStyle) : wrap.scrollHeight
+  if (!totalH || totalH <= 0) return 0
+  const cAny = wrap.querySelector('canvas[data-id]') as HTMLElement | null
+  if (!cAny) return 0
+  const gap = 10
+  const pageH =
+    parseFloat(cAny.style.height) ||
+    cAny.getBoundingClientRect().height ||
+    (cAny as HTMLCanvasElement).height
+  const unit = pageH + gap
+  if (unit <= 0) return 0
+  return Math.max(1, Math.round((totalH + gap) / unit))
 }
 
 const canZoomIn = computed(() => {
@@ -201,7 +235,8 @@ function getScrollContainer(): HTMLElement | null {
 }
 
 function scrollToPage(page: number) {
-  const p = Math.min(Math.max(1, page), Math.max(1, totalPages.value))
+  const maxP = Math.max(1, totalPages.value)
+  const p = Math.min(Math.max(1, page), maxP)
   const wrap = unwrapEl(getPdfExpose()?.wrapperRef ?? null)
   const container = getScrollContainer()
   if (!wrap || !container) return
@@ -267,6 +302,56 @@ function teardownObservers() {
   scrollCleanup = null
   ioCleanup?.()
   ioCleanup = null
+  domMutationCleanup?.()
+  domMutationCleanup = null
+  resizeObserverCleanup?.()
+  resizeObserverCleanup = null
+  layoutBoostRoCleanup?.()
+  layoutBoostRoCleanup = null
+}
+
+/**
+ * 父级用 v-show 隐藏时首次 rendered 容器宽高为 0，虚拟列表页数/布局错误；
+ * 在滚动区具备有效尺寸且实例提供 rerender 时执行一次，等价于用户点击缩放触发的内部重算。
+ */
+function tryLayoutBoost() {
+  if (didLayoutBoost.value) return
+  const inst = getPdfExpose()
+  const rerender = inst?.rerender
+  const root = scrollRootRef.value
+  const cw = root?.clientWidth ?? 0
+  const ch = root?.clientHeight ?? 0
+  if (typeof rerender !== 'function') return
+  if (!root || cw < 2 || ch < 2) return
+  didLayoutBoost.value = true
+  nextTick(() => {
+    getPdfExpose()?.rerender?.()
+    nextTick(() => {
+      updateSyncedDomPageCount()
+      updateCurrentPageFromScroll()
+    })
+  })
+}
+
+function setupLayoutBoostObserver() {
+  layoutBoostRoCleanup?.()
+  layoutBoostRoCleanup = null
+  const root = scrollRootRef.value
+  if (!root || typeof ResizeObserver === 'undefined') return
+  const ro = new ResizeObserver(() => {
+    tryLayoutBoost()
+  })
+  ro.observe(root)
+  layoutBoostRoCleanup = () => {
+    ro.disconnect()
+    layoutBoostRoCleanup = null
+  }
+}
+
+function updateSyncedDomPageCount() {
+  const inferred = inferTotalPagesFromWrapperLayout()
+  const domWindowMax = countPagesFromDom()
+  syncedDomPageCount.value = Math.max(inferred, domWindowMax, syncedDomPageCount.value)
 }
 
 function setupScrollTracking() {
@@ -297,7 +382,45 @@ function onRendered() {
   nextTick(() => {
     syncScaleFromInstance()
     setupScrollTracking()
+    updateSyncedDomPageCount()
     updateCurrentPageFromScroll()
+
+    const inst = getPdfExpose()
+    const wrap = unwrapEl(inst?.wrapperRef ?? null)
+    const cont = unwrapEl(inst?.containerRef ?? null)
+
+    if (wrap && typeof MutationObserver !== 'undefined') {
+      const mo = new MutationObserver(() => {
+        updateSyncedDomPageCount()
+        updateCurrentPageFromScroll()
+      })
+      mo.observe(wrap, { childList: true, subtree: true })
+      const prev = domMutationCleanup
+      domMutationCleanup = () => {
+        prev?.()
+        mo.disconnect()
+      }
+    }
+
+    if (cont && typeof ResizeObserver !== 'undefined') {
+      const ro = new ResizeObserver(() => {
+        updateSyncedDomPageCount()
+      })
+      ro.observe(cont)
+      const prev = resizeObserverCleanup
+      resizeObserverCleanup = () => {
+        prev?.()
+        ro.disconnect()
+      }
+    }
+
+    requestAnimationFrame(() => {
+      updateSyncedDomPageCount()
+      updateCurrentPageFromScroll()
+    })
+
+    tryLayoutBoost()
+    setupLayoutBoostObserver()
   })
 }
 
