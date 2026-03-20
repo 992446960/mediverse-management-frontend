@@ -147,7 +147,7 @@
                   :placeholder="t('avatar.styleCustom')"
                   :maxlength="100"
                   class="step-info-input"
-                  @update:value="(v) => (formData.style_custom = v?.trim() ? v : null)"
+                  @update:value="onStyleCustomUpdate"
                 />
               </div>
             </a-form-item>
@@ -206,14 +206,14 @@ import type { OwnerType } from '@/constants/avatar'
 import type { UpdateAvatarConfigParams } from '@/types/avatarConfig'
 import type { AvatarStyle, UpdateAvatarParams } from '@/types/avatar'
 import { getAvatarConfig, updateAvatarConfig } from '@/api/avatarConfig'
-import { getAvatarDetail, resolveWorkspaceAvatarId, updateAvatar } from '@/api/avatars'
+import { getAvatarDetail, updateAvatar } from '@/api/avatars'
 import { uploadAvatar } from '@/api/upload'
 
 const props = defineProps<{
   ownerType: OwnerType
   ownerId?: string
   readonly?: boolean
-  /** 已知分身 ID 时直接走 GET/PUT /avatars/:id（2.1.3 / 2.1.9），省略列表解析 */
+  /** 已知分身 ID 时走 GET/PUT /avatars/:id；工作台默认不传，使用 GET/PUT /my/avatar/... */
   avatarId?: string
 }>()
 
@@ -251,7 +251,7 @@ const styleOptions: { value: AvatarStyle; labelKey: string }[] = [
   { value: 'custom', labelKey: 'avatar.wizard.styleCustom' },
 ]
 
-/** 当前保存使用的分身 ID（列表解析或 props.avatarId）；无则走 my/avatar */
+/** 仅在传入 props.avatarId 时使用 PUT /avatars/:id；否则使用 PUT /my/avatar/... */
 const effectiveAvatarId = ref<string | null>(null)
 
 function assignFormFromDetail(res: {
@@ -279,12 +279,10 @@ const fetchConfig = async () => {
   loading.value = true
   try {
     const explicitId = props.avatarId?.trim()
-    const resolved =
-      explicitId || (await resolveWorkspaceAvatarId(props.ownerType, props.ownerId ?? null))
-    effectiveAvatarId.value = resolved ?? null
+    effectiveAvatarId.value = explicitId || null
 
-    if (resolved) {
-      const res = await getAvatarDetail(resolved)
+    if (explicitId) {
+      const res = await getAvatarDetail(explicitId)
       assignFormFromDetail(res)
     } else {
       const res = await getAvatarConfig(props.ownerType, props.ownerId)
@@ -364,6 +362,10 @@ const onAvatarFileChange = async (e: Event) => {
   } finally {
     avatarUploading.value = false
   }
+}
+
+function onStyleCustomUpdate(v: string) {
+  formData.style_custom = v?.trim() ? v : null
 }
 
 const removeTag = (index: number) => {
