@@ -327,17 +327,42 @@ const tableConf = computed<PageTableConfig>(() => ({
 }))
 
 const tableColumns = computed<PageTableColumnConfig[]>(() => [
-  { label: t('user.username'), prop: 'username', width: 120, showOverflowTooltip: true },
-  { label: t('user.realName'), prop: 'real_name', width: 100, showOverflowTooltip: true },
-  { label: t('user.phone'), prop: 'phone', width: 160 },
-  { label: t('user.email'), prop: 'email', width: 180, showOverflowTooltip: true },
-  { label: t('user.org'), prop: 'org_name', width: 160, showOverflowTooltip: true },
-  { label: t('user.dept'), prop: 'dept_name', width: 100, showOverflowTooltip: true },
+  {
+    label: t('user.username'),
+    prop: 'username',
+    width: 120,
+    showOverflowTooltip: true,
+    resizable: true,
+  },
+  {
+    label: t('user.realName'),
+    prop: 'real_name',
+    width: 100,
+    showOverflowTooltip: true,
+    resizable: true,
+  },
+  { label: t('user.phone'), prop: 'phone', width: 160, resizable: true },
+  { label: t('user.email'), prop: 'email', width: 180, showOverflowTooltip: true, resizable: true },
+  {
+    label: t('user.org'),
+    prop: 'org_name',
+    width: 160,
+    showOverflowTooltip: true,
+    resizable: true,
+  },
+  {
+    label: t('user.dept'),
+    prop: 'dept_name',
+    width: 100,
+    showOverflowTooltip: true,
+    resizable: true,
+  },
   {
     label: t('user.roles'),
     type: 'slot',
     slotName: 'roles',
     width: 260,
+    resizable: true,
   },
   {
     label: t('user.status'),
@@ -353,6 +378,7 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
     prop: 'created_at',
     width: 200,
     formatter: (row) => dayjs(row.created_at as string).format('YYYY-MM-DD HH:mm'),
+    resizable: true,
   },
   {
     label: t('common.actions'),

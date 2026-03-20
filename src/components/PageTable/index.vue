@@ -43,10 +43,12 @@
         :row-key="(r: Record<string, any>) => String(r[tableConf?.rowKey ?? 'id'])"
         :row-selection="rowSelectionConfig"
         :scroll="scrollConfig"
+        table-layout="fixed"
         :pagination="false"
         :bordered="tableConf?.border"
         :locale="{ emptyText: tableConf?.emptyText ?? t('common.noData') }"
         @change="onTableChange"
+        @resize-column="handleResizeColumn"
       >
         <template #bodyCell="{ column, record, index }">
           <template v-if="getColExt(column).type === 'index'">
@@ -148,9 +150,43 @@ const columnsEditorVisible = ref(false)
 const tableContainerRef = ref<HTMLElement | null>(null)
 const measuredScrollY = ref(0)
 let resizeObserver: ResizeObserver | null = null
+let scrollResizeDebounceTimer: ReturnType<typeof setTimeout> | null = null
+let hasAppliedObserverScrollY = false
 
 /** 内部维护的列配置（含 _visible/_index），用于列设置与表格渲染 */
 const effectiveColumns = ref<PageTableColumnConfig[]>([])
+
+/** 与 antd Table resizeColumn 回调中的列对齐：用 dataIndex/key 写回 effectiveColumns（避免当次渲染的临时 column 对象被丢弃导致宽度回弹） */
+function handleResizeColumn(w: number, col: Record<string, unknown>) {
+  const rawDi = col.dataIndex ?? col.prop
+  const dataIndex = rawDi == null ? '' : Array.isArray(rawDi) ? rawDi.join('.') : String(rawDi)
+  const keyStr = col.key != null ? String(col.key) : ''
+  const rounded = Math.round(Number(w))
+  if (!Number.isFinite(rounded)) return
+
+  const list = effectiveColumns.value
+  for (let i = 0; i < list.length; i++) {
+    const ec = list[i]
+    if (!ec) continue
+    const matchProp = ec.prop != null && dataIndex !== '' && String(ec.prop) === dataIndex
+    const matchKey =
+      keyStr !== '' && (String(ec._id ?? '') === keyStr || String(ec.prop ?? '') === keyStr)
+    if (matchProp || matchKey) {
+      ec.width = rounded
+      break
+    }
+  }
+}
+
+function normalizeColumnWidth(
+  width: number | string | undefined,
+  resizable?: boolean
+): number | string | undefined {
+  if (!resizable || width == null || width === '') return width
+  const n = typeof width === 'number' ? width : Number.parseFloat(String(width))
+  if (!Number.isFinite(n)) return 80
+  return n
+}
 
 function getColKey(c: PageTableColumnConfig): string {
   return String(c._id ?? c.prop ?? '')
@@ -203,14 +239,15 @@ const antdvColumns = computed<ColumnsType>(() => {
   const cols = [...(effectiveColumns.value ?? [])]
     .filter((c) => c.type !== 'selection' && c._visible !== false)
     .sort((a, b) => (a._index ?? 0) - (b._index ?? 0))
-  return cols.map((c) => ({
+  return cols.map((c, colIdx) => ({
     title: c.label,
     dataIndex: c.prop,
-    key: c._id ?? c.prop ?? String(Math.random()),
+    key: c._id ?? c.prop ?? `page-table-col-${colIdx}`,
     prop: c.prop,
-    width: c.width,
+    width: normalizeColumnWidth(c.width, c.resizable),
     fixed: c.fixed,
     align: c.align,
+    resizable: c.resizable,
     ellipsis: c.showOverflowTooltip,
     sorter: c.sortable,
     customRender: undefined,
@@ -351,12 +388,25 @@ onMounted(() => {
     const entry = entries[0]
     if (!entry) return
     const { height } = entry.contentRect
-    measuredScrollY.value = Math.max(100, Math.floor(height) - TABLE_MARGIN_BOTTOM)
+    const nextY = Math.max(100, Math.floor(height) - TABLE_MARGIN_BOTTOM)
+    if (!hasAppliedObserverScrollY) {
+      measuredScrollY.value = nextY
+      hasAppliedObserverScrollY = true
+      return
+    }
+    if (scrollResizeDebounceTimer != null) clearTimeout(scrollResizeDebounceTimer)
+    scrollResizeDebounceTimer = setTimeout(() => {
+      measuredScrollY.value = nextY
+      scrollResizeDebounceTimer = null
+    }, 48)
   })
   resizeObserver.observe(el)
 })
 
 onUnmounted(() => {
+  if (scrollResizeDebounceTimer != null) clearTimeout(scrollResizeDebounceTimer)
+  scrollResizeDebounceTimer = null
+  hasAppliedObserverScrollY = false
   resizeObserver?.disconnect()
   resizeObserver = null
 })
