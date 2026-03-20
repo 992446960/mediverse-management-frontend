@@ -122,6 +122,7 @@ declare module 'vue' {
     SearchResultThread: typeof import('./src/components/SearchResultThread/index.vue')['default']
     SessionRenameForm: typeof import('./src/components/SessionSidebar/components/SessionRenameForm.vue')['default']
     SessionSidebar: typeof import('./src/components/SessionSidebar/index.vue')['default']
+    SimpleFilePreview: typeof import('./src/components/SimpleFilePreview/index.vue')['default']
     SkillCallDisplay: typeof import('./src/components/ChatWindow/SkillCallDisplay.vue')['default']
     SkillPanel: typeof import('./src/components/SkillPanel/index.vue')['default']
     SourceCitation: typeof import('./src/components/ChatWindow/SourceCitation.vue')['default']

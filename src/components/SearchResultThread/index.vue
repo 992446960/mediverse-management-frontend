@@ -28,9 +28,7 @@
           <!-- Thinking Process (API 无 thinkingSteps 时为空) -->
           <ThinkingProcess
             v-if="msg.thinkingSteps && msg.thinkingSteps.length > 0"
-            :steps="
-              (msg.thinkingSteps as ThinkingStep[]).map((s) => ({ ...s, content: s.content ?? '' }))
-            "
+            :steps="mapThinkingSteps(msg.thinkingSteps)"
           />
 
           <!-- Content 气泡 -->
@@ -44,10 +42,13 @@
             <!-- Citations -->
             <div
               v-if="msg.citations && msg.citations.length > 0"
-              class="mt-4 pt-4 border-t border-gray-100"
+              class="mt-4 pt-4 border-t border-(--color-border)"
             >
-              <div class="text-xs font-medium text-gray-500 mb-2">
-                {{ t('knowledgeSearch.citationLabel') }}:
+              <div
+                class="kb-section-title flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-2.5"
+              >
+                <LinkOutlined class="text-primary text-sm" />
+                <span>{{ t('knowledgeSearch.citationLabel') }}</span>
               </div>
               <div class="flex flex-wrap gap-2">
                 <CitationLink
@@ -57,6 +58,103 @@
                   :index="idx + 1"
                 />
               </div>
+            </div>
+
+            <!-- 知识卡明细（与 citations 同源） -->
+            <div
+              v-if="msg.citations && msg.citations.length > 0"
+              class="mt-4 pt-4 border-t border-(--color-border)"
+            >
+              <div
+                class="kb-section-title flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-3"
+              >
+                <IdcardOutlined class="text-primary text-sm" />
+                <span>{{ t('knowledgeSearch.knowledgeCardHitsTitle') }}</span>
+              </div>
+              <ul class="kb-card-hits list-none space-y-2.5 m-0 p-0">
+                <li
+                  v-for="(citation, idx) in msg.citations"
+                  :key="`card-${citation.id}`"
+                  class="kb-card-hit-item group/card rounded-xl border border-(--color-border) bg-(--color-bg-layout) pl-3 pr-3 py-3 shadow-sm transition-all duration-200 hover:border-primary hover:shadow-md"
+                >
+                  <div class="flex items-stretch gap-3">
+                    <div
+                      class="kb-card-hit-index flex w-10 shrink-0 flex-col items-center justify-center rounded-lg bg-primary text-xs font-bold text-white shadow-sm"
+                    >
+                      {{ idx + 1 }}
+                    </div>
+                    <div class="min-w-0 flex-1 pt-0.5">
+                      <div class="flex flex-wrap items-center gap-2 gap-y-1">
+                        <span class="font-semibold text-gray-900 text-sm leading-snug">{{
+                          citation.title
+                        }}</span>
+                        <a-tag
+                          v-if="cardTypeBadge(citation.cardType)"
+                          :color="cardTypeBadge(citation.cardType)!.color"
+                          class="text-xs m-0 inline-flex items-center gap-0.5"
+                        >
+                          <TagOutlined class="text-[10px] opacity-80" />
+                          {{ cardTypeBadge(citation.cardType)!.label }}
+                        </a-tag>
+                      </div>
+                      <div class="mt-2 flex gap-2">
+                        <FileTextOutlined
+                          class="mt-0.5 shrink-0 text-gray-400 text-sm group-hover/card:text-primary transition-colors"
+                        />
+                        <p
+                          class="text-xs text-gray-600 leading-relaxed mb-0 line-clamp-3 flex-1 min-w-0"
+                        >
+                          {{ citation.content }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            <!-- 匹配文件 matched_files -->
+            <div
+              v-if="msg.matchedFiles && msg.matchedFiles.length > 0"
+              class="mt-4 pt-4 border-t border-(--color-border)"
+            >
+              <div
+                class="kb-section-title flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-3"
+              >
+                <FileSearchOutlined class="text-primary text-sm" />
+                <span>{{ t('knowledgeSearch.matchedFilesLabel') }}</span>
+              </div>
+              <ul class="kb-matched-files list-none space-y-2 m-0 p-0">
+                <li v-for="file in msg.matchedFiles" :key="file.file_id">
+                  <a-tooltip :title="t('knowledgeSearch.openFilePreview')">
+                    <button
+                      type="button"
+                      class="kb-file-hit group w-full cursor-pointer flex items-center gap-3 rounded-xl border border-(--color-border) bg-white px-3 py-2.5 text-left text-sm text-gray-700 shadow-sm transition-all duration-200 hover:-translate-y-px hover:border-primary hover:bg-primary/6 hover:shadow-md active:translate-y-0 active:scale-[0.995] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                      @click="openMatchedFilePreview(file)"
+                    >
+                      <span
+                        class="kb-file-hit-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-(--color-bg-layout) text-primary transition-all duration-200 group-hover:bg-primary/12 group-hover:scale-105"
+                      >
+                        <FileOutlined class="text-base" />
+                      </span>
+                      <span
+                        class="truncate flex-1 min-w-0 font-medium text-gray-800 transition-colors duration-200 group-hover:text-primary"
+                      >
+                        {{ file.file_name }}
+                      </span>
+                      <span
+                        v-if="file.relevance_score != null"
+                        class="text-xs text-gray-400 shrink-0 tabular-nums px-1.5 py-0.5 rounded-md bg-(--color-bg-layout) transition-colors duration-200 group-hover:bg-primary/10 group-hover:text-gray-600"
+                      >
+                        {{ formatRelevancePercent(file.relevance_score) }}
+                      </span>
+                      <RightOutlined
+                        class="text-gray-300 text-xs shrink-0 transition-all duration-200 group-hover:text-primary group-hover:translate-x-px"
+                      />
+                    </button>
+                  </a-tooltip>
+                </li>
+              </ul>
             </div>
 
             <!-- Related Questions -->
@@ -106,16 +204,36 @@
 <script setup lang="ts">
 import { ref, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { SearchOutlined, RobotOutlined, CopyOutlined } from '@ant-design/icons-vue'
+import {
+  SearchOutlined,
+  RobotOutlined,
+  CopyOutlined,
+  FileOutlined,
+  IdcardOutlined,
+  LinkOutlined,
+  TagOutlined,
+  FileTextOutlined,
+  FileSearchOutlined,
+  RightOutlined,
+} from '@ant-design/icons-vue'
 import BubbleRenderer from '@/components/ChatWindow/BubbleRenderer.vue'
 import ThinkingProcess from '@/components/ChatWindow/ThinkingProcess.vue'
 import CitationLink from './CitationLink.vue'
 import RelatedQuestions from './RelatedQuestions.vue'
-import type { SearchMessage, Citation } from '@/api/knowledgeSearch'
-import type { ThinkingStep } from '@/types/chat'
+import type { SearchMessage, Citation, ThinkingStep, MatchedFile } from '@/api/knowledgeSearch'
+import { useAuthStore } from '@/stores/auth'
+import { stashKnowledgePreviewFile } from '@/utils/knowledgePreviewStash'
+import { fileListItemFromKbMatchedFile } from '@/utils/kbSearchMatchedFile'
+import type { ThinkingProcessStep } from '@/types/chat'
+import type { CardType } from '@/types/knowledge'
+import { CARD_TYPE_CONFIG } from '@/types/knowledge'
 
 const { t } = useI18n()
+const router = useRouter()
+const authStore = useAuthStore()
+
 const props = defineProps<{
   messages: SearchMessage[]
   loading?: boolean
@@ -125,6 +243,43 @@ const emit = defineEmits(['question-select'])
 
 const handleQuestionSelect = (question: string) => {
   emit('question-select', question)
+}
+
+function cardTypeBadge(cardType?: string): { color: string; label: string } | null {
+  if (!cardType) return null
+  const known = CARD_TYPE_CONFIG[cardType as CardType]
+  if (known) return known
+  return { color: 'default', label: cardType }
+}
+
+function formatRelevancePercent(score: number): string {
+  if (Number.isNaN(score)) return ''
+  return `${(score * 100).toFixed(1)}%`
+}
+
+function mapThinkingSteps(steps: ThinkingStep[] | undefined): ThinkingProcessStep[] {
+  if (!steps?.length) return []
+  return steps.map((s) => ({
+    title: s.title,
+    description: s.content,
+    status: s.status === 'success' ? 'done' : 'processing',
+    duration_ms: s.duration,
+  }))
+}
+
+function resolveFilesPreviewRoute(): 'MyFilesPreview' | 'DeptFilesPreview' | 'OrgFilesPreview' {
+  const path = router.currentRoute.value.path
+  if (path.startsWith('/dept') && authStore.currentDeptId) return 'DeptFilesPreview'
+  if (path.startsWith('/org') && authStore.currentOrgId) return 'OrgFilesPreview'
+  return 'MyFilesPreview'
+}
+
+function openMatchedFilePreview(file: MatchedFile) {
+  stashKnowledgePreviewFile(fileListItemFromKbMatchedFile(file))
+  const name = resolveFilesPreviewRoute()
+  const { href } = router.resolve({ name, params: { id: file.file_id } })
+  const url = new URL(href, window.location.origin).href
+  window.open(url, '_blank', 'noopener,noreferrer')
 }
 
 const copyMessageContent = async (text: string) => {
@@ -172,5 +327,9 @@ watch(
 <style scoped>
 .kb-user-bubble {
   background: var(--color-primary);
+}
+
+.kb-card-hit-index {
+  min-height: 3.5rem;
 }
 </style>

@@ -348,6 +348,9 @@ export default {
     aiDisclaimer:
       'AI-generated content is for reference only. Please consult a doctor for diagnosis.',
     citationLabel: 'Sources',
+    knowledgeCardHitsTitle: 'Knowledge cards',
+    matchedFilesLabel: 'Matched files',
+    openFilePreview: 'Open file preview in a new tab',
     viewOriginal: 'View Original',
     startNewSearch: 'Start a new search...',
     groupToday: 'Today',

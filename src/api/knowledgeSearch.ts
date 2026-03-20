@@ -21,8 +21,8 @@ export interface MatchedFile {
 export interface SearchResponse {
   qa_session_id: string
   answer: string
-  citations: ApiCitation[]
-  matched_files: MatchedFile[]
+  citations?: ApiCitation[]
+  matched_files?: MatchedFile[]
 }
 
 /** 搜索历史项 */
@@ -38,6 +38,8 @@ export interface Citation {
   title: string
   content: string
   url?: string
+  /** API card_type，用于展示类型标签 */
+  cardType?: string
 }
 
 export interface SearchSession {
@@ -53,6 +55,8 @@ export interface SearchMessage {
   content: string
   createdAt: string
   citations?: Citation[]
+  /** 检索命中的文件（与 answer / citations 同源返回） */
+  matchedFiles?: MatchedFile[]
   relatedQuestions?: string[]
   thinkingSteps?: ThinkingStep[]
 }
@@ -70,6 +74,7 @@ function mapCitation(api: ApiCitation): Citation {
     id: api.card_id,
     title: api.card_title,
     content: api.content_preview,
+    cardType: api.card_type,
   }
 }
 
@@ -106,5 +111,6 @@ export const knowledgeSearchApi = {
     content: response.answer,
     createdAt: new Date().toISOString(),
     citations: response.citations?.map(mapCitation) ?? [],
+    matchedFiles: response.matched_files?.length ? [...response.matched_files] : undefined,
   }),
 }

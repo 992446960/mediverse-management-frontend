@@ -15,7 +15,6 @@
           :placeholder="t('knowledgeSearch.searchPlaceholder')"
           size="large"
           class="kb-search-input"
-          :loading="loading"
           @search="handleSearch"
         >
           <template #enterButton>
@@ -119,7 +118,6 @@ const { t } = useI18n()
 const store = useKnowledgeSearchStore()
 
 const searchQuery = ref('')
-const loading = ref(false)
 const recentLoading = ref(false)
 const recentItems = ref<HistoryItem[]>([])
 
@@ -147,19 +145,10 @@ const fetchRecentHistory = async () => {
   }
 }
 
-const handleSearch = async (query: string) => {
-  if (!query.trim()) return
-
-  loading.value = true
-  try {
-    const session = await store.createSession(query)
-    await fetchRecentHistory()
-    router.push(`/knowledge-base/search/${session.id}`)
-  } catch (error) {
-    console.error('Failed to create search session:', error)
-  } finally {
-    loading.value = false
-  }
+const handleSearch = (query: string) => {
+  const q = query.trim()
+  if (!q) return
+  router.push({ name: 'KnowledgeBaseSearchNew', query: { q } })
 }
 
 const handleRemoveRecent = async (sessionId: string) => {

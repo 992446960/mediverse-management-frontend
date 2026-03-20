@@ -221,6 +221,17 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/knowledge-base/search/new',
+    name: 'KnowledgeBaseSearchNew',
+    component: () => import('@/views/knowledge-base/Search.vue'),
+    meta: {
+      layout: 'MainLayout',
+      title: 'menu.knowledgeBase',
+      requiresAuth: true,
+      hidden: true,
+    },
+  },
+  {
     path: '/knowledge-base/search/:id',
     name: 'KnowledgeBaseSearch',
     component: () => import('@/views/knowledge-base/Search.vue'),
