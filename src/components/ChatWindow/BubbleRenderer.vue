@@ -20,16 +20,16 @@ const props = withDefaults(
 )
 
 marked.setOptions({
-  highlight: function (code, lang) {
+  highlight(code: string, lang: string | undefined) {
     try {
-      const language = hljs.getLanguage(lang) ? lang : 'plaintext'
+      const language = lang && hljs.getLanguage(lang) ? lang : 'plaintext'
       return hljs.highlight(code, { language }).value
     } catch {
       return code
     }
   },
   langPrefix: 'hljs language-',
-})
+} as Parameters<typeof marked.setOptions>[0])
 
 function escapeHtml(text: string): string {
   const div = document.createElement('div')

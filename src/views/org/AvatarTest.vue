@@ -27,7 +27,7 @@ onMounted(async () => {
     })
 
     if (res.items.length > 0) {
-      const row = res.items[0]
+      const row = res.items[0]!
       avatarId.value = row.id
       avatarName.value = row.name
     }

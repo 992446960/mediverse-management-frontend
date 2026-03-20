@@ -1,4 +1,3 @@
-/* eslint-disable */
 // @ts-nocheck
 // biome-ignore lint: disable
 // oxlint-disable
@@ -49,7 +48,6 @@ declare module 'vue' {
     APopover: typeof import('ant-design-vue/es')['Popover']
     AProgress: typeof import('ant-design-vue/es')['Progress']
     ARadio: typeof import('ant-design-vue/es')['Radio']
-    ARadioButton: typeof import('ant-design-vue/es')['RadioButton']
     ARadioGroup: typeof import('ant-design-vue/es')['RadioGroup']
     ARangePicker: typeof import('ant-design-vue/es')['RangePicker']
     AResult: typeof import('ant-design-vue/es')['Result']
@@ -106,7 +104,6 @@ declare module 'vue' {
     PageHead: typeof import('./src/components/PageHead/index.vue')['default']
     PageTable: typeof import('./src/components/PageTable/index.vue')['default']
     PageTree: typeof import('./src/components/PageTree/index.vue')['default']
-    PaginationSelect: typeof import('./src/components/AvatarSelector/PaginationSelect.vue')['default']
     ParsedDocViewer: typeof import('./src/components/FilePreview/ParsedDocViewer.vue')['default']
     PdfViewer: typeof import('./src/components/FilePreview/PdfViewer.vue')['default']
     QuickActionGuide: typeof import('./src/components/AvatarConfig/QuickActionGuide.vue')['default']

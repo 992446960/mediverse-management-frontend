@@ -28,9 +28,7 @@
           <!-- Thinking Process (API 无 thinkingSteps 时为空) -->
           <ThinkingProcess
             v-if="msg.thinkingSteps && msg.thinkingSteps.length > 0"
-            :steps="
-              (msg.thinkingSteps as ThinkingStep[]).map((s) => ({ ...s, content: s.content ?? '' }))
-            "
+            :steps="toThinkingProcessSteps(msg.thinkingSteps)"
           />
 
           <!-- Content 气泡 -->
@@ -112,8 +110,17 @@ import BubbleRenderer from '@/components/ChatWindow/BubbleRenderer.vue'
 import ThinkingProcess from '@/components/ChatWindow/ThinkingProcess.vue'
 import CitationLink from './CitationLink.vue'
 import RelatedQuestions from './RelatedQuestions.vue'
-import type { SearchMessage, Citation } from '@/api/knowledgeSearch'
-import type { ThinkingStep } from '@/types/chat'
+import type { SearchMessage, Citation, ThinkingStep } from '@/api/knowledgeSearch'
+import type { ThinkingProcessStep } from '@/types/chat'
+
+function toThinkingProcessSteps(steps: ThinkingStep[]): ThinkingProcessStep[] {
+  return steps.map((s) => ({
+    title: s.title,
+    description: s.content,
+    status: s.status === 'pending' ? 'processing' : 'done',
+    duration_ms: s.duration,
+  }))
+}
 
 const { t } = useI18n()
 const props = defineProps<{

@@ -147,7 +147,7 @@
                   :placeholder="t('avatar.styleCustom')"
                   :maxlength="100"
                   class="step-info-input"
-                  @update:value="(v) => (formData.style_custom = v?.trim() ? v : null)"
+                  @update:value="(v: string) => (formData.style_custom = v?.trim() ? v : null)"
                 />
               </div>
             </a-form-item>

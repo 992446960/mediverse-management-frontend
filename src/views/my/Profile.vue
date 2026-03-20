@@ -37,7 +37,6 @@
           <a-col :xs="24" :lg="18">
             <a-card class="h-full">
               <a-form
-                ref="formRef"
                 :model="formState"
                 :rules="formRules"
                 layout="vertical"
@@ -304,7 +303,7 @@ import {
 } from '@ant-design/icons-vue'
 import type { UserRole } from '@/types/auth'
 import { normalizeAuthUser, mergeUserWithWorkbenchFlags } from '@/utils/authUser'
-import type { FormInstance, Rule } from 'ant-design-vue/es/form'
+import type { Rule } from 'ant-design-vue/es/form'
 import ChangePasswordForm from '@/components/ChangePasswordForm/index.vue'
 
 const router = useRouter()
@@ -315,7 +314,6 @@ const user = computed(() => authStore.user)
 const loading = ref(false)
 const submitting = ref(false)
 const avatarUploading = ref(false)
-const formRef = ref<FormInstance>()
 const fileInputRef = ref<HTMLInputElement>()
 const changePasswordOpen = ref(false)
 const changePasswordLoading = ref(false)

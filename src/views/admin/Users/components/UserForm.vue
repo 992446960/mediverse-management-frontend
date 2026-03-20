@@ -356,9 +356,9 @@ watch(
         const deptId = authStore.isDeptAdmin
           ? (authStore.currentDeptId ?? record.dept_id)
           : record.dept_id
-        const roles = record.roles?.includes('user')
-          ? [...record.roles]
-          : ['user', ...(record.roles || [])]
+        const roles = (
+          record.roles?.includes('user') ? [...record.roles] : ['user', ...(record.roles || [])]
+        ) as UserRole[]
         formState.value = {
           username: record.username,
           real_name: record.real_name,

@@ -229,8 +229,8 @@ const fetchData = async () => {
       page_size: pageSize,
       type: activeTab.value !== 'all' ? activeTab.value : undefined,
       keyword: (params.keyword as string) || undefined,
-      online_status: (params.online_status as string) || undefined,
-      audit_status: (params.audit_status as string) || undefined,
+      online_status: (params.online_status as OnlineStatus | undefined) || undefined,
+      audit_status: (params.audit_status as AuditStatus | undefined) || undefined,
     })
     tableData.value = result.items
     total.value = result.total

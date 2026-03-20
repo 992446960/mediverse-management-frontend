@@ -67,10 +67,7 @@ export const useChatStore = defineStore('chat', () => {
         groupKey = date.format('YYYY-MM-DD')
       }
 
-      if (!groups[groupKey]) {
-        groups[groupKey] = []
-      }
-      groups[groupKey].push(session)
+      ;(groups[groupKey] ??= []).push(session)
     })
 
     return groups

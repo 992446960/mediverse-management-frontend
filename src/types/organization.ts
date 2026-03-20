@@ -21,4 +21,5 @@ export interface OrganizationForm {
   code?: string
   description?: string
   logo_url?: string
+  status?: Organization['status']
 }
