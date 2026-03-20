@@ -341,7 +341,6 @@ export default {
     searchPlaceholder: 'Search all knowledge...',
     searchButton: 'Search',
     recentSearches: 'Recent Searches',
-    clearRecent: 'Clear',
     newSearch: 'New Search',
     noTitle: 'Untitled Session',
     deleteSession: 'Delete Session',
@@ -355,6 +354,8 @@ export default {
     groupYesterday: 'Yesterday',
     groupWeek: 'Past 7 Days',
     groupEarlier: 'Earlier',
+    recentHistoryLoadFailed: 'Failed to load recent searches',
+    recentHistoryDeleteFailed: 'Failed to delete recent search',
   },
   chat: {
     newSession: 'New Conversation',

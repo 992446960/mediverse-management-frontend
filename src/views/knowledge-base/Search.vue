@@ -1,10 +1,6 @@
 <template>
-  <div class="kb-search-page h-full flex overflow-hidden rounded-md">
-    <!-- Sidebar -->
-    <KBSidebar />
-
-    <!-- Main Content -->
-    <div class="flex-1 flex flex-col h-full overflow-hidden bg-white">
+  <div class="kb-search-page h-full flex flex-col overflow-hidden rounded-md">
+    <div class="flex-1 flex flex-col h-full min-h-0 overflow-hidden bg-white">
       <!-- Header -->
       <div
         class="h-14 border-b border-gray-200 flex items-center justify-between px-6 bg-white shrink-0"
@@ -69,12 +65,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { SendOutlined, PauseOutlined } from '@ant-design/icons-vue'
-import KBSidebar from '@/components/KBSidebar/index.vue'
 import SearchResultThread from '@/components/SearchResultThread/index.vue'
 import { useKnowledgeSearchStore } from '@/stores/knowledgeSearch'
 
@@ -85,15 +80,26 @@ const { currentSession, messages, streaming } = storeToRefs(store)
 
 const inputContent = ref('')
 
-const handleFollowUp = async (content: string) => {
-  if (!content.trim() || streaming.value) return
-
-  const text = content
+const clearInput = async () => {
   inputContent.value = ''
-  await store.sendFollowUp(text)
+  await nextTick()
+}
+
+const handleFollowUp = async (content: string) => {
+  const text = content.trim()
+  if (!text || streaming.value) return
+
+  await clearInput()
+  try {
+    await store.sendFollowUp(text)
+  } catch {
+    inputContent.value = text
+    await nextTick()
+  }
 }
 
 const handleKeydown = (e: KeyboardEvent) => {
+  if (e.isComposing || e.key === 'Process') return
   if (!e.shiftKey) {
     handleFollowUp(inputContent.value)
   }
@@ -107,6 +113,7 @@ watch(
   () => route.params.id,
   (newId) => {
     if (newId && typeof newId === 'string') {
+      void clearInput()
       store.loadMessages(newId)
     }
   },

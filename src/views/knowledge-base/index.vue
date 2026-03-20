@@ -26,29 +26,24 @@
         </a-input-search>
       </div>
 
-      <!-- Recent Searches（支持单项删除与清空） -->
-      <div v-if="recentQueries.length > 0" class="space-y-2">
-        <div class="flex items-center justify-between gap-2">
-          <span class="text-sm text-gray-500 font-medium">
-            {{ t('knowledgeSearch.recentSearches') }}:
-          </span>
-          <a
-            class="text-xs text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
-            @click="handleClearRecent"
-          >
-            {{ t('knowledgeSearch.clearRecent') }}
-          </a>
+      <!-- Recent Searches（线上 history + 删除走 chat/sessions） -->
+      <div v-if="recentLoading || recentItems.length > 0" class="space-y-2">
+        <div class="text-sm text-gray-500 font-medium">
+          {{ t('knowledgeSearch.recentSearches') }}:
         </div>
-        <div class="flex flex-wrap gap-2">
+        <div v-if="recentLoading" class="py-2 flex justify-center">
+          <a-spin size="small" />
+        </div>
+        <div v-else class="flex flex-wrap gap-2">
           <a-tag
-            v-for="q in recentQueries"
-            :key="q"
+            v-for="item in recentItems"
+            :key="item.id"
             closable
             class="cursor-pointer hover:text-primary hover:border-primary transition-colors"
-            @click.self="handleSearch(q)"
-            @close="handleRemoveRecent(q)"
+            @click.self="handleSearch(item.query)"
+            @close="handleRemoveRecent(item.id)"
           >
-            {{ q }}
+            {{ item.query }}
           </a-tag>
         </div>
       </div>
@@ -105,19 +100,19 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { message } from 'ant-design-vue'
 import {
   SearchOutlined,
   FileTextOutlined,
   FileOutlined,
   IdcardOutlined,
 } from '@ant-design/icons-vue'
+import type { HistoryItem } from '@/api/knowledgeSearch'
+import { knowledgeSearchApi } from '@/api/knowledgeSearch'
+import { deleteChatSession } from '@/api/sessions'
 import { useKnowledgeSearchStore } from '@/stores/knowledgeSearch'
-import {
-  addKbRecentSearch,
-  clearKbRecentSearches,
-  getKbRecentSearches,
-  removeKbRecentSearch,
-} from '@/utils/kbRecentSearches'
+
+const KB_RECENT_HISTORY_LIMIT = 10
 
 const router = useRouter()
 const { t } = useI18n()
@@ -125,8 +120,9 @@ const store = useKnowledgeSearchStore()
 
 const searchQuery = ref('')
 const loading = ref(false)
+const recentLoading = ref(false)
+const recentItems = ref<HistoryItem[]>([])
 
-const recentQueries = ref<string[]>([])
 const recentFiles = ref([
   { id: 1, name: '2025年第一季度院感防控手册.pdf', date: '2小时前' },
   { id: 2, name: '急诊科排班表_3月.xlsx', date: '昨天' },
@@ -138,14 +134,26 @@ const recentCards = ref([
   { id: 3, title: '门诊挂号须知', author: '门诊部' },
 ])
 
+const fetchRecentHistory = async () => {
+  recentLoading.value = true
+  try {
+    const list = await knowledgeSearchApi.getHistory({ limit: KB_RECENT_HISTORY_LIMIT })
+    recentItems.value = Array.isArray(list) ? list : []
+  } catch {
+    message.error(t('knowledgeSearch.recentHistoryLoadFailed'))
+    recentItems.value = []
+  } finally {
+    recentLoading.value = false
+  }
+}
+
 const handleSearch = async (query: string) => {
   if (!query.trim()) return
 
   loading.value = true
   try {
     const session = await store.createSession(query)
-    addKbRecentSearch(query)
-    recentQueries.value = getKbRecentSearches()
+    await fetchRecentHistory()
     router.push(`/knowledge-base/search/${session.id}`)
   } catch (error) {
     console.error('Failed to create search session:', error)
@@ -154,18 +162,18 @@ const handleSearch = async (query: string) => {
   }
 }
 
-const handleRemoveRecent = (query: string) => {
-  removeKbRecentSearch(query)
-  recentQueries.value = getKbRecentSearches()
-}
-
-const handleClearRecent = () => {
-  clearKbRecentSearches()
-  recentQueries.value = getKbRecentSearches()
+const handleRemoveRecent = async (sessionId: string) => {
+  try {
+    await deleteChatSession(sessionId)
+    await store.deleteSession(sessionId)
+    await fetchRecentHistory()
+  } catch {
+    message.error(t('knowledgeSearch.recentHistoryDeleteFailed'))
+  }
 }
 
 onMounted(() => {
-  recentQueries.value = getKbRecentSearches()
+  fetchRecentHistory()
 })
 </script>
 

@@ -338,7 +338,6 @@ export default {
     searchPlaceholder: '搜索全部知识库...',
     searchButton: '搜索',
     recentSearches: '最近搜索',
-    clearRecent: '清空',
     newSearch: '新建搜索',
     noTitle: '无标题会话',
     deleteSession: '删除会话',
@@ -351,6 +350,8 @@ export default {
     groupYesterday: '昨天',
     groupWeek: '过去7天',
     groupEarlier: '更早',
+    recentHistoryLoadFailed: '加载最近搜索失败',
+    recentHistoryDeleteFailed: '删除最近搜索失败',
   },
   chat: {
     newSession: '新建会话',
