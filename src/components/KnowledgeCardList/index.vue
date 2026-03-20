@@ -300,9 +300,9 @@ const handleStatusToggle = async (record: KnowledgeCard) => {
           <div class="flex flex-col">
             <span class="font-medium text-gray-800">{{ (row as KnowledgeCard).title }}</span>
             <div class="flex flex-wrap gap-1 mt-1">
-              <Tag v-for="tag in (row as KnowledgeCard).tags" :key="tag" size="small">
+              <a-tag v-for="tag in (row as KnowledgeCard).tags" :key="tag" size="small">
                 {{ tag }}
-              </Tag>
+              </a-tag>
             </div>
           </div>
         </template>
