@@ -75,13 +75,34 @@ export const avatarConfigHandlers = [
     })
   }),
 
-  // 获取分身统计数据
-  http.get('/api/v1/my/avatar/stats/:owner_type/:owner_id', async () => {
+  // 获取分身统计数据（按 owner_type 区分，便于仪表盘多路聚合联调）
+  http.get('/api/v1/my/avatar/stats/:owner_type/:owner_id', async ({ params }) => {
     await delay(300)
+    const ownerType = String(params.owner_type ?? '')
+    const data =
+      ownerType === 'dept'
+        ? {
+            ...mockStats,
+            total_sessions: 20,
+            today_sessions: 5,
+            today_token: '120k',
+            all_token: '5.2M',
+            knowledge_progress: { indexed_files: 8, total_files: 20, percentage: 40 },
+          }
+        : ownerType === 'org'
+          ? {
+              ...mockStats,
+              total_sessions: 100,
+              today_sessions: 18,
+              today_token: '50k',
+              all_token: '12M',
+              knowledge_progress: { indexed_files: 15, total_files: 30, percentage: 50 },
+            }
+          : mockStats
     return HttpResponse.json({
       code: 0,
       message: 'ok',
-      data: mockStats,
+      data,
     })
   }),
 ]

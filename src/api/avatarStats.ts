@@ -99,13 +99,23 @@ function normalizeStats(
   }
 }
 
+export interface GetAvatarStatsOptions {
+  /** 为 true 时不触发全局错误 Toast（如仪表盘并行拉取多路，由调用方汇总） */
+  skipErrorToast?: boolean
+}
+
 /**
  * 获取分身统计数据
  * GET /api/v1/my/avatar/stats/{owner_type}/{owner_id}
  */
-export async function getAvatarStats(ownerType: OwnerType, ownerId: string) {
+export async function getAvatarStats(
+  ownerType: OwnerType,
+  ownerId: string,
+  options?: GetAvatarStatsOptions
+) {
   const res = await request.get<AvatarStatsRaw | AvatarStatsData | AvatarStatsLegacyCamel>(
-    `/my/avatar/stats/${ownerType}/${ownerId}`
+    `/my/avatar/stats/${ownerType}/${ownerId}`,
+    { skipErrorToast: options?.skipErrorToast === true }
   )
   return normalizeStats(res)
 }

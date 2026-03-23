@@ -126,6 +126,7 @@ declare module 'vue' {
     SkillCallDisplay: typeof import('./src/components/ChatWindow/SkillCallDisplay.vue')['default']
     SkillPanel: typeof import('./src/components/SkillPanel/index.vue')['default']
     SourceCitation: typeof import('./src/components/ChatWindow/SourceCitation.vue')['default']
+    StatCard: typeof import('./src/components/StatCard/index.vue')['default']
     TableFilter: typeof import('./src/components/TableFilter/index.vue')['default']
     TextFileViewer: typeof import('./src/components/FilePreview/TextFileViewer.vue')['default']
     ThemeSwitcher: typeof import('./src/components/ThemeSwitcher/index.vue')['default']
