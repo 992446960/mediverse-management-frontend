@@ -2,7 +2,8 @@
 import { ref, computed, onMounted, inject, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
-import { message } from 'ant-design-vue'
+import { useAuthStore } from '@/stores/auth'
+import { buildSkillExecuteArgs } from '@/utils/skillArgs'
 import {
   AppstoreOutlined,
   ArrowLeftOutlined,
@@ -22,7 +23,9 @@ import BubbleRenderer from '@/components/ChatWindow/BubbleRenderer.vue'
 
 const { t } = useI18n()
 const chatStore = useChatStore()
+const authStore = useAuthStore()
 const { currentSession } = storeToRefs(chatStore)
+const { user } = storeToRefs(authStore)
 
 const skills = ref<Skill[]>([])
 const loading = ref(false)
@@ -79,27 +82,14 @@ const getSkillIconColor = (skillCode: string) => {
 }
 
 const handleSkillClick = async (skill: Skill) => {
-  const requiredArgs = skill.args_schema?.required || []
-  const args: Record<string, any> = {}
-
-  if (requiredArgs.includes('query')) {
-    const query = skillInputContext.value.inputText.trim()
-    if (!query) {
-      message.warning(t('chat.skillNeedInput'))
-      return
-    }
-    args.query = query
-  }
-
-  if (requiredArgs.includes('file_url')) {
-    const fileList = skillInputContext.value.fileList
-    if (!fileList || fileList.length === 0) {
-      message.warning(t('chat.skillNeedFile'))
-      return
-    }
-    // Using the first file's URL or object URL for now
-    args.file_url = fileList[0].url || URL.createObjectURL(fileList[0].file)
-  }
+  const args = buildSkillExecuteArgs({
+    skill,
+    inputText: skillInputContext.value.inputText,
+    fileList: skillInputContext.value.fileList,
+    user: user.value,
+    t,
+  })
+  if (!args) return
 
   selectedSkill.value = skill
   resetExecute()

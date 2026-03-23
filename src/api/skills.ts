@@ -1,6 +1,6 @@
 import { request } from '@/api/index'
 import { getToken } from '@/utils/auth'
-import type { Skill } from '@/types/skill'
+import type { Skill, SkillExecuteRequest } from '@/types/skill'
 
 /**
  * 3.2.1 查询技能列表
@@ -11,10 +11,11 @@ export function getSkills(): Promise<Skill[]> {
 
 /**
  * 3.2.2 调用技能（流式响应）
+ * args 内字段以各技能的 args_schema 为准；context 可选，用于会话/分身等扩展字段。
  */
 export async function executeSkillRaw(
   skillCode: string,
-  payload: { args: Record<string, any>; context?: { session_id?: string; avatar_id?: string } }
+  payload: SkillExecuteRequest
 ): Promise<Response> {
   const baseURL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
   const url = `${baseURL}/skills/${skillCode}/execute`

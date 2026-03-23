@@ -425,6 +425,8 @@ export default {
     skillExecutionResult: '执行结果',
     skillNeedInput: '请输入内容',
     skillNeedFile: '请上传附件',
+    skillNeedLogin: '请先登录后再使用技能',
+    skillMissingField: '缺少必填参数：{field}',
     skillNoRecords: '暂无调用记录',
     skillCallArgs: '参数',
     skillCallResult: '结果',

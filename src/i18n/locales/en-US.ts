@@ -430,6 +430,8 @@ export default {
     skillExecutionResult: 'Execution Result',
     skillNeedInput: 'Please enter content',
     skillNeedFile: 'Please upload an attachment',
+    skillNeedLogin: 'Please sign in to use skills',
+    skillMissingField: 'Missing required argument: {field}',
     skillNoRecords: 'No call records yet',
     skillCallArgs: 'Args',
     skillCallResult: 'Result',
