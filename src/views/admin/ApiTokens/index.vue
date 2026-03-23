@@ -23,7 +23,7 @@
     <TokenForm
       ref="tokenFormRef"
       v-model:open="formOpen"
-      :org-options="orgOptions"
+      :org-options="tokenFormOrgOptions"
       :lock-org-to-current="authStore.isOrgAdmin || authStore.isDeptAdmin"
       :default-org-id="authStore.currentOrgId ?? ''"
       @submit="handleFormSubmit"
@@ -86,6 +86,11 @@ const orgOptions = computed(() => [
   { label: t('common.all'), value: '' },
   ...orgList.value.map((o) => ({ label: o.name, value: o.id })),
 ])
+
+/** 新建 Token 表单用：不含「全部」，空值时展示 placeholder */
+const tokenFormOrgOptions = computed(() =>
+  orgList.value.map((o) => ({ label: o.name, value: o.id }))
+)
 
 const filterConf = computed<PageFilterConfig>(() => {
   const showOrgFilter = !authStore.isOrgAdmin && !authStore.isDeptAdmin
