@@ -18,6 +18,39 @@ import type { AxiosRequestConfig } from 'axios'
 
 const BASE_URL = '/knowledge'
 
+/** 后端 GET .../cards/:id/versions 单条（字段名可能与前端模型不一致） */
+interface KnowledgeCardVersionRaw {
+  id?: string
+  version?: string
+  version_number?: number
+  summary?: string
+  change_summary?: string | null
+  created_by?: string
+  operated_by?: string
+  created_by_name?: string
+  operated_by_name?: string
+  created_at: string
+  content?: string
+}
+
+function normalizeKnowledgeCardVersion(raw: KnowledgeCardVersionRaw): KnowledgeCardVersion {
+  const version =
+    raw.version != null && raw.version !== ''
+      ? raw.version
+      : raw.version_number != null
+        ? `v${raw.version_number}`
+        : ''
+  return {
+    id: raw.id,
+    version,
+    summary: raw.change_summary ?? raw.summary ?? '',
+    created_by: raw.operated_by ?? raw.created_by ?? '',
+    created_by_name: raw.operated_by_name ?? raw.created_by_name ?? '',
+    created_at: raw.created_at,
+    content: raw.content ?? '',
+  }
+}
+
 /**
  * 单文件上传。FormData 仅 append 一个 file，可选 dir_id。
  * 响应 data 可能是单对象或单元素数组，统一解析为 UploadFileResult。
@@ -167,9 +200,9 @@ export function toggleKnowledgeCardStatus(
  * 获取知识卡版本历史
  */
 export function getKnowledgeCardVersions(ownerType: OwnerType, ownerId: string, cardId: string) {
-  return request.get<KnowledgeCardVersion[]>(
-    `${BASE_URL}/${ownerType}/${ownerId}/cards/${cardId}/versions`
-  )
+  return request
+    .get<KnowledgeCardVersionRaw[]>(`${BASE_URL}/${ownerType}/${ownerId}/cards/${cardId}/versions`)
+    .then((rows) => rows.map(normalizeKnowledgeCardVersion))
 }
 
 /**

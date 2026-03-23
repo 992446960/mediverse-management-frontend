@@ -52,6 +52,8 @@ export interface PageTableColumnConfig {
   formatter?: (row: Record<string, any>) => string
   /** 开启自定义排序 */
   sortable?: boolean
+  /** 列是否可调整宽度 */
+  resizable?: boolean
   /** 列设置中是否锁定 */
   lock?: boolean
   /** 多选保留（仅 selection 生效） */

@@ -98,6 +98,13 @@ const localForm = ref<Pick<AvatarWizardForm, 'org_id' | 'dept_id' | 'user_id'>>(
 watch(
   () => props.modelValue,
   (val) => {
+    if (
+      localForm.value.org_id === val.org_id &&
+      localForm.value.dept_id === val.dept_id &&
+      localForm.value.user_id === val.user_id
+    ) {
+      return
+    }
     localForm.value = {
       org_id: val.org_id,
       dept_id: val.dept_id,

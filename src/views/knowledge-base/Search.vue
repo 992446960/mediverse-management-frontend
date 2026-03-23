@@ -1,26 +1,26 @@
 <template>
-  <div class="kb-search-page h-full flex overflow-hidden rounded-md">
-    <!-- Sidebar -->
-    <KBSidebar />
-
-    <!-- Main Content -->
-    <div class="flex-1 flex flex-col h-full overflow-hidden bg-white">
+  <div class="kb-search-page h-full flex flex-col overflow-hidden rounded-md">
+    <div class="flex-1 flex flex-col h-full min-h-0 overflow-hidden bg-white">
       <!-- Header -->
       <div
         class="h-14 border-b border-gray-200 flex items-center justify-between px-6 bg-white shrink-0"
       >
         <div class="font-medium text-gray-900 truncate">
-          {{ currentSession?.title || t('knowledgeSearch.noTitle') }}
+          {{ headerTitle }}
         </div>
         <div class="text-xs text-gray-500">
-          {{ currentSession?.updatedAt ? new Date(currentSession.updatedAt).toLocaleString() : '' }}
+          {{
+            route.name === 'KnowledgeBaseSearch' && currentSession?.updatedAt
+              ? new Date(currentSession.updatedAt).toLocaleString()
+              : ''
+          }}
         </div>
       </div>
 
       <!-- Thread -->
       <SearchResultThread
         :messages="messages"
-        :loading="streaming"
+        :loading="streaming || kbLoading"
         @question-select="handleFollowUp"
       />
 
@@ -32,7 +32,7 @@
             :placeholder="t('knowledgeSearch.followUpPlaceholder')"
             :auto-size="{ minRows: 1, maxRows: 6 }"
             class="kb-search-textarea pr-12 resize-none! rounded-xl! py-3! px-4!"
-            :disabled="streaming"
+            :disabled="streaming || kbLoading || route.name === 'KnowledgeBaseSearchNew'"
             @keydown.enter.prevent="handleKeydown"
           />
           <div
@@ -69,31 +69,57 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, watch, nextTick, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { SendOutlined, PauseOutlined } from '@ant-design/icons-vue'
-import KBSidebar from '@/components/KBSidebar/index.vue'
 import SearchResultThread from '@/components/SearchResultThread/index.vue'
 import { useKnowledgeSearchStore } from '@/stores/knowledgeSearch'
 
+function pickRouteQueryQ(q: unknown): string {
+  const raw = Array.isArray(q) ? q[0] : q
+  return typeof raw === 'string' ? raw.trim() : ''
+}
+
 const route = useRoute()
+const router = useRouter()
 const { t } = useI18n()
 const store = useKnowledgeSearchStore()
-const { currentSession, messages, streaming } = storeToRefs(store)
+const { currentSession, messages, streaming, loading: kbLoading } = storeToRefs(store)
+
+let newSearchBootstrapSeq = 0
+
+const headerTitle = computed(() => {
+  if (route.name === 'KnowledgeBaseSearchNew') {
+    const q = pickRouteQueryQ(route.query.q)
+    return q || t('knowledgeSearch.noTitle')
+  }
+  return currentSession.value?.title || t('knowledgeSearch.noTitle')
+})
 
 const inputContent = ref('')
 
-const handleFollowUp = async (content: string) => {
-  if (!content.trim() || streaming.value) return
-
-  const text = content
+const clearInput = async () => {
   inputContent.value = ''
-  await store.sendFollowUp(text)
+  await nextTick()
+}
+
+const handleFollowUp = async (content: string) => {
+  const text = content.trim()
+  if (!text || streaming.value) return
+
+  await clearInput()
+  try {
+    await store.sendFollowUp(text)
+  } catch {
+    inputContent.value = text
+    await nextTick()
+  }
 }
 
 const handleKeydown = (e: KeyboardEvent) => {
+  if (e.isComposing || e.key === 'Process') return
   if (!e.shiftKey) {
     handleFollowUp(inputContent.value)
   }
@@ -104,10 +130,36 @@ const stopGeneration = () => {
 }
 
 watch(
-  () => route.params.id,
-  (newId) => {
-    if (newId && typeof newId === 'string') {
-      store.loadMessages(newId)
+  () => ({
+    name: route.name,
+    id: route.params.id,
+    q: route.query.q,
+  }),
+  async ({ name, id, q }) => {
+    if (name === 'KnowledgeBaseSearchNew') {
+      await clearInput()
+      const query = pickRouteQueryQ(q)
+      if (!query) {
+        await router.replace({ name: 'KnowledgeBase' })
+        return
+      }
+      const seq = ++newSearchBootstrapSeq
+      try {
+        const session = await store.createSession(query)
+        if (seq !== newSearchBootstrapSeq) return
+        if (router.currentRoute.value.name !== 'KnowledgeBaseSearchNew') return
+        await router.replace({ name: 'KnowledgeBaseSearch', params: { id: session.id } })
+      } catch {
+        if (seq !== newSearchBootstrapSeq) return
+        if (router.currentRoute.value.name !== 'KnowledgeBaseSearchNew') return
+        await router.replace({ name: 'KnowledgeBase' })
+      }
+      return
+    }
+
+    if (id && typeof id === 'string') {
+      await clearInput()
+      store.loadMessages(id)
     }
   },
   { immediate: true }

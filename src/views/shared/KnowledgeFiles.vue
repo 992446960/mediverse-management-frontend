@@ -85,6 +85,7 @@ import {
   SearchOutlined,
   ReloadOutlined,
   EyeOutlined,
+  ExportOutlined,
   DeleteOutlined,
   DownloadOutlined,
   UploadOutlined,
@@ -98,11 +99,20 @@ import { useFileStatusPoll } from '@/composables/useFileStatusPoll'
 import type { UploadQueueItem } from '@/components/FileUploader/types'
 import { getDirectoryTree, createDirectory, getFileList, deleteFile } from '@/api/knowledge'
 import { confirmDelete } from '@/utils/confirm'
+import { stashKnowledgePreviewFile } from '@/utils/knowledgePreviewStash'
+import { openFilePreview } from '@/utils/fileType'
+import { sanitizeDownloadFilename, triggerFileDownload } from '@/utils/triggerFileDownload'
 import { FILE_STATUS_CONFIG } from '@/types/knowledge'
 import type { PageHeadConfig } from '@/components/PageHead/types'
 import type { PageFilterConfig } from '@/components/PageFilter/types'
 import type { PageTableConfig, PageTableColumnConfig } from '@/components/PageTable/types'
-import type { OwnerType, DirectoryNode, FileListItem, FileStatus } from '@/types/knowledge'
+import {
+  getFileOriginalUrl,
+  type OwnerType,
+  type DirectoryNode,
+  type FileListItem,
+  type FileStatus,
+} from '@/types/knowledge'
 
 const props = defineProps<{
   ownerType: OwnerType
@@ -397,13 +407,19 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
   {
     label: t('common.actions'),
     type: 'operation',
-    width: 280,
+    width: 360,
     fixed: 'right',
     btns: [
       {
         text: t('knowledge.preview'),
         icon: EyeOutlined,
         handle: (row: Record<string, unknown>) => handlePreview(row as unknown as FileListItem),
+      },
+      {
+        text: t('knowledge.previewInNewWindow'),
+        icon: ExportOutlined,
+        handle: (row: Record<string, unknown>) =>
+          handleUniversalPreview(row as unknown as FileListItem),
       },
       {
         text: t('knowledge.download'),
@@ -490,21 +506,25 @@ const PREVIEW_ROUTE_NAMES: Record<OwnerType, string> = {
   avatar: 'AvatarFilesPreview',
 }
 
-/** 判断文件是否具备预览条件：后端可能不返回 file_url/parsed_file_url */
-function canPreview(record: FileListItem): boolean {
-  const ft = record.file_type?.toLowerCase()
-  if (ft === 'pdf') return !!(record.file_url || record.parsed_file_url)
-  return !!record.file_url
-}
-
 function handlePreview(record: FileListItem) {
-  if (!canPreview(record)) {
+  if (!(getFileOriginalUrl(record) || record.parsed_file_url)) {
     message.warning(t('knowledge.previewNoUrlHint'))
     return
   }
   const name = PREVIEW_ROUTE_NAMES[props.ownerType]
+  stashKnowledgePreviewFile(record)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- FileListItem 需通过 state 传递，HistoryState 类型限制
   router.push({ name, params: { id: record.id }, state: { file: record } as any })
+}
+
+/** 通用 URL 预览页（无知识卡侧栏），需已存在可访问的原文件地址 */
+function handleUniversalPreview(record: FileListItem) {
+  const url = getFileOriginalUrl(record)
+  if (!url) {
+    message.warning(t('knowledge.previewNoUrlHint'))
+    return
+  }
+  openFilePreview(url, record.file_name)
 }
 
 function handleDelete(record: FileListItem) {
@@ -522,9 +542,14 @@ function handleDelete(record: FileListItem) {
 }
 
 async function handleDownload(record: FileListItem) {
-  if (record.file_url) {
-    window.open(record.file_url, '_blank')
-  } else {
+  const url = getFileOriginalUrl(record)
+  if (!url) {
+    message.error(t('knowledge.downloadFailed'))
+    return
+  }
+  try {
+    await triggerFileDownload(url, sanitizeDownloadFilename(record.file_name))
+  } catch {
     message.error(t('knowledge.downloadFailed'))
   }
 }

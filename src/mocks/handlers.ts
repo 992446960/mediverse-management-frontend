@@ -8,6 +8,7 @@ import { knowledgeHandlers } from './handlers/knowledge'
 import { knowledgeSearchHandlers } from './handlers/knowledgeSearch'
 import { handlers as sessionHandlers } from './handlers/sessions'
 import { apiTokenHandlers } from './handlers/apiTokens'
+import { skillsHandlers } from './handlers/skills'
 
 export const handlers = [
   ...authHandlers,
@@ -20,4 +21,5 @@ export const handlers = [
   ...knowledgeSearchHandlers,
   ...sessionHandlers,
   ...apiTokenHandlers,
+  ...skillsHandlers,
 ]

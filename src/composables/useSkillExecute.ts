@@ -1,7 +1,6 @@
-import { ref } from 'vue'
 import type { Ref } from 'vue'
 import type { ThinkingProcessStep } from '@/types/chat'
-import type { SkillExecuteResult } from '@/types/skill'
+import type { SkillExecuteContext, SkillExecuteResult } from '@/types/skill'
 
 export interface SkillExecuteCallbacks {
   onDelta?: (text: string) => void
@@ -19,8 +18,8 @@ export interface SkillExecuteCallbacks {
 export interface UseSkillExecuteReturn {
   execute: (
     skillCode: string,
-    args: Record<string, any>,
-    context?: { session_id?: string; avatar_id?: string }
+    args: Record<string, unknown>,
+    context?: SkillExecuteContext
   ) => Promise<void>
   streaming: Ref<boolean>
   currentText: Ref<string>
@@ -268,8 +267,8 @@ export function useSkillExecute(): UseSkillExecuteReturn {
 
   const execute = async (
     skillCode: string,
-    args: Record<string, any>,
-    context?: { session_id?: string; avatar_id?: string }
+    args: Record<string, unknown>,
+    context?: SkillExecuteContext
   ) => {
     reset()
     try {

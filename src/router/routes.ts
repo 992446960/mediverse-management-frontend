@@ -49,11 +49,10 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: 'files',
-        name: 'MyFiles',
         component: () => import('@/views/shared/FilesLayout.vue'),
         meta: { title: 'menu.files', requiredRoles: ['user'] },
         children: [
-          { path: '', component: () => import('@/views/my/Files.vue') },
+          { path: '', name: 'MyFiles', component: () => import('@/views/my/Files.vue') },
           {
             path: 'preview/:id',
             name: 'MyFilesPreview',
@@ -70,12 +69,12 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: 'avatar',
-        name: 'MyAvatar',
         component: () => import('@/views/shared/AvatarLayout.vue'),
         meta: { title: 'menu.avatarConfig', requiredRoles: ['user'] },
         children: [
           {
             path: '',
+            name: 'MyAvatar',
             component: () => import('@/views/my/Avatar.vue'),
           },
           {
@@ -100,11 +99,10 @@ const routes: RouteRecordRaw[] = [
     children: [
       {
         path: 'files',
-        name: 'DeptFiles',
         component: () => import('@/views/shared/FilesLayout.vue'),
         meta: { title: 'menu.files' },
         children: [
-          { path: '', component: () => import('@/views/dept/Files.vue') },
+          { path: '', name: 'DeptFiles', component: () => import('@/views/dept/Files.vue') },
           {
             path: 'preview/:id',
             name: 'DeptFilesPreview',
@@ -121,12 +119,12 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: 'avatar',
-        name: 'DeptAvatar',
         component: () => import('@/views/shared/AvatarLayout.vue'),
         meta: { title: 'menu.avatarConfig' },
         children: [
           {
             path: '',
+            name: 'DeptAvatar',
             component: () => import('@/views/dept/Avatar.vue'),
           },
           {
@@ -151,11 +149,10 @@ const routes: RouteRecordRaw[] = [
     children: [
       {
         path: 'files',
-        name: 'OrgFiles',
         component: () => import('@/views/shared/FilesLayout.vue'),
         meta: { title: 'menu.files' },
         children: [
-          { path: '', component: () => import('@/views/org/Files.vue') },
+          { path: '', name: 'OrgFiles', component: () => import('@/views/org/Files.vue') },
           {
             path: 'preview/:id',
             name: 'OrgFilesPreview',
@@ -172,12 +169,12 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: 'avatar',
-        name: 'OrgAvatar',
         component: () => import('@/views/shared/AvatarLayout.vue'),
         meta: { title: 'menu.avatarConfig' },
         children: [
           {
             path: '',
+            name: 'OrgAvatar',
             component: () => import('@/views/org/Avatar.vue'),
           },
           {
@@ -221,6 +218,17 @@ const routes: RouteRecordRaw[] = [
       layout: 'MainLayout',
       title: 'menu.knowledgeBase',
       requiresAuth: true,
+    },
+  },
+  {
+    path: '/knowledge-base/search/new',
+    name: 'KnowledgeBaseSearchNew',
+    component: () => import('@/views/knowledge-base/Search.vue'),
+    meta: {
+      layout: 'MainLayout',
+      title: 'menu.knowledgeBase',
+      requiresAuth: true,
+      hidden: true,
     },
   },
   {
@@ -290,6 +298,17 @@ const routes: RouteRecordRaw[] = [
       layout: 'FullscreenLayout',
       title: '403 Forbidden',
       hidden: true,
+    },
+  },
+  {
+    path: '/preview',
+    name: 'UniversalFilePreview',
+    component: () => import('@/views/shared/UniversalPreviewPage.vue'),
+    meta: {
+      layout: 'FullscreenLayout',
+      title: 'knowledge.filePreview',
+      hidden: true,
+      requiresAuth: true,
     },
   },
   {

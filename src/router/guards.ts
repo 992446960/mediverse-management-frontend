@@ -1,4 +1,5 @@
-import type { Router } from 'vue-router'
+import type { Router, RouteLocationNormalized } from 'vue-router'
+import { i18n } from '@/i18n'
 import { useAuthStore } from '@/stores/auth'
 import { getSkipChangePassword } from '@/utils/auth'
 import { hasAnyRole } from '@/utils/permission'
@@ -6,11 +7,19 @@ import type { UserRole } from '@/types/auth'
 
 const whiteList = ['/login', '/403', '/404']
 
+const appTitle = import.meta.env.VITE_APP_TITLE || 'Mediverse'
+
+/** 路由 meta.title 存 i18n key，需翻译后再写入 document.title（浏览器标签） */
+export function setDocumentTitle(to: RouteLocationNormalized) {
+  const key = to.meta.title as string | undefined
+  document.title = `${key ? `${i18n.global.t(key)} - ` : ''}${appTitle}`
+}
+
 export function createPermissionGuard(router: Router) {
   router.beforeEach(async (to) => {
     const authStore = useAuthStore()
 
-    document.title = `${to.meta.title ? to.meta.title + ' - ' : ''}${import.meta.env.VITE_APP_TITLE || 'Mediverse'}`
+    setDocumentTitle(to)
 
     if (whiteList.includes(to.path)) {
       if (to.path === '/login' && authStore.isLoggedIn) {

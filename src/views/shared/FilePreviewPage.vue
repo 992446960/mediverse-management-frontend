@@ -16,6 +16,7 @@
 import { useI18n } from 'vue-i18n'
 import FilePreview from '@/components/FilePreview/index.vue'
 import { useAuthStore } from '@/stores/auth'
+import { readKnowledgePreviewFile } from '@/utils/knowledgePreviewStash'
 import type { OwnerType } from '@/types/knowledge'
 import type { FileListItem } from '@/types/knowledge'
 
@@ -43,11 +44,15 @@ const ownerId = computed(() => {
 
 const fileId = computed(() => route.params.id as string)
 
-/** 从路由 state 带入的列表项，避免单独请求文件详情。兼容 history.state 与 route.state */
+/**
+ * 列表传入的文件行：优先 history.state（若将来路由保留），否则 sessionStorage（Vue Router 5 下 push state 未出现在 history.state）
+ */
 const fileFromState = computed<FileListItem | undefined>(() => {
   const fromHistory = (history.state as { file?: FileListItem })?.file
   const fromRoute = (route as { state?: { file?: FileListItem } }).state?.file
-  return fromHistory ?? fromRoute
+  if (fromHistory) return fromHistory
+  if (fromRoute) return fromRoute
+  return readKnowledgePreviewFile(fileId.value)
 })
 
 const ready = computed(() => {

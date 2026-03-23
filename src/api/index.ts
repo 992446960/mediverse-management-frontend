@@ -125,7 +125,8 @@ api.interceptors.response.use(
       const isAuthEndpoint =
         response.config?.url?.includes?.('/auth/me') ||
         response.config?.url?.includes?.('/auth/logout')
-      if (!isAuthEndpoint) {
+      const silent = response.config?.skipErrorToast === true
+      if (!isAuthEndpoint && !silent) {
         message.error(res.message || 'Error')
       }
       return Promise.reject(new Error(res.message || 'Error'))
@@ -205,7 +206,10 @@ api.interceptors.response.use(
     const is5xx = error.response?.status != null && error.response.status >= 500
     if (!(isAuthEndpoint && (isNetworkError || is5xx))) {
       const errorMsg = error.response?.data?.message || error.message || '请求失败'
-      message.error(errorMsg)
+      const silent = originalRequest?.skipErrorToast === true
+      if (!silent) {
+        message.error(errorMsg)
+      }
     }
     return Promise.reject(error)
   }
