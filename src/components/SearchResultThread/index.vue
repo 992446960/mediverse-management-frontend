@@ -225,6 +225,7 @@ import RelatedQuestions from './RelatedQuestions.vue'
 import type { SearchMessage, Citation, ThinkingStep, MatchedFile } from '@/api/knowledgeSearch'
 import { useAuthStore } from '@/stores/auth'
 import { stashKnowledgePreviewFile } from '@/utils/knowledgePreviewStash'
+import { openFilePreview } from '@/utils/fileType'
 import { fileListItemFromKbMatchedFile } from '@/utils/kbSearchMatchedFile'
 import type { ThinkingProcessStep } from '@/types/chat'
 import type { CardType } from '@/types/knowledge'
@@ -275,6 +276,12 @@ function resolveFilesPreviewRoute(): 'MyFilesPreview' | 'DeptFilesPreview' | 'Or
 }
 
 function openMatchedFilePreview(file: MatchedFile) {
+  const direct =
+    file.file_url != null && typeof file.file_url === 'string' ? file.file_url.trim() : ''
+  if (direct) {
+    openFilePreview(direct, file.file_name)
+    return
+  }
   stashKnowledgePreviewFile(fileListItemFromKbMatchedFile(file))
   const name = resolveFilesPreviewRoute()
   const { href } = router.resolve({ name, params: { id: file.file_id } })

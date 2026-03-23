@@ -14,6 +14,8 @@ export interface ApiCitation {
 export interface MatchedFile {
   file_id: string
   file_name: string
+  /** 原文件可访问地址；有值时优先走通用 URL 预览 */
+  file_url?: string | null
   relevance_score?: number
 }
 

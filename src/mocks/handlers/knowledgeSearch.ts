@@ -29,7 +29,14 @@ function createSearchResponse(
         content_preview: '体温监测与护理措施...',
       },
     ],
-    matched_files: [{ file_id: 'file-1', file_name: '内科诊疗指南.pdf', relevance_score: 0.91 }],
+    matched_files: [
+      {
+        file_id: 'file-1',
+        file_name: '内科诊疗指南.pdf',
+        file_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+        relevance_score: 0.91,
+      },
+    ],
   }
 }
 

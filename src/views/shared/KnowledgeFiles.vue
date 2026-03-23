@@ -85,6 +85,7 @@ import {
   SearchOutlined,
   ReloadOutlined,
   EyeOutlined,
+  ExportOutlined,
   DeleteOutlined,
   DownloadOutlined,
   UploadOutlined,
@@ -99,6 +100,7 @@ import type { UploadQueueItem } from '@/components/FileUploader/types'
 import { getDirectoryTree, createDirectory, getFileList, deleteFile } from '@/api/knowledge'
 import { confirmDelete } from '@/utils/confirm'
 import { stashKnowledgePreviewFile } from '@/utils/knowledgePreviewStash'
+import { openFilePreview } from '@/utils/fileType'
 import { sanitizeDownloadFilename, triggerFileDownload } from '@/utils/triggerFileDownload'
 import { FILE_STATUS_CONFIG } from '@/types/knowledge'
 import type { PageHeadConfig } from '@/components/PageHead/types'
@@ -405,13 +407,19 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
   {
     label: t('common.actions'),
     type: 'operation',
-    width: 280,
+    width: 360,
     fixed: 'right',
     btns: [
       {
         text: t('knowledge.preview'),
         icon: EyeOutlined,
         handle: (row: Record<string, unknown>) => handlePreview(row as unknown as FileListItem),
+      },
+      {
+        text: t('knowledge.previewInNewWindow'),
+        icon: ExportOutlined,
+        handle: (row: Record<string, unknown>) =>
+          handleUniversalPreview(row as unknown as FileListItem),
       },
       {
         text: t('knowledge.download'),
@@ -507,6 +515,16 @@ function handlePreview(record: FileListItem) {
   stashKnowledgePreviewFile(record)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- FileListItem 需通过 state 传递，HistoryState 类型限制
   router.push({ name, params: { id: record.id }, state: { file: record } as any })
+}
+
+/** 通用 URL 预览页（无知识卡侧栏），需已存在可访问的原文件地址 */
+function handleUniversalPreview(record: FileListItem) {
+  const url = getFileOriginalUrl(record)
+  if (!url) {
+    message.warning(t('knowledge.previewNoUrlHint'))
+    return
+  }
+  openFilePreview(url, record.file_name)
 }
 
 function handleDelete(record: FileListItem) {

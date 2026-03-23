@@ -301,6 +301,17 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/preview',
+    name: 'UniversalFilePreview',
+    component: () => import('@/views/shared/UniversalPreviewPage.vue'),
+    meta: {
+      layout: 'FullscreenLayout',
+      title: 'knowledge.filePreview',
+      hidden: true,
+      requiresAuth: true,
+    },
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('@/views/error/404.vue'),

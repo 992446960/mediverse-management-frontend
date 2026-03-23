@@ -132,6 +132,7 @@ declare module 'vue' {
     ThemeSwitcher: typeof import('./src/components/ThemeSwitcher/index.vue')['default']
     ThinkingProcess: typeof import('./src/components/ChatWindow/ThinkingProcess.vue')['default']
     TiptapEditor: typeof import('./src/components/KnowledgeCardEditor/TiptapEditor.vue')['default']
+    UniversalFilePreview: typeof import('./src/components/UniversalFilePreview/index.vue')['default']
     VersionTimeline: typeof import('./src/components/KnowledgeCardViewer/VersionTimeline.vue')['default']
   }
 }
