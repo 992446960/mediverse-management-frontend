@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { i18n, getInitialLocale } from '@/i18n'
+import router from '@/router'
+import { setDocumentTitle } from '@/router/guards'
 import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
 import 'dayjs/locale/en'
@@ -27,6 +29,9 @@ export const useLocaleStore = defineStore('locale', () => {
 
     // Update document language
     document.querySelector('html')?.setAttribute('lang', newLocale)
+
+    // 与路由 meta.title 一致，切换语言后同步浏览器标签
+    setDocumentTitle(router.currentRoute.value)
   }
 
   return {

@@ -172,7 +172,7 @@ export default {
     deptManagement: '科室管理',
     userManagement: '用户管理',
     avatarManagement: '分身管理',
-    apiToken: 'API Token',
+    apiToken: 'API Token 管理',
     files: '文件管理',
     deptFilesManagement: '科室文件管理',
     orgFilesManagement: '机构文件管理',
