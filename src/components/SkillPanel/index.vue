@@ -20,6 +20,7 @@ import type { CardType } from '@/types/knowledge'
 import { useChatStore } from '@/stores/chat'
 import { useSkillExecute } from '@/composables/useSkillExecute'
 import BubbleRenderer from '@/components/ChatWindow/BubbleRenderer.vue'
+import CitationPreviewHtml from '@/components/CitationPreviewHtml/index.vue'
 
 const { t } = useI18n()
 const chatStore = useChatStore()
@@ -301,9 +302,7 @@ const getBadgeLabel = (citation: SkillCitation) => {
                   {{ getBadgeLabel(citation) }}
                 </span>
               </div>
-              <div class="text-xs text-gray-500 dark:text-gray-400 line-clamp-3">
-                {{ citation.content }}
-              </div>
+              <CitationPreviewHtml :content="citation.content" variant="skill" />
             </div>
           </div>
         </div>

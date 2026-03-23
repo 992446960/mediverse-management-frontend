@@ -101,11 +101,7 @@
                         <FileTextOutlined
                           class="mt-0.5 shrink-0 text-gray-400 text-sm group-hover/card:text-primary transition-colors"
                         />
-                        <p
-                          class="text-xs text-gray-600 leading-relaxed mb-0 line-clamp-3 flex-1 min-w-0"
-                        >
-                          {{ citation.content }}
-                        </p>
+                        <CitationPreviewHtml :content="citation.content" variant="card" />
                       </div>
                     </div>
                   </div>
@@ -189,8 +185,8 @@
 
     <!-- Global Citation Modal for inline clicks -->
     <a-modal v-model:open="detailsVisible" :title="currentCitation?.title" footer="">
-      <div v-if="currentCitation" class="prose prose-sm max-w-none">
-        <p class="text-gray-600">{{ currentCitation.content }}</p>
+      <div v-if="currentCitation">
+        <CitationPreviewHtml :content="currentCitation.content" variant="modal" />
         <div v-if="currentCitation.url" class="mt-4">
           <a :href="currentCitation.url" target="_blank" class="text-blue-600 hover:underline">{{
             t('knowledgeSearch.viewOriginal')
@@ -221,6 +217,7 @@ import {
 import BubbleRenderer from '@/components/ChatWindow/BubbleRenderer.vue'
 import ThinkingProcess from '@/components/ChatWindow/ThinkingProcess.vue'
 import CitationLink from './CitationLink.vue'
+import CitationPreviewHtml from '@/components/CitationPreviewHtml/index.vue'
 import RelatedQuestions from './RelatedQuestions.vue'
 import type { SearchMessage, Citation, ThinkingStep, MatchedFile } from '@/api/knowledgeSearch'
 import { useAuthStore } from '@/stores/auth'

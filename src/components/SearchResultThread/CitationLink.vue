@@ -9,8 +9,8 @@
   </a-tooltip>
 
   <a-modal v-model:open="detailsVisible" :title="citation.title" footer="">
-    <div class="prose prose-sm max-w-none">
-      <p class="text-gray-600">{{ citation.content }}</p>
+    <div>
+      <CitationPreviewHtml :content="citation.content" variant="modal" />
       <div v-if="citation.url" class="mt-4">
         <a :href="citation.url" target="_blank" class="text-blue-600 hover:underline">{{
           t('knowledgeSearch.viewOriginal')
@@ -24,6 +24,7 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { Citation } from '@/api/knowledgeSearch'
+import CitationPreviewHtml from '@/components/CitationPreviewHtml/index.vue'
 
 const { t } = useI18n()
 

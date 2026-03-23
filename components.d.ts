@@ -81,6 +81,7 @@ declare module 'vue' {
     ChatSidebar: typeof import('./src/components/ChatSidebar/index.vue')['default']
     ChatWindow: typeof import('./src/components/ChatWindow/index.vue')['default']
     CitationLink: typeof import('./src/components/SearchResultThread/CitationLink.vue')['default']
+    CitationPreviewHtml: typeof import('./src/components/CitationPreviewHtml/index.vue')['default']
     ColumnsEditor: typeof import('./src/components/PageTable/ColumnsEditor.vue')['default']
     DirectoryTree: typeof import('./src/components/DirectoryTree/index.vue')['default']
     DirectoryTreeItem: typeof import('./src/components/DirectoryTree/DirectoryTreeItem.vue')['default']
