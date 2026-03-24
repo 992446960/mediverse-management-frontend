@@ -6,7 +6,7 @@ import axios, {
 } from 'axios'
 import { message } from 'ant-design-vue'
 import { getToken, setToken, getRefreshToken, clearAuth } from '@/utils/auth'
-import { addPending, removePending } from '@/utils/requestDedup'
+import { checkRepeatSubmit } from '@/utils/requestDedup'
 import { getHttpErrorMessage } from '@/config/errorCodes'
 import type { ApiResponse } from '@/types'
 import type { RefreshTokenResponse } from '@/types/auth'
@@ -104,7 +104,8 @@ api.interceptors.request.use(
     if (config.data instanceof FormData && config.headers) {
       delete config.headers['Content-Type']
     }
-    addPending(config)
+    // 防重复提交（节流）：第一个放行，1s 内后续相同请求直接拦截
+    checkRepeatSubmit(config)
     return config
   },
   (error) => {
@@ -115,7 +116,6 @@ api.interceptors.request.use(
 // 响应拦截器
 api.interceptors.response.use(
   (response: AxiosResponse<any>) => {
-    removePending(response.config as InternalAxiosRequestConfig)
     const res = response.data as ApiResponse
 
     // 如果是二进制数据（如文件下载），直接返回
@@ -139,9 +139,6 @@ api.interceptors.response.use(
     return res.data
   },
   async (error) => {
-    if (error.config) {
-      removePending(error.config as InternalAxiosRequestConfig)
-    }
     const originalRequest = error.config
     const isLoginOrRefresh =
       originalRequest?.url?.includes?.('/auth/login') ||

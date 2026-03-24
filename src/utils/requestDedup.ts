@@ -1,78 +1,79 @@
 import type { InternalAxiosRequestConfig } from 'axios'
 
 /**
- * 请求去重模块
- * 原理：对 POST/PUT/PATCH/DELETE 请求，用 [method, url, body] 生成唯一 key
- *       若同 key 请求已在进行中，取消前一个请求，让新请求通过
+ * 防重复提交模块
+ *
+ * 基于节流函数实现：同一请求首次立即放行，冷却期（默认 1s）内的后续相同请求
+ * 直接拦截并提示。每次被拦截都会刷新冷却期，直到停止操作超过 1s 才可再次提交。
+ *
+ * 跳过方式：config.headers.repeatSubmit = false
  */
 
-const pendingMap = new Map<string, AbortController>()
-
-/** 不参与去重的 URL 关键字 */
+/** 不参与校验的 URL 关键字 */
 const EXCLUDE_URLS = ['/auth/login', '/auth/refresh', '/auth/logout']
 
-/** 仅对变更类请求去重 */
-const DEDUP_METHODS = ['post', 'put', 'patch', 'delete']
+/** 冷却时间（ms） */
+const INTERVAL = 1000
 
-function generateKey(config: InternalAxiosRequestConfig): string {
-  const { method, url, data } = config
-  const body = typeof data === 'string' ? data : JSON.stringify(data ?? '')
-  return `${method}:${url}:${body}`
+/**
+ * 创建一个「首次立即执行」的节流器
+ * - 首次调用：执行 fn 并进入冷却
+ * - 冷却期内再次调用：刷新冷却计时，不执行 fn，返回 false
+ * - 冷却期结束后调用：视为新的首次
+ */
+function createThrottle(interval: number) {
+  const lastMap = new Map<string, number>()
+
+  return (key: string): boolean => {
+    const now = Date.now()
+    const last = lastMap.get(key)
+
+    if (last != null && now - last < interval) {
+      // 冷却期内 → 刷新时间戳，拦截
+      lastMap.set(key, now)
+      return false
+    }
+
+    // 首次 或 冷却已过 → 放行
+    lastMap.set(key, now)
+    return true
+  }
 }
 
-function isExcluded(config: InternalAxiosRequestConfig): boolean {
-  const url = config.url || ''
+const throttle = createThrottle(INTERVAL)
+
+/** 根据请求信息生成唯一标识 */
+function generateKey(config: InternalAxiosRequestConfig): string {
+  const { method, url, data, params } = config
+  const paramsPart =
+    params != null && typeof params === 'object' && Object.keys(params).length > 0
+      ? JSON.stringify(params)
+      : ''
+  const body =
+    data instanceof FormData
+      ? 'FormData'
+      : typeof data === 'object'
+        ? JSON.stringify(data)
+        : String(data ?? '')
+  return `${method}:${url}:${paramsPart}:${body}`
+}
+
+function isExcluded(url: string): boolean {
   return EXCLUDE_URLS.some((exclude) => url.includes(exclude))
 }
 
-function shouldSkip(config: InternalAxiosRequestConfig): boolean {
-  return (
-    !DEDUP_METHODS.includes(config.method?.toLowerCase() || '') ||
-    isExcluded(config) ||
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (config as any).skipDedup === true
-  )
-}
-
 /**
- * 在请求拦截器中调用：
- * 1. 如果已有相同请求在 pending 中 → 取消前一个
- * 2. 为当前请求注册新的 AbortController
+ * 在请求拦截器中调用。
+ * 被节流拦截时抛出 Error，由 axios 错误拦截器统一提示。
  */
-export function addPending(config: InternalAxiosRequestConfig): void {
-  if (shouldSkip(config)) return
+export function checkRepeatSubmit(config: InternalAxiosRequestConfig): void {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if ((config.headers as any)?.repeatSubmit === false) return
+  if (isExcluded(config.url || '')) return
 
   const key = generateKey(config)
 
-  // 取消前一个相同请求（如果存在）
-  if (pendingMap.has(key)) {
-    const prevController = pendingMap.get(key)!
-    prevController.abort('Duplicate request cancelled')
-    pendingMap.delete(key)
+  if (!throttle(key)) {
+    throw new Error('数据正在处理，请勿重复提交')
   }
-
-  // 为当前请求注册 AbortController
-  const controller = new AbortController()
-  config.signal = controller.signal
-  pendingMap.set(key, controller)
-}
-
-/**
- * 在响应/错误拦截器中调用：移除已完成的 pending 请求
- */
-export function removePending(config: InternalAxiosRequestConfig): void {
-  if (shouldSkip(config)) return
-
-  const key = generateKey(config)
-  pendingMap.delete(key)
-}
-
-/**
- * 清除所有 pending 请求（可在路由切换时调用）
- */
-export function clearAllPending(): void {
-  pendingMap.forEach((controller) => {
-    controller.abort('Route changed, pending requests cleared')
-  })
-  pendingMap.clear()
 }
