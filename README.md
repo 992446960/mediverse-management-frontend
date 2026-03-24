@@ -28,13 +28,15 @@ docker run --rm -p 8080:80 \
 
 或使用 Compose 一键构建并预览：`docker compose up --build`，浏览器打开 `http://localhost:8080`。
 
+**Compose 与架构**：仓库内 `docker-compose.yml` 已为 `frontend` 服务设置 **`platform: linux/amd64`**。在 Apple Silicon 上执行 `docker compose build` 时，会产出可在常见 **x86 云主机** 上运行的镜像；镜像名默认为 **`mediverse-management-frontend-frontend:latest`**（项目目录名 + 服务名）。
+
 ### 镜像交付给后端（部署到服务器）
 
 **方式 A：推私有镜像仓库（推荐）**  
 在本机构建并打标签后推送，后端 `docker pull` + `docker run` / `compose` 即可。
 
 ```bash
-# 云服务器多为 amd64，务必加 --platform
+# 云服务器多为 amd64，务必加 --platform（或与下方 Compose 方式二选一）
 docker build --platform linux/amd64 -t <registry>/<namespace>/mediverse-management-frontend:1.0.0 .
 
 docker push <registry>/<namespace>/mediverse-management-frontend:1.0.0
@@ -42,23 +44,64 @@ docker push <registry>/<namespace>/mediverse-management-frontend:1.0.0
 
 发给对方：**镜像地址 + 版本 tag**，以及下方「运行时环境变量」。
 
-**方式 B：离线交付 `tar` 包**（无仓库时使用）
+**方式 B：离线 `tar.gz` 包（scp 上传，无仓库时使用）**
+
+以下为「本机构建 → 校验压缩包 → 上传 → 服务器加载 → 替换容器」的完整流程；**不要**只上传文件而不在服务器执行 `docker load`，也**不要**用未校验通过或上传中断的压缩包。
+
+**1. 本机（macOS，项目根目录）**
+
+离线包请输出到仓库内 **`docker-dist/`**（该目录下除 `.gitkeep` 外已被 `.gitignore` 忽略，避免误提交大文件）。
 
 ```bash
-docker build --platform linux/amd64 -t mediverse-management-frontend:1.0.0 .
-docker save mediverse-management-frontend:1.0.0 -o mediverse-management-frontend-1.0.0.tar
+docker compose build
+
+# 导出（镜像名以 docker images 为准，Compose 默认多为 mediverse-management-frontend-frontend:latest）
+docker save mediverse-management-frontend-frontend:latest | gzip -1 > docker-dist/mediverse-management-frontend-frontend-latest.tar.gz
+
+# 上传前必须校验，出现 OK 再 scp
+gzip -t docker-dist/mediverse-management-frontend-frontend-latest.tar.gz && echo OK
 ```
 
-后端在服务器上：
+```bash
+scp docker-dist/mediverse-management-frontend-frontend-latest.tar.gz root@<服务器IP>:/root/
+```
+
+（也可用 `docker build --platform linux/amd64 -t <自定义名>:<tag> .` 再 `docker save <自定义名>:<tag>`，与下述服务器步骤中的镜像名保持一致即可。）
+
+**2. 服务器**
 
 ```bash
-docker load -i mediverse-management-frontend-1.0.0.tar
+gunzip -c /root/mediverse-management-frontend-frontend-latest.tar.gz | docker load
+
+# 确认架构为 amd64；若为 arm64，说明本机构建未走 amd64，勿启动
+docker image inspect mediverse-management-frontend-frontend:latest --format '{{.Architecture}}'
+
+# 替换旧容器（名称与线上一致）
+docker rm -f mediverse-frontend
+
 docker run -d --name mediverse-frontend --restart unless-stopped \
-  -p 80:80 \
+  -p 8080:80 \
   -e API_UPSTREAM=https://<实际后端或网关基址> \
   -e API_PROXY_HOST=<与 API_UPSTREAM 同主机名，无 https://> \
-  mediverse-management-frontend:1.0.0
+  mediverse-management-frontend-frontend:latest
+
+docker ps
 ```
+
+未压缩的离线包也可用：`docker save ... -o xxx.tar` → 服务器 `docker load -i xxx.tar`。
+
+**3. 发布后**
+
+浏览器访问站点时建议 **强制刷新**（如 macOS `Cmd+Shift+R`）或使用无痕窗口，避免旧版 JS 缓存。
+
+### 部署常见问题
+
+| 现象 | 处理 |
+|------|------|
+| `gzip: invalid compressed data` / `unexpected EOF` | 压缩包损坏或上传不完整；本机重新 `docker save \| gzip`，`gzip -t` 通过后再 `scp`，确保传输结束。 |
+| `The requested image's platform (linux/arm64) does not match ... (linux/amd64)` | 本机镜像为 arm64。请用 **`docker compose build`**（已含 `platform: linux/amd64`）或 **`docker build --platform linux/amd64`** 重建，本机 `docker image inspect ... --format '{{.Architecture}}'` 为 **amd64** 后再导出。 |
+| `docker ps` 为空但刚 run 过 | 多为架构不匹配导致进程立即退出；按上一条重建 amd64 镜像。可用 `docker ps -a` 与 `docker logs mediverse-frontend` 确认。 |
+| `Conflict. The container name "/mediverse-frontend" is already in use` | 先 `docker rm -f mediverse-frontend` 再 `docker run`。 |
 
 可同时把仓库里的 **`docker-compose.yml`**（按需改端口与环境变量）交给对方，便于一致编排。
 

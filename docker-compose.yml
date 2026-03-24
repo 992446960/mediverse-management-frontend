@@ -3,6 +3,8 @@
 # 浏览器访问：http://localhost:8080
 services:
   frontend:
+    # 与多数云服务器一致（amd64）；在 Apple Silicon 本机构建时勿省略，否则 arm64 镜像在 amd64 主机上无法运行
+    platform: linux/amd64
     build:
       context: .
       args:
