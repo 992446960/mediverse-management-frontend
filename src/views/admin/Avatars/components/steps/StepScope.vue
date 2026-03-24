@@ -89,6 +89,9 @@ const emit = defineEmits<{
   'update:modelValue': [value: AvatarWizardForm]
 }>()
 
+/** 从父同步到 localForm 时跳过 emit，避免与 StepInfo 等字段联动时形成递归更新 */
+const syncingFromParent = ref(false)
+
 const localForm = ref<Pick<AvatarWizardForm, 'org_id' | 'dept_id' | 'user_id'>>({
   org_id: props.modelValue.org_id,
   dept_id: props.modelValue.dept_id,
@@ -98,17 +101,17 @@ const localForm = ref<Pick<AvatarWizardForm, 'org_id' | 'dept_id' | 'user_id'>>(
 watch(
   () => props.modelValue,
   (val) => {
-    if (
-      localForm.value.org_id === val.org_id &&
-      localForm.value.dept_id === val.dept_id &&
-      localForm.value.user_id === val.user_id
-    ) {
-      return
-    }
-    localForm.value = {
-      org_id: val.org_id,
-      dept_id: val.dept_id,
-      user_id: val.user_id,
+    syncingFromParent.value = true
+    try {
+      localForm.value = {
+        org_id: val.org_id,
+        dept_id: val.dept_id,
+        user_id: val.user_id,
+      }
+    } finally {
+      nextTick(() => {
+        syncingFromParent.value = false
+      })
     }
   },
   { deep: true }
@@ -117,6 +120,7 @@ watch(
 watch(
   localForm,
   (val) => {
+    if (syncingFromParent.value) return
     emit('update:modelValue', {
       ...props.modelValue,
       org_id: val.org_id,
