@@ -75,13 +75,22 @@ export const knowledgeSearchHandlers = [
   http.get(`${API_BASE}/knowledge-qa/history`, async ({ request }) => {
     await delay(200)
     const url = new URL(request.url)
-    const limit = Math.min(
-      50,
-      Math.max(1, Number.parseInt(url.searchParams.get('limit') || '10', 10))
+    const limitRaw = url.searchParams.get('limit')
+    const list = Array.from(history.values()).sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     )
-    const list = Array.from(history.values())
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-      .slice(0, limit)
-    return HttpResponse.json({ code: 0, data: list, message: 'ok' })
+    /** 不传 limit：返回全部（与入口页「最近搜索」全量一致） */
+    const sliced =
+      limitRaw == null || limitRaw === ''
+        ? list
+        : list.slice(0, Math.min(500, Math.max(1, Number.parseInt(limitRaw, 10))))
+    return HttpResponse.json({ code: 0, data: sliced, message: 'ok' })
+  }),
+
+  /** 清空当前用户知识库搜索会话（与入口页「清空」一致，同步清空本地 MSW 历史） */
+  http.delete(`${API_BASE}/chat/sessions/kb-search/by-user`, async () => {
+    await delay(200)
+    history.clear()
+    return HttpResponse.json({ code: 0, data: null, message: 'ok' })
   }),
 ]

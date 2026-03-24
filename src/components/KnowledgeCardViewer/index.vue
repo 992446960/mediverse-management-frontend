@@ -22,7 +22,7 @@
               }}</a-tag>
             </a-space>
           </div>
-          <div class="flex gap-2">
+          <div v-if="!readonlyPreview" class="flex gap-2">
             <a-button
               :type="card.online_status === 'online' ? 'default' : 'primary'"
               @click="handleStatusToggle"
@@ -40,7 +40,39 @@
           </div>
         </div>
 
-        <a-tabs v-model:active-key="activeTab">
+        <!-- 知识库入口：仅正文 + 溯源，无 Tab、无上下线 -->
+        <template v-if="readonlyPreview">
+          <div class="p-4 bg-gray-50 rounded-lg min-h-[400px]">
+            <!-- eslint-disable-next-line vue/no-v-html -- marked + DOMPurify -->
+            <div class="markdown-body" v-html="renderedContent"></div>
+          </div>
+          <div v-if="card.tags?.length" class="mt-4 flex flex-wrap gap-1.5">
+            <a-tag v-for="tag in card.tags" :key="tag" class="m-0"> #{{ tag }} </a-tag>
+          </div>
+          <div class="mt-6">
+            <h3 class="text-sm font-bold text-gray-500 mb-2 flex items-center gap-2">
+              <FileOutlined /> {{ t('knowledge.card.sourceFile') }}
+            </h3>
+            <a-list
+              v-if="card.source_files?.length"
+              size="small"
+              :data-source="card.source_files"
+              class="bg-white border rounded"
+            >
+              <template #renderItem="{ item }">
+                <a-list-item>
+                  <div class="flex items-center gap-2 cursor-pointer text-blue-600 hover:underline">
+                    <FileOutlined />
+                    <span>{{ item.name }}</span>
+                  </div>
+                </a-list-item>
+              </template>
+            </a-list>
+            <a-empty v-else :description="t('knowledge.card.noSourceFile')" />
+          </div>
+        </template>
+
+        <a-tabs v-else v-model:active-key="activeTab">
           <a-tab-pane key="content" :tab="t('knowledge.card.tabContent')">
             <div class="p-4 bg-gray-50 rounded-lg min-h-[400px]">
               <div
@@ -54,7 +86,11 @@
                   {{ t('knowledge.card.exitPreview') }}
                 </a-button>
               </div>
+              <!-- eslint-disable-next-line vue/no-v-html -- marked + DOMPurify -->
               <div class="markdown-body" v-html="renderedContent"></div>
+            </div>
+            <div v-if="card.tags?.length" class="mt-4 flex flex-wrap gap-1.5">
+              <a-tag v-for="tag in card.tags" :key="tag" class="m-0"> #{{ tag }} </a-tag>
             </div>
 
             <div class="mt-6">
@@ -93,6 +129,12 @@
 
           <a-tab-pane key="info" :tab="t('knowledge.card.tabInfo')">
             <div class="p-4 space-y-4">
+              <div class="flex justify-between gap-3 border-b pb-2">
+                <span class="text-gray-500 shrink-0">{{ t('knowledge.card.columnTitle') }}</span>
+                <span class="font-medium text-(--color-text-base) text-right wrap-break-word">{{
+                  card.title
+                }}</span>
+              </div>
               <div class="flex justify-between border-b pb-2">
                 <span class="text-gray-500">{{ t('knowledge.card.cardId') }}</span>
                 <span class="font-mono">{{ card.id }}</span>
@@ -116,7 +158,7 @@
               <div class="flex flex-col gap-2">
                 <span class="text-gray-500">{{ t('knowledge.card.tagsLabel') }}</span>
                 <div class="flex flex-wrap gap-1">
-                  <a-tag v-for="tag in card.tags" :key="tag">{{ tag }}</a-tag>
+                  <a-tag v-for="tag in card.tags" :key="tag">#{{ tag }}</a-tag>
                 </div>
               </div>
             </div>
@@ -147,12 +189,19 @@ import dayjs from 'dayjs'
 
 const { t } = useI18n()
 
-const props = defineProps<{
-  open: boolean
-  cardId: string | null
-  ownerType: OwnerType
-  ownerId: string
-}>()
+const props = withDefaults(
+  defineProps<{
+    open: boolean
+    cardId: string | null
+    ownerType: OwnerType
+    ownerId: string
+    /** 知识库等只读场景：无上下线、仅正文与溯源，无版本/信息 Tab */
+    readonlyPreview?: boolean
+  }>(),
+  {
+    readonlyPreview: false,
+  }
+)
 
 const emit = defineEmits<{
   (e: 'update:open', value: boolean): void
@@ -174,12 +223,13 @@ const renderedContent = computed(() => {
 const fetchCardDetails = async (id: string) => {
   loading.value = true
   try {
-    const [cardData, versionsData] = await Promise.all([
-      getKnowledgeCardDetail(props.ownerType, props.ownerId, id),
-      getKnowledgeCardVersions(props.ownerType, props.ownerId, id),
-    ])
+    const cardData = await getKnowledgeCardDetail(props.ownerType, props.ownerId, id)
     card.value = cardData
-    versions.value = versionsData
+    if (props.readonlyPreview) {
+      versions.value = []
+    } else {
+      versions.value = await getKnowledgeCardVersions(props.ownerType, props.ownerId, id)
+    }
   } catch (err) {
     console.error('Fetch card failed:', err)
     message.error(t('knowledge.card.fetchDetailFailed'))

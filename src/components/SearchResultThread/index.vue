@@ -45,7 +45,7 @@
               class="mt-4 pt-4 border-t border-(--color-border)"
             >
               <div
-                class="kb-section-title flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-2.5"
+                class="kb-section-title flex items-center gap-1.5 text-xs font-semibold text-(--color-text-secondary) mb-2.5"
               >
                 <LinkOutlined class="text-primary text-sm" />
                 <span>{{ t('knowledgeSearch.citationLabel') }}</span>
@@ -66,45 +66,34 @@
               class="mt-4 pt-4 border-t border-(--color-border)"
             >
               <div
-                class="kb-section-title flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-3"
+                class="kb-section-title flex items-center gap-1.5 text-xs font-semibold text-(--color-text-secondary) mb-3"
               >
                 <IdcardOutlined class="text-primary text-sm" />
                 <span>{{ t('knowledgeSearch.knowledgeCardHitsTitle') }}</span>
               </div>
-              <ul class="kb-card-hits list-none space-y-2.5 m-0 p-0">
+              <ul class="kb-card-hits list-none space-y-3 m-0 p-0" role="list">
                 <li
                   v-for="(citation, idx) in msg.citations"
                   :key="`card-${citation.id}`"
-                  class="kb-card-hit-item group/card rounded-xl border border-(--color-border) bg-(--color-bg-layout) pl-3 pr-3 py-3 shadow-sm transition-all duration-200 hover:border-primary hover:shadow-md"
+                  role="listitem"
+                  class="kb-card-hit-item rounded-lg border border-(--color-border) bg-(--color-bg-container) p-3 shadow-sm transition-all duration-200 hover:border-primary hover:shadow-md"
                 >
-                  <div class="flex items-stretch gap-3">
-                    <div
-                      class="kb-card-hit-index flex w-10 shrink-0 flex-col items-center justify-center rounded-lg bg-primary text-xs font-bold text-white shadow-sm"
+                  <div class="flex items-start justify-between gap-2 mb-2">
+                    <h4
+                      class="kb-card-hit-title m-0 min-w-0 flex-1 font-medium text-sm leading-snug text-(--color-text-base) line-clamp-2"
+                      :title="`${idx + 1}. ${citation.title}`"
                     >
-                      {{ idx + 1 }}
-                    </div>
-                    <div class="min-w-0 flex-1 pt-0.5">
-                      <div class="flex flex-wrap items-center gap-2 gap-y-1">
-                        <span class="font-semibold text-gray-900 text-sm leading-snug">{{
-                          citation.title
-                        }}</span>
-                        <a-tag
-                          v-if="cardTypeBadge(citation.cardType)"
-                          :color="cardTypeBadge(citation.cardType)!.color"
-                          class="text-xs m-0 inline-flex items-center gap-0.5"
-                        >
-                          <TagOutlined class="text-[10px] opacity-80" />
-                          {{ cardTypeBadge(citation.cardType)!.label }}
-                        </a-tag>
-                      </div>
-                      <div class="mt-2 flex gap-2">
-                        <FileTextOutlined
-                          class="mt-0.5 shrink-0 text-gray-400 text-sm group-hover/card:text-primary transition-colors"
-                        />
-                        <CitationPreviewHtml :content="citation.content" variant="card" />
-                      </div>
-                    </div>
+                      {{ idx + 1 }}. {{ citation.title }}
+                    </h4>
+                    <span
+                      v-if="citation.cardType"
+                      class="shrink-0 px-1.5 py-0.5 text-[10px] font-medium border rounded uppercase tracking-wide"
+                      :class="cardTypeBadgeClass(citation.cardType)"
+                    >
+                      {{ cardTypeLabel(citation.cardType) }}
+                    </span>
                   </div>
+                  <CitationPreviewHtml :content="citation.content" variant="skill" />
                 </li>
               </ul>
             </div>
@@ -115,7 +104,7 @@
               class="mt-4 pt-4 border-t border-(--color-border)"
             >
               <div
-                class="kb-section-title flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-3"
+                class="kb-section-title flex items-center gap-1.5 text-xs font-semibold text-(--color-text-secondary) mb-3"
               >
                 <FileSearchOutlined class="text-primary text-sm" />
                 <span>{{ t('knowledgeSearch.matchedFilesLabel') }}</span>
@@ -209,8 +198,6 @@ import {
   FileOutlined,
   IdcardOutlined,
   LinkOutlined,
-  TagOutlined,
-  FileTextOutlined,
   FileSearchOutlined,
   RightOutlined,
 } from '@ant-design/icons-vue'
@@ -243,11 +230,33 @@ const handleQuestionSelect = (question: string) => {
   emit('question-select', question)
 }
 
-function cardTypeBadge(cardType?: string): { color: string; label: string } | null {
-  if (!cardType) return null
-  const known = CARD_TYPE_CONFIG[cardType as CardType]
-  if (known) return known
-  return { color: 'default', label: cardType }
+/** 与 SkillPanel 引用卡类型徽标一致 */
+const CARD_TYPE_BADGE_CLASSES: Record<CardType, string> = {
+  evidence:
+    'bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800',
+  rule: 'bg-orange-50 text-orange-600 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800',
+  experience:
+    'bg-green-50 text-green-600 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800',
+}
+
+const CARD_TYPE_I18N_KEYS: Record<CardType, string> = {
+  evidence: 'knowledge.card.typeEvidence',
+  rule: 'knowledge.card.typeRule',
+  experience: 'knowledge.card.typeExperience',
+}
+
+function cardTypeBadgeClass(cardType: string): string {
+  if (cardType in CARD_TYPE_CONFIG) {
+    return CARD_TYPE_BADGE_CLASSES[cardType as CardType]
+  }
+  return 'bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700'
+}
+
+function cardTypeLabel(cardType: string): string {
+  if (cardType in CARD_TYPE_I18N_KEYS) {
+    return t(CARD_TYPE_I18N_KEYS[cardType as CardType])
+  }
+  return cardType.toUpperCase()
 }
 
 function formatRelevancePercent(score: number): string {
@@ -331,9 +340,5 @@ watch(
 <style scoped>
 .kb-user-bubble {
   background: var(--color-primary);
-}
-
-.kb-card-hit-index {
-  min-height: 3.5rem;
 }
 </style>

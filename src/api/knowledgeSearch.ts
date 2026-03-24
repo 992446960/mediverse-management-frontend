@@ -99,11 +99,13 @@ export const knowledgeSearchApi = {
   },
 
   /**
-   * 查询搜索历史
+   * 查询搜索历史（不传 limit 时由后端返回全部；若后端分页可传 limit）
    * GET /knowledge-qa/history
    */
   getHistory: (params?: { limit?: number }) => {
-    return request.get<HistoryItem[]>('/knowledge-qa/history', { params })
+    return request.get<HistoryItem[]>('/knowledge-qa/history', {
+      params: params?.limit != null ? { limit: params.limit } : undefined,
+    })
   },
 
   /** 将 API 响应转为前端 assistant 消息格式 */
