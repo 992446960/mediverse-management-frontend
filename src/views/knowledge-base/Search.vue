@@ -3,10 +3,22 @@
     <div class="flex-1 flex flex-col h-full min-h-0 overflow-hidden bg-white">
       <!-- Header -->
       <div
-        class="h-14 border-b border-gray-200 flex items-center justify-between px-6 bg-white shrink-0"
+        class="h-14 border-b border-gray-200 flex items-center justify-between gap-3 px-6 bg-white shrink-0"
       >
-        <div class="font-medium text-gray-900 truncate">
-          {{ headerTitle }}
+        <div class="flex items-center gap-2 min-w-0 flex-1">
+          <a-button
+            type="link"
+            class="kb-search-back-btn shrink-0 text-gray-500 hover:text-primary"
+            @click="goBackToKnowledgeBase"
+          >
+            <template #icon>
+              <ArrowLeftOutlined />
+            </template>
+            {{ t('common.back') }}
+          </a-button>
+          <div class="font-medium text-gray-900 truncate">
+            {{ headerTitle }}
+          </div>
         </div>
         <div class="text-xs text-gray-500">
           {{
@@ -73,7 +85,7 @@ import { ref, watch, nextTick, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
-import { SendOutlined, PauseOutlined } from '@ant-design/icons-vue'
+import { ArrowLeftOutlined, SendOutlined, PauseOutlined } from '@ant-design/icons-vue'
 import SearchResultThread from '@/components/SearchResultThread/index.vue'
 import { useKnowledgeSearchStore } from '@/stores/knowledgeSearch'
 
@@ -129,6 +141,10 @@ const stopGeneration = () => {
   store.stopGeneration()
 }
 
+const goBackToKnowledgeBase = () => {
+  router.push({ name: 'KnowledgeBase' })
+}
+
 watch(
   () => ({
     name: route.name,
@@ -167,6 +183,12 @@ watch(
 </script>
 
 <style scoped>
+/* 去掉 link 按钮默认内边距，避免与标题区不对齐 */
+.kb-search-back-btn.ant-btn {
+  padding-left: 0 !important;
+  height: auto !important;
+  line-height: inherit;
+}
 .kb-search-input-wrap :deep(.kb-search-textarea.ant-input),
 .kb-search-input-wrap :deep(.kb-search-textarea.ant-input:hover) {
   border-color: var(--color-border);
