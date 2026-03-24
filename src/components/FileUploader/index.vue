@@ -48,22 +48,27 @@
       <div
         v-for="item in queue"
         :key="item.uid"
-        class="flex items-center gap-3 rounded-lg border border-slate-200 dark:border-slate-700 p-3"
+        class="flex flex-wrap items-center gap-3 rounded-lg border border-slate-200 dark:border-slate-700 p-3"
       >
         <span class="min-w-0 flex-1 truncate text-sm" :title="item.fileName">{{
           item.fileName
         }}</span>
         <a-tag :color="queueStatusColor(item.status)">{{ queueStatusLabel(item.status) }}</a-tag>
-        <div v-if="item.status === 'uploading'" class="w-24">
+        <div v-if="item.status === 'uploading'" class="w-24 shrink-0">
           <a-progress :percent="item.percent" size="small" />
         </div>
-        <span
-          v-if="item.status === 'fail' && item.error"
-          class="max-w-32 truncate text-xs text-red-500"
-          :title="item.error"
-        >
-          {{ item.error }}
-        </span>
+        <template v-if="item.status === 'fail'">
+          <span
+            v-if="item.error"
+            class="min-w-0 flex-1 text-xs leading-snug text-red-500"
+            :title="item.error"
+          >
+            {{ item.error }}
+          </span>
+          <a-button type="link" size="small" class="shrink-0 px-0" @click="retryItem(item)">
+            {{ t('knowledge.retry') }}
+          </a-button>
+        </template>
       </div>
     </div>
   </div>
@@ -77,6 +82,7 @@ import { uploadFile } from '@/api/knowledge'
 import type { OwnerType, DirectoryNode } from '@/types/knowledge'
 import type { UploadFileResult } from '@/types/knowledge'
 import type { UploadQueueItem } from './types'
+import { getUploadErrorMessage } from '@/utils/uploadErrorMessage'
 
 const ACCEPT = '.pdf,.txt,.csv,.json,.jsonl,.md,.xlsx,.docx'
 const MAX_SIZE_DEFAULT = 50 * 1024 * 1024
@@ -201,6 +207,15 @@ function noopRequest() {
   // 使用 customRequest 阻止默认上传，实际上传由 processQueue 驱动
 }
 
+function retryItem(item: UploadQueueItem) {
+  if (item.status !== 'fail') return
+  item.status = 'pending'
+  item.error = undefined
+  item.percent = 0
+  item.result = undefined
+  processQueue()
+}
+
 /** 启动单个文件上传，完成后调用 processQueue 补充下一批 */
 function startOneUpload(item: UploadQueueItem) {
   item.status = 'uploading'
@@ -214,6 +229,7 @@ function startOneUpload(item: UploadQueueItem) {
   const dirId =
     uploadMode.value === 'manual' && selectedDirId.value ? selectedDirId.value : undefined
   uploadFile(props.ownerType, props.ownerId, item.file, dirId, {
+    skipErrorToast: true,
     onUploadProgress: (e) => {
       if (e.total && e.total > 0) item.percent = Math.round((e.loaded / e.total) * 100)
     },
@@ -224,9 +240,9 @@ function startOneUpload(item: UploadQueueItem) {
       item.result = result
       processQueue()
     })
-    .catch((err: Error) => {
+    .catch((err: unknown) => {
       item.status = 'fail'
-      item.error = err.message || t('knowledge.uploadFailed')
+      item.error = getUploadErrorMessage(err, t)
       processQueue()
     })
     .finally(() => {
