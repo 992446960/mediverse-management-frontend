@@ -1,6 +1,6 @@
 <template>
   <div
-    class="search-result-thread flex-1 overflow-y-auto p-6 space-y-6 bg-(--color-bg-base) min-h-0"
+    class="search-result-thread flex-1 overflow-y-auto p-6 space-y-6 bg-(--color-bg-container) min-h-0"
   >
     <div
       v-if="messages.length === 0"

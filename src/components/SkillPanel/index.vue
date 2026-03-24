@@ -111,12 +111,12 @@ const goBack = () => {
 
 <template>
   <div
-    class="skill-panel h-full flex flex-col bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800"
+    class="skill-panel h-full flex flex-col border-l border-gray-200 dark:border-gray-800"
   >
     <!-- List View -->
     <template v-if="!selectedSkill">
       <div
-        class="flex items-center gap-2 px-4 py-3 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shrink-0"
+        class="skill-panel__header flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-800 shrink-0"
       >
         <AppstoreOutlined class="text-gray-600 dark:text-gray-300" />
         <span class="font-medium text-sm text-gray-800 dark:text-gray-200">{{
@@ -169,7 +169,7 @@ const goBack = () => {
     <!-- Execute View -->
     <template v-else>
       <div
-        class="flex items-center gap-2 px-4 py-3 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shrink-0"
+        class="skill-panel__header flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-800 shrink-0"
       >
         <a-button type="text" size="small" class="mr-1" @click="goBack">
           <template #icon><ArrowLeftOutlined /></template>
@@ -179,7 +179,7 @@ const goBack = () => {
         </span>
       </div>
 
-      <div class="flex-1 overflow-y-auto p-4 bg-white dark:bg-gray-900">
+      <div class="skill-panel__execute-body flex-1 overflow-y-auto p-4">
         <!-- Thinking Process Timeline -->
         <div v-if="thinkingProcess.length > 0" class="mb-6">
           <div class="relative pl-6">
@@ -277,6 +277,12 @@ const goBack = () => {
 <style scoped>
 .skill-panel {
   width: 100%;
+  background: var(--color-bg-container);
+}
+
+.skill-panel__header,
+.skill-panel__execute-body {
+  background: var(--color-bg-container);
 }
 
 /* 与聊天窗口 thinking-process-step-dot 颜色一致 */

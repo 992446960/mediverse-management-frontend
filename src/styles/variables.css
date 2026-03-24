@@ -113,9 +113,9 @@
   /* 参考设计 Dark Mode 背景（slate-950 系列）*/
   --color-bg-base:        #020617;
   --color-bg-layout:      #020617;
-  --color-bg-container:   #111827;
+  --color-bg-container:   #141414;
   --color-bg-elevated:    #1E293B;
-  --color-bg-sidebar:     #00132B;
+  --color-bg-sidebar:     #141414;
   --color-bg-sidebar-border: #1E293B;
 
   --color-text-base:        #F1F5F9;

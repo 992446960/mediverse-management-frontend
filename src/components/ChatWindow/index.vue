@@ -130,7 +130,7 @@ watch(
 </script>
 
 <template>
-  <div class="chat-window flex flex-col h-full bg-white dark:bg-gray-900">
+  <div class="chat-window flex flex-col h-full">
     <!-- Header（数字医生体验页展示；分身测试页已有页标题，不重复展示） -->
     <div
       v-if="currentSession && !isTestMode"
@@ -220,6 +220,7 @@ watch(
 <style scoped>
 .chat-window {
   height: 100%;
+  background: var(--color-bg-container);
 }
 
 /* 已评价星星与 Rate 组件同色（antdv Rate 使用 yellow-6） */

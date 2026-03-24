@@ -96,7 +96,7 @@ async function handleRenameSubmit(title: string) {
 
 <template>
   <div
-    class="session-sidebar h-full flex flex-col bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800"
+    class="session-sidebar h-full flex flex-col border-r border-gray-200 dark:border-gray-800"
   >
     <div
       v-if="!isOnChatHome"
@@ -169,6 +169,7 @@ async function handleRenameSubmit(title: string) {
 <style scoped>
 .session-sidebar {
   transition: all 0.3s ease;
+  background: var(--color-bg-container);
 }
 
 .session-group-title {

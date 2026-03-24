@@ -27,7 +27,7 @@ onMounted(() => {
     </div>
 
     <!-- Center: Main Content (ChatWindow via router-view) -->
-    <div class="flex-1 overflow-visible bg-white dark:bg-gray-900 min-w-0 flex flex-col min-h-0">
+    <div class="chat-layout__center flex-1 overflow-visible min-w-0 flex flex-col min-h-0">
       <router-view />
     </div>
 
@@ -41,5 +41,9 @@ onMounted(() => {
 <style scoped>
 .chat-layout {
   max-height: var(--ant-layout-content-insert-height);
+}
+
+.chat-layout__center {
+  background: var(--color-bg-container);
 }
 </style>

@@ -279,7 +279,7 @@ const onFileChange = (e: Event) => {
 
 <template>
   <div
-    class="message-input p-4 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900"
+    class="message-input p-4 border-t border-gray-100 dark:border-gray-800"
   >
     <!-- Attachments Preview -->
     <Attachments
@@ -362,6 +362,10 @@ const onFileChange = (e: Event) => {
 </template>
 
 <style scoped>
+.message-input {
+  background: var(--color-bg-container);
+}
+
 .message-input :deep(.ant-sender) {
   border-radius: 12px;
 }
