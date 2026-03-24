@@ -6,6 +6,7 @@ import { Prompts } from 'ant-design-x-vue'
 import {
   BulbOutlined,
   RocketOutlined,
+  RobotOutlined,
   SmileOutlined,
   StarOutlined,
   StarFilled,
@@ -173,16 +174,10 @@ watch(
       <!-- Empty State / Prompts -->
       <div v-else class="h-full flex flex-col items-center justify-center p-8 text-center">
         <div class="mb-8 flex flex-col items-center">
-          <div class="mb-6 p-4 h-full rounded-2xl bg-sky-50 dark:bg-sky-900/20 text-primary">
-            <svg width="48" height="48" viewBox="0 0 40 40" fill="none">
-              <rect width="40" height="40" rx="10" fill="currentColor" fill-opacity="0.12" />
-              <path
-                d="M20 8v24M8 20h24"
-                stroke="currentColor"
-                stroke-width="3.5"
-                stroke-linecap="round"
-              />
-            </svg>
+          <div
+            class="mb-6 flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-sky-50 dark:bg-sky-900/20 text-primary"
+          >
+            <RobotOutlined class="text-[48px] leading-none" />
           </div>
           <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">
             {{ t('chat.emptyMessages') }}
@@ -193,7 +188,8 @@ watch(
         <Prompts
           :items="initialPrompts"
           :title="t('chat.tryAsking')"
-          class="max-w-md w-full"
+          wrap
+          class="chat-empty-prompts max-w-3xl w-full"
           @item-click="handlePromptClick"
         />
       </div>
@@ -226,5 +222,28 @@ watch(
 /* 已评价星星与 Rate 组件同色（antdv Rate 使用 yellow-6） */
 .rated-star :deep(.anticon) {
   color: var(--ant-yellow-6, #fadb14);
+}
+
+/* 空状态：快捷提问标题与条目整体、文案居中对齐 */
+.chat-empty-prompts :deep(.ant-prompts-title) {
+  width: 100%;
+  text-align: center;
+}
+
+.chat-empty-prompts :deep(.ant-prompts-list) {
+  justify-content: center;
+}
+
+.chat-empty-prompts :deep(.ant-prompts-item) {
+  justify-content: center;
+  align-items: center;
+}
+
+.chat-empty-prompts :deep(.ant-prompts-content) {
+  align-items: center;
+}
+
+.chat-empty-prompts :deep(.ant-prompts-label) {
+  text-align: center;
 }
 </style>
