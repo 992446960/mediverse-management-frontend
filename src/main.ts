@@ -32,6 +32,8 @@ async function enableMocking() {
   }
 }
 
-enableMocking().then(() => {
+enableMocking().then(async () => {
+  // 初始导航（含权限守卫重定向）完成后再挂载，避免首帧 route.matched 为空时先渲染 MainLayout 空壳
+  await router.isReady()
   app.mount('#app')
 })
