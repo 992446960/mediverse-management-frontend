@@ -84,6 +84,7 @@ const displaySteps = computed(() =>
   cursor: pointer;
   color: var(--color-text-secondary);
   font-size: 14px;
+  line-height: 22px;
 }
 
 .thinking-process-header:hover {
@@ -91,7 +92,12 @@ const displaySteps = computed(() =>
 }
 
 .thinking-process-header-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
   font-size: 16px;
+  line-height: 1;
   color: var(--color-primary);
 }
 
@@ -118,6 +124,7 @@ const displaySteps = computed(() =>
 
 .thinking-process-step {
   display: flex;
+  align-items: flex-start;
   gap: 12px;
   position: relative;
 }
@@ -129,6 +136,8 @@ const displaySteps = computed(() =>
 .thinking-process-step-icon {
   position: relative;
   flex-shrink: 0;
+  /* 16px 圆点与标题行（约 22px 行高）视觉中线对齐 */
+  padding-top: 3px;
 }
 
 .thinking-process-step-dot {
@@ -165,7 +174,7 @@ const displaySteps = computed(() =>
 .thinking-process-step-line {
   position: absolute;
   left: 7px;
-  top: 16px;
+  top: 19px;
   bottom: -16px;
   width: 2px;
   background: var(--tp-border);
@@ -180,6 +189,7 @@ const displaySteps = computed(() =>
   font-weight: 600;
   color: var(--color-text-base);
   font-size: 14px;
+  line-height: 22px;
 }
 
 .thinking-process-step-desc {

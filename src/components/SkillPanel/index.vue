@@ -289,7 +289,7 @@ const goBack = () => {
 .skill-panel-step-icon {
   position: absolute;
   left: -21px;
-  top: 4px;
+  top: 7px;
   flex-shrink: 0;
 }
 
@@ -327,7 +327,7 @@ const goBack = () => {
 .skill-panel-step-line {
   position: absolute;
   left: -15px;
-  top: 20px;
+  top: 23px;
   bottom: -20px;
   width: 2px;
   background: var(--color-border);
