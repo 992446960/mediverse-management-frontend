@@ -67,7 +67,9 @@ export function uploadFile(
   }
   const form = new FormData()
   form.append('files', file)
-  if (dirId) form.append('dir_id', dirId)
+  if (dirId !== undefined && dirId !== '') {
+    form.append('dir_id', String(dirId))
+  }
   return request
     .post<
       UploadFileResult | UploadFileResult[]

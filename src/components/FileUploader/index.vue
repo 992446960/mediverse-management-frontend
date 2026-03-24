@@ -226,9 +226,9 @@ function startOneUpload(item: UploadQueueItem) {
     item.percent = Math.min(90, item.percent + 8)
   }, 150)
 
-  const dirId =
-    uploadMode.value === 'manual' && selectedDirId.value ? selectedDirId.value : undefined
-  uploadFile(props.ownerType, props.ownerId, item.file, dirId, {
+  const uploadDirId =
+    uploadMode.value === 'manual' ? (selectedDirId.value ?? undefined) : props.dirId
+  uploadFile(props.ownerType, props.ownerId, item.file, uploadDirId, {
     skipErrorToast: true,
     onUploadProgress: (e) => {
       if (e.total && e.total > 0) item.percent = Math.round((e.loaded / e.total) * 100)

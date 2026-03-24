@@ -57,6 +57,7 @@
         ref="fileUploaderRef"
         :owner-type="props.ownerType"
         :owner-id="props.ownerId"
+        :dir-id="uploadContextDirId"
         :queue="uploadQueue"
         :tree-data="treeData"
         @add-to-queue="addToQueue"
@@ -448,6 +449,16 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
   },
 ])
 
+/** 与后端约定：未分类目录查询传 dir_id = -1（query 中为字符串 "-1"） */
+function resolveDirIdForFileListApi(selectedKey: string): string | undefined {
+  if (selectedKey === '__all__') return undefined
+  if (selectedKey === '__uncategorized__') return '-1'
+  return selectedKey
+}
+
+/** 上传时与当前侧栏一致：未分类传 -1 */
+const uploadContextDirId = computed(() => resolveDirIdForFileListApi(selectedDirId.value))
+
 // ----- 数据拉取 -----
 async function loadData() {
   const params = pageFilterRef.value?.filteParams ?? {}
@@ -459,7 +470,7 @@ async function loadData() {
     statusVal === 'processing' || statusVal === 'done' || statusVal === 'failed'
       ? (statusVal as FileStatus)
       : undefined
-  const dirId = selectedDirId.value === '__all__' ? undefined : selectedDirId.value
+  const dirId = resolveDirIdForFileListApi(selectedDirId.value)
 
   loading.value = true
   try {
