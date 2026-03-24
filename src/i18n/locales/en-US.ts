@@ -159,6 +159,8 @@ export default {
     notLoggedIn: 'Not logged in',
   },
   menu: {
+    login: 'Login',
+    changePassword: 'Change Password',
     logout: 'Logout',
     dashboard: 'Dashboard',
     profile: 'Profile',

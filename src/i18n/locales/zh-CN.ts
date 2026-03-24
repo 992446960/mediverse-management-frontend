@@ -159,6 +159,8 @@ export default {
     notLoggedIn: '未登录',
   },
   menu: {
+    login: '登录',
+    changePassword: '修改密码',
     logout: '退出登录',
     dashboard: '仪表盘',
     profile: '个人资料',

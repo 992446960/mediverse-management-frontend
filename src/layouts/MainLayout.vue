@@ -11,8 +11,8 @@
       }"
     >
       <div class="logo">
-        <span v-if="!collapsed">Mediverse</span>
-        <span v-else>M</span>
+        <img class="logo__img" :src="logoUrl" alt="" width="28" height="28" />
+        <span v-if="!collapsed" class="logo__text">Mediverse</span>
       </div>
       <a-menu
         v-model:selected-keys="selectedKeys"
@@ -47,7 +47,11 @@
         <div class="header-right">
           <ThemeSwitcher />
           <LocaleSwitcher />
-          <a-dropdown :trigger="['click']" overlay-class-name="user-menu-overlay">
+          <a-dropdown
+            :trigger="['click']"
+            :min-overlay-width-match-trigger="false"
+            overlay-class-name="user-menu-overlay"
+          >
             <div class="user-dropdown-trigger group">
               <a-avatar
                 :src="user?.avatar_url ? toAbsoluteFileUrl(user.avatar_url) : undefined"
@@ -101,6 +105,7 @@ import {
 } from '@ant-design/icons-vue'
 import { toAbsoluteFileUrl } from '@/api/upload'
 import type { ItemType } from 'ant-design-vue'
+import logoUrl from '@/assets/logo.svg?url'
 
 const collapsed = ref(false)
 const selectedKeys = ref<string[]>([])
@@ -223,17 +228,30 @@ watch(
 }
 
 .logo {
-  height: 32px;
+  min-height: 32px;
   margin: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 10px;
   color: var(--color-primary);
   font-weight: 700;
   font-size: 18px;
   letter-spacing: 0.5px;
   border-bottom: 1px solid var(--color-border-secondary);
   padding-bottom: 16px;
+}
+
+.logo__img {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  display: block;
+}
+
+.logo__text {
+  white-space: nowrap;
 }
 
 .header {
@@ -353,6 +371,17 @@ watch(
 </style>
 
 <style>
+/* 用户菜单：关闭「与触发器等宽」后，由内容决定宽度；略设 max-width 防溢出 */
+.user-menu-overlay.ant-dropdown {
+  width: max-content;
+  max-width: min(100vw - var(--spacing-xl), 20rem);
+}
+
+.user-menu-overlay .ant-dropdown-menu {
+  width: max-content;
+  min-width: unset;
+}
+
 .user-menu-overlay .ant-dropdown-menu-item {
   .user-menu-item-text {
     white-space: nowrap;

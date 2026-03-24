@@ -5,6 +5,7 @@ import { useThemeStore } from '@/stores/theme'
 import { message } from 'ant-design-vue'
 import { UserOutlined, LockOutlined } from '@ant-design/icons-vue'
 import ThemeSwitcher from '@/components/ThemeSwitcher/index.vue'
+import logoUrl from '@/assets/logo.svg?url'
 
 const LOGIN_REMEMBER_KEY = 'login_remember'
 
@@ -85,21 +86,7 @@ const handleLogin = async () => {
     <div class="login-box">
       <div class="login-header">
         <div class="brand-icon" aria-hidden="true">
-          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-            <rect
-              width="40"
-              height="40"
-              rx="10"
-              fill="var(--login-brand-color)"
-              fill-opacity="0.12"
-            />
-            <path
-              d="M20 8v24M8 20h24"
-              stroke="var(--login-brand-color)"
-              stroke-width="3.5"
-              stroke-linecap="round"
-            />
-          </svg>
+          <img class="brand-icon__img" :src="logoUrl" alt="" width="40" height="40" />
         </div>
         <h2 class="title">Mediverse</h2>
         <p class="subtitle">{{ t('auth.subtitle') }}</p>
@@ -260,6 +247,13 @@ const handleLogin = async () => {
   display: flex;
   justify-content: center;
   margin-bottom: 16px;
+}
+
+.brand-icon__img {
+  display: block;
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
 }
 
 .title {
