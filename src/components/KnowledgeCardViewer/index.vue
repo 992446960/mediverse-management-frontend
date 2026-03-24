@@ -22,7 +22,7 @@
               }}</a-tag>
             </a-space>
           </div>
-          <div class="flex gap-2">
+          <div v-if="!readonlyPreview" class="flex gap-2">
             <a-button
               :type="card.online_status === 'online' ? 'default' : 'primary'"
               @click="handleStatusToggle"
@@ -40,9 +40,31 @@
           </div>
         </div>
 
-        <a-tabs v-model:active-key="activeTab">
+        <!-- 知识库入口：仅正文 + 溯源，无 Tab、无上下线 -->
+        <template v-if="readonlyPreview">
+          <div
+            class="p-4 bg-gray-50 rounded-lg min-h-[200px] max-h-[min(480px,calc(100vh-240px))] overflow-y-auto"
+          >
+            <!-- eslint-disable-next-line vue/no-v-html -- marked + DOMPurify -->
+            <div class="markdown-body" v-html="renderedContent"></div>
+          </div>
+          <div v-if="card.tags?.length" class="mt-4 flex flex-wrap gap-1.5">
+            <a-tag v-for="tag in card.tags" :key="tag" class="m-0"> #{{ tag }} </a-tag>
+          </div>
+          <div class="mt-6">
+            <AssociatedFilesList
+              :rows="sourceFileRows"
+              :opening-id="openingSourceFileId"
+              @open="openSourceFilePreview"
+            />
+          </div>
+        </template>
+
+        <a-tabs v-else v-model:active-key="activeTab">
           <a-tab-pane key="content" :tab="t('knowledge.card.tabContent')">
-            <div class="p-4 bg-gray-50 rounded-lg min-h-[400px]">
+            <div
+              class="p-4 bg-gray-50 rounded-lg min-h-[200px] max-h-[min(480px,calc(100vh-240px))] overflow-y-auto"
+            >
               <div
                 v-if="previewVersion"
                 class="mb-4 p-2 bg-blue-50 border border-blue-200 rounded text-blue-600 text-sm flex justify-between items-center"
@@ -54,31 +76,19 @@
                   {{ t('knowledge.card.exitPreview') }}
                 </a-button>
               </div>
+              <!-- eslint-disable-next-line vue/no-v-html -- marked + DOMPurify -->
               <div class="markdown-body" v-html="renderedContent"></div>
+            </div>
+            <div v-if="card.tags?.length" class="mt-4 flex flex-wrap gap-1.5">
+              <a-tag v-for="tag in card.tags" :key="tag" class="m-0"> #{{ tag }} </a-tag>
             </div>
 
             <div class="mt-6">
-              <h3 class="text-sm font-bold text-gray-500 mb-2 flex items-center gap-2">
-                <FileOutlined /> {{ t('knowledge.card.sourceFile') }}
-              </h3>
-              <a-list
-                v-if="card.source_files?.length"
-                size="small"
-                :data-source="card.source_files"
-                class="bg-white border rounded"
-              >
-                <template #renderItem="{ item }">
-                  <a-list-item>
-                    <div
-                      class="flex items-center gap-2 cursor-pointer text-blue-600 hover:underline"
-                    >
-                      <FileOutlined />
-                      <span>{{ item.name }}</span>
-                    </div>
-                  </a-list-item>
-                </template>
-              </a-list>
-              <a-empty v-else :description="t('knowledge.card.noSourceFile')" />
+              <AssociatedFilesList
+                :rows="sourceFileRows"
+                :opening-id="openingSourceFileId"
+                @open="openSourceFilePreview"
+              />
             </div>
           </a-tab-pane>
 
@@ -93,6 +103,12 @@
 
           <a-tab-pane key="info" :tab="t('knowledge.card.tabInfo')">
             <div class="p-4 space-y-4">
+              <div class="flex justify-between gap-3 border-b pb-2">
+                <span class="text-gray-500 shrink-0">{{ t('knowledge.card.columnTitle') }}</span>
+                <span class="font-medium text-(--color-text-base) text-right wrap-break-word">{{
+                  card.title
+                }}</span>
+              </div>
               <div class="flex justify-between border-b pb-2">
                 <span class="text-gray-500">{{ t('knowledge.card.cardId') }}</span>
                 <span class="font-mono">{{ card.id }}</span>
@@ -116,7 +132,7 @@
               <div class="flex flex-col gap-2">
                 <span class="text-gray-500">{{ t('knowledge.card.tagsLabel') }}</span>
                 <div class="flex flex-wrap gap-1">
-                  <a-tag v-for="tag in card.tags" :key="tag">{{ tag }}</a-tag>
+                  <a-tag v-for="tag in card.tags" :key="tag">#{{ tag }}</a-tag>
                 </div>
               </div>
             </div>
@@ -130,29 +146,51 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { FileOutlined, CloudUploadOutlined, CloudDownloadOutlined } from '@ant-design/icons-vue'
+import { CloudUploadOutlined, CloudDownloadOutlined } from '@ant-design/icons-vue'
 import type { KnowledgeCard, KnowledgeCardVersion, OwnerType } from '@/types/knowledge'
 import { CARD_TYPE_CONFIG, ONLINE_STATUS_CONFIG, AUDIT_STATUS_CONFIG } from '@/types/knowledge'
+import { getFileOriginalUrl } from '@/types/knowledge'
+import { stashKnowledgePreviewFile } from '@/utils/knowledgePreviewStash'
 import {
+  getFileList,
+  getFileListItemById,
   getKnowledgeCardDetail,
   getKnowledgeCardVersions,
   toggleKnowledgeCardStatus,
   rollbackKnowledgeCard,
 } from '@/api/knowledge'
+import { formatFileSize } from '@/utils/formatFileSize'
+import AssociatedFilesList from './AssociatedFilesList.vue'
 import VersionTimeline from './VersionTimeline.vue'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import dayjs from 'dayjs'
 
 const { t } = useI18n()
+const router = useRouter()
 
-const props = defineProps<{
-  open: boolean
-  cardId: string | null
-  ownerType: OwnerType
-  ownerId: string
-}>()
+/** 与 KnowledgeFiles / 知识库首页文件预览路由一致（个人/科室/机构） */
+const PREVIEW_ROUTE_NAMES: Record<'personal' | 'dept' | 'org', string> = {
+  personal: 'MyFilesPreview',
+  dept: 'DeptFilesPreview',
+  org: 'OrgFilesPreview',
+}
+
+const props = withDefaults(
+  defineProps<{
+    open: boolean
+    cardId: string | null
+    ownerType: OwnerType
+    ownerId: string
+    /** 知识库等只读场景：无上下线、仅正文与溯源，无版本/信息 Tab */
+    readonlyPreview?: boolean
+  }>(),
+  {
+    readonlyPreview: false,
+  }
+)
 
 const emit = defineEmits<{
   (e: 'update:open', value: boolean): void
@@ -161,6 +199,9 @@ const emit = defineEmits<{
 
 const activeTab = ref('content')
 const loading = ref(false)
+const openingSourceFileId = ref<string | null>(null)
+const sourceFileMeta = ref<Map<string, { file_size: number; file_type: string }>>(new Map())
+const sourceMetaLoading = ref(false)
 const card = ref<KnowledgeCard | null>(null)
 const versions = ref<KnowledgeCardVersion[]>([])
 const previewVersion = ref<KnowledgeCardVersion | null>(null)
@@ -171,15 +212,104 @@ const renderedContent = computed(() => {
   return DOMPurify.sanitize(html)
 })
 
+function inferFileExtension(name: string): string {
+  const m = name.match(/\.([^.]+)$/)
+  return m ? m[1].toLowerCase() : ''
+}
+
+/** 关联文件类型角标（与 AssociatedFilesList 中 assets/icons 一致） */
+function classifyThumbKind(ft: string): 'pdf' | 'doc' | 'xls' | 'ppt' | 'img' | 'txt' | 'default' {
+  const e = ft.toLowerCase()
+  if (e === 'pdf') return 'pdf'
+  if (['doc', 'docx'].includes(e)) return 'doc'
+  if (['xls', 'xlsx', 'csv'].includes(e)) return 'xls'
+  if (['ppt', 'pptx'].includes(e)) return 'ppt'
+  if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(e)) return 'img'
+  if (['txt', 'md', 'json', 'jsonl'].includes(e)) return 'txt'
+  return 'default'
+}
+
+const sourceFileRows = computed(() => {
+  const files = card.value?.source_files ?? []
+  return files.map((s) => {
+    const meta = s.id ? sourceFileMeta.value.get(s.id) : undefined
+    const ft = (meta?.file_type ?? s.file_type ?? inferFileExtension(s.name)).toLowerCase()
+    const thumbKind = classifyThumbKind(ft)
+    let sizeLabel: string
+    if (typeof s.file_size === 'number' && s.file_size >= 0) {
+      sizeLabel = formatFileSize(s.file_size)
+    } else if (meta != null) {
+      sizeLabel = formatFileSize(meta.file_size)
+    } else if (sourceMetaLoading.value) {
+      sizeLabel = t('common.loading')
+    } else {
+      sizeLabel = '—'
+    }
+    return { source: s, thumbKind, sizeLabel }
+  })
+})
+
+async function loadSourceFileMeta() {
+  const sf = card.value?.source_files
+  if (!sf?.length || props.ownerType === 'avatar') return
+  const ids = new Set(sf.map((s) => s.id).filter(Boolean) as string[])
+  if (ids.size === 0) return
+  sourceMetaLoading.value = true
+  try {
+    const meta = new Map<string, { file_size: number; file_type: string }>()
+    let page = 1
+    const pageSize = 100
+    for (let i = 0; i < 30; i++) {
+      const { items, total } = await getFileList(props.ownerType, props.ownerId, {
+        page,
+        page_size: pageSize,
+      })
+      for (const f of items) {
+        if (ids.has(f.id)) {
+          meta.set(f.id, { file_size: f.file_size, file_type: f.file_type })
+        }
+      }
+      if ([...ids].every((id) => meta.has(id))) break
+      if (page * pageSize >= total) break
+      page++
+    }
+    // 列表 id 与知识卡关联 id 不一致时，用文件名 keyword 再查一次（对齐真实环境）
+    for (const s of sf) {
+      if (!s.id || meta.has(s.id)) continue
+      const name = s.name?.trim()
+      if (!name) continue
+      const { items } = await getFileList(props.ownerType, props.ownerId, {
+        page: 1,
+        page_size: 80,
+        keyword: name,
+      })
+      const byId = items.find((f) => f.id === s.id)
+      if (byId) {
+        meta.set(s.id, { file_size: byId.file_size, file_type: byId.file_type })
+        continue
+      }
+      const byName = items.find((f) => f.file_name === name)
+      if (byName) {
+        meta.set(s.id, { file_size: byName.file_size, file_type: byName.file_type })
+      }
+    }
+
+    sourceFileMeta.value = meta
+  } finally {
+    sourceMetaLoading.value = false
+  }
+}
+
 const fetchCardDetails = async (id: string) => {
   loading.value = true
   try {
-    const [cardData, versionsData] = await Promise.all([
-      getKnowledgeCardDetail(props.ownerType, props.ownerId, id),
-      getKnowledgeCardVersions(props.ownerType, props.ownerId, id),
-    ])
+    const cardData = await getKnowledgeCardDetail(props.ownerType, props.ownerId, id)
     card.value = cardData
-    versions.value = versionsData
+    if (props.readonlyPreview) {
+      versions.value = []
+    } else {
+      versions.value = await getKnowledgeCardVersions(props.ownerType, props.ownerId, id)
+    }
   } catch (err) {
     console.error('Fetch card failed:', err)
     message.error(t('knowledge.card.fetchDetailFailed'))
@@ -194,13 +324,60 @@ watch(
     if (val && props.cardId) {
       activeTab.value = 'content'
       previewVersion.value = null
+      sourceFileMeta.value = new Map()
       fetchCardDetails(props.cardId)
     }
   }
 )
 
+watch(
+  () => [props.open, props.ownerType, props.ownerId, card.value?.id, card.value?.source_files],
+  async () => {
+    sourceFileMeta.value = new Map()
+    if (!props.open || !card.value?.source_files?.length) return
+    if (props.ownerType === 'avatar') return
+    await loadSourceFileMeta()
+  }
+)
+
 const handleClose = () => {
   emit('update:open', false)
+}
+
+async function openSourceFilePreview(item: KnowledgeCard['source_files'][number]) {
+  if (!item.id) {
+    message.warning(t('knowledge.missingFileId'))
+    return
+  }
+  if (props.ownerType === 'avatar') {
+    message.warning(t('knowledge.card.sourceFilePreviewUnsupported'))
+    return
+  }
+  const routeName = PREVIEW_ROUTE_NAMES[props.ownerType]
+  if (!routeName) return
+
+  openingSourceFileId.value = item.id
+  try {
+    const file = await getFileListItemById(props.ownerType, props.ownerId, item.id)
+    if (!file) {
+      message.error(t('knowledge.card.sourceFileNotFoundInWorkspace'))
+      return
+    }
+    if (!(getFileOriginalUrl(file) || file.parsed_file_url)) {
+      message.warning(t('knowledge.previewNoUrlHint'))
+      return
+    }
+    stashKnowledgePreviewFile(file)
+    emit('update:open', false)
+    router.push({
+      name: routeName,
+      params: { id: file.id },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- 与 KnowledgeFiles 预览一致
+      state: { file } as any,
+    })
+  } finally {
+    openingSourceFileId.value = null
+  }
 }
 
 const handlePreviewVersion = (v: KnowledgeCardVersion) => {

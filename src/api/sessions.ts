@@ -51,6 +51,11 @@ export function deleteChatSession(id: string): Promise<null> {
   return request.delete<null>(`/chat/sessions/${id}`)
 }
 
+/** 清空当前用户全部知识库搜索会话 */
+export function deleteKbSearchSessionsByUser(): Promise<null> {
+  return request.delete<null>('/chat/sessions/kb-search/by-user')
+}
+
 /** 3.1.4 重命名会话 */
 export function renameSession(id: string, payload: { title: string }): Promise<null> {
   return request.patch<null>(`/chat/sessions/${id}/title`, payload)

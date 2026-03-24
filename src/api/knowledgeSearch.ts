@@ -1,6 +1,6 @@
 import { request } from '@/api'
 
-/** API 返回的引用项（与 API 设计 4.2.1 一致） */
+/** API 返回的引用项（与 API 设计 4.2.1 一致；来源可与知识卡 `sources` 对齐） */
 export interface ApiCitation {
   index: number
   card_id: string
@@ -8,6 +8,12 @@ export interface ApiCitation {
   card_type: string
   relevance_score?: number
   content_preview: string
+  /** 关联原文件列表（与知识卡 API `sources` 一致） */
+  sources?: Array<{ id?: string; name?: string; file_name?: string } | string>
+  /** 与 `sources` 同义（部分接口字段名） */
+  source_files?: Array<{ id?: string; name?: string; file_name?: string } | string>
+  /** 单文件来源名（兼容） */
+  source_file_name?: string
 }
 
 /** API 返回的匹配文件 */
@@ -42,6 +48,9 @@ export interface Citation {
   url?: string
   /** API card_type，用于展示类型标签 */
   cardType?: string
+  /** 与知识卡 `sources` 对齐；有则展示「来源」 */
+  sources?: Array<{ id?: string; name?: string; file_name?: string } | string>
+  source_file_name?: string
 }
 
 export interface SearchSession {
@@ -72,11 +81,14 @@ export interface ThinkingStep {
 
 /** 将 API 引用转为前端 Citation */
 function mapCitation(api: ApiCitation): Citation {
+  const sources = api.sources ?? api.source_files
   return {
     id: api.card_id,
     title: api.card_title,
     content: api.content_preview,
     cardType: api.card_type,
+    sources,
+    source_file_name: api.source_file_name,
   }
 }
 
@@ -99,11 +111,13 @@ export const knowledgeSearchApi = {
   },
 
   /**
-   * 查询搜索历史
+   * 查询搜索历史（不传 limit 时由后端返回全部；若后端分页可传 limit）
    * GET /knowledge-qa/history
    */
   getHistory: (params?: { limit?: number }) => {
-    return request.get<HistoryItem[]>('/knowledge-qa/history', { params })
+    return request.get<HistoryItem[]>('/knowledge-qa/history', {
+      params: params?.limit != null ? { limit: params.limit } : undefined,
+    })
   },
 
   /** 将 API 响应转为前端 assistant 消息格式 */

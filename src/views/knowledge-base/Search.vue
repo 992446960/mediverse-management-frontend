@@ -1,14 +1,28 @@
 <template>
-  <div class="kb-search-page h-full flex flex-col overflow-hidden rounded-md">
-    <div class="flex-1 flex flex-col h-full min-h-0 overflow-hidden bg-white">
+  <div
+    class="kb-search-page h-full flex flex-col overflow-hidden rounded-md bg-(--color-bg-layout)"
+  >
+    <div class="flex-1 flex flex-col h-full min-h-0 overflow-hidden bg-(--color-bg-container)">
       <!-- Header -->
       <div
-        class="h-14 border-b border-gray-200 flex items-center justify-between px-6 bg-white shrink-0"
+        class="h-14 border-b border-(--color-border) flex items-center justify-between gap-3 px-6 bg-(--color-bg-container) shrink-0"
       >
-        <div class="font-medium text-gray-900 truncate">
-          {{ headerTitle }}
+        <div class="flex items-center gap-2 min-w-0 flex-1">
+          <a-button
+            type="link"
+            class="kb-search-back-btn shrink-0 text-(--color-text-secondary) hover:text-primary"
+            @click="goBackToKnowledgeBase"
+          >
+            <template #icon>
+              <ArrowLeftOutlined />
+            </template>
+            {{ t('common.back') }}
+          </a-button>
+          <div class="font-medium text-(--color-text-base) truncate">
+            {{ headerTitle }}
+          </div>
         </div>
-        <div class="text-xs text-gray-500">
+        <div class="text-xs text-(--color-text-tertiary)">
           {{
             route.name === 'KnowledgeBaseSearch' && currentSession?.updatedAt
               ? new Date(currentSession.updatedAt).toLocaleString()
@@ -25,7 +39,7 @@
       />
 
       <!-- Input Area（主题色边框 + 发送图标垂直居中） -->
-      <div class="p-4 border-t border-gray-200 bg-white shrink-0">
+      <div class="p-4 border-t border-(--color-border) bg-(--color-bg-container) shrink-0">
         <div class="kb-search-input-wrap relative max-w-4xl mx-auto">
           <a-textarea
             v-model:value="inputContent"
@@ -60,7 +74,7 @@
             </a-button>
           </div>
         </div>
-        <div class="text-center mt-2 text-xs text-gray-400">
+        <div class="text-center mt-2 text-xs text-(--color-text-tertiary)">
           {{ t('knowledgeSearch.aiDisclaimer') }}
         </div>
       </div>
@@ -73,7 +87,7 @@ import { ref, watch, nextTick, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
-import { SendOutlined, PauseOutlined } from '@ant-design/icons-vue'
+import { ArrowLeftOutlined, SendOutlined, PauseOutlined } from '@ant-design/icons-vue'
 import SearchResultThread from '@/components/SearchResultThread/index.vue'
 import { useKnowledgeSearchStore } from '@/stores/knowledgeSearch'
 
@@ -129,6 +143,10 @@ const stopGeneration = () => {
   store.stopGeneration()
 }
 
+const goBackToKnowledgeBase = () => {
+  router.push({ name: 'KnowledgeBase' })
+}
+
 watch(
   () => ({
     name: route.name,
@@ -167,9 +185,20 @@ watch(
 </script>
 
 <style scoped>
+/* 去掉 link 按钮默认内边距，避免与标题区不对齐 */
+.kb-search-back-btn.ant-btn {
+  padding-left: 0 !important;
+  height: auto !important;
+  line-height: inherit;
+}
 .kb-search-input-wrap :deep(.kb-search-textarea.ant-input),
 .kb-search-input-wrap :deep(.kb-search-textarea.ant-input:hover) {
   border-color: var(--color-border);
+  background-color: var(--color-bg-container);
+  color: var(--color-text-base);
+}
+.kb-search-input-wrap :deep(.kb-search-textarea.ant-input::placeholder) {
+  color: var(--color-text-placeholder);
 }
 .kb-search-input-wrap :deep(.kb-search-textarea.ant-input:focus) {
   border-color: var(--color-primary);

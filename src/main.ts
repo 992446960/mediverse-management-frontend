@@ -6,6 +6,13 @@ import router from './router'
 import { i18n } from './i18n'
 import { setupPermissionDirective } from './directives/permission'
 import './styles/index.css'
+import faviconUrl from '@/assets/logo.svg?url'
+
+const faviconLink = document.createElement('link')
+faviconLink.rel = 'icon'
+faviconLink.type = 'image/svg+xml'
+faviconLink.href = faviconUrl
+document.head.appendChild(faviconLink)
 
 const app = createApp(App)
 

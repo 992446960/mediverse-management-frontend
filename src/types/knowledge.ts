@@ -76,7 +76,15 @@ export interface KnowledgeCard {
   online_status: OnlineStatus
   audit_status: AuditStatus
   reference_count: number
-  source_files: { id: string; name: string }[]
+  /** 关联原文件；详情接口也可能以 `sources` 返回，由 API 层归一化 */
+  source_files: {
+    id: string
+    name: string
+    page_hint?: string
+    /** 详情若直接返回则可省去再拉文件列表 */
+    file_size?: number
+    file_type?: string
+  }[]
   owner_type: OwnerType
   owner_id: string
   created_by: string
@@ -114,6 +122,8 @@ export interface FileStatusResponse {
 export interface FileListParams extends PaginationParams {
   dir_id?: string
   status?: FileStatus
+  /** 文件名模糊搜索（与后端 / Mock 一致） */
+  keyword?: string
 }
 
 /** 知识卡列表请求参数 */

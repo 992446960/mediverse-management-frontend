@@ -1,8 +1,10 @@
 <template>
-  <div class="search-result-thread flex-1 overflow-y-auto p-6 space-y-6">
+  <div
+    class="search-result-thread flex-1 overflow-y-auto p-6 space-y-6 bg-(--color-bg-base) min-h-0"
+  >
     <div
       v-if="messages.length === 0"
-      class="flex flex-col items-center justify-center h-full text-gray-400"
+      class="flex flex-col items-center justify-center h-full text-(--color-text-tertiary)"
     >
       <SearchOutlined class="text-4xl mb-4" />
       <p>{{ t('knowledgeSearch.startNewSearch') }}</p>
@@ -11,17 +13,17 @@
     <div v-for="msg in messages" :key="msg.id" class="message-item group">
       <!-- User Message（与分身聊天气泡风格一致，使用主题色） -->
       <div v-if="msg.role === 'user'" class="flex justify-end mb-4">
-        <div
-          class="kb-user-bubble text-white px-4 py-2 rounded-2xl rounded-tr-sm max-w-[80%] shadow-sm"
-        >
+        <div class="kb-user-bubble px-4 py-2 rounded-2xl rounded-tr-sm max-w-[80%] shadow-sm">
           {{ msg.content }}
         </div>
       </div>
 
       <!-- Assistant Message（气泡宽度适应内容；复制按钮在气泡下方 hover 展示） -->
       <div v-else class="kb-assistant-row flex gap-3 mb-6 group">
-        <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
-          <RobotOutlined class="text-indigo-600" />
+        <div
+          class="kb-assistant-avatar w-8 h-8 rounded-full flex items-center justify-center shrink-0"
+        >
+          <RobotOutlined />
         </div>
 
         <div class="kb-assistant-content w-fit max-w-full flex flex-col">
@@ -32,7 +34,9 @@
           />
 
           <!-- Content 气泡 -->
-          <div class="bg-white border border-gray-100 rounded-2xl rounded-tl-sm p-4 shadow-sm">
+          <div
+            class="kb-assistant-bubble border border-(--color-border) rounded-2xl rounded-tl-sm p-4 shadow-sm"
+          >
             <BubbleRenderer
               :content="msg.content"
               :show-copy-button="false"
@@ -45,7 +49,7 @@
               class="mt-4 pt-4 border-t border-(--color-border)"
             >
               <div
-                class="kb-section-title flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-2.5"
+                class="kb-section-title flex items-center gap-1.5 text-xs font-semibold text-(--color-text-secondary) mb-2.5"
               >
                 <LinkOutlined class="text-primary text-sm" />
                 <span>{{ t('knowledgeSearch.citationLabel') }}</span>
@@ -66,45 +70,26 @@
               class="mt-4 pt-4 border-t border-(--color-border)"
             >
               <div
-                class="kb-section-title flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-3"
+                class="kb-section-title flex items-center gap-1.5 text-xs font-semibold text-(--color-text-secondary) mb-3"
               >
                 <IdcardOutlined class="text-primary text-sm" />
                 <span>{{ t('knowledgeSearch.knowledgeCardHitsTitle') }}</span>
               </div>
-              <ul class="kb-card-hits list-none space-y-2.5 m-0 p-0">
+              <ul class="kb-card-hits m-0 flex list-none flex-col gap-4 p-0" role="list">
                 <li
                   v-for="(citation, idx) in msg.citations"
                   :key="`card-${citation.id}`"
-                  class="kb-card-hit-item group/card rounded-xl border border-(--color-border) bg-(--color-bg-layout) pl-3 pr-3 py-3 shadow-sm transition-all duration-200 hover:border-primary hover:shadow-md"
+                  role="listitem"
+                  class="m-0 list-none"
                 >
-                  <div class="flex items-stretch gap-3">
-                    <div
-                      class="kb-card-hit-index flex w-10 shrink-0 flex-col items-center justify-center rounded-lg bg-primary text-xs font-bold text-white shadow-sm"
-                    >
-                      {{ idx + 1 }}
-                    </div>
-                    <div class="min-w-0 flex-1 pt-0.5">
-                      <div class="flex flex-wrap items-center gap-2 gap-y-1">
-                        <span class="font-semibold text-gray-900 text-sm leading-snug">{{
-                          citation.title
-                        }}</span>
-                        <a-tag
-                          v-if="cardTypeBadge(citation.cardType)"
-                          :color="cardTypeBadge(citation.cardType)!.color"
-                          class="text-xs m-0 inline-flex items-center gap-0.5"
-                        >
-                          <TagOutlined class="text-[10px] opacity-80" />
-                          {{ cardTypeBadge(citation.cardType)!.label }}
-                        </a-tag>
-                      </div>
-                      <div class="mt-2 flex gap-2">
-                        <FileTextOutlined
-                          class="mt-0.5 shrink-0 text-gray-400 text-sm group-hover/card:text-primary transition-colors"
-                        />
-                        <CitationPreviewHtml :content="citation.content" variant="card" />
-                      </div>
-                    </div>
-                  </div>
+                  <KnowledgeCardPreview
+                    :type="citation.cardType || 'evidence'"
+                    :title="citation.title"
+                    :title-prefix="`${idx + 1}. `"
+                    :source-file-name="formatSourcesLikeForPreview(citation)"
+                  >
+                    <CitationPreviewHtml :content="citation.content" variant="skill" />
+                  </KnowledgeCardPreview>
                 </li>
               </ul>
             </div>
@@ -115,7 +100,7 @@
               class="mt-4 pt-4 border-t border-(--color-border)"
             >
               <div
-                class="kb-section-title flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-3"
+                class="kb-section-title flex items-center gap-1.5 text-xs font-semibold text-(--color-text-secondary) mb-3"
               >
                 <FileSearchOutlined class="text-primary text-sm" />
                 <span>{{ t('knowledgeSearch.matchedFilesLabel') }}</span>
@@ -125,7 +110,7 @@
                   <a-tooltip :title="t('knowledgeSearch.openFilePreview')">
                     <button
                       type="button"
-                      class="kb-file-hit group w-full cursor-pointer flex items-center gap-3 rounded-xl border border-(--color-border) bg-white px-3 py-2.5 text-left text-sm text-gray-700 shadow-sm transition-all duration-200 hover:-translate-y-px hover:border-primary hover:bg-primary/6 hover:shadow-md active:translate-y-0 active:scale-[0.995] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                      class="kb-file-hit group w-full cursor-pointer flex items-center gap-3 rounded-xl border border-(--color-border) bg-(--color-bg-container) px-3 py-2.5 text-left text-sm text-(--color-text-secondary) shadow-sm transition-all duration-200 hover:-translate-y-px hover:border-primary hover:bg-primary/10 hover:shadow-md active:translate-y-0 active:scale-[0.995] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                       @click="openMatchedFilePreview(file)"
                     >
                       <span
@@ -134,18 +119,18 @@
                         <FileOutlined class="text-base" />
                       </span>
                       <span
-                        class="truncate flex-1 min-w-0 font-medium text-gray-800 transition-colors duration-200 group-hover:text-primary"
+                        class="truncate flex-1 min-w-0 font-medium text-(--color-text-base) transition-colors duration-200 group-hover:text-primary"
                       >
                         {{ file.file_name }}
                       </span>
                       <span
                         v-if="file.relevance_score != null"
-                        class="text-xs text-gray-400 shrink-0 tabular-nums px-1.5 py-0.5 rounded-md bg-(--color-bg-layout) transition-colors duration-200 group-hover:bg-primary/10 group-hover:text-gray-600"
+                        class="text-xs text-(--color-text-tertiary) shrink-0 tabular-nums px-1.5 py-0.5 rounded-md bg-(--color-bg-layout) transition-colors duration-200 group-hover:bg-primary/10 group-hover:text-(--color-text-secondary)"
                       >
                         {{ formatRelevancePercent(file.relevance_score) }}
                       </span>
                       <RightOutlined
-                        class="text-gray-300 text-xs shrink-0 transition-all duration-200 group-hover:text-primary group-hover:translate-x-px"
+                        class="text-(--color-text-placeholder) text-xs shrink-0 transition-all duration-200 group-hover:text-primary group-hover:translate-x-px"
                       />
                     </button>
                   </a-tooltip>
@@ -167,7 +152,7 @@
               <a-button
                 type="text"
                 size="small"
-                class="text-gray-400 hover:text-gray-600"
+                class="text-(--color-text-tertiary) hover:text-(--color-text-secondary)"
                 @click="copyMessageContent(msg.content)"
               >
                 <template #icon><CopyOutlined /></template>
@@ -188,7 +173,7 @@
       <div v-if="currentCitation">
         <CitationPreviewHtml :content="currentCitation.content" variant="modal" />
         <div v-if="currentCitation.url" class="mt-4">
-          <a :href="currentCitation.url" target="_blank" class="text-blue-600 hover:underline">{{
+          <a :href="currentCitation.url" target="_blank" class="text-primary hover:underline">{{
             t('knowledgeSearch.viewOriginal')
           }}</a>
         </div>
@@ -209,8 +194,6 @@ import {
   FileOutlined,
   IdcardOutlined,
   LinkOutlined,
-  TagOutlined,
-  FileTextOutlined,
   FileSearchOutlined,
   RightOutlined,
 } from '@ant-design/icons-vue'
@@ -218,15 +201,15 @@ import BubbleRenderer from '@/components/ChatWindow/BubbleRenderer.vue'
 import ThinkingProcess from '@/components/ChatWindow/ThinkingProcess.vue'
 import CitationLink from './CitationLink.vue'
 import CitationPreviewHtml from '@/components/CitationPreviewHtml/index.vue'
+import KnowledgeCardPreview from '@/components/KnowledgeCardPreview/index.vue'
 import RelatedQuestions from './RelatedQuestions.vue'
 import type { SearchMessage, Citation, ThinkingStep, MatchedFile } from '@/api/knowledgeSearch'
 import { useAuthStore } from '@/stores/auth'
 import { stashKnowledgePreviewFile } from '@/utils/knowledgePreviewStash'
 import { openFilePreview } from '@/utils/fileType'
 import { fileListItemFromKbMatchedFile } from '@/utils/kbSearchMatchedFile'
+import { formatSourcesLikeForPreview } from '@/utils/skillCitationSource'
 import type { ThinkingProcessStep } from '@/types/chat'
-import type { CardType } from '@/types/knowledge'
-import { CARD_TYPE_CONFIG } from '@/types/knowledge'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -241,13 +224,6 @@ const emit = defineEmits(['question-select'])
 
 const handleQuestionSelect = (question: string) => {
   emit('question-select', question)
-}
-
-function cardTypeBadge(cardType?: string): { color: string; label: string } | null {
-  if (!cardType) return null
-  const known = CARD_TYPE_CONFIG[cardType as CardType]
-  if (known) return known
-  return { color: 'default', label: cardType }
 }
 
 function formatRelevancePercent(score: number): string {
@@ -331,9 +307,17 @@ watch(
 <style scoped>
 .kb-user-bubble {
   background: var(--color-primary);
+  color: var(--color-text-inverse);
 }
 
-.kb-card-hit-index {
-  min-height: 3.5rem;
+.kb-assistant-avatar {
+  background: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  color: var(--color-primary);
+  font-size: 18px;
+}
+
+.kb-assistant-bubble {
+  background: var(--color-bg-container);
+  box-shadow: var(--shadow-sm);
 }
 </style>

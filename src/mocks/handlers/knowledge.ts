@@ -115,7 +115,8 @@ export const knowledgeHandlers = [
       const formData = await request.formData()
       const file = (formData.get('file') ?? formData.get('files')) as File | FileList | null
       const rawFile = file instanceof FileList ? file[0] : file
-      const dirId = (formData.get('dir_id') as string) || ''
+      const rawDirId = (formData.get('dir_id') as string) || ''
+      const dirId = rawDirId
 
       if (!rawFile || !(rawFile instanceof File)) {
         return HttpResponse.json(
@@ -127,7 +128,11 @@ export const knowledgeHandlers = [
       const id = `file_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
       const fileType = (rawFile.name.split('.').pop() || 'bin').toLowerCase()
       let dirName = '未分类'
-      if (dirId) {
+      let resolvedDirId = dirId
+      if (dirId === '-1') {
+        dirName = '未分类'
+        resolvedDirId = '-1'
+      } else if (dirId) {
         const findDir = (nodes: typeof mutableDirectories): string | null => {
           for (const n of nodes) {
             if (n.id === dirId) return n.name
@@ -146,7 +151,7 @@ export const knowledgeHandlers = [
         file_name: rawFile.name,
         file_type: fileType,
         file_size: rawFile.size,
-        dir_id: dirId,
+        dir_id: resolvedDirId,
         dir_name: dirName,
         status: 'uploading',
         error_msg: null,
@@ -202,8 +207,8 @@ export const knowledgeHandlers = [
 
     let filtered = [...mutableFiles]
 
-    if (dirId === '__uncategorized__') {
-      filtered = filtered.filter((f) => !f.dir_id)
+    if (dirId === '__uncategorized__' || dirId === '-1') {
+      filtered = filtered.filter((f) => !f.dir_id || f.dir_id === '-1' || f.dir_id === '')
     } else if (dirId && dirId !== '__all__') {
       filtered = filtered.filter((f) => f.dir_id === dirId)
     }

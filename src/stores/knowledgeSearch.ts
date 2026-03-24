@@ -59,10 +59,18 @@ export const useKnowledgeSearchStore = defineStore('knowledgeSearch', () => {
     return groups
   })
 
+  /** 清空本地会话与消息缓存（服务端已清空全部知识库搜索会话后调用） */
+  function clearAllLocalState() {
+    sessions.value = []
+    currentSessionId.value = null
+    messages.value = []
+    messagesBySession.value = {}
+  }
+
   async function fetchSessions() {
     loading.value = true
     try {
-      const list = await knowledgeSearchApi.getHistory({ limit: 50 })
+      const list = await knowledgeSearchApi.getHistory()
       sessions.value = list.map(historyToSession)
     } catch (err: any) {
       error.value = err.message
@@ -195,6 +203,7 @@ export const useKnowledgeSearchStore = defineStore('knowledgeSearch', () => {
     currentText: ref(''),
     thinkingSteps: ref([]),
     fetchSessions,
+    clearAllLocalState,
     createSession,
     deleteSession,
     loadMessages,

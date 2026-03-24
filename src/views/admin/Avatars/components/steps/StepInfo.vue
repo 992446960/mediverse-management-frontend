@@ -237,6 +237,9 @@ const avatarPreviewUrl = ref('')
 const AVATAR_ACCEPT = 'image/jpeg,image/png,image/gif,image/webp'
 const avatarUploading = ref(false)
 
+/** 从父同步到 local 时跳过回传 emit，避免 v-model 与 deep watch 形成递归更新 */
+const syncingFromParent = ref(false)
+
 const local = ref<
   Pick<
     AvatarWizardForm,
@@ -255,26 +258,33 @@ const local = ref<
 watch(
   () => props.modelValue,
   (val) => {
-    local.value = {
-      name: val.name,
-      avatar_url: val.avatar_url ?? '',
-      bio: val.bio ?? '',
-      tags: val.tags ?? [],
-      greeting: val.greeting ?? '',
-      style: val.style,
-      style_custom: val.style_custom ?? '',
-    }
-    if (!val.avatar_url) {
-      revokeAvatarPreview()
-    } else {
-      if (
-        avatarPreviewUrl.value &&
-        avatarPreviewUrl.value.startsWith('blob:') &&
-        avatarPreviewUrl.value !== val.avatar_url
-      ) {
-        URL.revokeObjectURL(avatarPreviewUrl.value)
+    syncingFromParent.value = true
+    try {
+      local.value = {
+        name: val.name,
+        avatar_url: val.avatar_url ?? '',
+        bio: val.bio ?? '',
+        tags: val.tags ?? [],
+        greeting: val.greeting ?? '',
+        style: val.style,
+        style_custom: val.style_custom ?? '',
       }
-      avatarPreviewUrl.value = val.avatar_url
+      if (!val.avatar_url) {
+        revokeAvatarPreview()
+      } else {
+        if (
+          avatarPreviewUrl.value &&
+          avatarPreviewUrl.value.startsWith('blob:') &&
+          avatarPreviewUrl.value !== val.avatar_url
+        ) {
+          URL.revokeObjectURL(avatarPreviewUrl.value)
+        }
+        avatarPreviewUrl.value = val.avatar_url
+      }
+    } finally {
+      nextTick(() => {
+        syncingFromParent.value = false
+      })
     }
   },
   { deep: true }
@@ -283,6 +293,7 @@ watch(
 watch(
   local,
   (val) => {
+    if (syncingFromParent.value) return
     emit('update:modelValue', {
       ...props.modelValue,
       name: val.name,
@@ -316,7 +327,6 @@ function confirmAddTag() {
 }
 
 function onTagPopoverOpenChange(open: boolean) {
-  tagPopoverOpen.value = open
   if (!open) tagInputValue.value = ''
   else setTimeout(() => tagInputRef.value?.focus(), 80)
 }

@@ -274,7 +274,6 @@ function confirmAddTag() {
 }
 
 function onTagPopoverOpenChange(open: boolean) {
-  tagPopoverOpen.value = open
   if (!open) tagInputValue.value = ''
   else setTimeout(() => tagInputRef.value?.focus(), 80)
 }
@@ -347,17 +346,22 @@ const rules = computed(() => ({
     { required: true, message: t('avatar.name') + ' ' + t('common.required'), trigger: 'blur' },
     { max: 100, message: t('common.max100'), trigger: 'blur' },
   ],
-  style_custom:
-    form.value.style === 'custom'
-      ? [
-          {
-            required: true,
-            message: t('avatar.styleCustom') + ' ' + t('common.required'),
-            trigger: 'blur',
-          },
-          { max: 100, message: t('common.max100'), trigger: 'blur' },
-        ]
-      : [],
+  style_custom: [
+    {
+      validator: async (_rule: unknown, value: string) => {
+        if (form.value.style !== 'custom') return Promise.resolve()
+        const v = String(value ?? '').trim()
+        if (!v) {
+          return Promise.reject(t('avatar.styleCustom') + ' ' + t('common.required'))
+        }
+        if (v.length > 100) {
+          return Promise.reject(t('common.max100'))
+        }
+        return Promise.resolve()
+      },
+      trigger: 'blur',
+    },
+  ],
 }))
 
 function toUpdatePayload(v: EditFormState): UpdateAvatarParams {
