@@ -350,7 +350,11 @@ export default {
       tabInfo: 'Metadata',
       previewingVersion: 'Previewing version: {version}',
       exitPreview: 'Exit Preview',
-      sourceFile: 'Source Files',
+      sourceFile: 'Associated files',
+      attachmentCount: '{count} attachments',
+      sourceFileNotFoundInWorkspace:
+        'File not found in the workspace file list; preview unavailable',
+      sourceFilePreviewUnsupported: 'Preview from here is not supported for avatar workspace files',
       noSourceFile: 'No associated files',
       cardId: 'Card ID',
       referenceCount: 'References',
