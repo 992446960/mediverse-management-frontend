@@ -40,6 +40,6 @@ onMounted(() => {
 
 <style scoped>
 .chat-layout {
-  max-height: calc(100vh - 64px - 24px - 24px);
+  max-height: var(--ant-layout-content-insert-height);
 }
 </style>

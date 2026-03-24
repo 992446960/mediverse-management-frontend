@@ -350,3 +350,9 @@ function handleDelete(record: Department) {
 
 onMounted(loadTree)
 </script>
+
+<style scoped>
+.departments-page {
+  max-height: var(--ant-layout-content-insert-height);
+}
+</style>

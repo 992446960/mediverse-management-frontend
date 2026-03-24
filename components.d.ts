@@ -1,3 +1,4 @@
+/* eslint-disable */
 // @ts-nocheck
 // biome-ignore lint: disable
 // oxlint-disable
@@ -84,6 +85,7 @@ declare module 'vue' {
     CitationLink: typeof import('./src/components/SearchResultThread/CitationLink.vue')['default']
     CitationPreviewHtml: typeof import('./src/components/CitationPreviewHtml/index.vue')['default']
     ColumnsEditor: typeof import('./src/components/PageTable/ColumnsEditor.vue')['default']
+    DictTag: typeof import('./src/components/DictTag/index.vue')['default']
     DirectoryTree: typeof import('./src/components/DirectoryTree/index.vue')['default']
     DirectoryTreeItem: typeof import('./src/components/DirectoryTree/DirectoryTreeItem.vue')['default']
     DocxViewer: typeof import('./src/components/FilePreview/DocxViewer.vue')['default']
@@ -119,9 +121,11 @@ declare module 'vue' {
     QuickActionGuide: typeof import('./src/components/AvatarConfig/QuickActionGuide.vue')['default']
     RatingDialog: typeof import('./src/components/RatingDialog/index.vue')['default']
     RelatedQuestions: typeof import('./src/components/SearchResultThread/RelatedQuestions.vue')['default']
+    RightToolbar: typeof import('./src/components/RightToolbar/index.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     ScopeCell: typeof import('./src/components/PageTable/ScopeCell.vue')['default']
+    ScrollPane: typeof import('./src/components/TagsView/ScrollPane.vue')['default']
     SearchResultThread: typeof import('./src/components/SearchResultThread/index.vue')['default']
     SessionRenameForm: typeof import('./src/components/SessionSidebar/components/SessionRenameForm.vue')['default']
     SessionSidebar: typeof import('./src/components/SessionSidebar/index.vue')['default']
@@ -131,6 +135,7 @@ declare module 'vue' {
     SourceCitation: typeof import('./src/components/ChatWindow/SourceCitation.vue')['default']
     StatCard: typeof import('./src/components/StatCard/index.vue')['default']
     TableFilter: typeof import('./src/components/TableFilter/index.vue')['default']
+    TagsView: typeof import('./src/components/TagsView/index.vue')['default']
     TextFileViewer: typeof import('./src/components/FilePreview/TextFileViewer.vue')['default']
     ThemeSwitcher: typeof import('./src/components/ThemeSwitcher/index.vue')['default']
     ThinkingProcess: typeof import('./src/components/ChatWindow/ThinkingProcess.vue')['default']

@@ -36,11 +36,11 @@
           />
           <menu-fold-outlined v-else class="trigger" @click="() => (collapsed = !collapsed)" />
           <a-breadcrumb>
-            <a-breadcrumb-item v-for="(route, index) in breadcrumbs" :key="index">
-              <router-link v-if="route.path && index < breadcrumbs.length - 1" :to="route.path">
-                {{ route.meta.title ? t(route.meta.title as string) : '' }}
+            <a-breadcrumb-item v-for="(item, index) in breadcrumbItems" :key="`${item.href}-${index}`">
+              <router-link v-if="item.linkable" :to="item.href">
+                {{ t(item.titleKey) }}
               </router-link>
-              <span v-else>{{ route.meta.title ? t(route.meta.title as string) : '' }}</span>
+              <span v-else>{{ t(item.titleKey) }}</span>
             </a-breadcrumb-item>
           </a-breadcrumb>
         </div>
@@ -81,6 +81,7 @@
           </a-dropdown>
         </div>
       </a-layout-header>
+      <TagsView />
       <a-layout-content class="content">
         <slot />
       </a-layout-content>
@@ -94,6 +95,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useThemeStore } from '@/stores/theme'
 import { usePermission } from '@/composables/usePermission'
 import { menuConfig } from '@/config/menu'
+import { buildBreadcrumbItems } from '@/utils/breadcrumb'
 import ThemeSwitcher from '@/components/ThemeSwitcher/index.vue'
 import LocaleSwitcher from '@/components/LocaleSwitcher/index.vue'
 import {
@@ -104,6 +106,7 @@ import {
   LogoutOutlined,
 } from '@ant-design/icons-vue'
 import { toAbsoluteFileUrl } from '@/api/upload'
+import TagsView from '@/components/TagsView/index.vue'
 import type { ItemType } from 'ant-design-vue'
 import logoUrl from '@/assets/logo.svg?url'
 
@@ -120,9 +123,7 @@ const { checkRoles } = usePermission()
 
 const user = computed(() => authStore.user)
 
-const breadcrumbs = computed(() => {
-  return currentRoute.matched.filter((item) => item.meta && item.meta.title)
-})
+const breadcrumbItems = computed(() => buildBreadcrumbItems(currentRoute, menuConfig))
 
 // Filter menu items: 工作台按 user.has_*_avatar + requiredRoles（权限矩阵），其余按 requiredRoles
 const filterMenu = (items: any[]): ItemType[] => {

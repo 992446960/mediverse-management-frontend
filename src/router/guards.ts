@@ -1,11 +1,15 @@
 import type { Router, RouteLocationNormalized } from 'vue-router'
+import NProgress from 'nprogress'
+import 'nprogress/nprogress.css'
 import { i18n } from '@/i18n'
 import { useAuthStore } from '@/stores/auth'
 import { getSkipChangePassword } from '@/utils/auth'
 import { hasAnyRole } from '@/utils/permission'
 import type { UserRole } from '@/types/auth'
 
-const whiteList = ['/login', '/403', '/404']
+NProgress.configure({ showSpinner: false })
+
+const whiteList = ['/login', '/401', '/403', '/404']
 
 const appTitle = import.meta.env.VITE_APP_TITLE || 'Mediverse'
 
@@ -17,6 +21,7 @@ export function setDocumentTitle(to: RouteLocationNormalized) {
 
 export function createPermissionGuard(router: Router) {
   router.beforeEach(async (to) => {
+    NProgress.start()
     const authStore = useAuthStore()
 
     setDocumentTitle(to)
@@ -58,5 +63,9 @@ export function createPermissionGuard(router: Router) {
         return '/403'
       }
     }
+  })
+
+  router.afterEach(() => {
+    NProgress.done()
   })
 }

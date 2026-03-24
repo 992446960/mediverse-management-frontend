@@ -586,3 +586,9 @@ onBeforeUnmount(() => {
   clearOrgDeptCache()
 })
 </script>
+
+<style scoped>
+.users-page {
+  max-height: var(--ant-layout-content-insert-height);
+}
+</style>

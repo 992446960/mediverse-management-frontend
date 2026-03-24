@@ -169,6 +169,7 @@ export default {
     deptWorkbench: '科室工作台',
     orgWorkbench: '机构工作台',
     digitalDoctor: '数字医生体验',
+    avatarChat: '分身对话',
     knowledgeBase: '知识库搜索',
     systemManagement: '系统管理',
     orgManagement: '机构管理',

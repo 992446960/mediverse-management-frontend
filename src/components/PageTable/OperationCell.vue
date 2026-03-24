@@ -1,7 +1,7 @@
 <template>
   <div class="flex items-center gap-3 flex-wrap">
     <template v-for="(btn, bIdx) in column.btns" :key="bIdx">
-      <template v-if="btn.btnIsShow?.(record) !== false">
+      <template v-if="hasPermission(btn) && btn.btnIsShow?.(record) !== false">
         <!-- popconfirm -->
         <a-popconfirm
           v-if="btn.type === 'popconfirm'"
@@ -37,7 +37,7 @@
             <a-menu class="page-table-more-menu">
               <a-menu-item
                 v-for="(m, mIdx) in btn.moreList?.filter(
-                  (item) => item.btnIsShow?.(record) !== false
+                  (item) => hasPermission(item) && item.btnIsShow?.(record) !== false
                 ) ?? []"
                 :key="mIdx"
                 @click="onMoreItemClick(m, record, index)"
@@ -95,6 +95,7 @@
 
 <script setup lang="ts">
 import { UpOutlined, DownOutlined } from '@ant-design/icons-vue'
+import { usePermission } from '@/composables/usePermission'
 import type { PageTableColumnConfig, PageTableOperationBtn } from './types'
 
 defineProps<{
@@ -103,7 +104,16 @@ defineProps<{
   index: number
 }>()
 
+const { checkRoles } = usePermission()
+
 const moreOpen = ref(false)
+
+function hasPermission(btn: PageTableOperationBtn): boolean {
+  if (btn.permission && btn.permission.length > 0) {
+    if (!checkRoles(btn.permission)) return false
+  }
+  return true
+}
 
 function onMoreItemClick(m: PageTableOperationBtn, record: Record<string, any>, index: number) {
   moreOpen.value = false

@@ -6,6 +6,8 @@ import axios, {
 } from 'axios'
 import { message } from 'ant-design-vue'
 import { getToken, setToken, getRefreshToken, clearAuth } from '@/utils/auth'
+import { addPending, removePending } from '@/utils/requestDedup'
+import { getHttpErrorMessage } from '@/config/errorCodes'
 import type { ApiResponse } from '@/types'
 import type { RefreshTokenResponse } from '@/types/auth'
 
@@ -102,6 +104,7 @@ api.interceptors.request.use(
     if (config.data instanceof FormData && config.headers) {
       delete config.headers['Content-Type']
     }
+    addPending(config)
     return config
   },
   (error) => {
@@ -112,6 +115,7 @@ api.interceptors.request.use(
 // 响应拦截器
 api.interceptors.response.use(
   (response: AxiosResponse<any>) => {
+    removePending(response.config as InternalAxiosRequestConfig)
     const res = response.data as ApiResponse
 
     // 如果是二进制数据（如文件下载），直接返回
@@ -135,6 +139,9 @@ api.interceptors.response.use(
     return res.data
   },
   async (error) => {
+    if (error.config) {
+      removePending(error.config as InternalAxiosRequestConfig)
+    }
     const originalRequest = error.config
     const isLoginOrRefresh =
       originalRequest?.url?.includes?.('/auth/login') ||
@@ -205,7 +212,11 @@ api.interceptors.response.use(
       !error.response && (error.code === 'ECONNREFUSED' || error.message?.includes('Network Error'))
     const is5xx = error.response?.status != null && error.response.status >= 500
     if (!(isAuthEndpoint && (isNetworkError || is5xx))) {
-      const errorMsg = error.response?.data?.message || error.message || '请求失败'
+      const errorMsg =
+        error.response?.data?.message ||
+        (error.response?.status ? getHttpErrorMessage(error.response.status) : null) ||
+        error.message ||
+        '请求失败'
       const silent = originalRequest?.skipErrorToast === true
       if (!silent) {
         message.error(errorMsg)

@@ -1,6 +1,8 @@
 export interface PageTableOperationBtn {
   /** 按钮文案 */
   text: string
+  /** 所需角色（可选），用户无对应角色时按钮不显示 */
+  permission?: import('@/types/auth').UserRole[]
   /** 动态文案 */
   dynamicText?: (row: Record<string, any>) => string
   /** 按钮形态：'popconfirm' | 'popover' | 默认 link button */

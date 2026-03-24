@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import './variables.css';
+@import './nprogress.css';
 
 /* 与 themeStore 一致：dark 由 html.dark 控制，不随系统 prefers-color-scheme 变化 */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -90,7 +91,7 @@ body {
 
 /* 全局 Modal 确认框样式 */
 .ant-modal-confirm {
-  .ant-modal-content{
+  .ant-modal-content {
     .ant-modal-body {
       padding: 20px;
     }
@@ -98,6 +99,6 @@ body {
 }
 
 /* 全局 Alert 样式 */
-.ant-alert{
+.ant-alert {
   margin-bottom: 14px;
 }

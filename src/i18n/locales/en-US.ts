@@ -169,6 +169,7 @@ export default {
     deptWorkbench: 'Dept Workbench',
     orgWorkbench: 'Org Workbench',
     digitalDoctor: 'Digital Doctor',
+    avatarChat: 'Avatar Chat',
     knowledgeBase: 'Knowledge Base',
     systemManagement: 'System Management',
     orgManagement: 'Org Management',
