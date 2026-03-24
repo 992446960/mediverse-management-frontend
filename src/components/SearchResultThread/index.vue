@@ -71,29 +71,21 @@
                 <IdcardOutlined class="text-primary text-sm" />
                 <span>{{ t('knowledgeSearch.knowledgeCardHitsTitle') }}</span>
               </div>
-              <ul class="kb-card-hits list-none space-y-3 m-0 p-0" role="list">
+              <ul class="kb-card-hits m-0 flex list-none flex-col gap-4 p-0" role="list">
                 <li
                   v-for="(citation, idx) in msg.citations"
                   :key="`card-${citation.id}`"
                   role="listitem"
-                  class="kb-card-hit-item rounded-lg border border-(--color-border) bg-(--color-bg-container) p-3 shadow-sm transition-all duration-200 hover:border-primary hover:shadow-md"
+                  class="m-0 list-none"
                 >
-                  <div class="flex items-start justify-between gap-2 mb-2">
-                    <h4
-                      class="kb-card-hit-title m-0 min-w-0 flex-1 font-medium text-sm leading-snug text-(--color-text-base) line-clamp-2"
-                      :title="`${idx + 1}. ${citation.title}`"
-                    >
-                      {{ idx + 1 }}. {{ citation.title }}
-                    </h4>
-                    <span
-                      v-if="citation.cardType"
-                      class="shrink-0 px-1.5 py-0.5 text-[10px] font-medium border rounded uppercase tracking-wide"
-                      :class="cardTypeBadgeClass(citation.cardType)"
-                    >
-                      {{ cardTypeLabel(citation.cardType) }}
-                    </span>
-                  </div>
-                  <CitationPreviewHtml :content="citation.content" variant="skill" />
+                  <KnowledgeCardPreview
+                    :type="citation.cardType || 'evidence'"
+                    :title="citation.title"
+                    :title-prefix="`${idx + 1}. `"
+                    :source-file-name="formatSourcesLikeForPreview(citation)"
+                  >
+                    <CitationPreviewHtml :content="citation.content" variant="skill" />
+                  </KnowledgeCardPreview>
                 </li>
               </ul>
             </div>
@@ -205,15 +197,15 @@ import BubbleRenderer from '@/components/ChatWindow/BubbleRenderer.vue'
 import ThinkingProcess from '@/components/ChatWindow/ThinkingProcess.vue'
 import CitationLink from './CitationLink.vue'
 import CitationPreviewHtml from '@/components/CitationPreviewHtml/index.vue'
+import KnowledgeCardPreview from '@/components/KnowledgeCardPreview/index.vue'
 import RelatedQuestions from './RelatedQuestions.vue'
 import type { SearchMessage, Citation, ThinkingStep, MatchedFile } from '@/api/knowledgeSearch'
 import { useAuthStore } from '@/stores/auth'
 import { stashKnowledgePreviewFile } from '@/utils/knowledgePreviewStash'
 import { openFilePreview } from '@/utils/fileType'
 import { fileListItemFromKbMatchedFile } from '@/utils/kbSearchMatchedFile'
+import { formatSourcesLikeForPreview } from '@/utils/skillCitationSource'
 import type { ThinkingProcessStep } from '@/types/chat'
-import type { CardType } from '@/types/knowledge'
-import { CARD_TYPE_CONFIG } from '@/types/knowledge'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -228,35 +220,6 @@ const emit = defineEmits(['question-select'])
 
 const handleQuestionSelect = (question: string) => {
   emit('question-select', question)
-}
-
-/** 与 SkillPanel 引用卡类型徽标一致 */
-const CARD_TYPE_BADGE_CLASSES: Record<CardType, string> = {
-  evidence:
-    'bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800',
-  rule: 'bg-orange-50 text-orange-600 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800',
-  experience:
-    'bg-green-50 text-green-600 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800',
-}
-
-const CARD_TYPE_I18N_KEYS: Record<CardType, string> = {
-  evidence: 'knowledge.card.typeEvidence',
-  rule: 'knowledge.card.typeRule',
-  experience: 'knowledge.card.typeExperience',
-}
-
-function cardTypeBadgeClass(cardType: string): string {
-  if (cardType in CARD_TYPE_CONFIG) {
-    return CARD_TYPE_BADGE_CLASSES[cardType as CardType]
-  }
-  return 'bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700'
-}
-
-function cardTypeLabel(cardType: string): string {
-  if (cardType in CARD_TYPE_I18N_KEYS) {
-    return t(CARD_TYPE_I18N_KEYS[cardType as CardType])
-  }
-  return cardType.toUpperCase()
 }
 
 function formatRelevancePercent(score: number): string {

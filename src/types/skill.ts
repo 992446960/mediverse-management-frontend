@@ -30,6 +30,13 @@ export interface KnowledgeRetrievalSkillArgs {
   top_k?: number
 }
 
+/** 技能 citation 中的来源项（与知识卡 `sources` / `file_name` 命名对齐） */
+export interface SkillCitationSource {
+  id?: string
+  name?: string
+  file_name?: string
+}
+
 export interface SkillCitation {
   id: string
   owner_type?: string
@@ -37,6 +44,10 @@ export interface SkillCitation {
   type: 'evidence' | 'rule' | 'experience'
   title: string
   content: string
+  /** 关联来源文件列表（SSE `result.citations[].sources`；元素可为 `{ name/file_name }` 或文件名字符串） */
+  sources?: Array<SkillCitationSource | string>
+  /** 单文件来源名（兼容旧字段）；无 `sources` 时可用于展示「来源」 */
+  source_file_name?: string
   tags?: string[]
   online_status?: string
   audit_status?: string

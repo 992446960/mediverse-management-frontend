@@ -96,6 +96,7 @@ declare module 'vue' {
     KBSidebar: typeof import('./src/components/KBSidebar/index.vue')['default']
     KnowledgeCardEditor: typeof import('./src/components/KnowledgeCardEditor/index.vue')['default']
     KnowledgeCardList: typeof import('./src/components/KnowledgeCardList/index.vue')['default']
+    KnowledgeCardPreview: typeof import('./src/components/KnowledgeCardPreview/index.vue')['default']
     KnowledgeCardSidebar: typeof import('./src/components/FilePreview/KnowledgeCardSidebar.vue')['default']
     KnowledgeCardViewer: typeof import('./src/components/KnowledgeCardViewer/index.vue')['default']
     LoadingSkeleton: typeof import('./src/components/LoadingSkeleton/index.vue')['default']

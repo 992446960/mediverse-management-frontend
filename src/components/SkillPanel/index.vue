@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
 import { buildSkillExecuteArgs } from '@/utils/skillArgs'
+import { formatCitationSourceForPreview } from '@/utils/skillCitationSource'
 import {
   AppstoreOutlined,
   ArrowLeftOutlined,
@@ -14,13 +15,11 @@ import {
 } from '@ant-design/icons-vue'
 import { getSkills } from '@/api/skills'
 import type { Skill } from '@/types/skill'
-import type { SkillCitation } from '@/types/skill'
-import { CARD_TYPE_CONFIG } from '@/types/knowledge'
-import type { CardType } from '@/types/knowledge'
 import { useChatStore } from '@/stores/chat'
 import { useSkillExecute } from '@/composables/useSkillExecute'
 import BubbleRenderer from '@/components/ChatWindow/BubbleRenderer.vue'
 import CitationPreviewHtml from '@/components/CitationPreviewHtml/index.vue'
+import KnowledgeCardPreview from '@/components/KnowledgeCardPreview/index.vue'
 
 const { t } = useI18n()
 const chatStore = useChatStore()
@@ -107,34 +106,6 @@ const handleSkillClick = async (skill: Skill) => {
 const goBack = () => {
   selectedSkill.value = null
   resetExecute()
-}
-
-const CARD_TYPE_CLASSES: Record<CardType, string> = {
-  evidence:
-    'bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800',
-  rule: 'bg-orange-50 text-orange-600 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800',
-  experience:
-    'bg-green-50 text-green-600 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800',
-}
-
-const getBadgeClass = (type?: string) => {
-  if (type && type in CARD_TYPE_CONFIG) {
-    return CARD_TYPE_CLASSES[type as CardType]
-  }
-  return 'bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700'
-}
-
-const CARD_TYPE_I18N_KEYS: Record<CardType, string> = {
-  evidence: 'knowledge.card.typeEvidence',
-  rule: 'knowledge.card.typeRule',
-  experience: 'knowledge.card.typeExperience',
-}
-
-const getBadgeLabel = (citation: SkillCitation) => {
-  if (citation.type && citation.type in CARD_TYPE_CONFIG) {
-    return t(CARD_TYPE_I18N_KEYS[citation.type as CardType])
-  }
-  return citation.type?.toUpperCase() ?? ''
 }
 </script>
 
@@ -285,25 +256,17 @@ const getBadgeLabel = (citation: SkillCitation) => {
             v-if="result && result.citations && result.citations.length > 0"
             class="flex flex-col gap-3"
           >
-            <div
+            <KnowledgeCardPreview
               v-for="(citation, idx) in result.citations"
               :key="citation.id"
-              class="border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-white dark:bg-gray-800"
+              :type="citation.type"
+              :title="citation.title"
+              :title-prefix="`${idx + 1}. `"
+              :tags="citation.tags"
+              :source-file-name="formatCitationSourceForPreview(citation)"
             >
-              <div class="flex items-start justify-between gap-2 mb-2">
-                <div class="font-medium text-sm text-gray-800 dark:text-gray-200">
-                  {{ idx + 1 }}. {{ citation.title }}
-                </div>
-                <span
-                  v-if="citation.type"
-                  class="shrink-0 px-1.5 py-0.5 text-[10px] border rounded uppercase"
-                  :class="getBadgeClass(citation.type)"
-                >
-                  {{ getBadgeLabel(citation) }}
-                </span>
-              </div>
               <CitationPreviewHtml :content="citation.content" variant="skill" />
-            </div>
+            </KnowledgeCardPreview>
           </div>
         </div>
       </div>

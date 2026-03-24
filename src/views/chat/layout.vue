@@ -31,8 +31,8 @@ onMounted(() => {
       <router-view />
     </div>
 
-    <!-- Right: Skill Panel（仅对话页展示） -->
-    <div v-if="showSkillPanel" class="w-72 shrink-0">
+    <!-- Right: Skill Panel（仅对话页展示；略宽于 w-72 便于长文与知识卡） -->
+    <div v-if="showSkillPanel" class="w-96 shrink-0">
       <SkillPanel />
     </div>
   </div>

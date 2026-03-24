@@ -19,6 +19,7 @@ function createSearchResponse(
         card_type: 'evidence',
         relevance_score: 0.92,
         content_preview: '关于该症状的详细诊疗流程...',
+        sources: [{ file_name: '内科诊疗指南.pdf' }],
       },
       {
         index: 2,
@@ -27,6 +28,7 @@ function createSearchResponse(
         card_type: 'rule',
         relevance_score: 0.85,
         content_preview: '体温监测与护理措施...',
+        sources: [{ name: '护理规范.docx' }],
       },
     ],
     matched_files: [
