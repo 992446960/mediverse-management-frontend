@@ -71,6 +71,7 @@ export default {
     description: '描述',
     status: '状态',
     logo: '机构 logo',
+    logoSizeHint: '建议尺寸: 200x200px',
     logoUpload: '上传图片',
     logoLoadFailed: '图片加载失败，点击重新上传',
     logoUploadHint: '支持 JPG、PNG、WebP，建议 ≤ 2MB',

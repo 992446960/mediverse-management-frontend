@@ -71,6 +71,7 @@ export default {
     description: 'Description',
     status: 'Status',
     logo: 'Organization Logo',
+    logoSizeHint: 'Recommended: 200x200px',
     logoUpload: 'Upload image',
     logoLoadFailed: 'Image failed to load, click to re-upload',
     logoUploadHint: 'JPG, PNG, WebP supported, recommended ≤ 2MB',

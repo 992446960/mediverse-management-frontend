@@ -31,42 +31,71 @@
           :rows="3"
         />
       </a-form-item>
-      <a-form-item :label="t('org.logo')" name="logo_url">
-        <a-upload
-          v-model:file-list="logoFileList"
-          name="logo"
-          list-type="picture-card"
-          :max-count="1"
-          :accept="LOGO_ACCEPT"
-          :show-upload-list="{ showPreviewIcon: true, showRemoveIcon: true }"
-          :before-upload="beforeLogoUpload"
-          :custom-request="customLogoUpload"
-          class="org-logo-upload"
-        >
-          <template v-if="logoFileList.length < 1">
-            <div class="flex flex-col items-center justify-center">
-              <PlusOutlined />
-              <span class="mt-1 text-xs">{{ t('org.logoUpload') }}</span>
+      <a-form-item name="logo_url">
+        <template #label>
+          <span class="org-form-logo-label">{{ t('org.logo') }}</span>
+        </template>
+        <div class="step-info-avatar-wrap flex flex-col gap-2">
+          <input
+            ref="logoFileRef"
+            type="file"
+            :accept="LOGO_ACCEPT"
+            style="display: none"
+            aria-hidden="true"
+            @change="onLogoFileChange"
+          />
+          <div
+            class="step-info-upload-card group relative w-20 h-20 rounded-lg bg-gray-50 dark:bg-gray-700 flex flex-col items-center justify-center border border-dashed border-gray-300 dark:border-gray-600 overflow-hidden shrink-0"
+            :class="[
+              logoPreviewUrl
+                ? ''
+                : 'cursor-pointer hover:border-[#0ea5e9] hover:text-[#0ea5e9] transition-all',
+              logoUploading ? 'pointer-events-none opacity-70' : '',
+            ]"
+            @click="onLogoCardClick"
+          >
+            <a-spin v-if="logoUploading" />
+            <template v-else-if="logoPreviewUrl">
+              <div class="absolute inset-0 w-full h-full" @click.stop>
+                <a-image
+                  :src="logoDisplayUrl"
+                  :alt="t('org.logo')"
+                  class="w-full h-full [&_.ant-image]:block! [&_.ant-image-img]:w-full! [&_.ant-image-img]:h-full! [&_.ant-image-img]:object-cover!"
+                />
+              </div>
+            </template>
+            <template v-else>
+              <PlusOutlined class="text-gray-400 text-lg" />
+              <span class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{
+                t('org.logoUpload')
+              }}</span>
+            </template>
+          </div>
+          <template v-if="logoPreviewUrl">
+            <div class="text-left">
+              <a-button type="link" size="small" class="p-0 h-auto" @click="triggerLogoFileInput">
+                {{ t('common.selectFile') }}
+              </a-button>
             </div>
           </template>
-        </a-upload>
-        <p class="mt-1 text-xs text-gray-400">
-          {{ t('org.logoUploadHint') }}
-        </p>
+          <div class="flex flex-col gap-0.5">
+            <p class="text-xs text-gray-400">
+              {{ t('org.logoSizeHint') + '，' + t('org.logoUploadHint') }}
+            </p>
+          </div>
+        </div>
       </a-form-item>
     </a-form>
   </a-modal>
 </template>
 
 <script setup lang="ts">
-import type { UploadFile, UploadProps } from 'ant-design-vue'
 import { message } from 'ant-design-vue'
 import { PlusOutlined } from '@ant-design/icons-vue'
 import { useI18n } from 'vue-i18n'
 import type { FormInstance } from 'ant-design-vue'
 import { toAbsoluteFileUrl, uploadAvatar } from '@/api/upload'
 import type { Organization, OrganizationForm } from '@/types/organization'
-import errorImgUrl from '@/assets/error_img.png'
 
 const LOGO_ACCEPT = 'image/jpeg,image/png,image/webp'
 const LOGO_ACCEPT_LIST = LOGO_ACCEPT.split(',').map((s) => s.trim())
@@ -92,7 +121,8 @@ const isEdit = computed(() => !!props.initialRecord?.id)
 
 const formRef = ref<FormInstance>()
 const confirmLoading = ref(false)
-const logoFileList = ref<UploadFile[]>([])
+const logoFileRef = ref<HTMLInputElement | null>(null)
+const logoUploading = ref(false)
 
 const formState = ref<OrganizationForm>({
   name: '',
@@ -101,6 +131,14 @@ const formState = ref<OrganizationForm>({
   logo_url: '',
 })
 
+const logoPreviewUrl = computed(() =>
+  formState.value.logo_url?.trim() ? formState.value.logo_url.trim() : ''
+)
+
+const logoDisplayUrl = computed(() =>
+  logoPreviewUrl.value ? toAbsoluteFileUrl(logoPreviewUrl.value) : ''
+)
+
 const rules = {
   name: [
     { required: true, message: t('org.name') + ' ' + t('common.required'), trigger: 'blur' },
@@ -108,28 +146,9 @@ const rules = {
   ],
 } as const
 
-function urlToFileItem(url: string, thumbUrl?: string): UploadFile {
-  return {
-    uid: `logo-${Date.now()}`,
-    name: 'logo',
-    status: 'done',
-    url: toAbsoluteFileUrl(url),
-    thumbUrl: thumbUrl ?? toAbsoluteFileUrl(url),
-  }
-}
-
-function probeImage(src: string): Promise<boolean> {
-  return new Promise((resolve) => {
-    const img = new Image()
-    img.onload = () => resolve(true)
-    img.onerror = () => resolve(false)
-    img.src = src
-  })
-}
-
 watch(
   () => [props.open, props.initialRecord] as const,
-  async ([open, record]) => {
+  ([open, record]) => {
     if (open) {
       if (record) {
         const logoUrl = record.logo_url ?? (record as unknown as { logoUrl?: string }).logoUrl ?? ''
@@ -139,16 +158,8 @@ watch(
           description: record.description ?? '',
           logo_url: logoUrl,
         }
-        if (logoUrl) {
-          const absoluteUrl = toAbsoluteFileUrl(logoUrl)
-          const loaded = await probeImage(absoluteUrl)
-          logoFileList.value = [urlToFileItem(logoUrl, loaded ? undefined : errorImgUrl)]
-        } else {
-          logoFileList.value = []
-        }
       } else {
         formState.value = { name: '', code: '', description: '', logo_url: '' }
-        logoFileList.value = []
       }
       formRef.value?.clearValidate()
     }
@@ -156,36 +167,37 @@ watch(
   { immediate: true }
 )
 
-watch(
-  logoFileList,
-  (list) => {
-    const done = list.find((f) => f.status === 'done')
-    const url = (done?.response as { url?: string })?.url ?? done?.url ?? ''
-    formState.value.logo_url = url
-  },
-  { deep: true }
-)
+function triggerLogoFileInput() {
+  logoFileRef.value?.click()
+}
 
-const beforeLogoUpload: UploadProps['beforeUpload'] = (file) => {
+function onLogoCardClick() {
+  if (logoPreviewUrl.value) return
+  triggerLogoFileInput()
+}
+
+async function onLogoFileChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (!file) return
   const type = file.type
   if (!LOGO_ACCEPT_LIST.includes(type)) {
     message.warning(t('org.logoFormatHint'))
-    return false
+    return
   }
   if (file.size > LOGO_MAX_SIZE) {
     message.warning(t('profile.avatarSizeExceeded'))
-    return false
+    return
   }
-  return true
-}
-
-const customLogoUpload: NonNullable<UploadProps['customRequest']> = async (options) => {
-  const { file, onSuccess, onError } = options
+  logoUploading.value = true
   try {
-    const res = await uploadAvatar(file as File)
-    onSuccess?.({ url: res.url })
-  } catch (err) {
-    onError?.(err as Error)
+    const res = await uploadAvatar(file)
+    formState.value = { ...formState.value, logo_url: res.url }
+  } catch {
+    // 错误由拦截器提示
+  } finally {
+    logoUploading.value = false
   }
 }
 
@@ -210,18 +222,27 @@ async function handleOk() {
 </script>
 
 <style scoped>
-.org-logo-upload :deep(.ant-upload-select) {
-  width: 104px;
-  height: 104px;
+/* 与分身 StepInfo 表单项 label / 上传卡片一致 */
+.org-form-logo-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ant-color-text, #374151);
 }
-.org-logo-upload :deep(.ant-upload-list-item) {
-  width: 104px;
-  height: 104px;
-  padding: 0 !important;
-  overflow: hidden !important;
+.step-info-upload-card {
+  min-width: 80px;
+  min-height: 80px;
 }
-.org-logo-upload :deep(.ant-upload-list-item):after {
+.step-info-upload-card :deep(.ant-image) {
   width: 100%;
   height: 100%;
+  display: block;
+}
+.step-info-upload-card :deep(.ant-image-img) {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+.step-info-upload-card :deep(.ant-image-mask) {
+  border-radius: 0.5rem;
 }
 </style>

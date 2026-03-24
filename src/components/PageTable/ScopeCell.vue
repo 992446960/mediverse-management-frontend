@@ -47,7 +47,12 @@
         :height="column.imageHeight ?? 40"
         :fallback="IMAGE_FALLBACK_URL"
         @error="imageEffectiveSrc = IMAGE_FALLBACK_URL"
-      />
+      >
+        <!-- 仅图标，不显示「预览」文案 -->
+        <template #previewMask>
+          <EyeOutlined />
+        </template>
+      </a-image>
     </template>
   </template>
   <template v-else-if="column.scopeType === '_numInput'">
@@ -68,6 +73,7 @@
 </template>
 
 <script setup lang="ts">
+import { EyeOutlined } from '@ant-design/icons-vue'
 import errorImgUrl from '@/assets/error_img.png'
 import { toAbsoluteFileUrl } from '@/api/upload'
 import type { PageTableColumnConfig } from './types'

@@ -82,7 +82,7 @@
 
     <!-- 底部：分隔线 + 取消/上一步 + 确认 -->
     <div
-      class="avatar-wizard-footer pt-3 pb-2 border-t border-gray-100 dark:border-gray-800 dark:bg-slate-900/50 flex justify-end items-center gap-3"
+      class="avatar-wizard-footer pt-3 pb-2 border-t border-gray-100 dark:border-gray-800 flex justify-end items-center gap-3"
     >
       <a-button
         class="avatar-wizard-btn cursor-pointer transition-colors duration-200"
