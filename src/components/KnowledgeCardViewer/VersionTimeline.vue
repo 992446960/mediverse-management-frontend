@@ -1,7 +1,9 @@
 <template>
-  <div class="version-timeline p-4">
+  <div
+    class="version-timeline p-4 max-h-[min(80vh,calc(100vh-280px))] overflow-y-auto overflow-x-hidden"
+  >
     <a-timeline>
-      <a-timeline-item v-for="(v, index) in versions" :key="v.version">
+      <a-timeline-item v-for="v in versions" :key="v.version">
         <template #dot>
           <HistoryOutlined style="font-size: 16px" />
         </template>
@@ -30,7 +32,7 @@
                 type="link"
                 size="small"
                 danger
-                @click="handleRollback(v.version, index + 1)"
+                @click="handleRollback(v)"
               >
                 <template #icon><RollbackOutlined /></template>
                 {{ t('knowledge.card.rollback') }}
@@ -45,7 +47,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { Modal } from 'ant-design-vue'
+import { Modal, message } from 'ant-design-vue'
 import { HistoryOutlined, RollbackOutlined, SwapOutlined } from '@ant-design/icons-vue'
 import type { KnowledgeCardVersion } from '@/types/knowledge'
 import dayjs from 'dayjs'
@@ -76,14 +78,19 @@ function handleCompare(v: KnowledgeCardVersion) {
   }
 }
 
-const handleRollback = (version: string, targetVersion: number) => {
+const handleRollback = (v: KnowledgeCardVersion) => {
+  const targetVersion = extractVersionNumber(v.version)
+  if (targetVersion == null) {
+    message.warning(t('knowledge.card.rollbackInvalidVersion'))
+    return
+  }
   Modal.confirm({
     title: t('knowledge.card.rollbackConfirmTitle'),
-    content: t('knowledge.card.rollbackConfirmContent', { version }),
+    content: t('knowledge.card.rollbackConfirmContent', { version: v.version }),
     okText: t('common.confirm'),
     cancelText: t('common.cancel'),
     onOk: () => {
-      emit('rollback', version, targetVersion)
+      emit('rollback', v.version, targetVersion)
     },
   })
 }

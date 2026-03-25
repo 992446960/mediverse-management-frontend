@@ -1,7 +1,7 @@
 <template>
   <div class="version-diff-view">
-    <!-- 顶部版本选择器 + 对比按钮 + 视图切换 -->
-    <div class="flex items-center gap-3 mb-4 flex-wrap">
+    <!-- 版本选择 + 对比 / 回退 -->
+    <div class="flex items-center gap-3 flex-wrap" :class="diff.length > 0 ? 'mb-2' : 'mb-4'">
       <a-select
         v-model:value="localFrom"
         :options="versionOptions"
@@ -18,7 +18,16 @@
       <a-button type="primary" size="small" :disabled="!canCompare" @click="handleCompare">
         {{ t('knowledge.card.compare') }}
       </a-button>
-      <a-radio-group v-model:value="viewMode" size="small" class="ml-auto">
+      <a-button danger size="small" :disabled="!canRollbackToTarget" @click="handleRollbackClick">
+        <template #icon>
+          <RollbackOutlined />
+        </template>
+        {{ t('knowledge.card.rollback') }}
+      </a-button>
+    </div>
+    <!-- 单栏 / 分栏：有对比数据时再展示 -->
+    <div v-if="diff.length > 0" class="flex justify-end mb-4">
+      <a-radio-group v-model:value="viewMode" size="small">
         <a-radio-button value="unified">
           {{ t('knowledge.card.diffUnified') }}
         </a-radio-button>
@@ -106,6 +115,8 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { Modal } from 'ant-design-vue'
+import { RollbackOutlined } from '@ant-design/icons-vue'
 import type { VersionDiffSegment, KnowledgeCardVersion } from '@/types/knowledge'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
@@ -122,6 +133,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'change-versions', fromVersion: number, toVersion: number): void
+  (e: 'rollback-to', versionLabel: string, targetVersion: number): void
 }>()
 
 const viewMode = ref<'unified' | 'split'>('unified')
@@ -151,9 +163,36 @@ const canCompare = computed(() => {
   return localFrom.value > 0 && localTo.value > 0 && localFrom.value !== localTo.value
 })
 
+function extractVersionNumber(version: string): number | null {
+  const m = version.match(/(\d+)/)
+  return m ? Number(m[1]) : null
+}
+
+/** 仅当右侧 to 无合法版本（未选或不在历史列表中）时禁用 */
+const canRollbackToTarget = computed(() => {
+  if (localTo.value <= 0) return false
+  return props.versions.some((v) => extractVersionNumber(v.version) === localTo.value)
+})
+
 function handleCompare() {
   if (!canCompare.value) return
   emit('change-versions', localFrom.value, localTo.value)
+}
+
+function handleRollbackClick() {
+  if (!canRollbackToTarget.value) return
+  const targetVersion = localTo.value
+  const row = props.versions.find((v) => extractVersionNumber(v.version) === targetVersion)
+  const versionLabel = row?.version ?? `v${targetVersion}`
+  Modal.confirm({
+    title: t('knowledge.card.rollbackConfirmTitle'),
+    content: t('knowledge.card.rollbackConfirmContent', { version: versionLabel }),
+    okText: t('common.confirm'),
+    cancelText: t('common.cancel'),
+    onOk: () => {
+      emit('rollback-to', versionLabel, targetVersion)
+    },
+  })
 }
 
 /** 将 Markdown 片段渲染为安全 HTML */

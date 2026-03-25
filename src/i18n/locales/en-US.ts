@@ -347,6 +347,8 @@ export default {
       rollbackFailed: 'Rollback failed',
       rollbackConfirmTitle: 'Confirm Rollback',
       rollbackConfirmContent: 'Are you sure to rollback content to version {version}?',
+      rollbackInvalidVersion:
+        'Cannot resolve rollback target from version label. Please contact an administrator.',
       currentVersion: 'Current',
       operator: 'Operator',
       tabContent: 'Content',

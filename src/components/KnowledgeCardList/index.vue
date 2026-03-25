@@ -289,9 +289,25 @@ const handleEdit = (record: KnowledgeCard) => {
   editorOpen.value = true
 }
 
+const handleEditFromViewer = (record: KnowledgeCard) => {
+  editingCard.value = record
+  editorOpen.value = true
+}
+
 const handleView = (record: KnowledgeCard) => {
   viewingCardId.value = record.id
   viewerOpen.value = true
+}
+
+function patchTableRowOnlineStatus(id: string, online_status: OnlineStatus) {
+  const row = tableData.value.find((r) => r.id === id)
+  if (row) {
+    row.online_status = online_status
+  }
+}
+
+const handleViewerStatusChanged = (payload: { id: string; online_status: OnlineStatus }) => {
+  patchTableRowOnlineStatus(payload.id, payload.online_status)
 }
 
 const handleStatusToggle = async (record: KnowledgeCard) => {
@@ -303,7 +319,7 @@ const handleStatusToggle = async (record: KnowledgeCard) => {
         ? t('knowledge.card.onlineSuccess')
         : t('knowledge.card.offlineSuccess')
     )
-    fetchData()
+    patchTableRowOnlineStatus(record.id, newStatus)
   } catch (err) {
     console.error('Status toggle failed:', err)
     message.error(t('common.error'))
@@ -366,7 +382,8 @@ const handleStatusToggle = async (record: KnowledgeCard) => {
       :card-id="viewingCardId"
       :owner-type="ownerType"
       :owner-id="ownerId"
-      @rollback-success="fetchData"
+      @status-changed="handleViewerStatusChanged"
+      @edit="handleEditFromViewer"
     />
   </div>
 </template>

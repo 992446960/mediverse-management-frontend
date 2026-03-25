@@ -7,10 +7,14 @@ import type { InternalAxiosRequestConfig } from 'axios'
  * 直接拦截并提示。每次被拦截都会刷新冷却期，直到停止操作超过 1s 才可再次提交。
  *
  * 跳过方式：config.headers.repeatSubmit = false
+ *
+ * 仅对写操作（POST/PUT/PATCH/DELETE）节流；GET 等幂等读请求不参与，避免列表/详情并发拉取被误拦。
  */
 
 /** 不参与校验的 URL 关键字 */
 const EXCLUDE_URLS = ['/auth/login', '/auth/refresh', '/auth/logout']
+
+const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 
 /** 冷却时间（ms） */
 const INTERVAL = 1000
@@ -70,6 +74,8 @@ export function checkRepeatSubmit(config: InternalAxiosRequestConfig): void {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if ((config.headers as any)?.repeatSubmit === false) return
   if (isExcluded(config.url || '')) return
+  const method = (config.method ?? 'get').toUpperCase()
+  if (!MUTATING_METHODS.has(method)) return
 
   const key = generateKey(config)
 

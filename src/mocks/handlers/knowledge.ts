@@ -455,7 +455,9 @@ export const knowledgeHandlers = [
       const { target_version } = (await request.json()) as { target_version: number }
       const card = mutableCards.find((c) => c.id === cardId)
       const versions = mockCardVersions[cardId as string] || []
-      const versionData = versions[target_version - 1] // 1-based index
+      const versionData = versions.find(
+        (row) => row.version.match(/(\d+)/)?.[1] === String(target_version)
+      )
 
       if (card && versionData) {
         card.content = versionData.content

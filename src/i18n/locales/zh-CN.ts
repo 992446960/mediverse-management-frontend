@@ -344,6 +344,7 @@ export default {
       rollbackFailed: '回退失败',
       rollbackConfirmTitle: '确认回退版本',
       rollbackConfirmContent: '确定要将知识卡内容回退到版本 {version} 吗？',
+      rollbackInvalidVersion: '无法从版本号解析回退目标，请联系统管理员',
       currentVersion: '当前版本',
       operator: '操作人',
       tabContent: '正文内容',
