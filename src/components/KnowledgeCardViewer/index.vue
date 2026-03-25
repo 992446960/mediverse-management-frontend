@@ -177,7 +177,6 @@ import { CARD_TYPE_CONFIG, ONLINE_STATUS_CONFIG, AUDIT_STATUS_CONFIG } from '@/t
 import { getFileOriginalUrl } from '@/types/knowledge'
 import { stashKnowledgePreviewFile } from '@/utils/knowledgePreviewStash'
 import {
-  getFileList,
   getFileListItemById,
   getKnowledgeCardDetail,
   getKnowledgeCardVersions,
@@ -227,8 +226,6 @@ const emit = defineEmits<{
 const activeTab = ref('content')
 const loading = ref(false)
 const openingSourceFileId = ref<string | null>(null)
-const sourceFileMeta = ref<Map<string, { file_size: number; file_type: string }>>(new Map())
-const sourceMetaLoading = ref(false)
 const card = ref<KnowledgeCard | null>(null)
 const versions = ref<KnowledgeCardVersion[]>([])
 
@@ -237,9 +234,6 @@ const diffResult = ref<VersionDiffSegment[]>([])
 const diffFrom = ref<number>(0)
 const diffTo = ref<number>(0)
 const diffLoading = ref(false)
-
-/** 回退成功后跳过关联文件元数据拉取（不请求 files 列表） */
-const skipSourceFileMetaOnce = ref(false)
 
 const renderedContent = computed(() => {
   const content = card.value?.content || ''
@@ -269,73 +263,13 @@ function classifyThumbKind(ft: string): 'pdf' | 'doc' | 'xls' | 'ppt' | 'img' | 
 const sourceFileRows = computed(() => {
   const files = card.value?.source_files ?? []
   return files.map((s) => {
-    const meta = s.id ? sourceFileMeta.value.get(s.id) : undefined
-    const ft = (meta?.file_type ?? s.file_type ?? inferFileExtension(s.name)).toLowerCase()
+    const ft = (s.file_type ?? inferFileExtension(s.name)).toLowerCase()
     const thumbKind = classifyThumbKind(ft)
-    let sizeLabel: string
-    if (typeof s.file_size === 'number' && s.file_size >= 0) {
-      sizeLabel = formatFileSize(s.file_size)
-    } else if (meta != null) {
-      sizeLabel = formatFileSize(meta.file_size)
-    } else if (sourceMetaLoading.value) {
-      sizeLabel = t('common.loading')
-    } else {
-      sizeLabel = '—'
-    }
+    const sizeLabel =
+      typeof s.file_size === 'number' && s.file_size >= 0 ? formatFileSize(s.file_size) : '—'
     return { source: s, thumbKind, sizeLabel }
   })
 })
-
-async function loadSourceFileMeta() {
-  const sf = card.value?.source_files
-  if (!sf?.length || props.ownerType === 'avatar') return
-  const ids = new Set(sf.map((s) => s.id).filter(Boolean) as string[])
-  if (ids.size === 0) return
-  sourceMetaLoading.value = true
-  try {
-    const meta = new Map<string, { file_size: number; file_type: string }>()
-    let page = 1
-    const pageSize = 100
-    for (let i = 0; i < 30; i++) {
-      const { items, total } = await getFileList(props.ownerType, props.ownerId, {
-        page,
-        page_size: pageSize,
-      })
-      for (const f of items) {
-        if (ids.has(f.id)) {
-          meta.set(f.id, { file_size: f.file_size, file_type: f.file_type })
-        }
-      }
-      if ([...ids].every((id) => meta.has(id))) break
-      if (page * pageSize >= total) break
-      page++
-    }
-    // 列表 id 与知识卡关联 id 不一致时，用文件名 keyword 再查一次（对齐真实环境）
-    for (const s of sf) {
-      if (!s.id || meta.has(s.id)) continue
-      const name = s.name?.trim()
-      if (!name) continue
-      const { items } = await getFileList(props.ownerType, props.ownerId, {
-        page: 1,
-        page_size: 80,
-        keyword: name,
-      })
-      const byId = items.find((f) => f.id === s.id)
-      if (byId) {
-        meta.set(s.id, { file_size: byId.file_size, file_type: byId.file_type })
-        continue
-      }
-      const byName = items.find((f) => f.file_name === name)
-      if (byName) {
-        meta.set(s.id, { file_size: byName.file_size, file_type: byName.file_type })
-      }
-    }
-
-    sourceFileMeta.value = meta
-  } finally {
-    sourceMetaLoading.value = false
-  }
-}
 
 const fetchCardDetails = async (id: string) => {
   loading.value = true
@@ -359,27 +293,13 @@ watch(
   () => props.open,
   (val) => {
     if (val && props.cardId) {
+      card.value = null
       activeTab.value = 'content'
-      sourceFileMeta.value = new Map()
       diffResult.value = []
       diffFrom.value = 0
       diffTo.value = 0
       fetchCardDetails(props.cardId)
     }
-  }
-)
-
-watch(
-  () => [props.open, props.ownerType, props.ownerId, card.value?.id, card.value?.source_files],
-  async () => {
-    if (skipSourceFileMetaOnce.value) {
-      skipSourceFileMetaOnce.value = false
-      return
-    }
-    sourceFileMeta.value = new Map()
-    if (!props.open || !card.value?.source_files?.length) return
-    if (props.ownerType === 'avatar') return
-    await loadSourceFileMeta()
   }
 )
 
@@ -476,7 +396,6 @@ const handleRollback = async (version: string, targetVersion: number) => {
       props.cardId,
       targetVersion
     )
-    skipSourceFileMetaOnce.value = true
     card.value = updated
     versions.value = await getKnowledgeCardVersions(props.ownerType, props.ownerId, props.cardId)
     diffResult.value = []
