@@ -158,6 +158,8 @@ function closeContextMenu() {
 }
 
 onMounted(() => {
+  // 页面刷新后，visitedViews 由 sessionStorage 恢复，需重建 cachedViews
+  tagsViewStore.restoreCachedViews()
   document.addEventListener('click', closeContextMenu)
 })
 onUnmounted(() => {
@@ -190,7 +192,7 @@ watch(
   background: var(--color-bg-container, #fff);
   border-bottom: 1px solid var(--color-border-secondary, #d8dce5);
   box-shadow:
-   0 1px 3px 0 rgba(0, 0, 0, 0.08),
+    0 1px 3px 0 rgba(0, 0, 0, 0.08),
     0 0 3px 0 rgba(0, 0, 0, 0.04);
 }
 

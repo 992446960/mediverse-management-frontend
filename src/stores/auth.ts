@@ -54,6 +54,9 @@ export const useAuthStore = defineStore(
         refreshToken.value = null
         user.value = null
         clearAuth()
+        // 退出登录时清空标签页，防止切换账号后残留前一个用户的页签
+        const { useTagsViewStore } = await import('@/stores/tagsView')
+        useTagsViewStore().$reset()
       }
     }
 
