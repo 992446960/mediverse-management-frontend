@@ -129,15 +129,29 @@ const displaySteps = computed(() =>
   position: relative;
 }
 
+/* 用 padding 替代 margin，便于时间轴竖线在列内延伸到下一步圆点（绝对定位图标列可拉高到底） */
 .thinking-process-step:not(:last-child) {
-  margin-bottom: 16px;
+  padding-bottom: 16px;
 }
 
 .thinking-process-step-icon {
-  position: relative;
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 16px;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   /* 16px 圆点与标题行（约 22px 行高）视觉中线对齐 */
   padding-top: 3px;
+  box-sizing: border-box;
+}
+
+/* 下一步圆点同样有 padding-top: 3px，时间轴略微下探避免竖线与圆点「断开」 */
+.thinking-process-step:not(:last-child) .thinking-process-step-icon {
+  bottom: -3px;
 }
 
 .thinking-process-step-dot {
@@ -172,17 +186,17 @@ const displaySteps = computed(() =>
 }
 
 .thinking-process-step-line {
-  position: absolute;
-  left: 7px;
-  top: 19px;
-  bottom: -16px;
+  flex: 1;
   width: 2px;
+  min-height: 0;
+  margin-top: 0;
   background: var(--tp-border);
 }
 
 .thinking-process-step-content {
   flex: 1;
   min-width: 0;
+  margin-left: 28px;
 }
 
 .thinking-process-step-title {
