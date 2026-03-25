@@ -11,6 +11,7 @@ import {
   clearAuth,
 } from '@/utils/auth'
 import { normalizeAuthUser, mergeUserWithWorkbenchFlags } from '@/utils/authUser'
+import { useTagsViewStore } from '@/stores/tagsView'
 
 export const useAuthStore = defineStore(
   'auth',
@@ -54,9 +55,8 @@ export const useAuthStore = defineStore(
         refreshToken.value = null
         user.value = null
         clearAuth()
-        // 退出登录时清空标签页，防止切换账号后残留前一个用户的页签
-        const { useTagsViewStore } = await import('@/stores/tagsView')
-        useTagsViewStore().$reset()
+        // setup store 无 Pinia 默认 $reset()，见 tagsView.resetSession
+        useTagsViewStore().resetSession()
       }
     }
 

@@ -107,6 +107,12 @@ export const useTagsViewStore = defineStore(
       return [...visitedViews.value]
     }
 
+    /** setup store 无 Pinia 默认 $reset；登出时清空页签并触发持久化同步 */
+    function resetSession() {
+      visitedViews.value = []
+      cachedViews.value = []
+    }
+
     return {
       visitedViews,
       cachedViews,
@@ -119,6 +125,7 @@ export const useTagsViewStore = defineStore(
       addVisitedView,
       removeCachedView,
       restoreCachedViews,
+      resetSession,
     }
   },
   {
