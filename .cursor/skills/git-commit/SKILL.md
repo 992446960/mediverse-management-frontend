@@ -1,6 +1,6 @@
 ---
 name: git-commit
-description: 'Execute git commit with conventional commit message analysis, intelligent staging, and message generation. Use when user asks to commit changes, create a git commit, or mentions "/commit". Supports: (1) Auto-detecting type and scope from changes, (2) Generating conventional commit messages from diff, (3) Interactive commit with optional type/scope/description overrides, (4) Intelligent file staging for logical grouping'
+description: 'Execute git commit with conventional commit message analysis, intelligent staging, and message generation. Use when user asks to commit changes, create a git commit, or mentions "/commit". Commits to local repo only — do NOT run git push unless the user explicitly asks to push. Supports: (1) Auto-detecting type and scope from changes, (2) Generating conventional commit messages from diff, (3) Interactive commit with optional type/scope/description overrides, (4) Intelligent file staging for logical grouping'
 license: MIT
 allowed-tools: Bash
 ---
@@ -114,6 +114,11 @@ EOF
 - Imperative mood: "fix bug" not "fixes bug"
 - Reference issues: `Closes #123`, `Refs #456`
 - Keep description under 72 characters
+
+## Push
+
+- **默认不推送**：`/commit` 或本 skill 执行成功后仅完成本地 `git commit`，**禁止**自动执行 `git push`。
+- 仅当用户**明确**要求推送（例如「push」「推送到远程」）时，再执行 `git push`；失败时说明错误，未经用户同意不得使用 `--force`。
 
 ## Git Safety Protocol
 
