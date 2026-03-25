@@ -1,9 +1,19 @@
 <template>
-  <a-drawer
+  <a-modal
     :open="open"
     :title="t('knowledge.card.detailTitle')"
-    width="600px"
-    @close="handleClose"
+    width="min(960px, 94vw)"
+    centered
+    :footer="null"
+    destroy-on-close
+    :body-style="{
+      minHeight: 'min(520px, calc(100vh - 180px))',
+      maxHeight: 'calc(100vh - 160px)',
+      overflowY: 'auto',
+      paddingTop: '8px',
+    }"
+    wrap-class-name="knowledge-card-detail-modal"
+    @update:open="onDetailOpenChange"
   >
     <a-spin :spinning="loading">
       <div v-if="card" class="card-viewer">
@@ -22,7 +32,13 @@
               }}</a-tag>
             </a-space>
           </div>
-          <div v-if="!readonlyPreview" class="flex gap-2">
+          <div v-if="!readonlyPreview" class="flex flex-wrap items-center justify-end gap-2">
+            <a-button type="default" @click="handleEditFromContent">
+              <template #icon>
+                <EditOutlined />
+              </template>
+              {{ t('common.edit') }}
+            </a-button>
             <a-button
               :type="card.online_status === 'online' ? 'default' : 'primary'"
               @click="handleStatusToggle"
@@ -62,14 +78,6 @@
 
         <a-tabs v-else v-model:active-key="activeTab">
           <a-tab-pane key="content" :tab="t('knowledge.card.tabContent')">
-            <div class="flex justify-end mb-2">
-              <a-button type="link" class="px-0!" @click="handleEditFromContent">
-                <template #icon>
-                  <EditOutlined />
-                </template>
-                {{ t('common.edit') }}
-              </a-button>
-            </div>
             <div
               class="p-4 bg-gray-50 rounded-lg min-h-[200px] max-h-[min(480px,calc(100vh-240px))] overflow-y-auto"
             >
@@ -150,7 +158,7 @@
       </div>
       <a-empty v-else-if="!loading" :description="t('knowledge.card.notFound')" />
     </a-spin>
-  </a-drawer>
+  </a-modal>
 </template>
 
 <script setup lang="ts">
@@ -239,9 +247,11 @@ const renderedContent = computed(() => {
   return DOMPurify.sanitize(html)
 })
 
-function inferFileExtension(name: string): string {
+function inferFileExtension(name: string | undefined): string {
+  if (!name) return ''
   const m = name.match(/\.([^.]+)$/)
-  return m ? m[1].toLowerCase() : ''
+  const ext = m?.[1]
+  return ext ? ext.toLowerCase() : ''
 }
 
 /** 关联文件类型角标（与 AssociatedFilesList 中 assets/icons 一致） */
@@ -373,8 +383,8 @@ watch(
   }
 )
 
-const handleClose = () => {
-  emit('update:open', false)
+function onDetailOpenChange(val: boolean) {
+  emit('update:open', val)
 }
 
 function handleEditFromContent() {
