@@ -102,3 +102,14 @@ body {
 .ant-alert {
   margin-bottom: 14px;
 }
+
+/**
+ * Tag 预设 color="blue"：与 KnowledgeCardPreview `.knowledge-card-preview__type-tag--evidence` 同色
+ * 使用项目 CSS 变量；!important 用于覆盖 Ant Design 预设色的内联样式
+ */
+.ant-tag.ant-tag-blue,
+.ant-tag.ant-tag-color-blue {
+  color: var(--color-primary) !important;
+  background: var(--color-primary-100) !important;
+  border-color: color-mix(in srgb, var(--color-primary) 10%, transparent) !important;
+}
