@@ -31,8 +31,10 @@ export function toAbsoluteFileUrl(path: string): string {
 export function uploadAvatar(file: File) {
   const formData = new FormData()
   formData.append('file', file)
-  return request.post<UploadAvatarResponse>('/upload/avatar', formData).then((data) => ({
-    ...data,
-    url: toAbsoluteFileUrl(data.url),
-  }))
+  return request
+    .post<UploadAvatarResponse>('/upload/avatar', formData, { timeout: 120_000 })
+    .then((data) => ({
+      ...data,
+      url: toAbsoluteFileUrl(data.url),
+    }))
 }

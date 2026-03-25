@@ -48,14 +48,8 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks(id: string) {
             if (id.includes('node_modules')) {
-              if (
-                id.includes('/vue/') ||
-                id.includes('/vue-router/') ||
-                id.includes('/pinia/') ||
-                id.includes('/vue-i18n/')
-              ) {
-                return 'vue-vendor'
-              }
+              // 不单独拆 vue-vendor：与 vendor 等 chunk 易产生跨 chunk 循环依赖，
+              // 生产环境表现为 vendor 内 "Cannot access 'xx' before initialization"
               if (
                 id.includes('/ant-design-vue/') ||
                 id.includes('/@ant-design/') ||

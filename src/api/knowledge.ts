@@ -119,10 +119,12 @@ export function uploadFile(
   if (dirId !== undefined && dirId !== '') {
     form.append('dir_id', String(dirId))
   }
+  // 全局 axios 默认 10s，大文件经反代上传易超时；调用方可通过 config.timeout 覆盖
+  const uploadConfig = { timeout: 600_000, ...config }
   return request
     .post<
       UploadFileResult | UploadFileResult[]
-    >(`${BASE_URL}/${ownerType}/${ownerId}/files`, form, config)
+    >(`${BASE_URL}/${ownerType}/${ownerId}/files`, form, uploadConfig)
     .then((data) => {
       const one = Array.isArray(data) ? data[0] : data
       if (!one) throw new Error('Upload response empty')
