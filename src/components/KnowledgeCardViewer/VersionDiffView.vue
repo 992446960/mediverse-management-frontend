@@ -25,7 +25,7 @@
         {{ t('knowledge.card.rollback') }}
       </a-button>
     </div>
-    <!-- 单栏 / 分栏：有对比数据时再展示 -->
+    <!-- 默认固定分栏展示，单栏与 Radio 切换已停用
     <div v-if="diff.length > 0" class="flex justify-end mb-4">
       <a-radio-group v-model:value="viewMode" size="small">
         <a-radio-button value="unified">
@@ -36,39 +36,15 @@
         </a-radio-button>
       </a-radio-group>
     </div>
+    -->
 
     <a-spin :spinning="loading">
       <!-- 无数据提示 -->
       <a-empty v-if="!loading && diff.length === 0" :description="t('knowledge.card.diffNoData')" />
 
-      <!-- 单栏模式 -->
-      <div
-        v-else-if="viewMode === 'unified'"
-        class="diff-unified markdown-body p-4 bg-gray-50 rounded-lg overflow-auto max-h-[calc(100vh-320px)]"
-      >
-        <template v-for="(seg, i) in diff" :key="i">
-          <!-- eslint-disable-next-line vue/no-v-html -- marked + DOMPurify -->
-          <span
-            v-if="seg.type === 'equal'"
-            class="diff-equal"
-            v-html="renderSegment(seg.content)"
-          ></span>
-          <!-- eslint-disable-next-line vue/no-v-html -- marked + DOMPurify -->
-          <span
-            v-else-if="seg.type === 'delete'"
-            class="diff-delete"
-            v-html="renderSegment(seg.content)"
-          ></span>
-          <!-- eslint-disable-next-line vue/no-v-html -- marked + DOMPurify -->
-          <span
-            v-else-if="seg.type === 'insert'"
-            class="diff-insert"
-            v-html="renderSegment(seg.content)"
-          ></span>
-        </template>
-      </div>
+      <!-- 单栏 unified 已移除；与上方 Radio 一并恢复时，需恢复 script 内 viewMode -->
 
-      <!-- 左右分栏模式 -->
+      <!-- 左右分栏（默认唯一展示方式） -->
       <div v-else class="diff-split grid grid-cols-2 gap-4">
         <div
           class="markdown-body p-4 bg-gray-50 rounded-lg overflow-auto max-h-[calc(100vh-320px)]"
@@ -136,7 +112,8 @@ const emit = defineEmits<{
   (e: 'rollback-to', versionLabel: string, targetVersion: number): void
 }>()
 
-const viewMode = ref<'unified' | 'split'>('unified')
+/** 单栏/分栏切换已移除，固定分栏；原 viewMode 保留注释便于恢复 */
+// const viewMode = ref<'unified' | 'split'>('split')
 const localFrom = ref<number>(0)
 const localTo = ref<number>(0)
 
@@ -168,7 +145,7 @@ function extractVersionNumber(version: string): number | null {
   return m ? Number(m[1]) : null
 }
 
-/** 仅当右侧 to 无合法版本（未选或不在历史列表中）时禁用 */
+/** 回退目标为右侧 to；仅当 to 无合法版本时禁用 */
 const canRollbackToTarget = computed(() => {
   if (localTo.value <= 0) return false
   return props.versions.some((v) => extractVersionNumber(v.version) === localTo.value)

@@ -1,6 +1,6 @@
 <template>
   <div
-    class="version-timeline p-4 max-h-[min(80vh,calc(100vh-280px))] overflow-y-auto overflow-x-hidden"
+    class="version-timeline p-4 max-h-[min(480px,calc(100vh-280px))] overflow-y-auto overflow-x-hidden"
   >
     <a-timeline>
       <a-timeline-item v-for="v in versions" :key="v.version">
