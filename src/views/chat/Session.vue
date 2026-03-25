@@ -1,26 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
 import ChatWindow from '@/components/ChatWindow/index.vue'
-import { useChatStore } from '@/stores/chat'
 
 const route = useRoute()
-const chatStore = useChatStore()
-const { selectSession } = chatStore
 
 const sessionId = computed(() => route.params.id as string)
 
-onMounted(() => {
-  if (sessionId.value) {
-    selectSession(sessionId.value)
-  }
-})
-
-watch(sessionId, (newId) => {
-  if (newId) {
-    selectSession(newId)
-  }
-})
+/** 会话加载由 ChatWindow 根据 props.sessionId 统一调用 selectSession，避免与父级重复触发 getMessages 被 requestDedup 拦截。 */
 </script>
 
 <template>

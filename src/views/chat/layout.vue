@@ -27,12 +27,12 @@ onMounted(() => {
     </div>
 
     <!-- Center: Main Content (ChatWindow via router-view) -->
-    <div class="flex-1 overflow-visible bg-white dark:bg-gray-900 min-w-0 flex flex-col min-h-0">
+    <div class="chat-layout__center flex-1 overflow-visible min-w-[400px] flex flex-col min-h-0">
       <router-view />
     </div>
 
     <!-- Right: Skill Panel（仅对话页展示；略宽于 w-72 便于长文与知识卡） -->
-    <div v-if="showSkillPanel" class="w-96 shrink-0">
+    <div v-if="showSkillPanel" class="w-82 shrink-0">
       <SkillPanel />
     </div>
   </div>
@@ -40,6 +40,10 @@ onMounted(() => {
 
 <style scoped>
 .chat-layout {
-  max-height: calc(100vh - 64px - 24px - 24px);
+  max-height: var(--ant-layout-content-insert-height);
+}
+
+.chat-layout__center {
+  background: var(--color-bg-container);
 }
 </style>

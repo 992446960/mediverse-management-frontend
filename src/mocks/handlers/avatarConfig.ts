@@ -1,17 +1,18 @@
 import { http, HttpResponse, delay } from 'msw'
 import type { AvatarConfig } from '@/types/avatarConfig'
 
+/** 与 `mocks/data/avatars` 中条目 id 一致，便于 PUT /avatars/:id 联调 */
 const mockAvatarConfig: AvatarConfig = {
-  id: 'avatar-1',
+  id: 'avatar_expert_001',
   owner_type: 'personal',
-  owner_id: 'user-1',
-  name: '我的数字分身',
-  avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
-  bio: '这是一个专业的医疗助手分身，擅长处理各种临床咨询。',
-  greeting: '你好！我是您的数字临床助理，有什么可以帮您的？',
+  owner_id: 'u_doctor_001',
+  name: '张医生专家分身',
+  avatar_url: 'https://picsum.photos/200/200?random=avatar_expert_001',
+  bio: '从事内科临床工作 20 年，擅长高血压、糖尿病等慢性病管理。',
+  greeting: '您好，我是张医生，请问有什么可以帮助您？',
   style: 'formal',
   style_custom: null,
-  tags: ['临床', '助手', '专业'],
+  tags: ['内科', '高血压', '糖尿病', '慢性病'],
 }
 
 /** 与线上接口一致：snake_case + Token 为后端已格式化字符串 */
@@ -28,20 +29,17 @@ const mockStats = {
 }
 
 export const avatarConfigHandlers = [
-  // 获取个人分身配置
-  http.get('/api/v1/my/avatar', async () => {
-    await delay(300)
-    return HttpResponse.json({
-      code: 0,
-      message: 'ok',
-      data: mockAvatarConfig,
-    })
-  }),
-
-  // 获取科室/机构分身配置
+  /** 获取分身配置（含 personal/{user_id}） */
   http.get('/api/v1/my/avatar/:owner_type/:owner_id', async ({ params }) => {
-    const { owner_type, owner_id } = params
+    const owner_type = String(params.owner_type ?? '')
+    const owner_id = String(params.owner_id ?? '')
     await delay(300)
+    const name =
+      owner_type === 'dept'
+        ? '科室数字医生'
+        : owner_type === 'org'
+          ? '机构数字医生'
+          : mockAvatarConfig.name
     return HttpResponse.json({
       code: 0,
       message: 'ok',
@@ -49,29 +47,8 @@ export const avatarConfigHandlers = [
         ...mockAvatarConfig,
         owner_type,
         owner_id,
-        name: owner_type === 'dept' ? '科室数字医生' : '机构数字医生',
+        name,
       },
-    })
-  }),
-
-  // 更新分身配置
-  http.put('/api/v1/my/avatar', async ({ request }) => {
-    const data = (await request.json()) as Partial<AvatarConfig>
-    await delay(500)
-    return HttpResponse.json({
-      code: 0,
-      message: 'ok',
-      data: { ...mockAvatarConfig, ...data },
-    })
-  }),
-
-  http.put('/api/v1/my/avatar/:owner_type/:owner_id', async ({ request }) => {
-    const data = (await request.json()) as Partial<AvatarConfig>
-    await delay(500)
-    return HttpResponse.json({
-      code: 0,
-      message: 'ok',
-      data: { ...mockAvatarConfig, ...data },
     })
   }),
 

@@ -2,6 +2,16 @@ import type { RouteRecordRaw } from 'vue-router'
 
 const routes: RouteRecordRaw[] = [
   {
+    path: '/redirect/:path(.*)',
+    name: 'Redirect',
+    component: () => import('@/views/shared/Redirect.vue'),
+    meta: {
+      layout: 'MainLayout',
+      title: '',
+      hidden: true,
+    },
+  },
+  {
     path: '/login',
     name: 'Login',
     component: () => import('@/views/auth/Login.vue'),
@@ -30,6 +40,7 @@ const routes: RouteRecordRaw[] = [
       layout: 'MainLayout',
       title: 'menu.dashboard',
       requiresAuth: true,
+      affix: true,
     },
   },
   {
@@ -194,19 +205,20 @@ const routes: RouteRecordRaw[] = [
       layout: 'MainLayout',
       title: 'menu.digitalDoctor',
       requiresAuth: true,
+      noCache: true,
     },
     children: [
       {
         path: '',
         name: 'ChatHome',
         component: () => import('@/views/chat/index.vue'),
-        meta: { title: 'menu.digitalDoctor' },
+        meta: { title: 'menu.digitalDoctor', noCache: true },
       },
       {
         path: 'session/:id',
         name: 'ChatSession',
         component: () => import('@/views/chat/Session.vue'),
-        meta: { title: 'menu.digitalDoctor', hidden: true },
+        meta: { title: 'menu.avatarChat', noCache: true },
       },
     ],
   },
@@ -218,6 +230,7 @@ const routes: RouteRecordRaw[] = [
       layout: 'MainLayout',
       title: 'menu.knowledgeBase',
       requiresAuth: true,
+      noCache: true,
     },
   },
   {
@@ -229,6 +242,7 @@ const routes: RouteRecordRaw[] = [
       title: 'menu.knowledgeBase',
       requiresAuth: true,
       hidden: true,
+      noCache: true,
     },
   },
   {
@@ -240,6 +254,7 @@ const routes: RouteRecordRaw[] = [
       title: 'menu.knowledgeBase',
       requiresAuth: true,
       hidden: true,
+      noCache: true,
     },
   },
   {
@@ -297,6 +312,16 @@ const routes: RouteRecordRaw[] = [
     meta: {
       layout: 'FullscreenLayout',
       title: '403 Forbidden',
+      hidden: true,
+    },
+  },
+  {
+    path: '/401',
+    name: 'Unauthorized',
+    component: () => import('@/views/error/401.vue'),
+    meta: {
+      layout: 'FullscreenLayout',
+      title: '401 Unauthorized',
       hidden: true,
     },
   },

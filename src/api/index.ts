@@ -6,6 +6,8 @@ import axios, {
 } from 'axios'
 import { message } from 'ant-design-vue'
 import { getToken, setToken, getRefreshToken, clearAuth } from '@/utils/auth'
+import { checkRepeatSubmit } from '@/utils/requestDedup'
+import { getHttpErrorMessage } from '@/config/errorCodes'
 import type { ApiResponse } from '@/types'
 import type { RefreshTokenResponse } from '@/types/auth'
 
@@ -102,6 +104,8 @@ api.interceptors.request.use(
     if (config.data instanceof FormData && config.headers) {
       delete config.headers['Content-Type']
     }
+    // 防重复提交（节流）：第一个放行，1s 内后续相同请求直接拦截
+    checkRepeatSubmit(config)
     return config
   },
   (error) => {
@@ -205,7 +209,11 @@ api.interceptors.response.use(
       !error.response && (error.code === 'ECONNREFUSED' || error.message?.includes('Network Error'))
     const is5xx = error.response?.status != null && error.response.status >= 500
     if (!(isAuthEndpoint && (isNetworkError || is5xx))) {
-      const errorMsg = error.response?.data?.message || error.message || '请求失败'
+      const errorMsg =
+        error.response?.data?.message ||
+        (error.response?.status ? getHttpErrorMessage(error.response.status) : null) ||
+        error.message ||
+        '请求失败'
       const silent = originalRequest?.skipErrorToast === true
       if (!silent) {
         message.error(errorMsg)

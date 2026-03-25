@@ -205,7 +205,7 @@ import { message } from 'ant-design-vue'
 import type { OwnerType } from '@/constants/avatar'
 import type { UpdateAvatarConfigParams } from '@/types/avatarConfig'
 import type { AvatarStyle, UpdateAvatarParams } from '@/types/avatar'
-import { getAvatarConfig, updateAvatarConfig } from '@/api/avatarConfig'
+import { getAvatarConfig } from '@/api/avatarConfig'
 import { getAvatarDetail, updateAvatar } from '@/api/avatars'
 import { uploadAvatar } from '@/api/upload'
 
@@ -213,7 +213,7 @@ const props = defineProps<{
   ownerType: OwnerType
   ownerId?: string
   readonly?: boolean
-  /** 已知分身 ID 时走 GET/PUT /avatars/:id；工作台默认不传，使用 GET/PUT /my/avatar/... */
+  /** 已知分身 ID 时走 GET /avatars/:id；否则 GET /my/avatar/...（保存统一 PUT /avatars/:id） */
   avatarId?: string
 }>()
 
@@ -251,7 +251,7 @@ const styleOptions: { value: AvatarStyle; labelKey: string }[] = [
   { value: 'custom', labelKey: 'avatar.wizard.styleCustom' },
 ]
 
-/** 仅在传入 props.avatarId 时使用 PUT /avatars/:id；否则使用 PUT /my/avatar/... */
+/** 保存时使用的分身 id（来自 props.avatarId 或 GET /my/avatar 返回的 id） */
 const effectiveAvatarId = ref<string | null>(null)
 
 function assignFormFromDetail(res: {
@@ -275,18 +275,18 @@ function assignFormFromDetail(res: {
 }
 
 const fetchConfig = async () => {
-  if (props.ownerType !== 'personal' && !props.ownerId) return
+  if (!props.ownerId) return
   loading.value = true
   try {
     const explicitId = props.avatarId?.trim()
-    effectiveAvatarId.value = explicitId || null
-
     if (explicitId) {
       const res = await getAvatarDetail(explicitId)
       assignFormFromDetail(res)
+      effectiveAvatarId.value = explicitId
     } else {
       const res = await getAvatarConfig(props.ownerType, props.ownerId)
       assignFormFromDetail(res)
+      effectiveAvatarId.value = res.id?.trim() || null
     }
   } catch (err) {
     console.error('Failed to fetch avatar config:', err)
@@ -317,12 +317,12 @@ const handleSave = async () => {
         return [k, v]
       })
     ) as UpdateAvatarParams
-    const id = effectiveAvatarId.value
-    if (id) {
-      await updateAvatar(id, payload)
-    } else {
-      await updateAvatarConfig(props.ownerType, props.ownerId, payload)
+    const id = effectiveAvatarId.value?.trim()
+    if (!id) {
+      message.error(t('avatar.configSaveMissingAvatarId'))
+      return
     }
+    await updateAvatar(id, payload)
     message.success(t('common.success'))
     emit('saved')
   } catch (err) {

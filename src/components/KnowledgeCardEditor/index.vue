@@ -4,6 +4,7 @@
     :title="card ? t('knowledge.card.editTitle') : t('knowledge.card.createTitle')"
     :confirm-loading="loading"
     :ok-button-props="{ disabled: contentResolving }"
+    :destroy-on-close="true"
     width="800px"
     @ok="handleOk"
     @cancel="handleCancel"
@@ -18,6 +19,8 @@
           <a-input
             v-model:value="formState.title"
             :placeholder="t('knowledge.card.titlePlaceholder')"
+            :maxlength="200"
+            show-count
           />
         </a-form-item>
 
@@ -27,7 +30,7 @@
             :label="t('knowledge.card.typeLabel')"
             :rules="[{ required: true, message: t('knowledge.card.typeRequired') }]"
           >
-            <a-select v-model:value="formState.type">
+            <a-select v-model:value="formState.type" :disabled="isEditMode">
               <a-select-option v-for="(cfg, key) in CARD_TYPE_CONFIG" :key="key" :value="key">
                 {{ cfg.label }}
               </a-select-option>
@@ -49,12 +52,41 @@
                 @blur="handleInputTagConfirm"
                 @keyup.enter="handleInputTagConfirm"
               />
-              <a-tag v-else style="background: #fff; border-style: dashed" @click="showInputTag">
+              <a-tag
+                v-else-if="formState.tags.length < 10"
+                style="background: #fff; border-style: dashed"
+                @click="showInputTag"
+              >
                 <PlusOutlined /> {{ t('knowledge.card.addTag') }}
               </a-tag>
             </div>
           </a-form-item>
         </div>
+
+        <!-- 关联文件选择：仅创建模式 -->
+        <a-form-item v-if="!isEditMode" :label="t('knowledge.card.sourceFileLabel')">
+          <a-select
+            v-model:value="formState.source_file_ids"
+            mode="multiple"
+            show-search
+            allow-clear
+            :placeholder="t('knowledge.card.sourceFilePlaceholder')"
+            :filter-option="false"
+            :options="editorSourceFileOptions"
+            :loading="editorSourceFileLoading"
+            @search="handleEditorSourceFileSearch"
+          />
+        </a-form-item>
+
+        <!-- 修改摘要：仅编辑模式 -->
+        <a-form-item v-if="isEditMode" :label="t('knowledge.card.changeSummaryLabel')">
+          <a-input
+            v-model:value="formState.change_summary"
+            :placeholder="t('knowledge.card.changeSummaryPlaceholder')"
+            :maxlength="200"
+            show-count
+          />
+        </a-form-item>
 
         <a-form-item
           name="content"
@@ -80,6 +112,7 @@ import type { KnowledgeCard, CardType, OwnerType } from '@/types/knowledge'
 import { CARD_TYPE_CONFIG } from '@/types/knowledge'
 import { getKnowledgeCardDetail, saveKnowledgeCard, updateKnowledgeCard } from '@/api/knowledge'
 import TiptapEditor from './TiptapEditor.vue'
+import { useFileRemoteSearch } from '@/composables/useFileRemoteSearch'
 
 const { t } = useI18n()
 
@@ -103,11 +136,25 @@ let editorLoadGeneration = 0
 const inputTagValue = ref('')
 const inputTagVisible = ref(false)
 
+const isEditMode = computed(() => !!props.card?.id)
+
+const {
+  options: editorSourceFileOptions,
+  loading: editorSourceFileLoading,
+  loadDefault: loadEditorSourceFiles,
+  search: handleEditorSourceFileSearch,
+} = useFileRemoteSearch(
+  toRef(() => props.ownerType),
+  toRef(() => props.ownerId)
+)
+
 const formState = reactive({
   title: '',
   type: 'evidence' as CardType,
   content: '',
   tags: [] as string[],
+  source_file_ids: [] as string[],
+  change_summary: '',
 })
 
 watch(
@@ -122,6 +169,8 @@ watch(
       formState.title = props.card.title
       formState.type = props.card.type
       formState.tags = [...props.card.tags]
+      formState.source_file_ids = []
+      formState.change_summary = ''
 
       const fromList =
         typeof props.card.content === 'string' && props.card.content.trim().length > 0
@@ -148,6 +197,9 @@ watch(
       formState.type = 'evidence'
       formState.content = ''
       formState.tags = []
+      formState.source_file_ids = []
+      formState.change_summary = ''
+      loadEditorSourceFiles()
     }
   }
 )
@@ -166,11 +218,15 @@ const handleOk = async () => {
         title: formState.title,
         content: formState.content,
         tags: formState.tags,
+        change_summary: formState.change_summary || undefined,
       })
     } else {
       await saveKnowledgeCard(props.ownerType, props.ownerId, {
-        ...formState,
+        title: formState.title,
+        content: formState.content,
         type: formState.type,
+        tags: formState.tags,
+        source_file_ids: formState.source_file_ids.length ? formState.source_file_ids : undefined,
       })
     }
 
@@ -197,6 +253,12 @@ const showInputTag = () => {
 const handleInputTagConfirm = () => {
   const inputValue = inputTagValue.value
   if (inputValue && !formState.tags.includes(inputValue)) {
+    if (formState.tags.length >= 10) {
+      message.warning(t('knowledge.card.tagMaxLimit'))
+      inputTagVisible.value = false
+      inputTagValue.value = ''
+      return
+    }
     formState.tags.push(inputValue)
   }
   inputTagVisible.value = false

@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { RobotOutlined, DownOutlined, CheckOutlined } from '@ant-design/icons-vue'
 import { useI18n } from 'vue-i18n'
 import type { ThinkingProcessStep } from '@/types/chat'
+import { renderMarkdownSafe } from '@/utils/renderMarkdownSafe'
 
 const { t } = useI18n()
 
@@ -11,6 +12,18 @@ const props = defineProps<{
 }>()
 
 const expanded = ref(true)
+
+/** 每步说明是否展开，缺省为 true（与改前一致）；仅含 description 的步骤可收起 */
+const stepDescExpandedByIndex = ref<Record<number, boolean>>({})
+
+function isStepDescExpanded(idx: number): boolean {
+  return stepDescExpandedByIndex.value[idx] !== false
+}
+
+function toggleStepDesc(idx: number) {
+  const next = !isStepDescExpanded(idx)
+  stepDescExpandedByIndex.value = { ...stepDescExpandedByIndex.value, [idx]: next }
+}
 
 function formatDuration(step: ThinkingProcessStep): string | undefined {
   if (step.duration_ms !== undefined) {
@@ -24,6 +37,7 @@ const displaySteps = computed(() =>
   props.steps.map((step) => ({
     ...step,
     extra: formatDuration(step),
+    descriptionHtml: step.description ? renderMarkdownSafe(step.description) : '',
   }))
 )
 </script>
@@ -54,13 +68,40 @@ const displaySteps = computed(() =>
           <span v-if="idx < displaySteps.length - 1" class="thinking-process-step-line" />
         </div>
         <div class="thinking-process-step-content">
-          <div class="thinking-process-step-title">{{ step.title }}</div>
-          <div v-if="step.description" class="thinking-process-step-desc">
-            {{ step.description }}
+          <div class="thinking-process-step-title-row">
+            <div class="thinking-process-step-title">{{ step.title }}</div>
+            <span v-if="step.extra" class="thinking-process-step-badge">{{ step.extra }}</span>
+            <span
+              v-if="step.description"
+              class="thinking-process-step-title-row-spacer"
+              aria-hidden="true"
+            />
+            <button
+              v-if="step.description"
+              type="button"
+              class="thinking-process-step-detail-toggle"
+              :aria-expanded="isStepDescExpanded(idx)"
+              :aria-label="
+                isStepDescExpanded(idx)
+                  ? t('chat.thinkingProcessStepDetailCollapse')
+                  : t('chat.thinkingProcessStepDetailExpand')
+              "
+              @click.stop="toggleStepDesc(idx)"
+            >
+              <DownOutlined
+                class="thinking-process-step-detail-chevron"
+                :class="{
+                  'thinking-process-step-detail-chevron--collapsed': !isStepDescExpanded(idx),
+                }"
+              />
+            </button>
           </div>
-          <span v-if="step.extra" class="thinking-process-step-badge">
-            {{ step.extra }}
-          </span>
+          <!-- eslint-disable-next-line vue/no-v-html -- Markdown（marked + DOMPurify），来源为思考步骤接口 -->
+          <div
+            v-show="step.description && isStepDescExpanded(idx)"
+            class="thinking-process-step-desc markdown-body prose prose-sm max-w-none dark:prose-invert"
+            v-html="step.descriptionHtml"
+          />
         </div>
       </div>
     </div>
@@ -84,6 +125,7 @@ const displaySteps = computed(() =>
   cursor: pointer;
   color: var(--color-text-secondary);
   font-size: 14px;
+  line-height: 22px;
 }
 
 .thinking-process-header:hover {
@@ -91,7 +133,12 @@ const displaySteps = computed(() =>
 }
 
 .thinking-process-header-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
   font-size: 16px;
+  line-height: 1;
   color: var(--color-primary);
 }
 
@@ -118,17 +165,34 @@ const displaySteps = computed(() =>
 
 .thinking-process-step {
   display: flex;
+  align-items: flex-start;
   gap: 12px;
   position: relative;
 }
 
+/* 用 padding 替代 margin，便于时间轴竖线在列内延伸到下一步圆点（绝对定位图标列可拉高到底） */
 .thinking-process-step:not(:last-child) {
-  margin-bottom: 16px;
+  padding-bottom: 16px;
 }
 
 .thinking-process-step-icon {
-  position: relative;
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 16px;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* 16px 圆点与标题行（约 22px 行高）视觉中线对齐 */
+  padding-top: 3px;
+  box-sizing: border-box;
+}
+
+/* 下一步圆点同样有 padding-top: 3px，时间轴略微下探避免竖线与圆点「断开」 */
+.thinking-process-step:not(:last-child) .thinking-process-step-icon {
+  bottom: -3px;
 }
 
 .thinking-process-step-dot {
@@ -163,23 +227,68 @@ const displaySteps = computed(() =>
 }
 
 .thinking-process-step-line {
-  position: absolute;
-  left: 7px;
-  top: 16px;
-  bottom: -16px;
+  flex: 1;
   width: 2px;
+  min-height: 0;
+  margin-top: 0;
   background: var(--tp-border);
 }
 
 .thinking-process-step-content {
   flex: 1;
   min-width: 0;
+  margin-left: 28px;
+}
+
+.thinking-process-step-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
 }
 
 .thinking-process-step-title {
+  flex: 0 1 auto;
+  min-width: 0;
   font-weight: 600;
   color: var(--color-text-base);
   font-size: 14px;
+  line-height: 22px;
+}
+
+.thinking-process-step-title-row-spacer {
+  flex: 1;
+  min-width: 8px;
+}
+
+.thinking-process-step-detail-toggle {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  margin-top: 1px;
+  padding: 2px;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.thinking-process-step-detail-toggle:hover {
+  color: var(--color-primary);
+  background: var(--color-fill-tertiary);
+}
+
+.thinking-process-step-detail-chevron {
+  font-size: 12px;
+  transition: transform 0.2s ease;
+}
+
+.thinking-process-step-detail-chevron--collapsed {
+  transform: rotate(-90deg);
 }
 
 .thinking-process-step-desc {
@@ -189,11 +298,38 @@ const displaySteps = computed(() =>
   line-height: 1.4;
 }
 
+.thinking-process-step-desc :deep(p) {
+  margin: 0.35em 0;
+}
+
+.thinking-process-step-desc :deep(p:first-child) {
+  margin-top: 0;
+}
+
+.thinking-process-step-desc :deep(p:last-child) {
+  margin-bottom: 0;
+}
+
+.thinking-process-step-desc :deep(pre) {
+  background-color: var(--color-bg-layout);
+  padding: 10px 12px;
+  border-radius: 6px;
+  overflow: auto;
+  font-size: 12px;
+}
+
+.thinking-process-step-desc :deep(code) {
+  font-size: 0.92em;
+}
+
 .thinking-process-step-badge {
   display: inline-block;
-  margin-top: 6px;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 2px;
   padding: 2px 8px;
   font-size: 12px;
+  line-height: 1.25;
   color: var(--color-text-secondary);
   background: var(--color-bg-layout);
   border-radius: 999px;

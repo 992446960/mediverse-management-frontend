@@ -192,7 +192,7 @@ onMounted(() => {
 
     <div
       v-if="avatars.length > 0 || pagination.total > 0"
-      class="shrink-0 px-6 py-4 border-t border-gray-100 dark:border-gray-800 flex justify-end bg-white dark:bg-gray-900"
+      class="avatar-selector__footer shrink-0 px-6 py-4 border-t border-gray-100 dark:border-gray-800 flex justify-end"
     >
       <a-pagination
         v-model:current="pagination.current"
@@ -210,6 +210,10 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.avatar-selector__footer {
+  background: var(--color-bg-container);
+}
+
 .avatar-grid {
   grid-template-columns: repeat(auto-fit, minmax(300px, 400px));
 }

@@ -62,20 +62,17 @@
 
         <a-tabs v-else v-model:active-key="activeTab">
           <a-tab-pane key="content" :tab="t('knowledge.card.tabContent')">
+            <div class="flex justify-end mb-2">
+              <a-button type="link" class="px-0!" @click="handleEditFromContent">
+                <template #icon>
+                  <EditOutlined />
+                </template>
+                {{ t('common.edit') }}
+              </a-button>
+            </div>
             <div
               class="p-4 bg-gray-50 rounded-lg min-h-[200px] max-h-[min(480px,calc(100vh-240px))] overflow-y-auto"
             >
-              <div
-                v-if="previewVersion"
-                class="mb-4 p-2 bg-blue-50 border border-blue-200 rounded text-blue-600 text-sm flex justify-between items-center"
-              >
-                <span>{{
-                  t('knowledge.card.previewingVersion', { version: previewVersion.version })
-                }}</span>
-                <a-button type="link" size="small" @click="previewVersion = null">
-                  {{ t('knowledge.card.exitPreview') }}
-                </a-button>
-              </div>
               <!-- eslint-disable-next-line vue/no-v-html -- marked + DOMPurify -->
               <div class="markdown-body" v-html="renderedContent"></div>
             </div>
@@ -96,8 +93,20 @@
             <VersionTimeline
               :versions="versions"
               :current-version="card.version"
-              @preview="handlePreviewVersion"
+              @compare="handleCompareFromTimeline"
               @rollback="handleRollback"
+            />
+          </a-tab-pane>
+
+          <a-tab-pane key="diff" :tab="t('knowledge.card.tabDiff')">
+            <VersionDiffView
+              :diff="diffResult"
+              :from-version="diffFrom"
+              :to-version="diffTo"
+              :versions="versions"
+              :loading="diffLoading"
+              @change-versions="handleDiffVersionChange"
+              @rollback-to="handleRollback"
             />
           </a-tab-pane>
 
@@ -148,8 +157,14 @@
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { CloudUploadOutlined, CloudDownloadOutlined } from '@ant-design/icons-vue'
-import type { KnowledgeCard, KnowledgeCardVersion, OwnerType } from '@/types/knowledge'
+import { CloudUploadOutlined, CloudDownloadOutlined, EditOutlined } from '@ant-design/icons-vue'
+import type {
+  KnowledgeCard,
+  KnowledgeCardVersion,
+  OnlineStatus,
+  OwnerType,
+} from '@/types/knowledge'
+import type { VersionDiffSegment } from '@/types/knowledge'
 import { CARD_TYPE_CONFIG, ONLINE_STATUS_CONFIG, AUDIT_STATUS_CONFIG } from '@/types/knowledge'
 import { getFileOriginalUrl } from '@/types/knowledge'
 import { stashKnowledgePreviewFile } from '@/utils/knowledgePreviewStash'
@@ -158,12 +173,14 @@ import {
   getFileListItemById,
   getKnowledgeCardDetail,
   getKnowledgeCardVersions,
+  getKnowledgeCardVersionDiff,
   toggleKnowledgeCardStatus,
   rollbackKnowledgeCard,
 } from '@/api/knowledge'
 import { formatFileSize } from '@/utils/formatFileSize'
 import AssociatedFilesList from './AssociatedFilesList.vue'
 import VersionTimeline from './VersionTimeline.vue'
+import VersionDiffView from './VersionDiffView.vue'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import dayjs from 'dayjs'
@@ -194,7 +211,9 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (e: 'update:open', value: boolean): void
-  (e: 'rollback-success'): void
+  /** 上下线成功后通知父级就地更新列表行，不请求列表接口 */
+  (e: 'status-changed', payload: { id: string; online_status: OnlineStatus }): void
+  (e: 'edit', card: KnowledgeCard): void
 }>()
 
 const activeTab = ref('content')
@@ -204,10 +223,18 @@ const sourceFileMeta = ref<Map<string, { file_size: number; file_type: string }>
 const sourceMetaLoading = ref(false)
 const card = ref<KnowledgeCard | null>(null)
 const versions = ref<KnowledgeCardVersion[]>([])
-const previewVersion = ref<KnowledgeCardVersion | null>(null)
+
+// 版本对比状态
+const diffResult = ref<VersionDiffSegment[]>([])
+const diffFrom = ref<number>(0)
+const diffTo = ref<number>(0)
+const diffLoading = ref(false)
+
+/** 回退成功后跳过关联文件元数据拉取（不请求 files 列表） */
+const skipSourceFileMetaOnce = ref(false)
 
 const renderedContent = computed(() => {
-  const content = previewVersion.value?.content || card.value?.content || ''
+  const content = card.value?.content || ''
   const html = marked.parse(content) as string
   return DOMPurify.sanitize(html)
 })
@@ -323,8 +350,10 @@ watch(
   (val) => {
     if (val && props.cardId) {
       activeTab.value = 'content'
-      previewVersion.value = null
       sourceFileMeta.value = new Map()
+      diffResult.value = []
+      diffFrom.value = 0
+      diffTo.value = 0
       fetchCardDetails(props.cardId)
     }
   }
@@ -333,6 +362,10 @@ watch(
 watch(
   () => [props.open, props.ownerType, props.ownerId, card.value?.id, card.value?.source_files],
   async () => {
+    if (skipSourceFileMetaOnce.value) {
+      skipSourceFileMetaOnce.value = false
+      return
+    }
     sourceFileMeta.value = new Map()
     if (!props.open || !card.value?.source_files?.length) return
     if (props.ownerType === 'avatar') return
@@ -341,6 +374,12 @@ watch(
 )
 
 const handleClose = () => {
+  emit('update:open', false)
+}
+
+function handleEditFromContent() {
+  if (!card.value) return
+  emit('edit', card.value)
   emit('update:open', false)
 }
 
@@ -380,18 +419,60 @@ async function openSourceFilePreview(item: KnowledgeCard['source_files'][number]
   }
 }
 
-const handlePreviewVersion = (v: KnowledgeCardVersion) => {
-  previewVersion.value = v
-  activeTab.value = 'content'
+// ─── 版本对比 ───────────────────────────────────────────
+
+async function loadDiff(from: number, to: number) {
+  if (!props.cardId || from === to) return
+  diffLoading.value = true
+  try {
+    const result = await getKnowledgeCardVersionDiff(
+      props.ownerType,
+      props.ownerId,
+      props.cardId,
+      from,
+      to
+    )
+    diffResult.value = result.diff
+  } catch (err) {
+    console.error('Load diff failed:', err)
+    message.error(t('knowledge.card.diffFailed'))
+    diffResult.value = []
+  } finally {
+    diffLoading.value = false
+  }
 }
+
+async function handleCompareFromTimeline(fromVersion: number, toVersion: number) {
+  diffFrom.value = fromVersion
+  diffTo.value = toVersion
+  activeTab.value = 'diff'
+  await loadDiff(fromVersion, toVersion)
+}
+
+async function handleDiffVersionChange(fromVersion: number, toVersion: number) {
+  diffFrom.value = fromVersion
+  diffTo.value = toVersion
+  await loadDiff(fromVersion, toVersion)
+}
+
+// ─── 回滚 & 上下线 ─────────────────────────────────────
 
 const handleRollback = async (version: string, targetVersion: number) => {
   if (!props.cardId) return
   try {
-    await rollbackKnowledgeCard(props.ownerType, props.ownerId, props.cardId, targetVersion)
+    const updated = await rollbackKnowledgeCard(
+      props.ownerType,
+      props.ownerId,
+      props.cardId,
+      targetVersion
+    )
+    skipSourceFileMetaOnce.value = true
+    card.value = updated
+    versions.value = await getKnowledgeCardVersions(props.ownerType, props.ownerId, props.cardId)
+    diffResult.value = []
+    diffFrom.value = 0
+    diffTo.value = 0
     message.success(t('knowledge.card.rollbackSuccess', { version }))
-    emit('rollback-success')
-    handleClose()
   } catch (err) {
     console.error('Rollback failed:', err)
     message.error(t('knowledge.card.rollbackFailed'))
@@ -409,6 +490,7 @@ const handleStatusToggle = async () => {
         ? t('knowledge.card.onlineSuccess')
         : t('knowledge.card.offlineSuccess')
     )
+    emit('status-changed', { id: card.value.id, online_status: newStatus })
   } catch (err) {
     console.error('Status toggle failed:', err)
     message.error(t('common.error'))

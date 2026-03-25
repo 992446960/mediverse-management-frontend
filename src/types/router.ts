@@ -12,5 +12,7 @@ declare module 'vue-router' {
     keepAlive?: boolean
     hidden?: boolean // 在菜单中隐藏
     order?: number // 菜单排序
+    noCache?: boolean
+    affix?: boolean
   }
 }

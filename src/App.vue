@@ -6,12 +6,15 @@ import MainLayout from '@/layouts/MainLayout.vue'
 import FullscreenLayout from '@/layouts/FullscreenLayout.vue'
 import { useThemeStore } from '@/stores/theme'
 import { useLocaleStore } from '@/stores/locale'
+import { useTagsViewStore } from '@/stores/tagsView'
 import { themeConfig, darkThemeConfig } from '@/config/themes'
 import type { Locale } from 'ant-design-vue/es/locale'
 
 const route = useRoute()
 const themeStore = useThemeStore()
 const localeStore = useLocaleStore()
+const tagsViewStore = useTagsViewStore()
+const cachedViews = computed(() => tagsViewStore.cachedViews)
 
 const layout = computed(() =>
   route.meta.layout === 'FullscreenLayout' ? FullscreenLayout : MainLayout
@@ -28,7 +31,9 @@ const antdLocale = computed<Locale>(() => (localeStore.locale === 'zh-CN' ? zhCN
       <component :is="layout">
         <router-view v-slot="{ Component }">
           <transition name="fade" mode="out-in">
-            <component :is="Component" />
+            <keep-alive :include="cachedViews">
+              <component :is="Component" :key="route.fullPath" />
+            </keep-alive>
           </transition>
         </router-view>
       </component>

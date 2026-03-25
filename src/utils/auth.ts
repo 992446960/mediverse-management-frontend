@@ -4,8 +4,8 @@ export const AUTH_STORAGE_KEY = 'mediverse_auth'
 const TokenKey = 'mediverse_access_token'
 const RefreshTokenKey = 'mediverse_refresh_token'
 
-/** 本会话跳过修改密码（点击「稍后修改」后设置，logout 时清除） */
-const SkipChangePwdKey = 'mediverse_skip_change_pwd'
+/** 本地持久化：用户对「稍后修改」的选择（按 userId，换账号不影响他人） */
+const SkipChangePwdUserIdKey = 'mediverse_skip_change_pwd_user_id'
 
 export function getToken(): string | null {
   return localStorage.getItem(TokenKey)
@@ -27,16 +27,18 @@ export function clearAuth() {
   localStorage.removeItem(TokenKey)
   localStorage.removeItem(RefreshTokenKey)
   localStorage.removeItem(AUTH_STORAGE_KEY)
-  sessionStorage.removeItem(SkipChangePwdKey)
 }
 
-/** 本会话跳过修改密码（点击「稍后修改」时设置，守卫据此不再重定向到 /change-password） */
-export function setSkipChangePassword() {
-  sessionStorage.setItem(SkipChangePwdKey, '1')
+/** 记录当前用户已选择「稍后修改」，守卫据此不再重定向到 /change-password */
+export function setSkipChangePassword(userId: string) {
+  localStorage.setItem(SkipChangePwdUserIdKey, userId)
 }
 
-export function getSkipChangePassword(): boolean {
-  return sessionStorage.getItem(SkipChangePwdKey) === '1'
+export function getSkipChangePassword(currentUserId: string | undefined): boolean {
+  if (!currentUserId) {
+    return false
+  }
+  return localStorage.getItem(SkipChangePwdUserIdKey) === currentUserId
 }
 
 export function isAuthenticated(): boolean {

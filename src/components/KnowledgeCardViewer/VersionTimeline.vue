@@ -1,7 +1,9 @@
 <template>
-  <div class="version-timeline p-4">
+  <div
+    class="version-timeline p-4 max-h-[min(80vh,calc(100vh-280px))] overflow-y-auto overflow-x-hidden"
+  >
     <a-timeline>
-      <a-timeline-item v-for="(v, index) in versions" :key="v.version">
+      <a-timeline-item v-for="v in versions" :key="v.version">
         <template #dot>
           <HistoryOutlined style="font-size: 16px" />
         </template>
@@ -21,16 +23,16 @@
           <div class="flex items-center justify-between text-xs text-gray-400">
             <span>{{ t('knowledge.card.operator') }}: {{ v.created_by_name }}</span>
             <a-space>
-              <a-button type="link" size="small" @click="emit('preview', v)">
-                <template #icon><EyeOutlined /></template>
-                {{ t('knowledge.preview') }}
+              <a-button type="link" size="small" @click="handleCompare(v)">
+                <template #icon><SwapOutlined /></template>
+                {{ t('knowledge.card.compare') }}
               </a-button>
               <a-button
                 v-if="v.version !== currentVersion"
                 type="link"
                 size="small"
                 danger
-                @click="handleRollback(v.version, index + 1)"
+                @click="handleRollback(v)"
               >
                 <template #icon><RollbackOutlined /></template>
                 {{ t('knowledge.card.rollback') }}
@@ -45,31 +47,50 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { Modal } from 'ant-design-vue'
-import { HistoryOutlined, RollbackOutlined, EyeOutlined } from '@ant-design/icons-vue'
+import { Modal, message } from 'ant-design-vue'
+import { HistoryOutlined, RollbackOutlined, SwapOutlined } from '@ant-design/icons-vue'
 import type { KnowledgeCardVersion } from '@/types/knowledge'
 import dayjs from 'dayjs'
 
 const { t } = useI18n()
 
-defineProps<{
+const props = defineProps<{
   versions: KnowledgeCardVersion[]
   currentVersion: string
 }>()
 
 const emit = defineEmits<{
-  (e: 'preview', version: KnowledgeCardVersion): void
+  (e: 'compare', fromVersion: number, toVersion: number): void
   (e: 'rollback', version: string, targetVersion: number): void
 }>()
 
-const handleRollback = (version: string, targetVersion: number) => {
+function extractVersionNumber(version: string): number | null {
+  const m = version.match(/(\d+)/)
+  return m ? Number(m[1]) : null
+}
+
+function handleCompare(v: KnowledgeCardVersion) {
+  const fromNum = extractVersionNumber(v.version)
+  const latestVersion = props.versions[0]
+  const toNum = extractVersionNumber(latestVersion.version)
+  if (fromNum != null && toNum != null) {
+    emit('compare', fromNum, toNum)
+  }
+}
+
+const handleRollback = (v: KnowledgeCardVersion) => {
+  const targetVersion = extractVersionNumber(v.version)
+  if (targetVersion == null) {
+    message.warning(t('knowledge.card.rollbackInvalidVersion'))
+    return
+  }
   Modal.confirm({
     title: t('knowledge.card.rollbackConfirmTitle'),
-    content: t('knowledge.card.rollbackConfirmContent', { version }),
+    content: t('knowledge.card.rollbackConfirmContent', { version: v.version }),
     okText: t('common.confirm'),
     cancelText: t('common.cancel'),
     onOk: () => {
-      emit('rollback', version, targetVersion)
+      emit('rollback', v.version, targetVersion)
     },
   })
 }

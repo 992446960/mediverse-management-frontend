@@ -24,6 +24,7 @@ import PageHead from '@/components/PageHead/index.vue'
 import PageFilter from '@/components/PageFilter/index.vue'
 import PageTable from '@/components/PageTable/index.vue'
 import { getKnowledgeCards, toggleKnowledgeCardStatus } from '@/api/knowledge'
+import { useFileRemoteSearch } from '@/composables/useFileRemoteSearch'
 import type { PageHeadConfig } from '@/components/PageHead/types'
 import type { PageFilterConfig } from '@/components/PageFilter/types'
 import type { PageTableConfig, PageTableColumnConfig } from '@/components/PageTable/types'
@@ -39,6 +40,16 @@ const props = defineProps<{
 defineEmits<{
   (e: 'success'): void
 }>()
+
+const {
+  options: sourceFileOptions,
+  loading: sourceFileLoading,
+  loadDefault: loadDefaultSourceFiles,
+  search: handleSourceFileSearch,
+} = useFileRemoteSearch(
+  toRef(() => props.ownerType),
+  toRef(() => props.ownerId)
+)
 
 const pageFilterRef = ref<InstanceType<typeof PageFilter> | null>(null)
 const pageTableRef = ref<InstanceType<typeof PageTable> | null>(null)
@@ -109,6 +120,20 @@ const filterConf = computed<PageFilterConfig>(() => ({
         value,
       })),
       clearable: true,
+    },
+    {
+      key: 'source_file_id',
+      label: t('knowledge.card.sourceFileFilter'),
+      type: 'slot',
+      slotName: 'sourceFileFilter',
+      col: 8,
+    },
+    {
+      key: 'tag',
+      label: t('knowledge.card.tagsLabel'),
+      type: 'input',
+      ph: t('knowledge.card.tagFilterPlaceholder'),
+      col: 6,
     },
   ],
   btns: [
@@ -229,8 +254,10 @@ const fetchData = async () => {
       page_size: pageSize,
       type: activeTab.value !== 'all' ? activeTab.value : undefined,
       keyword: (params.keyword as string) || undefined,
-      online_status: (params.online_status as OnlineStatus | undefined) || undefined,
-      audit_status: (params.audit_status as AuditStatus | undefined) || undefined,
+      online_status: (params.online_status as string) || undefined,
+      audit_status: (params.audit_status as string) || undefined,
+      source_file_id: (params.source_file_id as string) || undefined,
+      tag: (params.tag as string) || undefined,
     })
     tableData.value = result.items
     total.value = result.total
@@ -242,7 +269,10 @@ const fetchData = async () => {
   }
 }
 
-onMounted(fetchData)
+onMounted(() => {
+  fetchData()
+  loadDefaultSourceFiles()
+})
 
 const handleSearch = () => {
   pageTableRef.value?.resetCurPage(1)
@@ -259,9 +289,25 @@ const handleEdit = (record: KnowledgeCard) => {
   editorOpen.value = true
 }
 
+const handleEditFromViewer = (record: KnowledgeCard) => {
+  editingCard.value = record
+  editorOpen.value = true
+}
+
 const handleView = (record: KnowledgeCard) => {
   viewingCardId.value = record.id
   viewerOpen.value = true
+}
+
+function patchTableRowOnlineStatus(id: string, online_status: OnlineStatus) {
+  const row = tableData.value.find((r) => r.id === id)
+  if (row) {
+    row.online_status = online_status
+  }
+}
+
+const handleViewerStatusChanged = (payload: { id: string; online_status: OnlineStatus }) => {
+  patchTableRowOnlineStatus(payload.id, payload.online_status)
 }
 
 const handleStatusToggle = async (record: KnowledgeCard) => {
@@ -273,7 +319,7 @@ const handleStatusToggle = async (record: KnowledgeCard) => {
         ? t('knowledge.card.onlineSuccess')
         : t('knowledge.card.offlineSuccess')
     )
-    fetchData()
+    patchTableRowOnlineStatus(record.id, newStatus)
   } catch (err) {
     console.error('Status toggle failed:', err)
     message.error(t('common.error'))
@@ -285,7 +331,21 @@ const handleStatusToggle = async (record: KnowledgeCard) => {
   <div class="knowledge-card-list flex flex-1 flex-col overflow-hidden">
     <div class="app-container p-4 mb-4">
       <PageHead :head-conf="headConf" />
-      <PageFilter ref="pageFilterRef" :filter-conf="filterConf" @fetch-table-data="handleSearch" />
+      <PageFilter ref="pageFilterRef" :filter-conf="filterConf" @fetch-table-data="handleSearch">
+        <template #sourceFileFilter="{ formData }">
+          <a-select
+            v-model:value="formData.source_file_id"
+            show-search
+            allow-clear
+            :placeholder="t('knowledge.card.sourceFilePlaceholder')"
+            :filter-option="false"
+            :options="sourceFileOptions"
+            :loading="sourceFileLoading"
+            @search="handleSourceFileSearch"
+            @change="handleSearch"
+          />
+        </template>
+      </PageFilter>
     </div>
 
     <div class="app-container p-0 flex-1 flex flex-col min-h-0">
@@ -322,7 +382,8 @@ const handleStatusToggle = async (record: KnowledgeCard) => {
       :card-id="viewingCardId"
       :owner-type="ownerType"
       :owner-id="ownerId"
-      @rollback-success="fetchData"
+      @status-changed="handleViewerStatusChanged"
+      @edit="handleEditFromViewer"
     />
   </div>
 </template>

@@ -46,6 +46,13 @@
   --spacing-xl:  32px;
   --spacing-2xl: 48px;
 
+  /* Ant Layout：顶栏高度（与 a-layout-header 一致；TagsView sticky top 对齐） */
+  --layout-header-height: 64px;
+  /* Ant Layout：主内容区可用高度（header + 上下内边距 24+24 + 页签条 34） */
+  --ant-layout-content-insert-height: calc(
+    100vh - var(--layout-header-height) - 24px - 24px - 34px
+  );
+
   /* ── Radius ── */
   --radius-sm:   6px;
   --radius-base: 8px;
@@ -106,9 +113,9 @@
   /* 参考设计 Dark Mode 背景（slate-950 系列）*/
   --color-bg-base:        #020617;
   --color-bg-layout:      #020617;
-  --color-bg-container:   #111827;
+  --color-bg-container:   #141414;
   --color-bg-elevated:    #1E293B;
-  --color-bg-sidebar:     #00132B;
+  --color-bg-sidebar:     #141414;
   --color-bg-sidebar-border: #1E293B;
 
   --color-text-base:        #F1F5F9;
