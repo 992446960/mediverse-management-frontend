@@ -7,7 +7,7 @@
         class="flex items-center gap-2 py-2 border-b border-slate-100 dark:border-slate-800 last:border-0"
         :draggable="!col.lock"
         @dragstart="onDragStart($event, index)"
-        @dragover.prevent="onDragOver($event, index)"
+        @dragover.prevent="onDragOver($event)"
         @drop="onDrop($event, index)"
       >
         <a-checkbox

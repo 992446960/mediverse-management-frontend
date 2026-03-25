@@ -19,6 +19,7 @@ alwaysApply: true
 7. **类型导入**：用 `import type { ... }` 与值导入分开
 8. **CSS 颜色**：用 `var(--color-xxx)` CSS 变量，禁止硬编码色值
 9. **公共组件**：禁止随意修改 `src/components/` 下公共组件；优先用配置/Props 扩展，确需修改时评估影响并说明
+10. **生产构建与类型检查**：`pnpm dev` 与 `pnpm preview` **不能**代替完整 TypeScript 检查；合并 PR / 发版 / 调整 Docker 构建前须本地执行 `pnpm build`（含 `vue-tsc -b`）且无报错，与 CI、镜像一致。细则见文档 **十二、12.3**。
 
 ## 按需查阅索引
 
@@ -39,11 +40,12 @@ alwaysApply: true
 | 样式编写、CSS 变量、暗色模式、BEM | 八、样式规范 | 698-795 |
 | 类型定义、类型文件组织、枚举 | 九、TypeScript 规范 | 796-881 |
 | 路由配置、权限守卫、v-permission | 十、路由与权限 | 882-942 |
-| Git commit、分支 | 十一、Git 工作流 | 943-989 |
-| 提交前自查清单 | 十二、代码质量检查 | 990-1022 |
-| Token 管理、XSS 防护 | 十三、安全规范 | 1023-1055 |
-| 编写 Composable | 附录 A | 1077-1114 |
-| confirmDelete 工具 | 附录 B | 1115-1140 |
+| Git commit、分支 | 十一、Git 工作流 | 977-1023 |
+| 提交前自查、dev 与生产构建类型检查 | 十二、代码质量检查 | 1024-1070 |
+| Token 管理、XSS 防护 | 十三、安全规范 | 1071-1102 |
+| 测试、Mock 数据复用 | 十四、测试规范 | 1104-1123 |
+| 编写 Composable | 附录 A | 1125-1162 |
+| confirmDelete 工具 | 附录 B | 1163-1188 |
 
 **读取示例**：需要开发列表页时 → `Read doc/前端开发文档/项目开发规范.md offset=235 limit=181`
 

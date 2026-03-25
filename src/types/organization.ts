@@ -21,4 +21,6 @@ export interface OrganizationForm {
   code?: string
   description?: string
   logo_url?: string
+  /** 更新机构状态（列表启停）时使用 */
+  status?: 'active' | 'inactive'
 }

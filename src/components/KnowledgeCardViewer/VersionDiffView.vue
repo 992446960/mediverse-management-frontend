@@ -121,8 +121,8 @@ const localTo = ref<number>(0)
 watch(
   () => [props.fromVersion, props.toVersion],
   ([f, t]) => {
-    localFrom.value = f
-    localTo.value = t
+    localFrom.value = f ?? 0
+    localTo.value = t ?? 0
   },
   { immediate: true }
 )

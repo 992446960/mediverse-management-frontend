@@ -28,8 +28,10 @@ onMounted(async () => {
 
     if (res.items.length > 0) {
       const row = res.items[0]
-      avatarId.value = row.id
-      avatarName.value = row.name
+      if (row) {
+        avatarId.value = row.id
+        avatarName.value = row.name
+      }
     }
   } catch (error) {
     console.error('Failed to fetch avatar', error)

@@ -72,6 +72,7 @@ function extractVersionNumber(version: string): number | null {
 function handleCompare(v: KnowledgeCardVersion) {
   const fromNum = extractVersionNumber(v.version)
   const latestVersion = props.versions[0]
+  if (!latestVersion) return
   const toNum = extractVersionNumber(latestVersion.version)
   if (fromNum != null && toNum != null) {
     emit('compare', fromNum, toNum)

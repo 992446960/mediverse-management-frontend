@@ -242,6 +242,14 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
   },
 ])
 
+function toOnlineStatus(v: unknown): OnlineStatus | undefined {
+  return v === 'online' || v === 'offline' ? v : undefined
+}
+
+function toAuditStatus(v: unknown): AuditStatus | undefined {
+  return v === 'pending' || v === 'approved' || v === 'rejected' ? v : undefined
+}
+
 const fetchData = async () => {
   const params = pageFilterRef.value?.filteParams ?? {}
   const page = pageTableRef.value?.currentPage ?? 1
@@ -254,8 +262,8 @@ const fetchData = async () => {
       page_size: pageSize,
       type: activeTab.value !== 'all' ? activeTab.value : undefined,
       keyword: (params.keyword as string) || undefined,
-      online_status: (params.online_status as string) || undefined,
-      audit_status: (params.audit_status as string) || undefined,
+      online_status: toOnlineStatus(params.online_status),
+      audit_status: toAuditStatus(params.audit_status),
       source_file_id: (params.source_file_id as string) || undefined,
       tag: (params.tag as string) || undefined,
     })

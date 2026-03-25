@@ -19,16 +19,27 @@ const props = withDefaults(
   { showCopyButton: true }
 )
 
-marked.setOptions({
-  highlight: function (code, lang) {
-    try {
-      const language = hljs.getLanguage(lang) ? lang : 'plaintext'
-      return hljs.highlight(code, { language }).value
-    } catch {
-      return code
-    }
+function escapeCodeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+marked.use({
+  renderer: {
+    code({ text, lang }) {
+      try {
+        const language = lang && hljs.getLanguage(lang) ? lang : 'plaintext'
+        const highlighted = hljs.highlight(text, { language }).value
+        const langClass = lang ? `language-${lang}` : 'language-plaintext'
+        return `<pre><code class="hljs ${langClass}">${highlighted}</code></pre>\n`
+      } catch {
+        return `<pre><code>${escapeCodeHtml(text)}</code></pre>\n`
+      }
+    },
   },
-  langPrefix: 'hljs language-',
 })
 
 const renderedContent = computed(() => renderMarkdownSafe(props.content))

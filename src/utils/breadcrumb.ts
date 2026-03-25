@@ -39,7 +39,9 @@ function hrefForMatchedPrefix(
 ): string {
   let path = ''
   for (let i = 0; i <= endIndex; i++) {
-    const p = matched[i].path
+    const record = matched[i]
+    if (!record) continue
+    const p = record.path
     if (p === '') continue
     if (p.startsWith('/')) path = p
     else path = path.replace(/\/$/, '') + '/' + p

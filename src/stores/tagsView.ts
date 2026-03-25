@@ -29,8 +29,10 @@ export const useTagsViewStore = defineStore(
       if (route.meta.hidden) return
       const index = visitedViews.value.findIndex((v) => v.path === route.path)
       if (index >= 0) {
+        const prev = visitedViews.value[index]
+        if (!prev) return
         visitedViews.value[index] = {
-          ...visitedViews.value[index],
+          ...prev,
           fullPath: route.fullPath,
           query: route.query as Record<string, string | (string | null)[]>,
         }

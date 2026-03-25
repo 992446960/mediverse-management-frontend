@@ -1,4 +1,3 @@
-/* eslint-disable */
 // @ts-nocheck
 // biome-ignore lint: disable
 // oxlint-disable
@@ -26,7 +25,6 @@ declare module 'vue' {
     ADescriptions: typeof import('ant-design-vue/es')['Descriptions']
     ADescriptionsItem: typeof import('ant-design-vue/es')['DescriptionsItem']
     ADivider: typeof import('ant-design-vue/es')['Divider']
-    ADrawer: typeof import('ant-design-vue/es')['Drawer']
     ADropdown: typeof import('ant-design-vue/es')['Dropdown']
     AEmpty: typeof import('ant-design-vue/es')['Empty']
     AForm: typeof import('ant-design-vue/es')['Form']
@@ -40,8 +38,6 @@ declare module 'vue' {
     ALayoutContent: typeof import('ant-design-vue/es')['LayoutContent']
     ALayoutHeader: typeof import('ant-design-vue/es')['LayoutHeader']
     ALayoutSider: typeof import('ant-design-vue/es')['LayoutSider']
-    AList: typeof import('ant-design-vue/es')['List']
-    AListItem: typeof import('ant-design-vue/es')['ListItem']
     AMenu: typeof import('ant-design-vue/es')['Menu']
     AMenuDivider: typeof import('ant-design-vue/es')['MenuDivider']
     AMenuItem: typeof import('ant-design-vue/es')['MenuItem']
@@ -51,7 +47,6 @@ declare module 'vue' {
     APopover: typeof import('ant-design-vue/es')['Popover']
     AProgress: typeof import('ant-design-vue/es')['Progress']
     ARadio: typeof import('ant-design-vue/es')['Radio']
-    ARadioButton: typeof import('ant-design-vue/es')['RadioButton']
     ARadioGroup: typeof import('ant-design-vue/es')['RadioGroup']
     ARangePicker: typeof import('ant-design-vue/es')['RangePicker']
     AResult: typeof import('ant-design-vue/es')['Result']
@@ -72,7 +67,6 @@ declare module 'vue' {
     ATimelineItem: typeof import('ant-design-vue/es')['TimelineItem']
     ATooltip: typeof import('ant-design-vue/es')['Tooltip']
     ATreeSelect: typeof import('ant-design-vue/es')['TreeSelect']
-    AUpload: typeof import('ant-design-vue/es')['Upload']
     AUploadDragger: typeof import('ant-design-vue/es')['UploadDragger']
     AvatarConfig: typeof import('./src/components/AvatarConfig/index.vue')['default']
     AvatarSelector: typeof import('./src/components/AvatarSelector/index.vue')['default']
@@ -113,7 +107,6 @@ declare module 'vue' {
     PageHead: typeof import('./src/components/PageHead/index.vue')['default']
     PageTable: typeof import('./src/components/PageTable/index.vue')['default']
     PageTree: typeof import('./src/components/PageTree/index.vue')['default']
-    PaginationSelect: typeof import('./src/components/AvatarSelector/PaginationSelect.vue')['default']
     ParsedDocViewer: typeof import('./src/components/FilePreview/ParsedDocViewer.vue')['default']
     PdfOriginalTabPanel: typeof import('./src/components/FilePreview/PdfOriginalTabPanel.vue')['default']
     PdfParsedTabPanel: typeof import('./src/components/FilePreview/PdfParsedTabPanel.vue')['default']
@@ -129,7 +122,6 @@ declare module 'vue' {
     SearchResultThread: typeof import('./src/components/SearchResultThread/index.vue')['default']
     SessionRenameForm: typeof import('./src/components/SessionSidebar/components/SessionRenameForm.vue')['default']
     SessionSidebar: typeof import('./src/components/SessionSidebar/index.vue')['default']
-    SimpleFilePreview: typeof import('./src/components/SimpleFilePreview/index.vue')['default']
     SkillCallDisplay: typeof import('./src/components/ChatWindow/SkillCallDisplay.vue')['default']
     SkillPanel: typeof import('./src/components/SkillPanel/index.vue')['default']
     SourceCitation: typeof import('./src/components/ChatWindow/SourceCitation.vue')['default']
