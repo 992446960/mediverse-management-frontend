@@ -1,5 +1,5 @@
 ---
-description: 前端开发规范 — 编写或修改 src/ 下的代码时自动生效，按需查阅规范文档对应章节
+description: 前端开发规范 — 编写或修改 src/ 下的代码时必须生效，必须按需查阅规范文档对应章节
 globs: src/**/*.{vue,ts,tsx,css}
 alwaysApply: true
 ---
