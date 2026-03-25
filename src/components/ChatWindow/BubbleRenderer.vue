@@ -2,11 +2,11 @@
 import { computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { marked } from 'marked'
-import DOMPurify from 'dompurify'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/github-dark.css'
 import { CopyOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
+import { renderMarkdownSafe } from '@/utils/renderMarkdownSafe'
 
 const { t } = useI18n()
 
@@ -31,23 +31,7 @@ marked.setOptions({
   langPrefix: 'hljs language-',
 })
 
-function escapeHtml(text: string): string {
-  const div = document.createElement('div')
-  div.textContent = text
-  return div.innerHTML
-}
-
-const renderedContent = computed(() => {
-  const raw = String(props.content ?? '')
-  if (!raw.trim()) return ''
-  try {
-    const result = marked.parse(raw)
-    const html = typeof result === 'string' ? result : String(result)
-    return DOMPurify.sanitize(html)
-  } catch {
-    return DOMPurify.sanitize(escapeHtml(raw))
-  }
-})
+const renderedContent = computed(() => renderMarkdownSafe(props.content))
 
 const copyContent = async () => {
   try {

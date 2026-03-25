@@ -463,6 +463,8 @@ export default {
     message: '消息',
     scrollToBottom: '回到底部',
     thinkingProcessTitle: '思考过程',
+    thinkingProcessStepDetailExpand: '展开步骤说明',
+    thinkingProcessStepDetailCollapse: '收起步骤说明',
     testSessionTitle: '分身测试',
   },
   theme: {

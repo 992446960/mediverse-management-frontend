@@ -470,6 +470,8 @@ export default {
     message: 'Message',
     scrollToBottom: 'Scroll to bottom',
     thinkingProcessTitle: 'Thinking Process',
+    thinkingProcessStepDetailExpand: 'Expand step details',
+    thinkingProcessStepDetailCollapse: 'Collapse step details',
     testSessionTitle: 'Avatar test',
   },
   theme: {
