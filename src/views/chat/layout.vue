@@ -27,12 +27,12 @@ onMounted(() => {
     </div>
 
     <!-- Center: Main Content (ChatWindow via router-view) -->
-    <div class="chat-layout__center flex-1 overflow-visible min-w-0 flex flex-col min-h-0">
+    <div class="chat-layout__center flex-1 overflow-visible min-w-[400px] flex flex-col min-h-0">
       <router-view />
     </div>
 
     <!-- Right: Skill Panel（仅对话页展示；略宽于 w-72 便于长文与知识卡） -->
-    <div v-if="showSkillPanel" class="w-96 shrink-0">
+    <div v-if="showSkillPanel" class="w-82 shrink-0">
       <SkillPanel />
     </div>
   </div>
