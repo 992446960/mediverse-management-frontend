@@ -500,6 +500,7 @@ export default {
     styleCustom: '自定义风格',
     addAvatar: '新增分身',
     editAvatar: '编辑分身',
+    configSaveMissingAvatarId: '无法保存：未获取到分身标识，请刷新页面后重试',
     detailTitle: '分身详情',
     testChatTitle: '{name}对话测试',
     testAvatarIdHint: '当前测试分身 ID：{id}',

@@ -507,6 +507,7 @@ export default {
     styleCustom: 'Custom Style',
     addAvatar: 'Add Avatar',
     editAvatar: 'Edit Avatar',
+    configSaveMissingAvatarId: 'Cannot save: avatar id is missing. Please refresh and try again.',
     detailTitle: 'Avatar details',
     testChatTitle: '{name} chat test',
     testAvatarIdHint: 'Test avatar ID: {id}',

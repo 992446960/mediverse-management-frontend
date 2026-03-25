@@ -1,25 +1,13 @@
 import { request } from '@/api/index'
-import type { AvatarConfig, UpdateAvatarConfigParams } from '@/types/avatarConfig'
+import type { AvatarConfig } from '@/types/avatarConfig'
 import type { OwnerType } from '@/constants/avatar'
 
 /**
- * 获取分身配置
- * 个人：/api/v1/my/avatar
- * 科室/机构：/api/v1/my/avatar/{owner_type}/{owner_id}
+ * 获取分身配置（含 id；更新见 `@/api/avatars` 的 updateAvatar）
+ *
+ * 统一：GET /api/v1/my/avatar/{owner_type}/{owner_id}
+ * 个人：`owner_type = personal`，`owner_id = user.id`
  */
-export function getAvatarConfig(ownerType: OwnerType, ownerId?: string) {
-  const url = ownerType === 'personal' ? '/my/avatar' : `/my/avatar/${ownerType}/${ownerId}`
-  return request.get<AvatarConfig>(url)
-}
-
-/**
- * 更新分身配置
- */
-export function updateAvatarConfig(
-  ownerType: OwnerType,
-  ownerId: string | undefined,
-  data: UpdateAvatarConfigParams
-) {
-  const url = ownerType === 'personal' ? '/my/avatar' : `/my/avatar/${ownerType}/${ownerId}`
-  return request.put<AvatarConfig>(url, data)
+export function getAvatarConfig(ownerType: OwnerType, ownerId: string) {
+  return request.get<AvatarConfig>(`/my/avatar/${ownerType}/${ownerId}`)
 }
