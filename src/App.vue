@@ -10,7 +10,7 @@ import { useTagsViewStore } from '@/stores/tagsView'
 import { themeConfig, darkThemeConfig } from '@/config/themes'
 import type { Locale } from 'ant-design-vue/es/locale'
 
-const route = useRoute()
+const route = useRoute() // 当前路由
 const themeStore = useThemeStore()
 const localeStore = useLocaleStore()
 const tagsViewStore = useTagsViewStore()
