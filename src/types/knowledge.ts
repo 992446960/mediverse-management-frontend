@@ -132,6 +132,10 @@ export interface KnowledgeCardListParams extends PaginationParams {
   online_status?: OnlineStatus
   audit_status?: AuditStatus
   keyword?: string
+  /** 按来源文件过滤（API 4.1.7） */
+  source_file_id?: string
+  /** 按标签过滤（API 4.1.7） */
+  tag?: string
 }
 
 /** 创建目录请求负载 */
@@ -179,4 +183,19 @@ export interface KnowledgeCardPayload {
   content: string
   type: CardType
   tags: string[]
+  /** 来源文件 ID 列表，仅创建时可选（API 4.1.9） */
+  source_file_ids?: string[]
+}
+
+/** 版本 Diff 单元（API 4.1.13） */
+export interface VersionDiffSegment {
+  type: 'equal' | 'delete' | 'insert'
+  content: string
+}
+
+/** 版本对比响应（API 4.1.13） */
+export interface VersionDiffResult {
+  from_version: number
+  to_version: number
+  diff: VersionDiffSegment[]
 }

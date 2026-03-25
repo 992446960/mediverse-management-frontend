@@ -12,6 +12,7 @@ import type {
   KnowledgeCardVersion,
   KnowledgeCardListParams,
   KnowledgeCardPayload,
+  VersionDiffResult,
 } from '@/types/knowledge'
 import type { PaginatedData } from '@/types/api'
 import type { AxiosRequestConfig } from 'axios'
@@ -302,4 +303,21 @@ export function rollbackKnowledgeCard(
       target_version: targetVersion,
     })
     .then(normalizeKnowledgeCard)
+}
+
+/**
+ * 知识卡版本对比（API 4.1.13）
+ * GET /api/v1/knowledge/{owner_type}/{owner_id}/cards/{id}/versions/diff
+ */
+export function getKnowledgeCardVersionDiff(
+  ownerType: OwnerType,
+  ownerId: string,
+  cardId: string,
+  fromVersion: number,
+  toVersion: number
+) {
+  return request.get<VersionDiffResult>(
+    `${BASE_URL}/${ownerType}/${ownerId}/cards/${cardId}/versions/diff`,
+    { params: { from_version: fromVersion, to_version: toVersion } }
+  )
 }

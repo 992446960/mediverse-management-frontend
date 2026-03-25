@@ -65,17 +65,6 @@
             <div
               class="p-4 bg-gray-50 rounded-lg min-h-[200px] max-h-[min(480px,calc(100vh-240px))] overflow-y-auto"
             >
-              <div
-                v-if="previewVersion"
-                class="mb-4 p-2 bg-blue-50 border border-blue-200 rounded text-blue-600 text-sm flex justify-between items-center"
-              >
-                <span>{{
-                  t('knowledge.card.previewingVersion', { version: previewVersion.version })
-                }}</span>
-                <a-button type="link" size="small" @click="previewVersion = null">
-                  {{ t('knowledge.card.exitPreview') }}
-                </a-button>
-              </div>
               <!-- eslint-disable-next-line vue/no-v-html -- marked + DOMPurify -->
               <div class="markdown-body" v-html="renderedContent"></div>
             </div>
@@ -96,8 +85,19 @@
             <VersionTimeline
               :versions="versions"
               :current-version="card.version"
-              @preview="handlePreviewVersion"
+              @compare="handleCompareFromTimeline"
               @rollback="handleRollback"
+            />
+          </a-tab-pane>
+
+          <a-tab-pane key="diff" :tab="t('knowledge.card.tabDiff')">
+            <VersionDiffView
+              :diff="diffResult"
+              :from-version="diffFrom"
+              :to-version="diffTo"
+              :versions="versions"
+              :loading="diffLoading"
+              @change-versions="handleDiffVersionChange"
             />
           </a-tab-pane>
 
@@ -150,6 +150,7 @@ import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { CloudUploadOutlined, CloudDownloadOutlined } from '@ant-design/icons-vue'
 import type { KnowledgeCard, KnowledgeCardVersion, OwnerType } from '@/types/knowledge'
+import type { VersionDiffSegment } from '@/types/knowledge'
 import { CARD_TYPE_CONFIG, ONLINE_STATUS_CONFIG, AUDIT_STATUS_CONFIG } from '@/types/knowledge'
 import { getFileOriginalUrl } from '@/types/knowledge'
 import { stashKnowledgePreviewFile } from '@/utils/knowledgePreviewStash'
@@ -158,12 +159,14 @@ import {
   getFileListItemById,
   getKnowledgeCardDetail,
   getKnowledgeCardVersions,
+  getKnowledgeCardVersionDiff,
   toggleKnowledgeCardStatus,
   rollbackKnowledgeCard,
 } from '@/api/knowledge'
 import { formatFileSize } from '@/utils/formatFileSize'
 import AssociatedFilesList from './AssociatedFilesList.vue'
 import VersionTimeline from './VersionTimeline.vue'
+import VersionDiffView from './VersionDiffView.vue'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import dayjs from 'dayjs'
@@ -204,10 +207,15 @@ const sourceFileMeta = ref<Map<string, { file_size: number; file_type: string }>
 const sourceMetaLoading = ref(false)
 const card = ref<KnowledgeCard | null>(null)
 const versions = ref<KnowledgeCardVersion[]>([])
-const previewVersion = ref<KnowledgeCardVersion | null>(null)
+
+// 版本对比状态
+const diffResult = ref<VersionDiffSegment[]>([])
+const diffFrom = ref<number>(0)
+const diffTo = ref<number>(0)
+const diffLoading = ref(false)
 
 const renderedContent = computed(() => {
-  const content = previewVersion.value?.content || card.value?.content || ''
+  const content = card.value?.content || ''
   const html = marked.parse(content) as string
   return DOMPurify.sanitize(html)
 })
@@ -323,8 +331,10 @@ watch(
   (val) => {
     if (val && props.cardId) {
       activeTab.value = 'content'
-      previewVersion.value = null
       sourceFileMeta.value = new Map()
+      diffResult.value = []
+      diffFrom.value = 0
+      diffTo.value = 0
       fetchCardDetails(props.cardId)
     }
   }
@@ -380,10 +390,43 @@ async function openSourceFilePreview(item: KnowledgeCard['source_files'][number]
   }
 }
 
-const handlePreviewVersion = (v: KnowledgeCardVersion) => {
-  previewVersion.value = v
-  activeTab.value = 'content'
+// ─── 版本对比 ───────────────────────────────────────────
+
+async function loadDiff(from: number, to: number) {
+  if (!props.cardId || from === to) return
+  diffLoading.value = true
+  try {
+    const result = await getKnowledgeCardVersionDiff(
+      props.ownerType,
+      props.ownerId,
+      props.cardId,
+      from,
+      to
+    )
+    diffResult.value = result.diff
+  } catch (err) {
+    console.error('Load diff failed:', err)
+    message.error(t('knowledge.card.diffFailed'))
+    diffResult.value = []
+  } finally {
+    diffLoading.value = false
+  }
 }
+
+async function handleCompareFromTimeline(fromVersion: number, toVersion: number) {
+  diffFrom.value = fromVersion
+  diffTo.value = toVersion
+  activeTab.value = 'diff'
+  await loadDiff(fromVersion, toVersion)
+}
+
+async function handleDiffVersionChange(fromVersion: number, toVersion: number) {
+  diffFrom.value = fromVersion
+  diffTo.value = toVersion
+  await loadDiff(fromVersion, toVersion)
+}
+
+// ─── 回滚 & 上下线 ─────────────────────────────────────
 
 const handleRollback = async (version: string, targetVersion: number) => {
   if (!props.cardId) return

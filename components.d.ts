@@ -141,6 +141,7 @@ declare module 'vue' {
     ThinkingProcess: typeof import('./src/components/ChatWindow/ThinkingProcess.vue')['default']
     TiptapEditor: typeof import('./src/components/KnowledgeCardEditor/TiptapEditor.vue')['default']
     UniversalFilePreview: typeof import('./src/components/UniversalFilePreview/index.vue')['default']
+    VersionDiffView: typeof import('./src/components/KnowledgeCardViewer/VersionDiffView.vue')['default']
     VersionTimeline: typeof import('./src/components/KnowledgeCardViewer/VersionTimeline.vue')['default']
   }
 }

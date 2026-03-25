@@ -21,9 +21,9 @@
           <div class="flex items-center justify-between text-xs text-gray-400">
             <span>{{ t('knowledge.card.operator') }}: {{ v.created_by_name }}</span>
             <a-space>
-              <a-button type="link" size="small" @click="emit('preview', v)">
-                <template #icon><EyeOutlined /></template>
-                {{ t('knowledge.preview') }}
+              <a-button type="link" size="small" @click="handleCompare(v)">
+                <template #icon><SwapOutlined /></template>
+                {{ t('knowledge.card.compare') }}
               </a-button>
               <a-button
                 v-if="v.version !== currentVersion"
@@ -46,21 +46,35 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { Modal } from 'ant-design-vue'
-import { HistoryOutlined, RollbackOutlined, EyeOutlined } from '@ant-design/icons-vue'
+import { HistoryOutlined, RollbackOutlined, SwapOutlined } from '@ant-design/icons-vue'
 import type { KnowledgeCardVersion } from '@/types/knowledge'
 import dayjs from 'dayjs'
 
 const { t } = useI18n()
 
-defineProps<{
+const props = defineProps<{
   versions: KnowledgeCardVersion[]
   currentVersion: string
 }>()
 
 const emit = defineEmits<{
-  (e: 'preview', version: KnowledgeCardVersion): void
+  (e: 'compare', fromVersion: number, toVersion: number): void
   (e: 'rollback', version: string, targetVersion: number): void
 }>()
+
+function extractVersionNumber(version: string): number | null {
+  const m = version.match(/(\d+)/)
+  return m ? Number(m[1]) : null
+}
+
+function handleCompare(v: KnowledgeCardVersion) {
+  const fromNum = extractVersionNumber(v.version)
+  const latestVersion = props.versions[0]
+  const toNum = extractVersionNumber(latestVersion.version)
+  if (fromNum != null && toNum != null) {
+    emit('compare', fromNum, toNum)
+  }
+}
 
 const handleRollback = (version: string, targetVersion: number) => {
   Modal.confirm({
