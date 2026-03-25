@@ -47,7 +47,10 @@ async function onSuccess() {
 }
 
 function goLater() {
-  setSkipChangePassword()
+  const userId = authStore.user?.id
+  if (userId) {
+    setSkipChangePassword(userId)
+  }
   const redirect = (route.query.redirect as string) || '/'
   router.push(redirect)
 }

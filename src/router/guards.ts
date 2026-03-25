@@ -50,7 +50,7 @@ export function createPermissionGuard(router: Router) {
     if (
       authStore.user?.must_change_pwd &&
       to.path !== '/change-password' &&
-      !getSkipChangePassword()
+      !getSkipChangePassword(authStore.user?.id)
     ) {
       return '/change-password'
     }
