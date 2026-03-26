@@ -36,4 +36,7 @@ enableMocking().then(async () => {
   // 初始导航（含权限守卫重定向）完成后再挂载，避免首帧 route.matched 为空时先渲染 MainLayout 空壳
   await router.isReady()
   app.mount('#app')
+  // 触发首次加载遮罩退场动画，动画结束后彻底移除 DOM 层
+  document.body.classList.add('loaded')
+  setTimeout(() => document.body.classList.add('loader-hidden'), 800)
 })
