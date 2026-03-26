@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, provide, computed, onMounted } from 'vue'
+import { ref, provide, computed, onMounted, watch } from 'vue'
 import ChatSidebar from '@/components/SessionSidebar/index.vue'
 import SkillPanel from '@/components/SkillPanel/index.vue'
 import { useChatStore } from '@/stores/chat'
@@ -23,6 +23,14 @@ function openSkillPanel() {
   skillPanelExpanded.value = true
 }
 provide('openSkillPanel', openSkillPanel)
+
+/** 切换会话时收起技能面板，避免沿用上一会话的上下文 */
+watch(
+  () => route.params.id,
+  () => {
+    skillPanelExpanded.value = false
+  }
+)
 
 onMounted(() => {
   chatStore.loadSessions()
