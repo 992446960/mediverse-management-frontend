@@ -470,6 +470,8 @@ export default {
     quotaExhausted: "This avatar's experience quota has been exhausted",
     viewSource: 'Sources',
     skillPanel: 'Skills',
+    skillPanelExpand: 'Open skills panel',
+    skillPanelCollapse: 'Close skills panel',
     skillPanelTitle: 'Digital Doctor Skills',
     skillExecute: 'Execute',
     skillBack: 'Back',

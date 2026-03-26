@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, provide } from 'vue'
+import { ref, provide, computed, onMounted } from 'vue'
 import ChatSidebar from '@/components/SessionSidebar/index.vue'
 import SkillPanel from '@/components/SkillPanel/index.vue'
 import { useChatStore } from '@/stores/chat'
@@ -15,6 +15,14 @@ const skillInputContext = ref<{ inputText: string; fileList: any[] }>({
   fileList: [],
 })
 provide('skillInputContext', skillInputContext)
+
+const skillPanelExpanded = ref(false)
+
+function openSkillPanel() {
+  if (!showSkillPanel.value) return
+  skillPanelExpanded.value = true
+}
+provide('openSkillPanel', openSkillPanel)
 
 onMounted(() => {
   chatStore.loadSessions()
@@ -37,9 +45,19 @@ onMounted(() => {
       </router-view>
     </div>
 
-    <!-- Right: Skill Panel（仅对话页展示；略宽于 w-72 便于长文与知识卡） -->
-    <div v-if="showSkillPanel" class="w-82 shrink-0">
-      <SkillPanel />
+    <!-- Right: Skill Panel（默认收起；宽度过渡，内层固定 w-82 保证布局） -->
+    <div
+      v-if="showSkillPanel"
+      :class="[
+        'chat-layout__skill-rail shrink-0 overflow-hidden h-full min-h-0',
+        skillPanelExpanded
+          ? 'w-82 border-l border-gray-200 dark:border-gray-800'
+          : 'w-0 border-l-0',
+      ]"
+    >
+      <div class="w-82 h-full min-h-0">
+        <SkillPanel id="chat-skill-panel" v-model:expanded="skillPanelExpanded" />
+      </div>
     </div>
   </div>
 </template>
@@ -51,5 +69,15 @@ onMounted(() => {
 
 .chat-layout__center {
   background: var(--color-bg-container);
+}
+
+.chat-layout__skill-rail {
+  transition: width 0.28s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-layout__skill-rail {
+    transition-duration: 0.01ms;
+  }
 }
 </style>

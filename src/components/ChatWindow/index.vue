@@ -10,6 +10,7 @@ import {
   SmileOutlined,
   StarOutlined,
   StarFilled,
+  ToolOutlined,
 } from '@ant-design/icons-vue'
 import MessageList from './MessageList.vue'
 import MessageInput from './MessageInput.vue'
@@ -33,6 +34,9 @@ const skillInputContext = inject<Ref<{ inputText: string; fileList: any[] }>>(
   'skillInputContext',
   ref({ inputText: '', fileList: [] })
 )
+
+/** 仅聊天布局（会话页）注入，分身测试页无此 provide */
+const openSkillPanel = inject<(() => void) | undefined>('openSkillPanel', undefined)
 
 watch(
   () => ({
@@ -155,14 +159,24 @@ watch(
           </div>
         </div>
       </div>
-      <a-button
-        type="text"
-        :class="{ 'rated-star': hasRated }"
-        :icon="h(hasRated ? StarFilled : StarOutlined)"
-        @click="ratingOpen = true"
-      >
-        {{ hasRated ? t('chat.rated') : t('chat.rateConversation') }}
-      </a-button>
+      <div class="flex items-center gap-1 shrink-0">
+        <a-button
+          type="text"
+          :class="{ 'rated-star': hasRated }"
+          :icon="h(hasRated ? StarFilled : StarOutlined)"
+          @click="ratingOpen = true"
+        >
+          {{ hasRated ? t('chat.rated') : t('chat.rateConversation') }}
+        </a-button>
+        <a-tooltip v-if="openSkillPanel" :title="t('chat.skillPanelExpand')">
+          <a-button
+            type="text"
+            :icon="h(ToolOutlined)"
+            :aria-label="t('chat.skillPanelExpand')"
+            @click="openSkillPanel()"
+          />
+        </a-tooltip>
+      </div>
     </div>
 
     <!-- Messages Area -->

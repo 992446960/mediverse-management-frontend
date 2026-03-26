@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, inject, nextTick } from 'vue'
+import { ref, computed, inject, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
 import { buildSkillExecuteArgs } from '@/utils/skillArgs'
 import { formatCitationSourceForPreview } from '@/utils/skillCitationSource'
 import {
-  AppstoreOutlined,
   ArrowLeftOutlined,
   SearchOutlined,
   FileTextOutlined,
   ToolOutlined,
   CheckOutlined,
+  MenuFoldOutlined,
 } from '@ant-design/icons-vue'
 import { getSkills } from '@/api/skills'
 import type { Skill } from '@/types/skill'
@@ -21,14 +21,17 @@ import BubbleRenderer from '@/components/ChatWindow/BubbleRenderer.vue'
 import CitationPreviewHtml from '@/components/CitationPreviewHtml/index.vue'
 import KnowledgeCardPreview from '@/components/KnowledgeCardPreview/index.vue'
 
+const expandedModel = defineModel<boolean>('expanded', { required: true })
+
 const { t } = useI18n()
 const chatStore = useChatStore()
 const authStore = useAuthStore()
-const { currentSession } = storeToRefs(chatStore)
+const { currentSession, currentSessionId } = storeToRefs(chatStore)
 const { user } = storeToRefs(authStore)
 
 const skills = ref<Skill[]>([])
 const loading = ref(false)
+const skillsLoadedForSessionId = ref<string | null>(null)
 
 const selectedSkill = ref<Skill | null>(null)
 
@@ -57,9 +60,25 @@ const fetchSkills = async () => {
   }
 }
 
-onMounted(() => {
-  fetchSkills()
-})
+watch(
+  [expandedModel, currentSessionId],
+  async ([expanded, sessionId], old) => {
+    const prevSessionId = old?.[1]
+    if (prevSessionId != null && sessionId !== prevSessionId) {
+      skills.value = []
+      skillsLoadedForSessionId.value = null
+    }
+    if (!expanded || !sessionId) return
+    if (skillsLoadedForSessionId.value === sessionId) return
+    await fetchSkills()
+    skillsLoadedForSessionId.value = sessionId
+  },
+  { immediate: true }
+)
+
+function collapseSkillPanel() {
+  expandedModel.value = false
+}
 
 const getSkillIcon = (skillCode: string) => {
   if (skillCode.includes('search') || skillCode.includes('retrieval')) {
@@ -110,18 +129,27 @@ const goBack = () => {
 </script>
 
 <template>
-  <div
-    class="skill-panel h-full flex flex-col border-l border-gray-200 dark:border-gray-800"
-  >
+  <div class="skill-panel h-full flex flex-col min-h-0">
     <!-- List View -->
     <template v-if="!selectedSkill">
       <div
         class="skill-panel__header flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-800 shrink-0"
       >
-        <AppstoreOutlined class="text-gray-600 dark:text-gray-300" />
-        <span class="font-medium text-sm text-gray-800 dark:text-gray-200">{{
-          t('chat.skillPanelTitle')
-        }}</span>
+        <a-tooltip :title="t('chat.skillPanelCollapse')">
+          <a-button
+            type="text"
+            size="small"
+            class="shrink-0 text-gray-500 dark:text-gray-400"
+            :aria-label="t('chat.skillPanelCollapse')"
+            @click="collapseSkillPanel"
+          >
+            <template #icon><MenuFoldOutlined /></template>
+          </a-button>
+        </a-tooltip>
+        <span
+          class="font-medium text-sm text-gray-800 dark:text-gray-200 truncate min-w-0 flex-1"
+          >{{ t('chat.skillPanelTitle') }}</span
+        >
       </div>
 
       <div class="flex-1 overflow-y-auto p-4">
@@ -169,14 +197,27 @@ const goBack = () => {
     <!-- Execute View -->
     <template v-else>
       <div
-        class="skill-panel__header flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-800 shrink-0"
+        class="skill-panel__header flex items-center justify-between gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-800 shrink-0"
       >
-        <a-button type="text" size="small" class="mr-1" @click="goBack">
-          <template #icon><ArrowLeftOutlined /></template>
-        </a-button>
-        <span class="font-medium text-sm text-gray-800 dark:text-gray-200">
-          {{ t('chat.skillExecute') }}: {{ selectedSkill.title }}
-        </span>
+        <div class="flex items-center gap-2 min-w-0 flex-1">
+          <a-button type="text" size="small" class="shrink-0 mr-1" @click="goBack">
+            <template #icon><ArrowLeftOutlined /></template>
+          </a-button>
+          <span class="font-medium text-sm text-gray-800 dark:text-gray-200 truncate">
+            {{ t('chat.skillExecute') }}: {{ selectedSkill.title }}
+          </span>
+        </div>
+        <a-tooltip :title="t('chat.skillPanelCollapse')">
+          <a-button
+            type="text"
+            size="small"
+            class="shrink-0 text-gray-500 dark:text-gray-400"
+            :aria-label="t('chat.skillPanelCollapse')"
+            @click="collapseSkillPanel"
+          >
+            <template #icon><MenuFoldOutlined /></template>
+          </a-button>
+        </a-tooltip>
       </div>
 
       <div class="skill-panel__execute-body flex-1 overflow-y-auto p-4">

@@ -462,6 +462,8 @@ export default {
     quotaExhausted: '该分身体验次数已用完',
     viewSource: '引用来源',
     skillPanel: '技能面板',
+    skillPanelExpand: '打开技能面板',
+    skillPanelCollapse: '收起技能面板',
     skillPanelTitle: '数字医生技能',
     skillExecute: '执行',
     skillBack: '返回',
