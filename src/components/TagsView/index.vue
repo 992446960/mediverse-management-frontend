@@ -8,7 +8,13 @@
             bindTagRefEl(tag, el)
           }
         "
-        :key="tag.path === CHAT_CANONICAL_TAG_PATH ? 'tag-/chat' : tag.fullPath"
+        :key="
+          tag.path === CHAT_HOME_TAG_PATH
+            ? 'tag-/chat'
+            : tag.path === CHAT_SESSION_TAG_PATH
+              ? 'tag-/chat/session'
+              : tag.fullPath
+        "
         :data-path="tag.path"
         :to="tag.fullPath"
         class="tags-view-item"
@@ -43,7 +49,12 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { CHAT_CANONICAL_TAG_PATH, useTagsViewStore, type TagView } from '@/stores/tagsView'
+import {
+  CHAT_HOME_TAG_PATH,
+  CHAT_SESSION_TAG_PATH,
+  useTagsViewStore,
+  type TagView,
+} from '@/stores/tagsView'
 import ScrollPane from './ScrollPane.vue'
 
 const { t } = useI18n()
@@ -54,14 +65,17 @@ const tagsViewStore = useTagsViewStore()
 const scrollPaneRef = ref<InstanceType<typeof ScrollPane>>()
 const tagRefs = ref<Record<string, HTMLElement>>({})
 
-/** 数字医生合并标签对应的 DOM，与 fullPath 解耦便于滚动定位 */
-const CHAT_TAB_REF_KEY = '__chat_tab__'
+/** 体验首页 / 分身会话 标签 DOM，与 fullPath 解耦便于滚动定位 */
+const CHAT_HOME_TAB_REF_KEY = '__chat_home_tab__'
+const CHAT_SESSION_TAB_REF_KEY = '__chat_session_tab__'
 
 function bindTagRefEl(tag: TagView, el: unknown) {
   if (!el) return
   const dom = (el as { $el?: HTMLElement }).$el ?? (el as HTMLElement)
-  if (tag.path === CHAT_CANONICAL_TAG_PATH) {
-    tagRefs.value[CHAT_TAB_REF_KEY] = dom
+  if (tag.path === CHAT_HOME_TAG_PATH) {
+    tagRefs.value[CHAT_HOME_TAB_REF_KEY] = dom
+  } else if (tag.path === CHAT_SESSION_TAG_PATH) {
+    tagRefs.value[CHAT_SESSION_TAB_REF_KEY] = dom
   } else {
     tagRefs.value[tag.fullPath] = dom
   }
@@ -77,8 +91,11 @@ const contextMenu = reactive({
 const selectedTag = ref<TagView | null>(null)
 
 function isActive(tag: TagView) {
-  if (tag.path === CHAT_CANONICAL_TAG_PATH) {
-    return route.path === '/chat' || route.path.startsWith('/chat/session/')
+  if (tag.path === CHAT_HOME_TAG_PATH) {
+    return route.path === '/chat'
+  }
+  if (tag.path === CHAT_SESSION_TAG_PATH) {
+    return /^\/chat\/session\/[^/]+$/.test(route.path)
   }
   return tag.path === route.path
 }
@@ -86,8 +103,11 @@ function isActive(tag: TagView) {
 function scrollTargetEl(): HTMLElement | undefined {
   const activeVisit = visitedViews.value.find((v) => isActive(v))
   if (!activeVisit) return undefined
-  if (activeVisit.path === CHAT_CANONICAL_TAG_PATH) {
-    return tagRefs.value[CHAT_TAB_REF_KEY]
+  if (activeVisit.path === CHAT_HOME_TAG_PATH) {
+    return tagRefs.value[CHAT_HOME_TAB_REF_KEY]
+  }
+  if (activeVisit.path === CHAT_SESSION_TAG_PATH) {
+    return tagRefs.value[CHAT_SESSION_TAB_REF_KEY]
   }
   return tagRefs.value[activeVisit.fullPath]
 }
