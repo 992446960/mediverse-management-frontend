@@ -96,8 +96,17 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
-  async function selectSession(id: string) {
+  async function selectSession(id: string, options?: { refresh?: boolean }) {
     if (!isValidSessionId(id)) return
+
+    const refresh = options?.refresh === true
+    if (refresh && streaming.value) {
+      stopSSEGeneration()
+    }
+    if (refresh) {
+      delete messages.value[id]
+    }
+
     currentSessionId.value = id
     if (!messages.value[id]) {
       loadingMessages.value = true

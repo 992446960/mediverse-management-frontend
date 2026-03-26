@@ -115,10 +115,6 @@ const handlePromptClick = (info: any) => {
 }
 
 onMounted(async () => {
-  if (props.sessionId) {
-    await selectSession(props.sessionId)
-    return
-  }
   if (props.isTestMode && props.avatarId) {
     startTestSessionBootstrap()
     try {
@@ -131,11 +127,12 @@ onMounted(async () => {
 
 watch(
   () => props.sessionId,
-  async (newId) => {
-    if (newId) {
-      await selectSession(newId)
-    }
-  }
+  async (newId, oldId) => {
+    if (!newId || props.isTestMode) return
+    const refresh = oldId !== undefined && oldId !== newId
+    await selectSession(newId, { refresh })
+  },
+  { immediate: true }
 )
 </script>
 

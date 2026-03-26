@@ -40,7 +40,10 @@ onMounted(() => {
     <div class="chat-layout__center flex-1 overflow-visible min-w-[400px] flex flex-col min-h-0">
       <router-view v-slot="{ Component, route: childRoute }">
         <keep-alive>
-          <component :is="Component" :key="childRoute.fullPath" />
+          <component
+            :is="Component"
+            :key="(childRoute.name as string | undefined) ?? childRoute.fullPath"
+          />
         </keep-alive>
       </router-view>
     </div>

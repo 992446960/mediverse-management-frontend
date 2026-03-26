@@ -5,12 +5,12 @@
         v-for="tag in visitedViews"
         :ref="
           (el: any) => {
-            if (el) tagRefs[tag.fullPath] = el.$el || el
+            bindTagRefEl(tag, el)
           }
         "
-        :key="tag.fullPath"
+        :key="tag.path === CHAT_CANONICAL_TAG_PATH ? 'tag-/chat' : tag.fullPath"
         :data-path="tag.path"
-        :to="{ path: tag.path, query: tag.query }"
+        :to="tag.fullPath"
         class="tags-view-item"
         :class="{ active: isActive(tag) }"
         :style="activeStyle(tag)"
@@ -43,7 +43,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { useTagsViewStore, type TagView } from '@/stores/tagsView'
+import { CHAT_CANONICAL_TAG_PATH, useTagsViewStore, type TagView } from '@/stores/tagsView'
 import ScrollPane from './ScrollPane.vue'
 
 const { t } = useI18n()
@@ -53,6 +53,19 @@ const tagsViewStore = useTagsViewStore()
 
 const scrollPaneRef = ref<InstanceType<typeof ScrollPane>>()
 const tagRefs = ref<Record<string, HTMLElement>>({})
+
+/** 数字医生合并标签对应的 DOM，与 fullPath 解耦便于滚动定位 */
+const CHAT_TAB_REF_KEY = '__chat_tab__'
+
+function bindTagRefEl(tag: TagView, el: unknown) {
+  if (!el) return
+  const dom = (el as { $el?: HTMLElement }).$el ?? (el as HTMLElement)
+  if (tag.path === CHAT_CANONICAL_TAG_PATH) {
+    tagRefs.value[CHAT_TAB_REF_KEY] = dom
+  } else {
+    tagRefs.value[tag.fullPath] = dom
+  }
+}
 
 const visitedViews = computed(() => tagsViewStore.visitedViews)
 
@@ -64,7 +77,19 @@ const contextMenu = reactive({
 const selectedTag = ref<TagView | null>(null)
 
 function isActive(tag: TagView) {
+  if (tag.path === CHAT_CANONICAL_TAG_PATH) {
+    return route.path === '/chat' || route.path.startsWith('/chat/session/')
+  }
   return tag.path === route.path
+}
+
+function scrollTargetEl(): HTMLElement | undefined {
+  const activeVisit = visitedViews.value.find((v) => isActive(v))
+  if (!activeVisit) return undefined
+  if (activeVisit.path === CHAT_CANONICAL_TAG_PATH) {
+    return tagRefs.value[CHAT_TAB_REF_KEY]
+  }
+  return tagRefs.value[activeVisit.fullPath]
 }
 
 /** 激活标签的动态样式：使用主题色作为背景色和边框色 */
@@ -171,7 +196,7 @@ watch(
   () => {
     addTag()
     nextTick(() => {
-      const activeEl = tagRefs.value[route.fullPath]
+      const activeEl = scrollTargetEl()
       if (activeEl && scrollPaneRef.value) {
         scrollPaneRef.value.scrollToTarget(activeEl)
       }
