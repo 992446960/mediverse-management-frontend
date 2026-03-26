@@ -18,10 +18,9 @@ dist-ssr
 .vscode/*
 .claude
 .cursor
-scripts/
 !.vscode/extensions.json
 
-# AI 助手文档与配置（Cursor/Claude/Codex 等本地规则与说明不入库）
+# AI 助手文档与配置
 .codex/
 .agents/
 .windsurf/
