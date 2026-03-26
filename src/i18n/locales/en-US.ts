@@ -483,6 +483,8 @@ export default {
     skillCallResult: 'Result',
     skillCallDuration: 'Duration',
     toolCallsSection: 'Tools used',
+    toolCallsSectionExpand: 'Expand tools used',
+    toolCallsSectionCollapse: 'Collapse tools used',
     toolCallInvokedTimes: '{n} invocations',
     toolCallFallbackTitle: 'Tool',
     message: 'Message',

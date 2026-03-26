@@ -475,6 +475,8 @@ export default {
     skillCallResult: '结果',
     skillCallDuration: '耗时',
     toolCallsSection: '已使用工具',
+    toolCallsSectionExpand: '展开已使用工具',
+    toolCallsSectionCollapse: '收起已使用工具',
     toolCallInvokedTimes: '共 {n} 次',
     toolCallFallbackTitle: '工具',
     message: '消息',

@@ -6,9 +6,14 @@ import type { ToolCall } from '@/types/chat'
 
 const { t } = useI18n()
 
-const props = defineProps<{
-  toolCalls: ToolCall[]
-}>()
+const props = withDefaults(
+  defineProps<{
+    toolCalls: ToolCall[]
+    /** 嵌入思考过程等区域时不展示外层「已使用工具」标题，并收紧间距 */
+    embedded?: boolean
+  }>(),
+  { embedded: false }
+)
 
 const expanded = ref<Record<number, boolean>>({})
 
@@ -91,8 +96,14 @@ function jsonForRow(call: ToolCall): { argsLine: string; resultLine: string } {
 </script>
 
 <template>
-  <div class="skill-call-display flex flex-col gap-2 my-2">
-    <div class="skill-call-display__label text-xs font-medium text-[var(--color-text-secondary)]">
+  <div
+    class="skill-call-display flex flex-col gap-2"
+    :class="props.embedded ? 'skill-call-display--embedded' : 'my-2'"
+  >
+    <div
+      v-if="!props.embedded"
+      class="skill-call-display__label text-xs font-medium text-[var(--color-text-secondary)]"
+    >
       {{ t('chat.toolCallsSection') }}
     </div>
     <div class="skill-call-display__list flex flex-col gap-2">
@@ -173,6 +184,10 @@ function jsonForRow(call: ToolCall): { argsLine: string; resultLine: string } {
 <style scoped>
 .skill-call-display__label {
   letter-spacing: 0.02em;
+}
+
+.skill-call-display--embedded {
+  gap: 10px;
 }
 
 .skill-call-card__icon-wrap {

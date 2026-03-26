@@ -4,7 +4,6 @@ import { BubbleList } from 'ant-design-x-vue'
 import BubbleRenderer from './BubbleRenderer.vue'
 import ThinkingProcess from './ThinkingProcess.vue'
 import SourceCitation from './SourceCitation.vue'
-import SkillCallDisplay from './SkillCallDisplay.vue'
 import type { Message, MessagePart } from '@/types/chat'
 import { isImagePart, isPdfPart } from '@/types/chat'
 import { getMessageText } from '@/types/chat'
@@ -207,8 +206,14 @@ const roles = {
         <!-- header: 思考过程在头部 -->
         <template #header="{ item }">
           <ThinkingProcess
-            v-if="item.role === 'assistant' && item.thinking_process?.length"
-            :steps="item.thinking_process"
+            v-if="
+              item.role === 'assistant' &&
+              ((item.thinking_process?.length ?? 0) > 0 ||
+                (!item.loading && (item.tool_calls?.length ?? 0) > 0))
+            "
+            :steps="item.thinking_process ?? []"
+            :tool-calls="item.tool_calls ?? null"
+            :show-tool-calls="!item.loading && (item.tool_calls?.length ?? 0) > 0"
           />
         </template>
         <!-- footer: 复制按钮在底部，hover 展示 -->
@@ -233,10 +238,6 @@ const roles = {
               'user-message-attachments': item.role === 'user',
             }"
           >
-            <SkillCallDisplay
-              v-if="item.tool_calls && item.tool_calls.length > 0 && !item.loading"
-              :tool-calls="item.tool_calls"
-            />
             <!-- 附件盒子：无背景无边框，控制展示尺寸 用户角色右对齐使用类控制-->
             <div
               v-if="item.fileParts && item.fileParts.length"

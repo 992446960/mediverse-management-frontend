@@ -1,17 +1,26 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { RobotOutlined, DownOutlined, CheckOutlined } from '@ant-design/icons-vue'
+import { RobotOutlined, DownOutlined, CheckOutlined, ToolOutlined } from '@ant-design/icons-vue'
 import { useI18n } from 'vue-i18n'
-import type { ThinkingProcessStep } from '@/types/chat'
+import type { ThinkingProcessStep, ToolCall } from '@/types/chat'
 import { renderMarkdownSafe } from '@/utils/renderMarkdownSafe'
+import SkillCallDisplay from '@/components/ChatWindow/SkillCallDisplay.vue'
 
 const { t } = useI18n()
 
-const props = defineProps<{
-  steps: ThinkingProcessStep[]
-}>()
+const props = withDefaults(
+  defineProps<{
+    steps: ThinkingProcessStep[]
+    toolCalls?: ToolCall[] | null
+    /** 为 false 时不展示工具块（如流式未完成） */
+    showToolCalls?: boolean
+  }>(),
+  { toolCalls: null, showToolCalls: false }
+)
 
 const expanded = ref(true)
+/** 「已使用工具」子区域展开，与思考步骤同级的交互习惯 */
+const toolCallsExpanded = ref(true)
 
 /** 每步说明是否展开，缺省为 true（与改前一致）；仅含 description 的步骤可收起 */
 const stepDescExpandedByIndex = ref<Record<number, boolean>>({})
@@ -39,6 +48,10 @@ const displaySteps = computed(() =>
     extra: formatDuration(step),
     descriptionHtml: step.description ? renderMarkdownSafe(step.description) : '',
   }))
+)
+
+const hasToolCallsBlock = computed(
+  () => props.showToolCalls && Array.isArray(props.toolCalls) && props.toolCalls.length > 0
 )
 </script>
 
@@ -102,6 +115,35 @@ const displaySteps = computed(() =>
             class="thinking-process-step-desc markdown-body prose prose-sm max-w-none dark:prose-invert"
             v-html="step.descriptionHtml"
           />
+        </div>
+      </div>
+
+      <!-- 已使用工具：与会话内思考过程同盒，亦可单独展开收起 -->
+      <div
+        v-if="hasToolCallsBlock"
+        class="thinking-process-tools"
+        :class="{ 'thinking-process-tools--after-steps': displaySteps.length > 0 }"
+      >
+        <button
+          type="button"
+          class="thinking-process-tools-header"
+          :aria-expanded="toolCallsExpanded"
+          :aria-label="
+            toolCallsExpanded
+              ? t('chat.toolCallsSectionCollapse')
+              : t('chat.toolCallsSectionExpand')
+          "
+          @click="toolCallsExpanded = !toolCallsExpanded"
+        >
+          <ToolOutlined class="thinking-process-tools-header-icon" />
+          <span class="thinking-process-tools-header-text">{{ t('chat.toolCallsSection') }}</span>
+          <DownOutlined
+            class="thinking-process-tools-header-chevron"
+            :class="{ 'thinking-process-tools-header-chevron--collapsed': !toolCallsExpanded }"
+          />
+        </button>
+        <div v-show="toolCallsExpanded" class="thinking-process-tools-body">
+          <SkillCallDisplay :tool-calls="toolCalls ?? []" embedded />
         </div>
       </div>
     </div>
@@ -333,5 +375,59 @@ const displaySteps = computed(() =>
   color: var(--color-text-secondary);
   background: var(--color-bg-layout);
   border-radius: 999px;
+}
+
+/* ── 已使用工具（嵌入 thinking-process-box）── */
+.thinking-process-tools--after-steps {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--tp-border);
+}
+
+.thinking-process-tools-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.thinking-process-tools-header:hover {
+  color: var(--color-primary);
+}
+
+.thinking-process-tools-header-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--color-primary);
+}
+
+.thinking-process-tools-header-text {
+  flex: 1;
+  text-align: left;
+  font-weight: 500;
+}
+
+.thinking-process-tools-header-chevron {
+  font-size: 12px;
+  transition: transform 0.2s ease;
+}
+
+.thinking-process-tools-header-chevron--collapsed {
+  transform: rotate(-90deg);
+}
+
+.thinking-process-tools-body {
+  padding-top: 4px;
 }
 </style>
