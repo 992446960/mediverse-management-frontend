@@ -1,12 +1,13 @@
 import { ref } from 'vue'
 import type { Ref } from 'vue'
-import type { ThinkingProcessStep } from '@/types/chat'
+import type { ChatStreamDonePayload, ThinkingProcessStep } from '@/types/chat'
+import { normalizeToolCallsFromApi } from '@/types/chat'
 
 export interface SSEChatCallbacks {
   onDelta?: (text: string) => void
   /** thinking_step 事件到达时调用，用于实时同步思考步骤到消息（符合 API 文档与开发规范） */
   onThinkingStep?: () => void
-  onDone?: (messageId: string, tokensUsed?: number) => void
+  onDone?: (messageId: string, tokensUsed?: number, payload?: ChatStreamDonePayload) => void
   /** 流结束但未收到 done 事件时调用（如后端直接关闭连接），用于收尾 UI 状态 */
   onStreamEnd?: () => void
   onError?: (err: string, code?: number) => void
@@ -39,6 +40,31 @@ export function useSSEChat(): UseSSEChatReturn {
 
   /** 让出事件循环，使 Vue 能 flush 响应式更新并触发渲染（解决流式内容一次性渲染的 bug） */
   const yieldToEventLoop = () => new Promise<void>((r) => setTimeout(r, 0))
+
+  function buildDonePayload(event: Record<string, unknown>): ChatStreamDonePayload | undefined {
+    const hasToolCalls = 'tool_calls' in event
+    const hasSearchRefs = 'search_references' in event
+    const hasSessionId = typeof event.session_id === 'string'
+    if (!hasToolCalls && !hasSearchRefs && !hasSessionId) return undefined
+    return {
+      tool_calls: hasToolCalls ? normalizeToolCallsFromApi(event.tool_calls) : undefined,
+      search_references: Array.isArray(event.search_references)
+        ? (event.search_references as unknown[])
+        : undefined,
+      session_id: hasSessionId ? (event.session_id as string) : undefined,
+    }
+  }
+
+  function emitDoneEvent(event: Record<string, unknown>, callbacks: SSEChatCallbacks): void {
+    const messageId = event.message_id ?? event.messageId ?? event.id
+    const tokensUsed = event.tokens_used ?? event.tokensUsed
+    streaming.value = false
+    callbacks.onDone?.(
+      typeof messageId === 'string' ? messageId : '',
+      typeof tokensUsed === 'number' ? tokensUsed : undefined,
+      buildDonePayload(event)
+    )
+  }
 
   async function processSSEStream(
     reader: ReadableStreamDefaultReader<Uint8Array>,
@@ -115,13 +141,7 @@ export function useSSEChat(): UseSSEChatReturn {
               case 'done':
               case 'end':
               case 'finish': {
-                const messageId = event.message_id ?? event.messageId ?? event.id
-                const tokensUsed = event.tokens_used ?? event.tokensUsed
-                streaming.value = false
-                callbacks.onDone?.(
-                  typeof messageId === 'string' ? messageId : '',
-                  typeof tokensUsed === 'number' ? tokensUsed : undefined
-                )
+                emitDoneEvent(event, callbacks)
                 return
               }
 
@@ -156,13 +176,7 @@ export function useSSEChat(): UseSSEChatReturn {
             const event = JSON.parse(data) as Record<string, unknown>
             const eventType = String(event.type ?? '')
             if (eventType === 'done' || eventType === 'end' || eventType === 'finish') {
-              const messageId = event.message_id ?? event.messageId ?? event.id
-              const tokensUsed = event.tokens_used ?? event.tokensUsed
-              streaming.value = false
-              callbacks.onDone?.(
-                typeof messageId === 'string' ? messageId : '',
-                typeof tokensUsed === 'number' ? tokensUsed : undefined
-              )
+              emitDoneEvent(event, callbacks)
               return
             }
             if (eventType === 'thinking_step') {

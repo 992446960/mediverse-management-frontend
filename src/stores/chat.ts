@@ -21,6 +21,7 @@ import type {
   ThinkingProcessStep,
   ChatMessageMode,
 } from '@/types/chat'
+import { normalizeToolCallsFromApi } from '@/types/chat'
 
 /** 过滤稀疏数组空位，useSSEChat 按 index 写入可能导致 [empty, empty, step] */
 function filterThinkingSteps(steps: ThinkingProcessStep[]): ThinkingProcessStep[] {
@@ -102,7 +103,10 @@ export const useChatStore = defineStore('chat', () => {
       loadingMessages.value = true
       try {
         const res = await getMessages(id, { limit: 50 })
-        messages.value[id] = res.items
+        messages.value[id] = res.items.map((m) => ({
+          ...m,
+          tool_calls: m.tool_calls != null ? normalizeToolCallsFromApi(m.tool_calls) : m.tool_calls,
+        }))
       } finally {
         loadingMessages.value = false
       }
@@ -273,11 +277,14 @@ export const useChatStore = defineStore('chat', () => {
           assistantMessage.thinking_process = filterThinkingSteps(sseThinkingProcess.value)
           messages.value[sessionId] = [...messages.value[sessionId]!]
         },
-        onDone: (finalId, tokensUsed) => {
+        onDone: (finalId, tokensUsed, payload) => {
           assistantMessage.id = finalId ?? assistantMessage.id
           assistantMessage.status = 'sent'
           assistantMessage.tokens_used = tokensUsed ?? undefined
           assistantMessage.thinking_process = filterThinkingSteps(sseThinkingProcess.value)
+          if (payload?.tool_calls !== undefined) {
+            assistantMessage.tool_calls = payload.tool_calls
+          }
           messages.value[sessionId] = [...messages.value[sessionId]!]
           const session = sessions.value.find((s) => s.id === sessionId)
           if (session) {

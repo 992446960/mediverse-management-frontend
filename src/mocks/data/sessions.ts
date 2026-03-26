@@ -69,7 +69,8 @@ export const mockMessages: Record<string, Message[]> = {
       ],
       tool_calls: [
         {
-          skill_name: '知识库检索',
+          name: 'kb_search',
+          title: '知识库检索',
           skill_description: '检索相关医学知识库文档',
           args: { query: '高血压诊断标准', top_k: 5 },
           result: {

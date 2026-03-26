@@ -75,12 +75,61 @@ export interface SourceCitation {
   score?: number
 }
 
+/** 工具调用：流式 done / 历史消息均可能返回（name + title 为主结构） */
 export interface ToolCall {
-  skill_name: string
+  /** 工具标识，如 file_extract */
+  name: string
+  /** 展示标题，如「解读上传文件」 */
+  title: string
+  /** 兼容旧 Mock / 扩展数据 */
+  skill_name?: string
   skill_description?: string
-  args?: Record<string, any>
-  result?: Record<string, any>
+  args?: Record<string, unknown>
+  result?: Record<string, unknown>
   duration_ms?: number
+}
+
+/** SSE type=done 时附带的扩展字段 */
+export interface ChatStreamDonePayload {
+  tool_calls?: ToolCall[]
+  search_references?: unknown[]
+  session_id?: string
+}
+
+/** 将接口/Mock 中任意 shape 规范为 ToolCall（支持 name+title 与 skill_name+skill_description） */
+export function normalizeToolCallsFromApi(raw: unknown): ToolCall[] {
+  if (!Array.isArray(raw)) return []
+  const out: ToolCall[] = []
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue
+    const o = item as Record<string, unknown>
+    const nameFromApi = typeof o.name === 'string' ? o.name.trim() : ''
+    const titleFromApi = typeof o.title === 'string' ? o.title.trim() : ''
+    const skillName = typeof o.skill_name === 'string' ? o.skill_name.trim() : ''
+    const skillDesc = typeof o.skill_description === 'string' ? o.skill_description.trim() : ''
+    const name = nameFromApi || skillName
+    const title = titleFromApi || skillDesc || name
+    if (!name && !title) continue
+    const args =
+      o.args !== null && typeof o.args === 'object' && !Array.isArray(o.args)
+        ? (o.args as Record<string, unknown>)
+        : undefined
+    const result =
+      o.result !== null && typeof o.result === 'object' && !Array.isArray(o.result)
+        ? (o.result as Record<string, unknown>)
+        : undefined
+    const duration_ms = typeof o.duration_ms === 'number' ? o.duration_ms : undefined
+    out.push({
+      name: name || 'tool',
+      title: title || name || 'tool',
+      skill_name: skillName || undefined,
+      skill_description: skillDesc || undefined,
+      args,
+      result,
+      duration_ms,
+    })
+  }
+  return out
 }
 
 export interface Message {

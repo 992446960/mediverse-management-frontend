@@ -192,6 +192,8 @@ export const handlers = [
               type: 'done',
               message_id: assistantMsgId,
               tokens_used: Math.floor(Math.random() * 500) + 100,
+              tool_calls: [{ name: 'mock_tool', title: '模拟工具调用' }],
+              search_references: [],
             })}\n\n`
           )
         )
@@ -208,6 +210,7 @@ export const handlers = [
               status: 'done' as const,
               duration: `${Math.floor(Math.random() * 300) + 100}ms`,
             })),
+            tool_calls: [{ name: 'mock_tool', title: '模拟工具调用' }],
             created_at: new Date().toISOString(),
             status: 'sent',
           })
