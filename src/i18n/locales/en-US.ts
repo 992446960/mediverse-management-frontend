@@ -462,6 +462,10 @@ export default {
     attachmentMaxCount: 'Maximum {max} attachments',
     attachmentFormatInvalid: '"{name}" format not supported',
     attachmentSizeExceeded: '"{name}" exceeds size limit',
+    attachmentLegacyDocHint:
+      'Legacy Word (.doc) cannot be previewed in the page. The file was downloaded; open it locally with Word or another app.',
+    attachmentFallbackDownload:
+      'This file type cannot be previewed in the page. It was downloaded; open it on your computer.',
     rateConversation: 'Rate',
     rated: 'Rated',
     prompt1: 'Help me analyze this case',

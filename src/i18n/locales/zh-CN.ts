@@ -454,6 +454,9 @@ export default {
     attachmentMaxCount: '最多上传 {max} 个附件',
     attachmentFormatInvalid: '「{name}」格式不支持',
     attachmentSizeExceeded: '「{name}」超出大小限制',
+    attachmentLegacyDocHint:
+      '旧版 Word（.doc）无法在页面内预览，已为您下载文件，请在本机用 Word 或其他程序打开。',
+    attachmentFallbackDownload: '当前类型无法在页面内预览，已为您下载文件，请在本机打开。',
     rateConversation: '评价问诊',
     rated: '已评价',
     prompt1: '帮我分析这个病例',

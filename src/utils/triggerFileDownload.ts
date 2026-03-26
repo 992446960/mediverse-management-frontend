@@ -35,3 +35,20 @@ export async function triggerFileDownload(url: string, filename: string): Promis
     URL.revokeObjectURL(objectUrl)
   }
 }
+
+/** 已由前端持有的 `File` 触发下载（无网络请求；文件名经 `sanitizeDownloadFilename` 处理） */
+export function triggerLocalFileDownload(file: File): void {
+  const objectUrl = URL.createObjectURL(file)
+  try {
+    const a = document.createElement('a')
+    a.href = objectUrl
+    a.download = sanitizeDownloadFilename(file.name)
+    a.rel = 'noopener noreferrer'
+    a.style.display = 'none'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+  } finally {
+    URL.revokeObjectURL(objectUrl)
+  }
+}

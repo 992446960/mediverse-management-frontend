@@ -1,5 +1,110 @@
+<template>
+  <div class="message-input p-4 border-t border-gray-100 dark:border-gray-800">
+    <a-modal
+      v-model:open="previewOpen"
+      :title="previewTitle"
+      width="min(1200px, 96vw)"
+      :footer="null"
+      destroy-on-close
+      wrap-class-name="chat-pending-attachment-preview-modal"
+      :after-close="onPreviewModalAfterClose"
+    >
+      <div
+        :key="previewUrl || 'empty'"
+        class="chat-pending-preview-body h-[min(75vh,720px)] min-h-[400px]"
+      >
+        <PdfViewer v-if="previewKind === 'pdf' && previewUrl" :file-url="previewUrl" />
+        <DocxViewer v-else-if="previewKind === 'docx' && previewUrl" :file-url="previewUrl" />
+        <TextFileViewer
+          v-else-if="previewKind === 'txt' && previewUrl"
+          :file-url="previewUrl"
+          file-type="txt"
+        />
+      </div>
+    </a-modal>
+
+    <!-- Attachments Preview -->
+    <div v-if="fileList.length > 0" class="mb-2" @click.capture="onPendingAttachmentCardClick">
+      <Attachments
+        :items="fileList"
+        :multiple="true"
+        :max-count="MAX_FILES"
+        accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,application/msword,text/plain,.docx"
+        :custom-request="customUploadRequest"
+        :before-upload="beforeUpload"
+        @change="handleAttachmentsChange"
+      />
+    </div>
+
+    <!-- 模式选择 + 联网开关：附件展示区下方、输入框上方 -->
+    <div class="message-input-toolbar flex items-center gap-3 px-1 py-2">
+      <div class="flex items-center gap-1.5">
+        <BulbOutlined class="text-sm text-gray-400" />
+        <a-select
+          v-model:value="thinkingMode"
+          size="small"
+          :options="thinkingModeOptions"
+          :bordered="true"
+          style="font-size: 12px"
+        />
+      </div>
+      <div
+        class="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs cursor-pointer select-none transition-all border border-gray-200 dark:border-gray-700"
+        :style="
+          webSearch
+            ? { borderColor: 'var(--color-primary)', color: 'var(--color-primary)' }
+            : { color: 'var(--color-text-tertiary)' }
+        "
+        :class="webSearch ? 'border' : ''"
+        @click="webSearch = !webSearch"
+      >
+        <GlobalOutlined />
+        <span>{{ webSearch ? t('chat.webSearchOn') : t('chat.webSearchOff') }}</span>
+      </div>
+    </div>
+
+    <!-- Sender 使用组件库自带聚焦效果（蓝色描边 + 阴影），不做覆盖 -->
+    <Sender
+      v-model:value="inputValue"
+      :loading="loading"
+      :disabled="disabled"
+      :placeholder="t('chat.inputPlaceholder')"
+      :allow-speech="useBuiltInSpeech ? true : allowSpeechConfig"
+      @submit="handleSend"
+      @cancel="handleStop"
+    >
+      <!-- Prefix Slot: Attachment -->
+      <template #prefix>
+        <!-- @mousedown.stop 阻止事件冒泡到 Sender 的 content div，避免其 onMousedown 对非 textarea 调用 preventDefault 导致 file input 无法打开选择框 -->
+        <div class="relative inline-block mr-1" @mousedown.stop>
+          <input
+            type="file"
+            multiple
+            accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,application/msword,text/plain,.docx"
+            class="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
+            @change="onFileChange"
+          />
+          <a-tooltip :title="t('chat.attachFile')">
+            <a-button type="text" size="small" :icon="h(PaperClipOutlined)" />
+          </a-tooltip>
+        </div>
+      </template>
+
+      <!-- Submit Button -->
+      <template #submitButton>
+        <a-button
+          type="primary"
+          shape="circle"
+          :icon="loading ? h(StopOutlined) : h(SendOutlined)"
+          @click="loading ? handleStop() : handleSend()"
+        />
+      </template>
+    </Sender>
+  </div>
+</template>
+
 <script setup lang="ts">
-import { ref, h, computed, nextTick } from 'vue'
+import { h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Sender, Attachments } from 'ant-design-x-vue'
 import {
@@ -12,6 +117,13 @@ import {
 import { message } from 'ant-design-vue'
 import type { ChatMessageMode } from '@/types/chat'
 import { randomUUID } from '@/utils/randomUUID'
+import { triggerLocalFileDownload } from '@/utils/triggerFileDownload'
+
+const PdfViewer = defineAsyncComponent(() => import('@/components/FilePreview/PdfViewer.vue'))
+const DocxViewer = defineAsyncComponent(() => import('@/components/FilePreview/DocxViewer.vue'))
+const TextFileViewer = defineAsyncComponent(
+  () => import('@/components/FilePreview/TextFileViewer.vue')
+)
 
 const { t } = useI18n()
 
@@ -81,6 +193,10 @@ const thinkingModeOptions = computed(() => [
 
 const handleSend = () => {
   if (!inputValue.value.trim() && fileList.value.length === 0) return
+
+  if (previewOpen.value) {
+    previewOpen.value = false
+  }
 
   emit('send', inputValue.value, {
     thinkingMode: thinkingMode.value,
@@ -277,91 +393,97 @@ const onFileChange = (e: Event) => {
   })
   target.value = ''
 }
+
+type PendingPreviewKind = 'pdf' | 'docx' | 'txt'
+
+const previewOpen = ref(false)
+const previewTitle = ref('')
+const previewUrl = ref('')
+const previewKind = ref<PendingPreviewKind | null>(null)
+
+function releasePreviewBlobUrl() {
+  if (previewUrl.value) {
+    URL.revokeObjectURL(previewUrl.value)
+    previewUrl.value = ''
+  }
+}
+
+function resolvePendingPreviewKind(file: File): PendingPreviewKind | 'legacy-doc' | null {
+  const mime = file.type
+  const name = file.name.toLowerCase()
+  if (mime === 'application/pdf' || name.endsWith('.pdf')) return 'pdf'
+  if (
+    mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+    name.endsWith('.docx')
+  ) {
+    return 'docx'
+  }
+  if (mime === 'text/plain' || name.endsWith('.txt')) return 'txt'
+  if (mime === 'application/msword' || name.endsWith('.doc')) return 'legacy-doc'
+  return null
+}
+
+/**
+ * 非图片附件：在应用内预览（PDF / docx / 纯文本）。
+ * 旧版 .doc 仅触发下载；纯网页无法调起操作系统默认程序打开本地文件。
+ */
+function openPendingFilePreview(file: File) {
+  const kind = resolvePendingPreviewKind(file)
+  if (kind === 'legacy-doc') {
+    triggerLocalFileDownload(file)
+    message.info(t('chat.attachmentLegacyDocHint'))
+    return
+  }
+  if (kind === null) {
+    triggerLocalFileDownload(file)
+    message.info(t('chat.attachmentFallbackDownload'))
+    return
+  }
+
+  releasePreviewBlobUrl()
+  previewTitle.value = file.name
+  previewUrl.value = URL.createObjectURL(file)
+  previewKind.value = kind
+  previewOpen.value = true
+}
+
+function onPreviewModalAfterClose() {
+  previewKind.value = null
+  previewTitle.value = ''
+  releasePreviewBlobUrl()
+}
+
+/**
+ * Attachments 非图片卡片为 overview 模式，组件库未绑定预览。
+ */
+const onPendingAttachmentCardClick = (e: MouseEvent) => {
+  const target = e.target as HTMLElement | null
+  if (!target) return
+  if (target.closest('button')) return
+
+  const card = target.closest('.ant-attachment-list-card-type-overview')
+  if (!card) return
+
+  const listRoot = card.closest('.ant-attachment-list')
+  if (!listRoot) return
+
+  // 与 fileList 顺序一致：须包含图片 preview 卡片，否则会混排时错位
+  const cards = listRoot.querySelectorAll('.ant-attachment-list-card')
+  const idx = [...cards].indexOf(card as HTMLElement)
+  if (idx < 0 || idx >= fileList.value.length) return
+
+  const item = fileList.value[idx]
+  const file = item?.file
+  if (!file) return
+
+  e.preventDefault()
+  e.stopPropagation()
+
+  openPendingFilePreview(file)
+}
 </script>
 
-<template>
-  <div class="message-input p-4 border-t border-gray-100 dark:border-gray-800">
-    <!-- Attachments Preview -->
-    <Attachments
-      v-if="fileList.length > 0"
-      :items="fileList"
-      :multiple="true"
-      :max-count="MAX_FILES"
-      accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,application/msword,text/plain,.docx"
-      :custom-request="customUploadRequest"
-      :before-upload="beforeUpload"
-      class="mb-2"
-      @change="handleAttachmentsChange"
-    />
-
-    <!-- 模式选择 + 联网开关：附件展示区下方、输入框上方 -->
-    <div class="message-input-toolbar flex items-center gap-3 px-1 py-2">
-      <div class="flex items-center gap-1.5">
-        <BulbOutlined class="text-sm text-gray-400" />
-        <a-select
-          v-model:value="thinkingMode"
-          size="small"
-          :options="thinkingModeOptions"
-          :bordered="true"
-          style="font-size: 12px"
-        />
-      </div>
-      <div
-        class="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs cursor-pointer select-none transition-all border border-gray-200 dark:border-gray-700"
-        :style="
-          webSearch
-            ? { borderColor: 'var(--color-primary)', color: 'var(--color-primary)' }
-            : { color: 'var(--color-text-tertiary)' }
-        "
-        :class="webSearch ? 'border' : ''"
-        @click="webSearch = !webSearch"
-      >
-        <GlobalOutlined />
-        <span>{{ webSearch ? t('chat.webSearchOn') : t('chat.webSearchOff') }}</span>
-      </div>
-    </div>
-
-    <!-- Sender 使用组件库自带聚焦效果（蓝色描边 + 阴影），不做覆盖 -->
-    <Sender
-      v-model:value="inputValue"
-      :loading="loading"
-      :disabled="disabled"
-      :placeholder="t('chat.inputPlaceholder')"
-      :allow-speech="useBuiltInSpeech ? true : allowSpeechConfig"
-      @submit="handleSend"
-      @cancel="handleStop"
-    >
-      <!-- Prefix Slot: Attachment -->
-      <template #prefix>
-        <!-- @mousedown.stop 阻止事件冒泡到 Sender 的 content div，避免其 onMousedown 对非 textarea 调用 preventDefault 导致 file input 无法打开选择框 -->
-        <div class="relative inline-block mr-1" @mousedown.stop>
-          <input
-            type="file"
-            multiple
-            accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,application/msword,text/plain,.docx"
-            class="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
-            @change="onFileChange"
-          />
-          <a-tooltip :title="t('chat.attachFile')">
-            <a-button type="text" size="small" :icon="h(PaperClipOutlined)" />
-          </a-tooltip>
-        </div>
-      </template>
-
-      <!-- Submit Button -->
-      <template #submitButton>
-        <a-button
-          type="primary"
-          shape="circle"
-          :icon="loading ? h(StopOutlined) : h(SendOutlined)"
-          @click="loading ? handleStop() : handleSend()"
-        />
-      </template>
-    </Sender>
-  </div>
-</template>
-
-<style scoped>
+<style scoped lang="scss">
 .message-input {
   background: var(--color-bg-container);
 }
@@ -374,5 +496,9 @@ const onFileChange = (e: Event) => {
 .message-input :deep(.ant-sender textarea),
 .message-input :deep(.ant-sender input) {
   outline: none;
+}
+
+.message-input :deep(.ant-attachment-list-card-type-overview) {
+  cursor: pointer;
 }
 </style>
