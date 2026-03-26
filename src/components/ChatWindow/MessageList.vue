@@ -487,6 +487,9 @@ const roles = {
 
 /* message-list-wrapper 下的深度选择器 */
 .message-list-wrapper {
+  :deep(.ant-bubble-content-wrapper) {
+    max-width: 80%;
+  }
   /* 仅带附件时去除外层气泡阴影（文字有独立气泡）；单文本保留默认气泡 */
   :deep(
     .ant-bubble.ant-bubble-end[role='user'] .ant-bubble-content:has(.message-with-attachments)

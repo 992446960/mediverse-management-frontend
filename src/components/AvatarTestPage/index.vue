@@ -11,7 +11,7 @@ defineProps<{
 </script>
 
 <template>
-  <div class="avatar-test-page h-full flex flex-col app-container">
+  <div class="avatar-test-page h-full flex flex-col app-container layout-content-m-h">
     <div class="avatar-test-page__header p-4">
       <h2 class="avatar-test-page__title text-lg font-medium">
         {{ t('avatar.testChatTitle', { name: avatarName }) }}
