@@ -17,8 +17,25 @@ dist-ssr
 # Editor directories and files
 .vscode/*
 .claude
+.cursor
+scripts/
 !.vscode/extensions.json
+
+# AI 助手文档与配置（Cursor/Claude/Codex 等本地规则与说明不入库）
+.codex/
+.agents/
+.windsurf/
+.aider*
+AGENTS.md
+CLAUDE.md
+CLAUDE.local.md
+GEMINI.md
+.cursorrules
+.cursorrules.local
+copilot-instructions.md
+.github/copilot-instructions.md
 .idea
+doc
 .DS_Store
 *.suo
 *.ntvs*
