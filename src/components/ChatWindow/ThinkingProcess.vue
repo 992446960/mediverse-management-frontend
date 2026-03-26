@@ -19,8 +19,8 @@ const props = withDefaults(
 )
 
 const expanded = ref(true)
-/** 「已使用工具」子区域展开，与思考步骤同级的交互习惯 */
-const toolCallsExpanded = ref(true)
+/** 「已使用工具」子区域默认收起，用户按需展开 */
+const toolCallsExpanded = ref(false)
 
 /** 每步说明是否展开，缺省为 true（与改前一致）；仅含 description 的步骤可收起 */
 const stepDescExpandedByIndex = ref<Record<number, boolean>>({})
