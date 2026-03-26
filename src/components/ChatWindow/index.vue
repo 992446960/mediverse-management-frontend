@@ -83,6 +83,14 @@ const isStreaming = computed(() => {
   return lastMsg?.status === 'streaming'
 })
 
+/** 切换会话拉取消息时避免先闪现「开始对话」空状态 */
+const showMessagesLoadingMask = computed(() => {
+  if (props.isTestMode) return false
+  const sid = props.sessionId ?? currentSessionId.value
+  if (!sid) return false
+  return loadingMessages.value && currentMessages.value.length === 0
+})
+
 const initialPrompts = [
   { key: '1', label: t('chat.prompt1'), icon: h(BulbOutlined) },
   { key: '2', label: t('chat.prompt2'), icon: h(RocketOutlined) },
@@ -187,8 +195,23 @@ watch(
         :session-id="props.sessionId ?? currentSessionId"
       />
 
+      <!-- 加载蒙版：会话消息请求中不展示空状态引导 -->
+      <div
+        v-if="showMessagesLoadingMask"
+        class="chat-window__loading-mask absolute inset-0 z-10 flex flex-col items-center justify-center"
+        role="status"
+        :aria-label="t('common.loading')"
+      >
+        <a-spin size="large" :spinning="true" :tip="t('common.loading')">
+          <div class="min-h-[200px] min-w-[200px]" aria-hidden="true" />
+        </a-spin>
+      </div>
+
       <!-- Empty State / Prompts -->
-      <div v-else class="h-full flex flex-col items-center justify-center p-8 text-center">
+      <div
+        v-else-if="currentMessages.length === 0"
+        class="h-full flex flex-col items-center justify-center p-8 text-center"
+      >
         <div class="mb-8 flex flex-col items-center">
           <div
             class="mb-6 flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-sky-50 dark:bg-sky-900/20 text-primary"
@@ -233,6 +256,10 @@ watch(
 .chat-window {
   height: 100%;
   background: var(--color-bg-container);
+}
+
+.chat-window__loading-mask {
+  background: color-mix(in srgb, var(--color-bg-container) 88%, transparent);
 }
 
 /* 已评价星星与 Rate 组件同色（antdv Rate 使用 yellow-6） */
