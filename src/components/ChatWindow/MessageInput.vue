@@ -11,6 +11,7 @@ import {
 } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import type { ChatMessageMode } from '@/types/chat'
+import { randomUUID } from '@/utils/randomUUID'
 
 const { t } = useI18n()
 
@@ -175,7 +176,7 @@ function validateAndFormatFile(
   }
 
   return {
-    uid: crypto.randomUUID(),
+    uid: randomUUID(),
     name: fileName,
     status: 'done',
     url: isImage ? URL.createObjectURL(rawFile) : '',

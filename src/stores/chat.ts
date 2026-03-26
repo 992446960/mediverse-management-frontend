@@ -13,6 +13,7 @@ import {
   sendMessageRaw,
 } from '@/api/sessions'
 import { useSSEChat } from '@/composables/useSSEChat'
+import { randomUUID } from '@/utils/randomUUID'
 import type {
   Session,
   Message,
@@ -112,7 +113,7 @@ export const useChatStore = defineStore('chat', () => {
     try {
       const { session, greeting, quota } = await createChatSession({
         avatar_id: avatarId,
-        idempotency_key: crypto.randomUUID(),
+        idempotency_key: randomUUID(),
       })
 
       if (!isValidSessionId(session.id)) {
