@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
+
+defineOptions({ name: 'OrgAvatarTest' })
 import { useAuthStore } from '@/stores/auth'
 import { getAvatars } from '@/api/avatars'
 import AvatarTestPage from '@/components/AvatarTestPage/index.vue'

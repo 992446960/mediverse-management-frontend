@@ -33,6 +33,8 @@ import AvatarConfig from '@/components/AvatarConfig/index.vue'
 import AvatarStats from '@/components/AvatarStats/index.vue'
 import QuickActionGuide from '@/components/AvatarConfig/QuickActionGuide.vue'
 
+defineOptions({ name: 'OrgAvatar' })
+
 const { t } = useI18n()
 const authStore = useAuthStore()
 const { currentOrgId } = storeToRefs(authStore)
