@@ -315,7 +315,7 @@ const goBack = () => {
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .skill-panel {
   width: 100%;
   background: var(--color-bg-container);
@@ -324,6 +324,11 @@ const goBack = () => {
 .skill-panel__header,
 .skill-panel__execute-body {
   background: var(--color-bg-container);
+}
+.skill-panel__header {
+  &:deep(.ant-btn) {
+    transform: rotate(180deg);
+  }
 }
 
 /* 与聊天窗口 thinking-process-step-dot 颜色一致 */

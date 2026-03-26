@@ -23,6 +23,10 @@ body {
   transition:
     background-color 0.3s,
     color 0.3s;
+    
+}
+.layout-content-m-h{
+  max-height:var(--ant-layout-content-insert-height);
 }
 
 /* a-button 全局：icon 与文字垂直居中对齐 */
