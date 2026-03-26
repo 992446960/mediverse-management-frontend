@@ -16,6 +16,12 @@ const localeStore = useLocaleStore()
 const tagsViewStore = useTagsViewStore()
 const cachedViews = computed(() => tagsViewStore.cachedViews)
 
+/** /chat/* 共用同一外层组件实例，避免每换一个 session id 就整页销毁；会话粒度的缓存由内层 router-view + keep-alive 负责 */
+const routerViewKey = computed(() => {
+  if (route.path === '/chat' || route.path.startsWith('/chat/')) return '/chat'
+  return route.fullPath
+})
+
 const layout = computed(() =>
   route.meta.layout === 'FullscreenLayout' ? FullscreenLayout : MainLayout
 )
@@ -32,7 +38,7 @@ const antdLocale = computed<Locale>(() => (localeStore.locale === 'zh-CN' ? zhCN
         <router-view v-slot="{ Component }">
           <transition name="fade" mode="out-in">
             <keep-alive :include="cachedViews">
-              <component :is="Component" :key="route.fullPath" />
+              <component :is="Component" :key="routerViewKey" />
             </keep-alive>
           </transition>
         </router-view>

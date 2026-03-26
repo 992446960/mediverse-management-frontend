@@ -5,6 +5,8 @@ import { useChatStore } from '@/stores/chat'
 import AvatarSelector from '@/components/AvatarSelector/index.vue'
 import type { ChatAvatar } from '@/api/avatars'
 
+defineOptions({ name: 'ChatHome' })
+
 const { t } = useI18n()
 const router = useRouter()
 const chatStore = useChatStore()

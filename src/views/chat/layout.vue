@@ -4,6 +4,8 @@ import ChatSidebar from '@/components/SessionSidebar/index.vue'
 import SkillPanel from '@/components/SkillPanel/index.vue'
 import { useChatStore } from '@/stores/chat'
 
+defineOptions({ name: 'ChatLayout' })
+
 const route = useRoute()
 const showSkillPanel = computed(() => route.name === 'ChatSession')
 const chatStore = useChatStore()
@@ -28,7 +30,11 @@ onMounted(() => {
 
     <!-- Center: Main Content (ChatWindow via router-view) -->
     <div class="chat-layout__center flex-1 overflow-visible min-w-[400px] flex flex-col min-h-0">
-      <router-view />
+      <router-view v-slot="{ Component, route: childRoute }">
+        <keep-alive>
+          <component :is="Component" :key="childRoute.fullPath" />
+        </keep-alive>
+      </router-view>
     </div>
 
     <!-- Right: Skill Panel（仅对话页展示；略宽于 w-72 便于长文与知识卡） -->

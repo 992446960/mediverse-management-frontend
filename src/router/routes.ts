@@ -205,7 +205,6 @@ const routes: RouteRecordRaw[] = [
       layout: 'MainLayout',
       title: 'menu.digitalDoctor',
       requiresAuth: true,
-      noCache: true,
     },
     children: [
       {
@@ -218,7 +217,7 @@ const routes: RouteRecordRaw[] = [
         path: 'session/:id',
         name: 'ChatSession',
         component: () => import('@/views/chat/Session.vue'),
-        meta: { title: 'menu.avatarChat', noCache: true },
+        meta: { title: 'menu.avatarChat' },
       },
     ],
   },

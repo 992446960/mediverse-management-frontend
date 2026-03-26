@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import ChatWindow from '@/components/ChatWindow/index.vue'
 
+defineOptions({ name: 'ChatSession' })
+
 const route = useRoute()
 
 const sessionId = computed(() => route.params.id as string)
