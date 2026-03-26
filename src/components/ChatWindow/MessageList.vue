@@ -85,27 +85,47 @@ function isNearBottom(el: HTMLElement | null): boolean {
   return el.scrollHeight - el.scrollTop - el.clientHeight <= NEAR_BOTTOM_THRESHOLD
 }
 
+type ScrollToBottomOptions = {
+  /** true：不防抖，立即执行 */
+  immediate?: boolean
+  /** auto：切换会话/首轮加载时无动画贴底；smooth：流式跟随、用户点「回到底部」 */
+  behavior?: ScrollBehavior
+}
+
 /**
- * 滚动到底部：使用 scrollIntoView 锚点，不依赖具体滚动容器
- * - scrollToBottom(): 流式追加时防抖
- * - scrollToBottom(true): 完成态/切换会话时立即滚动
+ * 滚动到底部
+ * - 默认：流式追加时防抖 + smooth
+ * - immediate + auto：切换会话、首轮加载，避免从顶长距 smooth（对齐 Claude 类体验）
  */
-function scrollToBottom(immediate = false) {
+function scrollToBottom(options: ScrollToBottomOptions | boolean = false) {
+  const opts: ScrollToBottomOptions =
+    typeof options === 'boolean' ? { immediate: options } : (options ?? {})
+  const immediate = opts.immediate ?? false
+  const behavior: ScrollBehavior = opts.behavior ?? (immediate ? 'auto' : 'smooth')
+
   if (!immediate && !shouldAutoScroll.value) return
 
-  const doScroll = () => {
+  const run = () => {
+    if (behavior === 'auto' || behavior === 'instant') {
+      const el = listContainerRef.value
+      if (el && el.scrollHeight > el.clientHeight) {
+        el.scrollTop = el.scrollHeight - el.clientHeight
+      }
+      bottomAnchorRef.value?.scrollIntoView({ block: 'end', behavior: 'auto' })
+      return
+    }
     bottomAnchorRef.value?.scrollIntoView({ block: 'end', behavior: 'smooth' })
   }
 
   if (immediate) {
-    doScroll()
+    run()
     return
   }
 
   if (scrollTimeout) clearTimeout(scrollTimeout)
   scrollTimeout = setTimeout(() => {
     scrollTimeout = null
-    doScroll()
+    run()
   }, SCROLL_DEBOUNCE_MS)
 }
 
@@ -120,19 +140,23 @@ function handleScroll(ev: Event) {
 function goToBottom() {
   shouldAutoScroll.value = true
   showScrollToBottom.value = false
-  nextTick(() => scrollToBottom(true))
+  nextTick(() => scrollToBottom({ immediate: true, behavior: 'smooth' }))
 }
 
 // 若实际滚动容器为外层 listContainerRef，需监听其 scroll（BubbleList 的 onScroll 覆盖其内部容器）
 onMounted(() => {
   const el = listContainerRef.value
   if (el) el.addEventListener('scroll', handleScroll, { passive: true })
-  // 进入有记录的聊天时，挂载后多次尝试滚动到底部（含切换会话、刷新）
+  // 进入有记录的聊天：即时贴底；rAF/短延时应对布局未完成
   if (props.messages.length > 0) {
-    nextTick(() => scrollToBottom(true))
-    ;[100, 200, 400].forEach((ms) => {
-      mountScrollTimeouts.push(setTimeout(() => scrollToBottom(true), ms))
+    nextTick(() => scrollToBottom({ immediate: true, behavior: 'auto' }))
+    requestAnimationFrame(() => {
+      scrollToBottom({ immediate: true, behavior: 'auto' })
+      requestAnimationFrame(() => scrollToBottom({ immediate: true, behavior: 'auto' }))
     })
+    mountScrollTimeouts.push(
+      setTimeout(() => scrollToBottom({ immediate: true, behavior: 'auto' }), 100)
+    )
   }
 })
 
@@ -150,7 +174,7 @@ watch(
     if (newId !== oldId) {
       shouldAutoScroll.value = true
       showScrollToBottom.value = false
-      nextTick(() => scrollToBottom(true))
+      nextTick(() => scrollToBottom({ immediate: true, behavior: 'auto' }))
     }
   }
 )
@@ -165,10 +189,13 @@ watch(
     const isInitialLoad = messages.length > 0 && (!oldMessages?.length || oldMessages.length === 0)
     const immediate = justFinished || isInitialLoad
     nextTick(() => {
-      scrollToBottom(immediate)
-      // 初始加载时 DOM 可能未完全布局，延迟再滚一次确保到底部
+      if (immediate) {
+        scrollToBottom({ immediate: true, behavior: 'auto' })
+      } else {
+        scrollToBottom({ immediate: false, behavior: 'smooth' })
+      }
       if (isInitialLoad) {
-        setTimeout(() => scrollToBottom(true), 100)
+        setTimeout(() => scrollToBottom({ immediate: true, behavior: 'auto' }), 100)
       }
     })
   },
