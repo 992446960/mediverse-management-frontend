@@ -6,7 +6,15 @@ import type {
   GetMessagesResponse,
   SessionRating,
   SessionRatingResponse,
+  ChatMessageMode,
 } from '@/types/chat'
+
+export interface SendMessageStreamPayload {
+  text?: string
+  attachments?: File[]
+  mode?: ChatMessageMode
+  use_web?: boolean
+}
 
 export interface GetSessionsParams {
   avatar_id?: string
@@ -102,12 +110,12 @@ export function getAvatarSkills(avatarId: string): Promise<AvatarSkill[]> {
  *   response.body.getReader() 逐块读取，才能实现打字机效果
  * - 禁止用 axios/request 发此接口：axios 会缓冲整个响应体，无法流式读取
  *
- * 请求：POST multipart/form-data（text + 可选 attachments）
+ * 请求：POST multipart/form-data（text、mode、use_web、可选 attachments）
  * 响应：Content-Type: text/event-stream 时为 SSE 流；否则按 JSON 处理
  */
 export async function sendMessageRaw(
   sessionId: string,
-  payload: { text?: string; attachments?: File[] }
+  payload: SendMessageStreamPayload
 ): Promise<Response> {
   const baseURL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
   const url = `${baseURL}/chat/sessions/${sessionId}/messages`
@@ -129,6 +137,12 @@ export async function sendMessageRaw(
     for (const file of payload.attachments) {
       formData.append('attachments', file)
     }
+  }
+  if (payload.mode !== undefined) {
+    formData.append('mode', payload.mode)
+  }
+  if (payload.use_web !== undefined) {
+    formData.append('use_web', payload.use_web ? 'true' : 'false')
   }
 
   const res = await fetch(url, {

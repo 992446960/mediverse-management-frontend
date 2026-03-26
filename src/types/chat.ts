@@ -18,6 +18,9 @@ export interface SessionQuota {
   is_exhausted: boolean
 }
 
+/** 发送消息（流式）表单字段 mode */
+export type ChatMessageMode = 'balance' | 'fast' | 'deep'
+
 /** 图片扩展名（API 可能返回 type: 'file' 的图片） */
 const IMAGE_EXT = /\.(jpe?g|png|gif|webp|bmp|svg)(\?|$)/i
 

@@ -10,6 +10,7 @@ import {
   BulbOutlined,
 } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
+import type { ChatMessageMode } from '@/types/chat'
 
 const { t } = useI18n()
 
@@ -22,13 +23,13 @@ const emit = defineEmits<{
   (
     e: 'send',
     content: string,
-    options: { thinkingMode: string; webSearch: boolean; files: File[] }
+    options: { thinkingMode: ChatMessageMode; webSearch: boolean; files: File[] }
   ): void
   (e: 'stop'): void
 }>()
 
 const inputValue = ref('')
-const thinkingMode = ref('medium')
+const thinkingMode = ref<ChatMessageMode>('balance')
 const webSearch = ref(false)
 const fileList = ref<
   Array<{ uid: string; name: string; status: string; url: string; file: File; size?: number }>
@@ -72,9 +73,9 @@ const beforeUpload = (file: File | { originFileObj?: File; name?: string; size?:
 }
 
 const thinkingModeOptions = computed(() => [
-  { value: 'high', label: t('chat.thinkingDeep') },
-  { value: 'medium', label: t('chat.thinkingBalance') },
-  { value: 'low', label: t('chat.thinkingFast') },
+  { value: 'deep', label: t('chat.thinkingDeep') },
+  { value: 'balance', label: t('chat.thinkingBalance') },
+  { value: 'fast', label: t('chat.thinkingFast') },
 ])
 
 const handleSend = () => {
@@ -278,9 +279,7 @@ const onFileChange = (e: Event) => {
 </script>
 
 <template>
-  <div
-    class="message-input p-4 border-t border-gray-100 dark:border-gray-800"
-  >
+  <div class="message-input p-4 border-t border-gray-100 dark:border-gray-800">
     <!-- Attachments Preview -->
     <Attachments
       v-if="fileList.length > 0"

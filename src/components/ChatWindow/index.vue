@@ -15,6 +15,7 @@ import MessageList from './MessageList.vue'
 import MessageInput from './MessageInput.vue'
 import RatingDialog from '@/components/RatingDialog/index.vue'
 import { useChatStore } from '@/stores/chat'
+import type { ChatMessageMode } from '@/types/chat'
 import type { Ref } from 'vue'
 import { inject } from 'vue'
 
@@ -86,7 +87,7 @@ const initialPrompts = [
 
 const handleSend = async (
   content: string,
-  options?: { thinkingMode?: string; webSearch?: boolean; files?: File[] }
+  options?: { thinkingMode?: ChatMessageMode; webSearch?: boolean; files?: File[] }
 ) => {
   if (testSessionBootstrap.value) {
     await testSessionBootstrap.value
@@ -96,7 +97,11 @@ const handleSend = async (
     if (!session) return
   }
 
-  await sendMessage(content, options?.files)
+  await sendMessage(content, {
+    attachments: options?.files,
+    mode: options?.thinkingMode,
+    use_web: options?.webSearch,
+  })
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

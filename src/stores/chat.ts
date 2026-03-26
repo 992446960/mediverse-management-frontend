@@ -13,7 +13,13 @@ import {
   sendMessageRaw,
 } from '@/api/sessions'
 import { useSSEChat } from '@/composables/useSSEChat'
-import type { Session, Message, SessionRating, ThinkingProcessStep } from '@/types/chat'
+import type {
+  Session,
+  Message,
+  SessionRating,
+  ThinkingProcessStep,
+  ChatMessageMode,
+} from '@/types/chat'
 
 /** 过滤稀疏数组空位，useSSEChat 按 index 写入可能导致 [empty, empty, step] */
 function filterThinkingSteps(steps: ThinkingProcessStep[]): ThinkingProcessStep[] {
@@ -166,12 +172,20 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
-  async function sendMessage(content: string, attachments?: File[]) {
+  async function sendMessage(
+    content: string,
+    options?: {
+      attachments?: File[]
+      mode?: ChatMessageMode
+      use_web?: boolean
+    }
+  ) {
     if (!currentSessionId.value) return
 
     const sessionId = currentSessionId.value
 
     const userParts: Message['parts'] = [{ type: 'text', text: content || '' }]
+    const attachments = options?.attachments
     if (attachments?.length) {
       for (const file of attachments) {
         userParts.push({
@@ -212,6 +226,8 @@ export const useChatStore = defineStore('chat', () => {
       const response = await sendMessageRaw(sessionId, {
         text: content,
         attachments,
+        mode: options?.mode,
+        use_web: options?.use_web,
       })
 
       const contentType = response.headers.get('content-type') ?? ''
