@@ -67,83 +67,110 @@ const hasToolCallsBlock = computed(
       />
     </button>
 
-    <!-- 步骤容器：白底、圆角、边框 -->
-    <div v-show="expanded" class="thinking-process-box">
-      <div v-for="(step, idx) in displaySteps" :key="idx" class="thinking-process-step">
-        <div class="thinking-process-step-icon">
-          <span
-            class="thinking-process-step-dot"
-            :class="{ 'thinking-process-step-dot--done': step.status === 'done' }"
+    <!-- 步骤容器：白底、圆角、边框（Grid 收起展开过渡，避免 v-show 无动画） -->
+    <div
+      class="thinking-process-collapse"
+      :class="{ 'thinking-process-collapse--collapsed': !expanded }"
+      :aria-hidden="!expanded"
+    >
+      <div class="thinking-process-collapse__inner">
+        <div class="thinking-process-box">
+          <div v-for="(step, idx) in displaySteps" :key="idx" class="thinking-process-step">
+            <div class="thinking-process-step-icon">
+              <span
+                class="thinking-process-step-dot"
+                :class="{ 'thinking-process-step-dot--done': step.status === 'done' }"
+              >
+                <CheckOutlined v-if="step.status === 'done'" />
+                <span v-else class="thinking-process-step-dot-loading" />
+              </span>
+              <span v-if="idx < displaySteps.length - 1" class="thinking-process-step-line" />
+            </div>
+            <div class="thinking-process-step-content">
+              <div class="thinking-process-step-title-row">
+                <div class="thinking-process-step-title">{{ step.title }}</div>
+                <span v-if="step.extra" class="thinking-process-step-badge">{{ step.extra }}</span>
+                <span
+                  v-if="step.description"
+                  class="thinking-process-step-title-row-spacer"
+                  aria-hidden="true"
+                />
+                <button
+                  v-if="step.description"
+                  type="button"
+                  class="thinking-process-step-detail-toggle"
+                  :aria-expanded="isStepDescExpanded(idx)"
+                  :aria-label="
+                    isStepDescExpanded(idx)
+                      ? t('chat.thinkingProcessStepDetailCollapse')
+                      : t('chat.thinkingProcessStepDetailExpand')
+                  "
+                  @click.stop="toggleStepDesc(idx)"
+                >
+                  <DownOutlined
+                    class="thinking-process-step-detail-chevron"
+                    :class="{
+                      'thinking-process-step-detail-chevron--collapsed': !isStepDescExpanded(idx),
+                    }"
+                  />
+                </button>
+              </div>
+              <div
+                v-if="step.description"
+                class="thinking-process-collapse"
+                :class="{ 'thinking-process-collapse--collapsed': !isStepDescExpanded(idx) }"
+                :aria-hidden="!isStepDescExpanded(idx)"
+              >
+                <div class="thinking-process-collapse__inner">
+                  <!-- eslint-disable vue/no-v-html -- Markdown（marked + DOMPurify），来源为思考步骤接口 -->
+                  <div
+                    class="thinking-process-step-desc markdown-body prose prose-sm max-w-none dark:prose-invert"
+                    v-html="step.descriptionHtml"
+                  ></div>
+                  <!-- eslint-enable vue/no-v-html -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 已使用工具：与会话内思考过程同盒，亦可单独展开收起 -->
+          <div
+            v-if="hasToolCallsBlock"
+            class="thinking-process-tools"
+            :class="{ 'thinking-process-tools--after-steps': displaySteps.length > 0 }"
           >
-            <CheckOutlined v-if="step.status === 'done'" />
-            <span v-else class="thinking-process-step-dot-loading" />
-          </span>
-          <span v-if="idx < displaySteps.length - 1" class="thinking-process-step-line" />
-        </div>
-        <div class="thinking-process-step-content">
-          <div class="thinking-process-step-title-row">
-            <div class="thinking-process-step-title">{{ step.title }}</div>
-            <span v-if="step.extra" class="thinking-process-step-badge">{{ step.extra }}</span>
-            <span
-              v-if="step.description"
-              class="thinking-process-step-title-row-spacer"
-              aria-hidden="true"
-            />
             <button
-              v-if="step.description"
               type="button"
-              class="thinking-process-step-detail-toggle"
-              :aria-expanded="isStepDescExpanded(idx)"
+              class="thinking-process-tools-header"
+              :aria-expanded="toolCallsExpanded"
               :aria-label="
-                isStepDescExpanded(idx)
-                  ? t('chat.thinkingProcessStepDetailCollapse')
-                  : t('chat.thinkingProcessStepDetailExpand')
+                toolCallsExpanded
+                  ? t('chat.toolCallsSectionCollapse')
+                  : t('chat.toolCallsSectionExpand')
               "
-              @click.stop="toggleStepDesc(idx)"
+              @click="toolCallsExpanded = !toolCallsExpanded"
             >
+              <ToolOutlined class="thinking-process-tools-header-icon" />
+              <span class="thinking-process-tools-header-text">{{
+                t('chat.toolCallsSection')
+              }}</span>
               <DownOutlined
-                class="thinking-process-step-detail-chevron"
-                :class="{
-                  'thinking-process-step-detail-chevron--collapsed': !isStepDescExpanded(idx),
-                }"
+                class="thinking-process-tools-header-chevron"
+                :class="{ 'thinking-process-tools-header-chevron--collapsed': !toolCallsExpanded }"
               />
             </button>
+            <div
+              class="thinking-process-collapse"
+              :class="{ 'thinking-process-collapse--collapsed': !toolCallsExpanded }"
+              :aria-hidden="!toolCallsExpanded"
+            >
+              <div class="thinking-process-collapse__inner">
+                <div class="thinking-process-tools-body">
+                  <SkillCallDisplay :tool-calls="toolCalls ?? []" embedded />
+                </div>
+              </div>
+            </div>
           </div>
-          <!-- eslint-disable-next-line vue/no-v-html -- Markdown（marked + DOMPurify），来源为思考步骤接口 -->
-          <div
-            v-show="step.description && isStepDescExpanded(idx)"
-            class="thinking-process-step-desc markdown-body prose prose-sm max-w-none dark:prose-invert"
-            v-html="step.descriptionHtml"
-          />
-        </div>
-      </div>
-
-      <!-- 已使用工具：与会话内思考过程同盒，亦可单独展开收起 -->
-      <div
-        v-if="hasToolCallsBlock"
-        class="thinking-process-tools"
-        :class="{ 'thinking-process-tools--after-steps': displaySteps.length > 0 }"
-      >
-        <button
-          type="button"
-          class="thinking-process-tools-header"
-          :aria-expanded="toolCallsExpanded"
-          :aria-label="
-            toolCallsExpanded
-              ? t('chat.toolCallsSectionCollapse')
-              : t('chat.toolCallsSectionExpand')
-          "
-          @click="toolCallsExpanded = !toolCallsExpanded"
-        >
-          <ToolOutlined class="thinking-process-tools-header-icon" />
-          <span class="thinking-process-tools-header-text">{{ t('chat.toolCallsSection') }}</span>
-          <DownOutlined
-            class="thinking-process-tools-header-chevron"
-            :class="{ 'thinking-process-tools-header-chevron--collapsed': !toolCallsExpanded }"
-          />
-        </button>
-        <div v-show="toolCallsExpanded" class="thinking-process-tools-body">
-          <SkillCallDisplay :tool-calls="toolCalls ?? []" embedded />
         </div>
       </div>
     </div>
@@ -154,6 +181,29 @@ const hasToolCallsBlock = computed(
 .thinking-process {
   --tp-border: var(--color-border);
   --tp-success: var(--color-success);
+}
+
+/* Grid 0fr → 1fr：不依赖 height:auto 插值，主区域 / 步骤说明 / 工具区共用 */
+.thinking-process-collapse {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.28s ease-in-out;
+  overflow: hidden;
+}
+
+.thinking-process-collapse--collapsed {
+  grid-template-rows: 0fr;
+}
+
+.thinking-process-collapse__inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thinking-process-collapse {
+    transition-duration: 0.01ms;
+  }
 }
 
 .thinking-process-header {
