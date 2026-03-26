@@ -307,18 +307,19 @@ const roles = {
       <div ref="bottomAnchorRef" class="h-px shrink-0" aria-hidden="true" />
     </div>
 
-    <!-- 回到底部按钮：用户上滑查看历史时显示 -->
-    <Transition name="fade">
-      <a-button
-        v-if="showScrollToBottom"
-        type="primary"
-        size="small"
-        class="scroll-to-bottom-btn absolute bottom-4 left-1/2 -translate-x-1/2 shadow-lg"
-        :icon="h(VerticalAlignBottomOutlined)"
-        @click="goToBottom"
-      >
-        {{ t('chat.scrollToBottom') }}
-      </a-button>
+    <!-- 回到底部：毛玻璃胶囊 + 淡入淡出/上滑（参考 ChatGPT 类产品的悬浮条） -->
+    <Transition name="scroll-to-bottom">
+      <div v-if="showScrollToBottom" class="scroll-to-bottom-wrap">
+        <a-button
+          type="default"
+          size="small"
+          class="scroll-to-bottom-btn"
+          :icon="h(VerticalAlignBottomOutlined)"
+          @click="goToBottom"
+        >
+          {{ t('chat.scrollToBottom') }}
+        </a-button>
+      </div>
     </Transition>
   </div>
 </template>
@@ -401,17 +402,81 @@ const roles = {
   padding: var(--spacing-sm) var(--spacing-md);
 }
 
-.scroll-to-bottom-btn {
+.scroll-to-bottom-wrap {
+  position: absolute;
+  bottom: var(--spacing-md);
+  left: 0;
+  right: 0;
   z-index: 10;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
 }
 
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s ease;
+.scroll-to-bottom-btn {
+  pointer-events: auto;
+  display: inline-flex !important;
+  align-items: center;
+  gap: var(--spacing-xs);
+  height: auto !important;
+  padding: var(--spacing-sm) var(--spacing-md) !important;
+  line-height: 1.25 !important;
+  border-radius: var(--radius-full) !important;
+  font-weight: 500;
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent) !important;
+  background: color-mix(in srgb, var(--color-bg-elevated) 68%, transparent) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(165%);
+  backdrop-filter: blur(14px) saturate(165%);
+  color: var(--color-text-base) !important;
+  box-shadow:
+    var(--shadow-md),
+    0 0 0 1px color-mix(in srgb, var(--color-primary) 12%, transparent);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    color var(--transition-fast);
+
+  &:hover {
+    background: color-mix(in srgb, var(--color-bg-elevated) 86%, transparent) !important;
+    border-color: color-mix(in srgb, var(--color-primary) 28%, transparent) !important;
+    color: var(--color-text-base) !important;
+    box-shadow:
+      var(--shadow-lg),
+      0 0 0 1px color-mix(in srgb, var(--color-primary) 18%, transparent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
 }
-.fade-enter-from,
-.fade-leave-to {
+
+.scroll-to-bottom-enter-active,
+.scroll-to-bottom-leave-active {
+  transition:
+    opacity 0.32s cubic-bezier(0.33, 1, 0.68, 1),
+    transform 0.32s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+.scroll-to-bottom-enter-from,
+.scroll-to-bottom-leave-to {
   opacity: 0;
+  transform: translateY(14px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-to-bottom-enter-active,
+  .scroll-to-bottom-leave-active {
+    transition-duration: 0.12s;
+    transition-property: opacity;
+  }
+
+  .scroll-to-bottom-enter-from,
+  .scroll-to-bottom-leave-to {
+    transform: none;
+  }
 }
 
 .bubble-footer-actions {
