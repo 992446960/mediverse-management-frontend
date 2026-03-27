@@ -49,7 +49,7 @@
         <div
           class="markdown-body p-4 bg-gray-50 rounded-lg overflow-auto max-h-[calc(100vh-320px)]"
         >
-          <div class="text-xs text-gray-400 mb-2 font-medium">v{{ fromVersion }}</div>
+          <div class="text-xs text-gray-400 mb-2 font-medium">{{ fromVersionLabel }}</div>
           <template v-for="(seg, i) in diff" :key="'l-' + i">
             <!-- eslint-disable-next-line vue/no-v-html -- marked + DOMPurify -->
             <span
@@ -68,7 +68,7 @@
         <div
           class="markdown-body p-4 bg-gray-50 rounded-lg overflow-auto max-h-[calc(100vh-320px)]"
         >
-          <div class="text-xs text-gray-400 mb-2 font-medium">v{{ toVersion }}</div>
+          <div class="text-xs text-gray-400 mb-2 font-medium">{{ toVersionLabel }}</div>
           <template v-for="(seg, i) in diff" :key="'r-' + i">
             <!-- eslint-disable-next-line vue/no-v-html -- marked + DOMPurify -->
             <span
@@ -94,6 +94,7 @@ import { useI18n } from 'vue-i18n'
 import { Modal } from 'ant-design-vue'
 import { RollbackOutlined } from '@ant-design/icons-vue'
 import type { VersionDiffSegment, KnowledgeCardVersion } from '@/types/knowledge'
+import { knowledgeCardVersionToNumeric } from '@/utils/knowledgeCardVersion'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 
@@ -117,6 +118,14 @@ const emit = defineEmits<{
 const localFrom = ref<number>(0)
 const localTo = ref<number>(0)
 
+function versionLabelForNumeric(n: number): string {
+  const row = props.versions.find((v) => knowledgeCardVersionToNumeric(v.version) === n)
+  return row?.version ?? `v${n}`
+}
+
+const fromVersionLabel = computed(() => versionLabelForNumeric(props.fromVersion))
+const toVersionLabel = computed(() => versionLabelForNumeric(props.toVersion))
+
 /** 同步外部传入的版本号到本地 Select */
 watch(
   () => [props.fromVersion, props.toVersion],
@@ -129,8 +138,7 @@ watch(
 
 const versionOptions = computed(() =>
   props.versions.map((v) => {
-    const m = v.version.match(/(\d+)/)
-    const num = m ? Number(m[1]) : 0
+    const num = knowledgeCardVersionToNumeric(v.version) ?? 0
     return { label: v.version, value: num }
   })
 )
@@ -140,15 +148,10 @@ const canCompare = computed(() => {
   return localFrom.value > 0 && localTo.value > 0 && localFrom.value !== localTo.value
 })
 
-function extractVersionNumber(version: string): number | null {
-  const m = version.match(/(\d+)/)
-  return m ? Number(m[1]) : null
-}
-
 /** 回退目标为右侧 to；仅当 to 无合法版本时禁用 */
 const canRollbackToTarget = computed(() => {
   if (localTo.value <= 0) return false
-  return props.versions.some((v) => extractVersionNumber(v.version) === localTo.value)
+  return props.versions.some((v) => knowledgeCardVersionToNumeric(v.version) === localTo.value)
 })
 
 function handleCompare() {
@@ -159,7 +162,7 @@ function handleCompare() {
 function handleRollbackClick() {
   if (!canRollbackToTarget.value) return
   const targetVersion = localTo.value
-  const row = props.versions.find((v) => extractVersionNumber(v.version) === targetVersion)
+  const row = props.versions.find((v) => knowledgeCardVersionToNumeric(v.version) === targetVersion)
   const versionLabel = row?.version ?? `v${targetVersion}`
   Modal.confirm({
     title: t('knowledge.card.rollbackConfirmTitle'),

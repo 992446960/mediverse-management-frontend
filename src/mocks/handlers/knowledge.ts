@@ -8,6 +8,7 @@ import type {
   KnowledgeCard,
   OwnerType,
 } from '@/types/knowledge'
+import { knowledgeCardVersionToNumeric } from '@/utils/knowledgeCardVersion'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 
@@ -456,7 +457,7 @@ export const knowledgeHandlers = [
       const card = mutableCards.find((c) => c.id === cardId)
       const versions = mockCardVersions[cardId as string] || []
       const versionData = versions.find(
-        (row) => row.version.match(/(\d+)/)?.[1] === String(target_version)
+        (row) => knowledgeCardVersionToNumeric(row.version) === target_version
       )
 
       if (card && versionData) {

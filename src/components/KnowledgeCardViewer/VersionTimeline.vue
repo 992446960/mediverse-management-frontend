@@ -50,6 +50,7 @@ import { useI18n } from 'vue-i18n'
 import { Modal, message } from 'ant-design-vue'
 import { HistoryOutlined, RollbackOutlined, SwapOutlined } from '@ant-design/icons-vue'
 import type { KnowledgeCardVersion } from '@/types/knowledge'
+import { knowledgeCardVersionToNumeric } from '@/utils/knowledgeCardVersion'
 import dayjs from 'dayjs'
 
 const { t } = useI18n()
@@ -64,23 +65,30 @@ const emit = defineEmits<{
   (e: 'rollback', version: string, targetVersion: number): void
 }>()
 
-function extractVersionNumber(version: string): number | null {
-  const m = version.match(/(\d+)/)
-  return m ? Number(m[1]) : null
-}
-
 function handleCompare(v: KnowledgeCardVersion) {
-  const fromNum = extractVersionNumber(v.version)
   const latestVersion = props.versions[0]
   if (!latestVersion) return
-  const toNum = extractVersionNumber(latestVersion.version)
-  if (fromNum != null && toNum != null) {
+
+  const toNum = knowledgeCardVersionToNumeric(v.version)
+  if (toNum == null) return
+
+  /** 点击项作为 to；from 为当前列表最新。若点的就是最新，则与相邻上一版对比。 */
+  let fromRow: KnowledgeCardVersion | undefined
+  if (v.version === latestVersion.version) {
+    fromRow = props.versions[1]
+  } else {
+    fromRow = latestVersion
+  }
+  if (!fromRow) return
+
+  const fromNum = knowledgeCardVersionToNumeric(fromRow.version)
+  if (fromNum != null && fromNum !== toNum) {
     emit('compare', fromNum, toNum)
   }
 }
 
 const handleRollback = (v: KnowledgeCardVersion) => {
-  const targetVersion = extractVersionNumber(v.version)
+  const targetVersion = knowledgeCardVersionToNumeric(v.version)
   if (targetVersion == null) {
     message.warning(t('knowledge.card.rollbackInvalidVersion'))
     return
