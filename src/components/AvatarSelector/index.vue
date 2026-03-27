@@ -157,7 +157,7 @@ onMounted(() => {
                   <template #icon><UserOutlined /></template>
                 </Avatar>
                 <div class="flex-1 min-w-0">
-                  <div class="flex items-baseline gap-2 flex-wrap">
+                  <div class="flex flex-row items-center gap-2 flex-wrap">
                     <span
                       class="avatar-card__name text-lg font-bold text-gray-900 dark:text-gray-100"
                     >
