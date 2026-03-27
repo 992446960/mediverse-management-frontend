@@ -1,6 +1,6 @@
 <template>
   <div class="dashboard">
-    <div class="dashboard__header">
+    <div class="app-container p-6 mb-6">
       <h1 class="dashboard__title">{{ t('menu.dashboard') }}</h1>
     </div>
 
@@ -248,10 +248,6 @@ onMounted(() => {
 <style scoped lang="scss">
 .dashboard {
   padding: var(--spacing-md);
-}
-
-.dashboard__header {
-  margin-bottom: var(--spacing-lg);
 }
 
 .dashboard__title {
