@@ -141,6 +141,10 @@ docker compose up -d --build
 ```bash
 docker compose ps
 ```
+### 4.手动上传(127.0.0.1改为自己的ip)
+```bash
+scp ./docker-dist/mediverse-frontend-20260330.tar root@127.0.0.1:/root/docker-images/
+```
 
 ---
 
