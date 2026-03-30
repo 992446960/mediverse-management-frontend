@@ -11,7 +11,8 @@
     "lint": "eslint . --fix",
     "format": "prettier --write .",
     "test:api": "vitest run --config vitest.config.api.ts",
-    "test:api:watch": "vitest --config vitest.config.api.ts"
+    "test:api:watch": "vitest --config vitest.config.api.ts",
+    "docker:build": "bash scripts/docker-build.sh"
   },
   "dependencies": {
     "@ant-design/icons-vue": "^7.0.1",
