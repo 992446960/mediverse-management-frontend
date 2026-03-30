@@ -14,9 +14,6 @@ dist
 dist-ssr
 *.local
 
-# Auto-generated type declarations (unplugin-auto-import / unplugin-vue-components)
-components.d.ts
-src/auto-imports.d.ts
 
 # Editor directories and files
 .vscode/*
