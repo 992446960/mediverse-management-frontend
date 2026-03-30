@@ -6,15 +6,15 @@
 
 ## 一、本项目涉及的路径与文件
 
-| 路径 | 作用 |
-|------|------|
-| `Dockerfile` | 多阶段构建：Node 22 + pnpm 编译 → `nginx:stable-alpine` 运行；构建阶段 `WORKDIR` 为 `/app`，产物在镜像内 `/usr/share/nginx/html`。 |
-| `compose.yaml` | 服务名 **`frontend`**，镜像 **`mediverse-management-frontend:latest`**，本地映射 **`8080:80`**。 |
-| `nginx.conf` | 构建时复制为镜像内 **`/etc/nginx/templates/default.conf.template`**，由官方 Nginx 镜像在启动时根据环境变量生成 `default.conf`。 |
-| `.dockerignore` | 排除 `node_modules`、`dist`、**`docker-dist/`**、**`*.tar`**、**`.env` / `.env.*`** 等，避免进入构建上下文。 |
-| `scripts/docker-pre.sh` | 执行 `docker compose up --build`（需在本仓库根目录运行）。 |
-| `scripts/docker-build.sh` | `docker compose build` → `docker save` 到 `docker-dist/` → `scp` 到远程目录。 |
-| `docker-dist/` | `docker-build.sh` 输出 tar 的目录（脚本使用相对路径 **`./docker-dist/`**）。 |
+| 路径                      | 作用                                                                                                                               |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `Dockerfile`              | 多阶段构建：Node 22 + pnpm 编译 → `nginx:stable-alpine` 运行；构建阶段 `WORKDIR` 为 `/app`，产物在镜像内 `/usr/share/nginx/html`。 |
+| `compose.yaml`            | 服务名 **`frontend`**，镜像 **`mediverse-management-frontend:latest`**，本地映射 **`8080:80`**。                                   |
+| `nginx.conf`              | 构建时复制为镜像内 **`/etc/nginx/templates/default.conf.template`**，由官方 Nginx 镜像在启动时根据环境变量生成 `default.conf`。    |
+| `.dockerignore`           | 排除 `node_modules`、`dist`、**`docker-dist/`**、**`*.tar`**、**`.env` / `.env.*`** 等，避免进入构建上下文。                       |
+| `scripts/docker-pre.sh`   | 执行 `docker compose up --build`（需在本仓库根目录运行）。                                                                         |
+| `scripts/docker-build.sh` | `docker compose build` → `docker save` 到 `docker-dist/` → `scp` 到远程目录。                                                      |
+| `docker-dist/`            | `docker-build.sh` 输出 tar 的目录（脚本使用相对路径 **`./docker-dist/`**）。                                                       |
 
 **约定：** 所有 `docker compose` 与脚本均在 **`mediverse-management-frontend` 仓库根目录**（与 `Dockerfile`、`compose.yaml` 同级）执行。
 
@@ -22,21 +22,22 @@
 
 ## 二、环境前提
 
-| 前提 | 说明 |
-|------|------|
-| Docker | `docker` 可用。 |
-| Docker Compose V2 | 使用子命令 **`docker compose`**（与脚本、`compose.yaml` 注释一致）。 |
-| Bash | `scripts/*.sh` 为 bash；Windows 可用 Git Bash / WSL。 |
-| 基础镜像拉取 | 构建需拉取 **`node:22-alpine`**、**`nginx:stable-alpine`**（需能访问镜像源或已配置加速）。 |
-| 平台 | **`compose.yaml`** 中 **`platform: linux/amd64`**，与常见云主机 x86_64 一致；Apple Silicon 本机构建会走 QEMU，可能较慢。 |
+| 前提              | 说明                                                                                                                     |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Docker            | `docker` 可用。                                                                                                          |
+| Docker Compose V2 | 使用子命令 **`docker compose`**（与脚本、`compose.yaml` 注释一致）。                                                     |
+| Bash              | `scripts/*.sh` 为 bash；Windows 可用 Git Bash / WSL。                                                                    |
+| 基础镜像拉取      | 构建需拉取 **`node:22-alpine`**、**`nginx:stable-alpine`**（需能访问镜像源或已配置加速）。                               |
+| 平台              | **`compose.yaml`** 中 **`platform: linux/amd64`**，与常见云主机 x86_64 一致；Apple Silicon 本机构建会走 QEMU，可能较慢。 |
 
 ### 使用 `scripts/docker-build.sh` 时额外需要
 
-| 前提 | 说明 |
-|------|------|
+| 前提                    | 说明                                                                                                            |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------- |
 | 目录 **`docker-dist/`** | 脚本写入 **`./docker-dist/mediverse-frontend-$(date +%Y%m%d).tar`**；若不存在请先执行：`mkdir -p docker-dist`。 |
-| **SSH / SCP** | 本机能无交互登录远程主机（密钥或 `ssh-agent`），且 **`scp`** 可用。 |
-| 修改脚本中的远程变量 | 见下文「`docker-build.sh` 中的变量」；远程目录需在服务器上已存在（可先 **`mkdir -p`**）。 |
+| **SSH / SCP**           | 本机能无交互登录远程主机（密钥或 `ssh-agent`），且 **`scp`** 可用。                                             |
+| 本机 **`REMOTE_HOST`**  | 须在运行脚本的 shell 中已导出（建议在 **`~/.zshrc`** 中 `export REMOTE_HOST=...` 后重开终端）；详见下文变量表。 |
+| 远程目录                | **`REMOTE_DIR`** 见脚本内默认值；目录需在服务器上已存在（可先 **`mkdir -p`**）。                                |
 
 ---
 
@@ -44,16 +45,16 @@
 
 以下内容摘自 **`compose.yaml`** / **`Dockerfile`**，部署时请与之一致或按需覆盖。
 
-| 名称 | 本项目中的值 | 说明 |
-|------|----------------|------|
-| **服务名** | `frontend` | `docker compose` 针对该服务的操作时使用。 |
-| **容器名** | `mediverse-management-frontend` | `container_name`。 |
-| **镜像名:标签** | `mediverse-management-frontend:latest` | `image` 与 `docker-build.sh` 中 **`IMAGE_TAG`** 一致。 |
-| **构建上下文** | `.` | 仓库根目录。 |
-| **`VITE_API_BASE_URL`（构建参数）** | `/api/v1` | `compose.yaml` → `build.args`；与 Dockerfile 中 **`ARG VITE_API_BASE_URL=/api/v1`** 一致，打进前端静态资源。 |
-| **`API_UPSTREAM`（运行时）** | `https://mediverse-management.huaxisy.com` | Nginx `proxy_pass` 上游完整 URL；Dockerfile **`ENV`** 与 compose **`environment`** 相同。 |
-| **`API_PROXY_HOST`（运行时）** | `mediverse-management.huaxisy.com` | 上游 `Host` 头与 TLS SNI，须与 **`API_UPSTREAM`** 的域名一致。 |
-| **端口映射（本地 Compose）** | `8080:80` | 浏览器访问 **`http://localhost:8080`**。 |
+| 名称                                | 本项目中的值                               | 说明                                                                                                         |
+| ----------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| **服务名**                          | `frontend`                                 | `docker compose` 针对该服务的操作时使用。                                                                    |
+| **容器名**                          | `mediverse-management-frontend`            | `container_name`。                                                                                           |
+| **镜像名:标签**                     | `mediverse-management-frontend:latest`     | `image` 与 `docker-build.sh` 中 **`IMAGE_TAG`** 一致。                                                       |
+| **构建上下文**                      | `.`                                        | 仓库根目录。                                                                                                 |
+| **`VITE_API_BASE_URL`（构建参数）** | `/api/v1`                                  | `compose.yaml` → `build.args`；与 Dockerfile 中 **`ARG VITE_API_BASE_URL=/api/v1`** 一致，打进前端静态资源。 |
+| **`API_UPSTREAM`（运行时）**        | `https://mediverse-management.huaxisy.com` | Nginx `proxy_pass` 上游完整 URL；Dockerfile **`ENV`** 与 compose **`environment`** 相同。                    |
+| **`API_PROXY_HOST`（运行时）**      | `mediverse-management.huaxisy.com`         | 上游 `Host` 头与 TLS SNI，须与 **`API_UPSTREAM`** 的域名一致。                                               |
+| **端口映射（本地 Compose）**        | `8080:80`                                  | 浏览器访问 **`http://localhost:8080`**。                                                                     |
 
 **Nginx 配置模板（`nginx.conf`）中与域名相关的固定值：**
 
@@ -98,15 +99,15 @@ docker compose up
 2. **`docker save mediverse-management-frontend:latest -o ./docker-dist/mediverse-frontend-YYYYMMDD.tar`**
 3. **`scp`** 将上述 tar 传到远程。
 
-**`docker-build.sh` 中的变量（与脚本内一致，改部署目标时只改这里）：**
+**`docker-build.sh` 中的变量：** 除 **`REMOTE_HOST`** 从本机环境读取外，其余与脚本内默认值一致（可按需改脚本）。
 
-| 变量 | 脚本中的赋值 | 含义 |
-|------|----------------|------|
-| `IMAGE_TAG` | `mediverse-management-frontend:latest` | `docker save` 的镜像引用。 |
-| `TAR_PATH` | `./docker-dist/mediverse-frontend-$(date +%Y%m%d).tar` | 本地 tar 路径（日期为运行当天 `YYYYMMDD`）。 |
-| `REMOTE_USER` | `root` | SCP 登录用户。 |
-| `REMOTE_HOST` | `120.48.178.101` | SCP 目标主机（请按实际服务器修改）。 |
-| `REMOTE_DIR` | `/root/docker-images` | 服务器上存放 tar 的目录（需已存在）。 |
+| 变量          | 取值说明                                                                 | 含义                                         |
+| ------------- | ------------------------------------------------------------------------ | -------------------------------------------- |
+| `IMAGE_TAG`   | `mediverse-management-frontend:latest`                                   | `docker save` 的镜像引用。                   |
+| `TAR_PATH`    | `./docker-dist/mediverse-frontend-$(date +%Y%m%d).tar`                   | 本地 tar 路径（日期为运行当天 `YYYYMMDD`）。 |
+| `REMOTE_USER` | `root`                                                                   | SCP 登录用户。                               |
+| `REMOTE_HOST` | **不设默认值**，须 `export REMOTE_HOST=服务器IP或域名`（如写在 `~/.zshrc`） | 未设置时脚本会报错退出。                     |
+| `REMOTE_DIR`  | `/root/docker-images`                                                    | 服务器上存放 tar 的目录（需已存在）。        |
 
 **命令：**
 
@@ -122,7 +123,7 @@ chmod +x scripts/docker-build.sh
 pnpm docker:build
 ```
 
-**成功时的典型输出：** `saved: ./docker-dist/mediverse-frontend-YYYYMMDD.tar`，以及 `uploaded to 120.48.178.101:/root/docker-images/`（若你未改脚本中的主机与目录）。
+**成功时的典型输出：** `saved: ./docker-dist/mediverse-frontend-YYYYMMDD.tar`，以及 `uploaded to <REMOTE_HOST>:/root/docker-images/`（`<REMOTE_HOST>` 为本机已导出的值）。
 
 ---
 
@@ -184,11 +185,11 @@ docker run -d \
 
 ### 4. 云侧通用配置
 
-| 项目 | 说明 |
-|------|------|
-| 安全组 / 防火墙 | 放行业务端口（例如 **`80`**；若仅 HTTPS 入口则 **`443`**）。 |
-| 域名 | 若对外域名与镜像内 **`server_name mediverse-management.huaxisy.com`** 不一致，多数场景仍可访问；若源站或 CDN 校验 `Host`，需改 **`nginx.conf`** 后重新构建镜像。 |
-| HTTPS | 可在宿主机或前置负载均衡做 TLS，后端指向本容器 **`80`**。 |
+| 项目            | 说明                                                                                                                                                             |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 安全组 / 防火墙 | 放行业务端口（例如 **`80`**；若仅 HTTPS 入口则 **`443`**）。                                                                                                     |
+| 域名            | 若对外域名与镜像内 **`server_name mediverse-management.huaxisy.com`** 不一致，多数场景仍可访问；若源站或 CDN 校验 `Host`，需改 **`nginx.conf`** 后重新构建镜像。 |
+| HTTPS           | 可在宿主机或前置负载均衡做 TLS，后端指向本容器 **`80`**。                                                                                                        |
 
 ### 5. 可选：镜像仓库
 
@@ -203,5 +204,5 @@ docker push <你的仓库>/mediverse-management-frontend:<标签>
 
 ## 六、参考
 
-* [Docker 入门与分享镜像](https://docs.docker.com/go/get-started-sharing/)
-* [Docker Node.js 指南](https://docs.docker.com/language/nodejs/)
+- [Docker 入门与分享镜像](https://docs.docker.com/go/get-started-sharing/)
+- [Docker Node.js 指南](https://docs.docker.com/language/nodejs/)
