@@ -36,7 +36,7 @@
 | ----------------------- | --------------------------------------------------------------------------------------------------------------- |
 | 目录 **`docker-dist/`** | 脚本写入 **`./docker-dist/mediverse-frontend-$(date +%Y%m%d).tar`**；若不存在请先执行：`mkdir -p docker-dist`。 |
 | **SSH / SCP**           | 本机能无交互登录远程主机（密钥或 `ssh-agent`），且 **`scp`** 可用。                                             |
-| 本机 **`REMOTE_HOST`**  | 须在运行脚本的 shell 中已导出（建议在 **`~/.zshrc`** 中 `export REMOTE_HOST=...` 后重开终端）；详见下文变量表。 |
+| **`REMOTE_HOST`** | 在 **`scripts/docker-build.sh`** 内手动将占位 **`YOUR_REMOTE_HOST`** 改为实际 IP 或域名；未修改时构建完成后、`scp` 前会报错退出。 |
 | 远程目录                | **`REMOTE_DIR`** 见脚本内默认值；目录需在服务器上已存在（可先 **`mkdir -p`**）。                                |
 
 ---
@@ -99,14 +99,14 @@ docker compose up
 2. **`docker save mediverse-management-frontend:latest -o ./docker-dist/mediverse-frontend-YYYYMMDD.tar`**
 3. **`scp`** 将上述 tar 传到远程。
 
-**`docker-build.sh` 中的变量：** 除 **`REMOTE_HOST`** 从本机环境读取外，其余与脚本内默认值一致（可按需改脚本）。
+**`docker-build.sh` 中的变量：** **`REMOTE_HOST`** 须在脚本内**手动修改**占位符；仍为 **`YOUR_REMOTE_HOST`** 时脚本会**报错退出**。其余可按需改脚本。
 
 | 变量          | 取值说明                                                                 | 含义                                         |
 | ------------- | ------------------------------------------------------------------------ | -------------------------------------------- |
 | `IMAGE_TAG`   | `mediverse-management-frontend:latest`                                   | `docker save` 的镜像引用。                   |
 | `TAR_PATH`    | `./docker-dist/mediverse-frontend-$(date +%Y%m%d).tar`                   | 本地 tar 路径（日期为运行当天 `YYYYMMDD`）。 |
 | `REMOTE_USER` | `root`                                                                   | SCP 登录用户。                               |
-| `REMOTE_HOST` | **不设默认值**，须 `export REMOTE_HOST=服务器IP或域名`（如写在 `~/.zshrc`） | 未设置时脚本会报错退出。                     |
+| `REMOTE_HOST` | 默认 **`YOUR_REMOTE_HOST`**（占位）；请在本脚本中**手动改为**实际 IP 或域名。 | SCP 目标主机。                               |
 | `REMOTE_DIR`  | `/root/docker-images`                                                    | 服务器上存放 tar 的目录（需已存在）。        |
 
 **命令：**
@@ -123,7 +123,7 @@ chmod +x scripts/docker-build.sh
 pnpm docker:build
 ```
 
-**成功时的典型输出：** `saved: ./docker-dist/mediverse-frontend-YYYYMMDD.tar`，以及 `uploaded to <REMOTE_HOST>:/root/docker-images/`（`<REMOTE_HOST>` 为本机已导出的值）。
+**成功时的典型输出：** `saved: ./docker-dist/mediverse-frontend-YYYYMMDD.tar`，以及 `uploaded to <REMOTE_HOST>:/root/docker-images/`（`<REMOTE_HOST>` 为你在脚本中手动配置的值）。
 
 ---
 
