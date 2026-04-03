@@ -113,7 +113,7 @@
         <a-col v-if="showRowCollapseToggle" :span="2">
           <a-button type="link" class="page-filter__row-toggle" @click="toggleRowLayoutCollapsed">
             {{ rowLayoutCollapsed ? t('common.expand') : t('common.collapse') }}
-            <DownOutlined v-if="!rowLayoutCollapsed" />
+            <DownOutlined v-if="rowLayoutCollapsed" />
             <UpOutlined v-else />
           </a-button>
         </a-col>
