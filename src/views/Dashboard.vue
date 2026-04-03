@@ -246,10 +246,6 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-.dashboard {
-  padding: var(--spacing-md);
-}
-
 .dashboard__title {
   margin: 0;
   font-size: 1.25rem;
