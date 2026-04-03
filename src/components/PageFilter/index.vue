@@ -2,7 +2,7 @@
   <div class="page-filter mt-5" style="background-color: var(--color-bg-container)">
     <a-form ref="formRef" :model="formData" layout="inline">
       <a-row :gutter="[16, 16]" class="w-full">
-        <a-col v-for="field in visibleFields" :key="field.key" :span="field.col ?? 6">
+        <a-col v-for="field in fieldsShownInFilter" :key="field.key" :span="field.col ?? 6">
           <a-form-item :label="field.label" :name="field.key">
             <!-- type === 'input' 或 默认 -->
             <a-input
@@ -108,6 +108,15 @@
             </a-button>
           </a-space>
         </a-col>
+
+        <!-- 多行筛选项时：收起为单行 / 展开全部（置于查询等按钮之后） -->
+        <a-col v-if="showRowCollapseToggle" :span="2">
+          <a-button type="link" class="page-filter__row-toggle" @click="toggleRowLayoutCollapsed">
+            {{ rowLayoutCollapsed ? t('common.expand') : t('common.collapse') }}
+            <DownOutlined v-if="!rowLayoutCollapsed" />
+            <UpOutlined v-else />
+          </a-button>
+        </a-col>
       </a-row>
     </a-form>
   </div>
@@ -131,13 +140,20 @@ const datePresets = computed(() => [
   { label: t('common.last30Days'), value: dayjs().subtract(30, 'day') },
 ])
 
+const GRID_COLS = 24
+const ROW_COLLAPSE_TOGGLE_SPAN = 2
+const MORE_FILTER_BTN_SPAN = 2
+
 const props = withDefaults(
   defineProps<{
     filterConf: PageFilterConfig
     tableColumns?: PageTableColumnConfig[]
+    /** 筛选项按 24 栅格占多行时，是否显示「收起为单行 / 展开」 */
+    enableLayoutRowCollapse?: boolean
   }>(),
   {
     tableColumns: () => [],
+    enableLayoutRowCollapse: true,
   }
 )
 
@@ -198,6 +214,73 @@ const visibleFields = computed<PageFilterField[]>(() => {
 const hasMoreFields = computed(() =>
   (props.filterConf.filterForm ?? []).some((f) => f._usual === false)
 )
+
+function countRowsFromSpans(spans: number[]): number {
+  let sum = 0
+  let rows = 1
+  for (const span of spans) {
+    if (sum + span > GRID_COLS) {
+      rows++
+      sum = span
+    } else {
+      sum += span
+    }
+  }
+  return rows
+}
+
+/** 不含「单行收起」按钮时，字段 + 更多 + 操作钮占用的栅格行数 */
+const filterLayoutRowCount = computed(() => {
+  const spans = visibleFields.value.map((f) => f.col ?? 6)
+  if (hasMoreFields.value) spans.push(MORE_FILTER_BTN_SPAN)
+  if (props.filterConf.btns?.length) spans.push(props.filterConf.btnsCol ?? 6)
+  return countRowsFromSpans(spans)
+})
+
+const showRowCollapseToggle = computed(
+  () => props.enableLayoutRowCollapse && filterLayoutRowCount.value >= 2
+)
+
+const rowLayoutCollapsed = ref(false)
+
+watch(showRowCollapseToggle, (ok) => {
+  if (!ok) rowLayoutCollapsed.value = false
+})
+
+/** 尾部固定占位：更多筛选 + 查询等按钮 + 单行切换（与模板列顺序一致） */
+const tailReservedSpans = computed(() => {
+  let n = 0
+  if (hasMoreFields.value) n += MORE_FILTER_BTN_SPAN
+  if (props.filterConf.btns?.length) n += props.filterConf.btnsCol ?? 6
+  if (showRowCollapseToggle.value) n += ROW_COLLAPSE_TOGGLE_SPAN
+  return n
+})
+
+const fieldsShownInFilter = computed<PageFilterField[]>(() => {
+  if (!showRowCollapseToggle.value || !rowLayoutCollapsed.value) {
+    return visibleFields.value
+  }
+  let budget = Math.max(0, GRID_COLS - tailReservedSpans.value)
+  const out: PageFilterField[] = []
+  for (const f of visibleFields.value) {
+    const span = f.col ?? 6
+    if (out.length === 0 && span > budget) {
+      out.push(f)
+      break
+    }
+    if (span <= budget) {
+      out.push(f)
+      budget -= span
+    } else {
+      break
+    }
+  }
+  return out
+})
+
+function toggleRowLayoutCollapsed() {
+  rowLayoutCollapsed.value = !rowLayoutCollapsed.value
+}
 
 const filteParams = computed<Record<string, unknown>>(() => {
   const params: Record<string, unknown> = {}

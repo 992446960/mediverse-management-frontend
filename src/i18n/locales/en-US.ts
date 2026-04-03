@@ -51,6 +51,7 @@ export default {
     startDate: 'Start Date',
     endDate: 'End Date',
     collapse: 'Collapse',
+    expand: 'Expand',
     moreFilters: 'More Filters',
     today: 'Today',
     yesterday: 'Yesterday',

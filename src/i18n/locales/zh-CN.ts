@@ -51,6 +51,7 @@ export default {
     startDate: '开始日期',
     endDate: '结束日期',
     collapse: '收起',
+    expand: '展开',
     moreFilters: '更多筛选',
     today: '今天',
     yesterday: '昨天',
