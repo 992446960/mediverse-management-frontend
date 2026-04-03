@@ -1,5 +1,5 @@
 <template>
-  <a-layout class="main-layout">
+  <a-layout class="main-layout h-full min-h-0">
     <a-layout-sider
       v-model:collapsed="collapsed"
       collapsible
@@ -24,7 +24,7 @@
       />
     </a-layout-sider>
     <a-layout
-      class="main-right-layout"
+      class="main-right-layout flex-1 min-h-0 min-w-0"
       :style="{ marginLeft: collapsed ? '80px' : '200px', transition: 'margin-left 0.2s' }"
     >
       <a-layout-header class="header">
@@ -217,8 +217,9 @@ watch(
 
 <style scoped>
 .main-layout {
-  min-height: 100vh;
   min-width: 1000px;
+  height: 100%;
+  min-height: 100%;
 }
 
 .sider {
@@ -347,11 +348,12 @@ watch(
   color: var(--color-primary);
 }
 
-/* 右侧主区域：flex 列布局，占满高度，便于内容区表格等占满剩余空间 */
+/* 右侧主区域：flex 列布局，占满剩余高度；主内容在 .content 内纵向滚动（body 为 overflow:hidden） */
 .main-right-layout {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100%;
+  min-height: 0;
 }
 
 .content {
@@ -361,6 +363,8 @@ watch(
   display: flex;
   flex-direction: column;
   border-radius: var(--radius-base);
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .fade-enter-active,

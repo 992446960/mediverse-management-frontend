@@ -32,9 +32,9 @@ const antdLocale = computed<Locale>(() => (localeStore.locale === 'zh-CN' ? zhCN
 </script>
 
 <template>
-  <a-config-provider :theme="currentTheme" :locale="antdLocale">
-    <XProvider :theme="currentTheme">
-      <component :is="layout">
+  <a-config-provider class="block h-full min-h-0" :theme="currentTheme" :locale="antdLocale">
+    <XProvider class="block h-full min-h-0" :theme="currentTheme">
+      <component :is="layout" class="h-full min-h-0">
         <router-view v-slot="{ Component }">
           <transition name="fade" mode="out-in">
             <keep-alive :include="cachedViews">
