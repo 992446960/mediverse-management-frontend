@@ -1,5 +1,130 @@
 import type { RouteRecordRaw } from 'vue-router'
 
+/**
+ * 路由配置约定（与 `guards.ts` 权限守卫、`App.vue` 布局选择配合使用）
+ *
+ * ## `meta` 常用字段（扩展见 `@/types/router.ts`）
+ *
+ * ```ts
+ * {
+ *   layout:
+ *     "'MainLayout' 侧栏主布局；'FullscreenLayout' 全屏（登录、错误页等）",
+ *   title:
+ *     '侧栏/标签页标题，一般为 i18n key（如 menu.dashboard）；setDocumentTitle 会用于 document.title',
+ *   requiresAuth: '需登录；未登录会跳转 /login?redirect=原路径',
+ *   requiredRoles: '需具备任一角色，否则跳转 /403（类型为 UserRole[]）',
+ *   hidden: 'true 时不显示在菜单里（详情、预览、404 等）',
+ *   affix: 'true 时标签页可固定（如首页）',
+ *   noCache: 'true 时不做 keep-alive 缓存',
+ *   icon: '菜单图标（若侧栏读取）',
+ *   order: '菜单排序（若侧栏读取）',
+ * }
+ * ```
+ *
+ * ## 路径规则
+ *
+ * - 子路由 `path` 不以 `/` 开头时为相对路径，最终 URL 为父 path + 子 path（如父 `/my` + 子 `profile` → `/my/profile`）。
+ * - 动态段：`preview/:id`；可选/重复匹配见 Vue Router 文档。
+ * - 全站兜底：`/:pathMatch(.*)*` 放**最后**，避免吞掉其他路由。
+ *
+ * ## 完整配置示例（注释模板，勿直接粘贴进数组；按业务改名、改路径与组件）
+ *
+ * ```ts
+ * // 1) 重定向
+ * {
+ *   path: '/redirect/:path(.*)',
+ *   name: 'Redirect',
+ *   component: () => import('@/views/shared/Redirect.vue'),
+ *   meta: { layout: 'MainLayout', title: '', hidden: true },
+ * }
+ *
+ * // 2) 全屏公开页
+ * {
+ *   path: '/login',
+ *   name: 'Login',
+ *   component: () => import('@/views/auth/Login.vue'),
+ *   meta: { layout: 'FullscreenLayout', title: 'menu.login', hidden: true },
+ * }
+ *
+ * // 3) 单页 + 主布局 + 登录 + 固定标签
+ * {
+ *   path: '/',
+ *   name: 'Dashboard',
+ *   component: () => import('@/views/Dashboard.vue'),
+ *   meta: {
+ *     layout: 'MainLayout',
+ *     title: 'menu.dashboard',
+ *     requiresAuth: true,
+ *     affix: true,
+ *   },
+ * }
+ *
+ * // 4) 父级仅分组（无 component），子路由挂实际页面
+ * {
+ *   path: '/example',
+ *   name: 'ExampleGroup',
+ *   meta: {
+ *     layout: 'MainLayout',
+ *     title: 'menu.example',
+ *     requiresAuth: true,
+ *     requiredRoles: ['org_admin'],
+ *   },
+ *   children: [
+ *     {
+ *       path: 'list',
+ *       name: 'ExampleList',
+ *       component: () => import('@/views/example/List.vue'),
+ *       meta: { title: 'menu.exampleList' },
+ *     },
+ *     {
+ *       path: 'detail/:id',
+ *       name: 'ExampleDetail',
+ *       component: () => import('@/views/example/Detail.vue'),
+ *       meta: { title: 'menu.exampleDetail', hidden: true },
+ *     },
+ *   ],
+ * }
+ *
+ * // 5) 布局壳子路由（父 component 为 Layout，默认子路由 path: ''）
+ * {
+ *   path: '/nested',
+ *   component: () => import('@/views/example/NestedLayout.vue'),
+ *   meta: {
+ *     layout: 'MainLayout',
+ *     title: 'menu.nested',
+ *     requiresAuth: true,
+ *   },
+ *   children: [
+ *     {
+ *       path: '',
+ *       name: 'NestedHome',
+ *       component: () => import('@/views/example/NestedHome.vue'),
+ *       meta: { title: 'menu.nested', noCache: true },
+ *     },
+ *     {
+ *       path: 'sub/:sid',
+ *       name: 'NestedSub',
+ *       component: () => import('@/views/example/NestedSub.vue'),
+ *       meta: { title: 'menu.nestedSub' },
+ *     },
+ *   ],
+ * }
+ *
+ * // 6) 错误页与兜底
+ * {
+ *   path: '/403',
+ *   name: 'Forbidden',
+ *   component: () => import('@/views/error/403.vue'),
+ *   meta: { layout: 'FullscreenLayout', title: '403 Forbidden', hidden: true },
+ * }
+ * {
+ *   path: '/:pathMatch(.*)*',
+ *   name: 'NotFound',
+ *   component: () => import('@/views/error/404.vue'),
+ *   meta: { layout: 'FullscreenLayout', title: '404 Not Found', hidden: true },
+ * }
+ * ```
+ */
 const routes: RouteRecordRaw[] = [
   {
     path: '/redirect/:path(.*)',
