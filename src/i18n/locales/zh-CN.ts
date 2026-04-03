@@ -235,7 +235,6 @@ export default {
     statusFailed: '失败',
     retry: '重试',
     preview: '预览',
-    previewInNewWindow: '新窗口预览',
     uploadFile: '文件上传',
     uploadCategoryMethod: '分类方式',
     uploadAutoCategory: '自动分类',

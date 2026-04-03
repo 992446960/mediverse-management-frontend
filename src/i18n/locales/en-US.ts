@@ -235,7 +235,6 @@ export default {
     statusFailed: 'Failed',
     retry: 'Retry',
     preview: 'Preview',
-    previewInNewWindow: 'Preview in new window',
     uploadFile: 'Upload File',
     uploadCategoryMethod: 'Categorization method',
     uploadAutoCategory: 'Auto category',
