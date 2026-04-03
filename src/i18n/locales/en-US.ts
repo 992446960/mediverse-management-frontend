@@ -63,6 +63,9 @@ export default {
     minValue: 'Min',
     maxValue: 'Max',
   },
+  app: {
+    brandName: 'Mediverse',
+  },
   org: {
     title: 'Organization Management',
     name: 'Name',

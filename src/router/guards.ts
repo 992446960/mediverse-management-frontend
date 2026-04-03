@@ -11,12 +11,14 @@ NProgress.configure({ showSpinner: false })
 
 const whiteList = ['/login', '/401', '/403', '/404']
 
-const appTitle = import.meta.env.VITE_APP_TITLE || 'Mediverse'
+/** 环境后缀，如「 (Dev)」，生产可留空 */
+const titleSuffix = import.meta.env.VITE_APP_TITLE_SUFFIX ?? ''
 
 /** 路由 meta.title 存 i18n key，需翻译后再写入 document.title（浏览器标签） */
 export function setDocumentTitle(to: RouteLocationNormalized) {
   const key = to.meta.title as string | undefined
-  document.title = `${key ? `${i18n.global.t(key)} - ` : ''}${appTitle}`
+  const brand = i18n.global.t('app.brandName')
+  document.title = `${key ? `${i18n.global.t(key)} - ` : ''}${brand}${titleSuffix}`
 }
 
 export function createPermissionGuard(router: Router) {

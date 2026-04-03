@@ -88,7 +88,7 @@ const handleLogin = async () => {
         <div class="brand-icon" aria-hidden="true">
           <img class="brand-icon__img" :src="logoUrl" alt="" width="40" height="40" />
         </div>
-        <h2 class="title">Mediverse</h2>
+        <h2 class="title">{{ t('app.brandName') }}</h2>
         <p class="subtitle">{{ t('auth.subtitle') }}</p>
       </div>
 

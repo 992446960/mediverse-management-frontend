@@ -6,7 +6,8 @@ interface ImportMetaEnv {
   /** 文件服务基础 URL */
   readonly VITE_FILE_BASE_URL?: string
   /** 应用标题 */
-  readonly VITE_APP_TITLE?: string
+  /** 浏览器标签标题后缀，如「 (Dev)」；品牌名取自 i18n `app.brandName` */
+  readonly VITE_APP_TITLE_SUFFIX?: string
   /** 是否启用 MSW Mock */
   readonly VITE_ENABLE_MOCK?: string
   /** 部署路径前缀 */

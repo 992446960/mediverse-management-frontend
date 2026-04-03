@@ -12,7 +12,7 @@
     >
       <div class="logo">
         <img class="logo__img" :src="logoUrl" alt="" width="28" height="28" />
-        <span v-if="!collapsed" class="logo__text">Mediverse</span>
+        <span v-if="!collapsed" class="logo__text">{{ t('app.brandName') }}</span>
       </div>
       <a-menu
         v-model:selected-keys="selectedKeys"
@@ -36,7 +36,10 @@
           />
           <menu-fold-outlined v-else class="trigger" @click="() => (collapsed = !collapsed)" />
           <a-breadcrumb>
-            <a-breadcrumb-item v-for="(item, index) in breadcrumbItems" :key="`${item.href}-${index}`">
+            <a-breadcrumb-item
+              v-for="(item, index) in breadcrumbItems"
+              :key="`${item.href}-${index}`"
+            >
               <router-link v-if="item.linkable" :to="item.href">
                 {{ t(item.titleKey) }}
               </router-link>
