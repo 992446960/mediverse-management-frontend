@@ -241,10 +241,10 @@ const showRowCollapseToggle = computed(
   () => props.enableLayoutRowCollapse && filterLayoutRowCount.value >= 2
 )
 
-const rowLayoutCollapsed = ref(false)
+const rowLayoutCollapsed = ref(true)
 
 watch(showRowCollapseToggle, (ok) => {
-  if (!ok) rowLayoutCollapsed.value = false
+  if (!ok) rowLayoutCollapsed.value = true
 })
 
 /** 尾部固定占位：更多筛选 + 查询等按钮 + 单行切换（与模板列顺序一致） */
