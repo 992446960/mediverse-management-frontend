@@ -303,6 +303,9 @@ export default {
     previewScrollPrevScreen: 'Previous screen',
     previewScrollNextScreen: 'Next screen',
     previewExcelSheetHint: 'Switch sheets using the tab bar at the bottom of the grid.',
+    previewPptxHint: 'Zoom to browse slides; complex animations may differ from desktop Office.',
+    previewDocLegacy:
+      'Legacy .doc files cannot be previewed in the browser. Use Download Original to open in Word.',
     card: {
       title: 'Knowledge Cards',
       create: 'New Knowledge Card',

@@ -29,6 +29,9 @@ importers:
       '@vue-office/pdf':
         specifier: ^2.0.10
         version: 2.0.10(vue-demi@0.14.10(vue@3.5.29(typescript@5.9.3)))(vue@3.5.29(typescript@5.9.3))
+      '@vue-office/pptx':
+        specifier: 1.0.1
+        version: 1.0.1(vue-demi@0.14.10(vue@3.5.29(typescript@5.9.3)))(vue@3.5.29(typescript@5.9.3))
       ant-design-vue:
         specifier: ^4.2.6
         version: 4.2.6(vue@3.5.29(typescript@5.9.3))
@@ -1206,6 +1209,16 @@ packages:
 
   '@vue-office/pdf@2.0.10':
     resolution: {integrity: sha512-yHVLrMAKpMPBkhBwofFyGEtEeJF0Zd7oGmf56Pe5aj/xObdRq3E1CIZqTqhWJNgHV8oLQqaX0vs4p5T1zq+GIA==}
+    peerDependencies:
+      '@vue/composition-api': ^1.7.1
+      vue: ^2.0.0 || >=3.0.0
+      vue-demi: ^0.14.6
+    peerDependenciesMeta:
+      '@vue/composition-api':
+        optional: true
+
+  '@vue-office/pptx@1.0.1':
+    resolution: {integrity: sha512-+V7Kctzl6f6+Yk4NaD/wQGRIkqLWcowe0jEhPexWQb8Oilbzt1OyhWRWcMsxNDTdrgm6aMLP+0/tmw27cxddMg==}
     peerDependencies:
       '@vue/composition-api': ^1.7.1
       vue: ^2.0.0 || >=3.0.0
@@ -3673,6 +3686,11 @@ snapshots:
       vue-demi: 0.14.10(vue@3.5.29(typescript@5.9.3))
 
   '@vue-office/pdf@2.0.10(vue-demi@0.14.10(vue@3.5.29(typescript@5.9.3)))(vue@3.5.29(typescript@5.9.3))':
+    dependencies:
+      vue: 3.5.29(typescript@5.9.3)
+      vue-demi: 0.14.10(vue@3.5.29(typescript@5.9.3))
+
+  '@vue-office/pptx@1.0.1(vue-demi@0.14.10(vue@3.5.29(typescript@5.9.3)))(vue@3.5.29(typescript@5.9.3))':
     dependencies:
       vue: 3.5.29(typescript@5.9.3)
       vue-demi: 0.14.10(vue@3.5.29(typescript@5.9.3))

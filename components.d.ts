@@ -111,6 +111,7 @@ declare module 'vue' {
     PdfOriginalTabPanel: typeof import('./src/components/FilePreview/PdfOriginalTabPanel.vue')['default']
     PdfParsedTabPanel: typeof import('./src/components/FilePreview/PdfParsedTabPanel.vue')['default']
     PdfViewer: typeof import('./src/components/FilePreview/PdfViewer.vue')['default']
+    PptxViewer: typeof import('./src/components/FilePreview/PptxViewer.vue')['default']
     QuickActionGuide: typeof import('./src/components/AvatarConfig/QuickActionGuide.vue')['default']
     RatingDialog: typeof import('./src/components/RatingDialog/index.vue')['default']
     RelatedQuestions: typeof import('./src/components/SearchResultThread/RelatedQuestions.vue')['default']

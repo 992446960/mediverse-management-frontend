@@ -15,10 +15,17 @@
       >
         <PdfViewer v-if="previewKind === 'pdf' && previewUrl" :file-url="previewUrl" />
         <DocxViewer v-else-if="previewKind === 'docx' && previewUrl" :file-url="previewUrl" />
+        <ExcelViewer v-else-if="previewKind === 'xlsx' && previewUrl" :file-url="previewUrl" />
+        <PptxViewer v-else-if="previewKind === 'pptx' && previewUrl" :file-url="previewUrl" />
         <TextFileViewer
           v-else-if="previewKind === 'txt' && previewUrl"
           :file-url="previewUrl"
           file-type="txt"
+        />
+        <TextFileViewer
+          v-else-if="previewKind === 'md' && previewUrl"
+          :file-url="previewUrl"
+          file-type="md"
         />
       </div>
     </a-modal>
@@ -29,7 +36,7 @@
         :items="fileList"
         :multiple="true"
         :max-count="MAX_FILES"
-        accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,application/msword,text/plain,.docx"
+        :accept="CHAT_ATTACHMENT_ACCEPT"
         :custom-request="customUploadRequest"
         :before-upload="beforeUpload"
         @change="handleAttachmentsChange"
@@ -80,7 +87,7 @@
           <input
             type="file"
             multiple
-            accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,application/msword,text/plain,.docx"
+            :accept="CHAT_ATTACHMENT_ACCEPT"
             class="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
             @change="onFileChange"
           />
@@ -118,9 +125,12 @@ import { message } from 'ant-design-vue'
 import type { ChatMessageMode } from '@/types/chat'
 import { randomUUID } from '@/utils/randomUUID'
 import { triggerLocalFileDownload } from '@/utils/triggerFileDownload'
+import { CHAT_ATTACHMENT_ACCEPT, isChatDocumentAttachment } from '@/utils/documentUploadAccept'
 
 const PdfViewer = defineAsyncComponent(() => import('@/components/FilePreview/PdfViewer.vue'))
 const DocxViewer = defineAsyncComponent(() => import('@/components/FilePreview/DocxViewer.vue'))
+const ExcelViewer = defineAsyncComponent(() => import('@/components/FilePreview/ExcelViewer.vue'))
+const PptxViewer = defineAsyncComponent(() => import('@/components/FilePreview/PptxViewer.vue'))
 const TextFileViewer = defineAsyncComponent(
   () => import('@/components/FilePreview/TextFileViewer.vue')
 )
@@ -218,12 +228,6 @@ defineExpose({
 })
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
-const ALLOWED_DOC_TYPES = [
-  'application/pdf',
-  'application/msword',
-  'text/plain',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-]
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024
 const MAX_DOC_SIZE = 20 * 1024 * 1024
 const MAX_FILES = 5
@@ -276,7 +280,7 @@ function validateAndFormatFile(
   if (!rawFile || !(rawFile instanceof File)) return null
 
   const isImage = ALLOWED_IMAGE_TYPES.includes(rawFile.type)
-  const isDoc = ALLOWED_DOC_TYPES.includes(rawFile.type)
+  const isDoc = isChatDocumentAttachment(rawFile)
 
   if (!isImage && !isDoc) {
     message.warning(t('chat.attachmentFormatInvalid', { name: fileName }))
@@ -394,7 +398,7 @@ const onFileChange = (e: Event) => {
   target.value = ''
 }
 
-type PendingPreviewKind = 'pdf' | 'docx' | 'txt'
+type PendingPreviewKind = 'pdf' | 'docx' | 'pptx' | 'xlsx' | 'txt' | 'md'
 
 const previewOpen = ref(false)
 const previewTitle = ref('')
@@ -411,21 +415,34 @@ function releasePreviewBlobUrl() {
 function resolvePendingPreviewKind(file: File): PendingPreviewKind | 'legacy-doc' | null {
   const mime = file.type
   const name = file.name.toLowerCase()
-  if (mime === 'application/pdf' || name.endsWith('.pdf')) return 'pdf'
+  if (name.endsWith('.pdf') || mime === 'application/pdf') return 'pdf'
   if (
-    mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-    name.endsWith('.docx')
+    name.endsWith('.docx') ||
+    mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
   ) {
     return 'docx'
   }
-  if (mime === 'text/plain' || name.endsWith('.txt')) return 'txt'
-  if (mime === 'application/msword' || name.endsWith('.doc')) return 'legacy-doc'
+  if (
+    name.endsWith('.pptx') ||
+    mime === 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+  ) {
+    return 'pptx'
+  }
+  if (
+    name.endsWith('.xlsx') ||
+    mime === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  ) {
+    return 'xlsx'
+  }
+  if (name.endsWith('.txt') || mime === 'text/plain') return 'txt'
+  if (name.endsWith('.md') || mime === 'text/markdown' || mime === 'text/x-markdown') return 'md'
+  if (name.endsWith('.doc') || mime === 'application/msword') return 'legacy-doc'
   return null
 }
 
 /**
- * 非图片附件：在应用内预览（PDF / docx / 纯文本）。
- * 旧版 .doc 仅触发下载；纯网页无法调起操作系统默认程序打开本地文件。
+ * 非图片附件：在应用内预览（PDF / Office / 文本 / Markdown）。
+ * 旧版 .doc 仅触发本地下载。
  */
 function openPendingFilePreview(file: File) {
   const kind = resolvePendingPreviewKind(file)
@@ -500,5 +517,19 @@ const onPendingAttachmentCardClick = (e: MouseEvent) => {
 
 .message-input :deep(.ant-attachment-list-card-type-overview) {
   cursor: pointer;
+}
+</style>
+
+<style lang="scss">
+/* Modal 挂载在 body，需非 scoped；与知识库预览一致的铺满高度 */
+.chat-pending-attachment-preview-modal .chat-pending-preview-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.chat-pending-attachment-preview-modal .chat-pending-preview-body > * {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 </style>

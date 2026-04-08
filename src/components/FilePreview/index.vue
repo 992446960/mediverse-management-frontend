@@ -76,6 +76,18 @@
               v-else-if="currentFile?.file_type === 'xlsx' && originalFileUrl"
               :file-url="originalFileUrl"
             />
+            <!-- PPTX -->
+            <PptxViewer
+              v-else-if="currentFile?.file_type === 'pptx' && originalFileUrl"
+              :file-url="originalFileUrl"
+            />
+            <!-- 旧版 Word .doc：仅提示下载 -->
+            <div
+              v-else-if="isLegacyDocType && originalFileUrl"
+              class="flex h-full min-h-[400px] flex-col items-center justify-center gap-3 bg-white px-6 dark:bg-slate-900"
+            >
+              <a-empty :description="t('knowledge.previewDocLegacy')" />
+            </div>
             <!-- 文本型：txt, md, json, jsonl, csv -->
             <TextFileViewer
               v-else-if="isTextType && originalFileUrl"
@@ -119,6 +131,7 @@ import { DownloadOutlined } from '@ant-design/icons-vue'
 import PageHead from '@/components/PageHead/index.vue'
 import DocxViewer from './DocxViewer.vue'
 import ExcelViewer from './ExcelViewer.vue'
+import PptxViewer from './PptxViewer.vue'
 import PdfOriginalTabPanel from './PdfOriginalTabPanel.vue'
 import PdfParsedTabPanel from './PdfParsedTabPanel.vue'
 import TextFileViewer from './TextFileViewer.vue'
@@ -165,6 +178,8 @@ const isTextType = computed(() => {
   const fileType = currentFile.value?.file_type?.toLowerCase()
   return ['txt', 'md', 'json', 'jsonl', 'csv'].includes(fileType ?? '')
 })
+
+const isLegacyDocType = computed(() => currentFile.value?.file_type?.toLowerCase() === 'doc')
 
 const showPdfTabs = computed(() => currentFile.value?.file_type?.toLowerCase() === 'pdf')
 

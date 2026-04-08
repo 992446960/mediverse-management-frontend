@@ -300,6 +300,9 @@ export default {
     previewScrollPrevScreen: '上一屏',
     previewScrollNextScreen: '下一屏',
     previewExcelSheetHint: '工作表切换请使用表格底部标签栏。',
+    previewPptxHint: '可缩放查看幻灯片；复杂动画以本机打开为准。',
+    previewDocLegacy:
+      '「.doc」格式暂不支持在线预览，请点击「原文件下载」在本地 Word 或其他兼容软件中打开。',
     card: {
       title: '知识卡管理',
       create: '新建知识卡',

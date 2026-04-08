@@ -83,8 +83,8 @@ import type { OwnerType, DirectoryNode } from '@/types/knowledge'
 import type { UploadFileResult } from '@/types/knowledge'
 import type { UploadQueueItem } from './types'
 import { getUploadErrorMessage } from '@/utils/uploadErrorMessage'
+import { KNOWLEDGE_FILE_ACCEPT } from '@/utils/documentUploadAccept'
 
-const ACCEPT = '.pdf,.txt,.csv,.json,.jsonl,.md,.xlsx,.docx'
 const MAX_SIZE_DEFAULT = 50 * 1024 * 1024
 const MAX_COUNT_DEFAULT = 20
 const CONCURRENT = 3
@@ -103,7 +103,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  accept: () => ACCEPT,
+  accept: () => KNOWLEDGE_FILE_ACCEPT,
   maxSize: MAX_SIZE_DEFAULT,
   maxCount: MAX_COUNT_DEFAULT,
   treeData: () => [],
