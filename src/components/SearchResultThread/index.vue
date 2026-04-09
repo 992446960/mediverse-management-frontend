@@ -83,7 +83,7 @@
                   class="m-0 list-none"
                 >
                   <KnowledgeCardPreview
-                    :type="citation.cardType || 'evidence'"
+                    :type="citation.cardType || ''"
                     :title="citation.title"
                     :title-prefix="`${idx + 1}. `"
                     :source-file-name="formatSourcesLikeForPreview(citation)"

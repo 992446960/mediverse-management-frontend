@@ -55,6 +55,14 @@ const mockFileCards: Record<string, FileCard[]> = {
       online_status: 'online',
       confidence: 0.85,
     },
+    {
+      id: 'card_004',
+      type: 'scale',
+      title: '高血压评估量表',
+      tags: ['量表', '评估'],
+      online_status: 'online',
+      confidence: 0.9,
+    },
   ],
 }
 
@@ -318,8 +326,8 @@ export const knowledgeHandlers = [
   http.get(`${API_BASE}/knowledge/card-types`, async () => {
     await delay(200)
     return HttpResponse.json({
-      code: 0,
-      message: 'ok',
+      code: 200,
+      message: '',
       data: [
         { name: '规则卡', code: 'rule' },
         { name: '量表卡', code: 'scale' },

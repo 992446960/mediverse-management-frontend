@@ -15,11 +15,11 @@ function createSearchResponse(
       {
         index: 1,
         card_id: 'card-1',
-        card_title: '2025诊疗指南',
-        card_type: 'evidence',
+        card_title: '住院路径条款',
+        card_type: 'pathway_clause',
         relevance_score: 0.92,
-        content_preview: '关于该症状的详细诊疗流程...',
-        sources: [{ file_name: '内科诊疗指南.pdf' }],
+        content_preview: '住院患者评估、宣教与复诊节点的执行要求...',
+        sources: [{ file_name: '临床路径管理制度.pdf' }],
       },
       {
         index: 2,

@@ -1,5 +1,5 @@
 <template>
-  <div class="knowledge-card-preview" :class="`knowledge-card-preview--${resolvedType}`">
+  <div class="knowledge-card-preview" :style="containerStyle">
     <div class="flex items-center justify-between gap-2">
       <h4
         class="knowledge-card-preview__title m-0 min-w-0 flex-1 text-[15px] font-bold leading-tight text-slate-800 dark:text-slate-100"
@@ -8,12 +8,14 @@
         <span v-if="titlePrefix">{{ titlePrefix }}</span
         >{{ title }}
       </h4>
-      <span
-        class="knowledge-card-preview__type-tag shrink-0"
-        :class="`knowledge-card-preview__type-tag--${resolvedType}`"
+      <!-- 动态颜色：由 getCardTypeConfig 驱动，兼容后端任意新增类型 -->
+      <a-tag
+        v-if="showTypeTag"
+        :color="typeConfig.color"
+        class="shrink-0 m-0 text-[10px] font-bold"
       >
-        {{ typeLabel }}
-      </span>
+        {{ typeConfig.label }}
+      </a-tag>
     </div>
     <div v-if="tags?.length" class="flex flex-wrap gap-1.5">
       <span v-for="tag in tags" :key="tag" class="knowledge-card-preview__desc-tag">
@@ -34,15 +36,14 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { FileTextOutlined } from '@ant-design/icons-vue'
-import { CARD_TYPE_CONFIG } from '@/types/knowledge'
-import type { CardType } from '@/types/knowledge'
+import { getCardTypeConfig } from '@/types/knowledge'
 
 const { t } = useI18n()
 
 const props = withDefaults(
   defineProps<{
-    /** 循证 / 规则 / 经验（字符串兼容检索引用等场景） */
-    type: CardType | string
+    /** 知识卡类型 code，由后端动态下发（兼容任意字符串） */
+    type: string
     title: string
     tags?: string[]
     /** 来源文件名，展示「来源：xxx」 */
@@ -55,27 +56,25 @@ const props = withDefaults(
   }
 )
 
-const CARD_TYPE_LABEL_KEYS: Record<CardType, string> = {
-  evidence: 'knowledge.card.typeEvidence',
-  rule: 'knowledge.card.typeRule',
-  experience: 'knowledge.card.typeExperience',
+/** 类型配置：颜色 + label，未知类型自动 fallback */
+const normalizedType = computed(() => props.type.trim())
+const typeConfig = computed(() => getCardTypeConfig(normalizedType.value))
+const showTypeTag = computed(() => normalizedType.value !== '')
+
+const HOVER_BORDER_COLOR: Record<string, string> = {
+  evidence: 'var(--color-primary)',
+  rule: 'var(--color-success)',
+  experience: 'var(--color-warning)',
+  scale: '#722ed1',
+  risk_point: '#ff4d4f',
+  pathway_clause: '#13c2c2',
+  melody_element: '#2f54eb',
 }
 
-const resolvedType = computed<CardType>(() => {
-  const raw = props.type
-  if (typeof raw === 'string' && raw in CARD_TYPE_CONFIG) {
-    return raw as CardType
-  }
-  return 'evidence'
-})
-
-const typeLabel = computed(() => {
-  const raw = props.type
-  if (typeof raw === 'string' && raw in CARD_TYPE_LABEL_KEYS) {
-    return t(CARD_TYPE_LABEL_KEYS[raw as CardType])
-  }
-  return typeof raw === 'string' ? raw.toUpperCase() : t('knowledge.card.typeEvidence')
-})
+const containerStyle = computed(() => ({
+  '--knowledge-card-hover-border-color':
+    HOVER_BORDER_COLOR[normalizedType.value] ?? 'var(--color-text-secondary)',
+}))
 
 const fullTitle = computed(() => `${props.titlePrefix ?? ''}${props.title}`)
 </script>
@@ -95,50 +94,17 @@ const fullTitle = computed(() => `${props.titlePrefix ?? ''}${props.title}`)
 }
 
 .knowledge-card-preview:hover {
+  border-color: color-mix(
+    in srgb,
+    var(--knowledge-card-hover-border-color, var(--color-text-secondary)) 40%,
+    transparent
+  );
   box-shadow: var(--shadow-sm);
-}
-
-.knowledge-card-preview--evidence:hover {
-  border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
-}
-
-.knowledge-card-preview--rule:hover {
-  border-color: color-mix(in srgb, var(--color-success) 40%, transparent);
-}
-
-.knowledge-card-preview--experience:hover {
-  border-color: color-mix(in srgb, var(--color-warning) 40%, transparent);
 }
 
 .dark .knowledge-card-preview {
   background: var(--color-bg-container);
   border-color: var(--color-border);
-}
-
-.knowledge-card-preview__type-tag {
-  padding: 2px 8px;
-  font-size: 10px;
-  font-weight: 700;
-  border-radius: var(--radius-full);
-  white-space: nowrap;
-}
-
-.knowledge-card-preview__type-tag--evidence {
-  background: var(--color-primary-100);
-  color: var(--color-primary);
-  border: 1px solid color-mix(in srgb, var(--color-primary) 10%, transparent);
-}
-
-.knowledge-card-preview__type-tag--rule {
-  background: color-mix(in srgb, var(--color-success) 10%, white);
-  color: var(--color-success);
-  border: 1px solid color-mix(in srgb, var(--color-success) 10%, transparent);
-}
-
-.knowledge-card-preview__type-tag--experience {
-  background: color-mix(in srgb, var(--color-warning) 10%, white);
-  color: var(--color-warning);
-  border: 1px solid color-mix(in srgb, var(--color-warning) 10%, transparent);
 }
 
 .knowledge-card-preview__desc-tag {

@@ -314,7 +314,9 @@ export function rollbackKnowledgeCard(
  * GET /api/v1/knowledge/card-types
  */
 export function getCardTypes(): Promise<CardTypeOption[]> {
-  return request.get<CardTypeOption[]>(`${BASE_URL}/card-types`)
+  return request.get<CardTypeOption[]>(`${BASE_URL}/card-types`, {
+    successCodes: [0, 200],
+  })
 }
 
 /**

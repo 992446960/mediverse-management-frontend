@@ -78,7 +78,7 @@ export const skillsHandlers = [
                 citations: [
                   {
                     id: 'card_mock_1',
-                    type: 'evidence',
+                    type: 'melody_element',
                     title: 'Mock 引用',
                     content: '示例引用内容片段。',
                   },

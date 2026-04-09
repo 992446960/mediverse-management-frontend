@@ -11,6 +11,11 @@ import { getHttpErrorMessage } from '@/config/errorCodes'
 import type { ApiResponse } from '@/types'
 import type { RefreshTokenResponse } from '@/types/auth'
 
+export interface RequestConfig extends AxiosRequestConfig {
+  skipErrorToast?: boolean
+  successCodes?: number[]
+}
+
 const baseURL = import.meta.env.VITE_API_BASE_URL
 const useMockFetch = import.meta.env.VITE_ENABLE_MOCK === 'true'
 
@@ -117,6 +122,7 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response: AxiosResponse<any>) => {
     const res = response.data as ApiResponse
+    const requestConfig = response.config as RequestConfig
 
     // 如果是二进制数据（如文件下载），直接返回
     if (response.config.responseType === 'blob' || response.config.responseType === 'arraybuffer') {
@@ -124,12 +130,13 @@ api.interceptors.response.use(
     }
 
     // 业务状态码判断
-    if (res.code !== 0) {
+    const successCodes = requestConfig.successCodes?.length ? requestConfig.successCodes : [0]
+    if (!successCodes.includes(res.code)) {
       // /auth/me、/auth/logout 业务失败时由路由守卫静默跳转登录，不弹 toast（与 5xx 行为一致）
       const isAuthEndpoint =
         response.config?.url?.includes?.('/auth/me') ||
         response.config?.url?.includes?.('/auth/logout')
-      const silent = response.config?.skipErrorToast === true
+      const silent = requestConfig.skipErrorToast === true
       if (!isAuthEndpoint && !silent) {
         message.error(res.message || 'Error')
       }
@@ -225,23 +232,23 @@ api.interceptors.response.use(
 
 // 封装通用请求方法
 export const request = {
-  get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
+  get<T = any>(url: string, config?: RequestConfig): Promise<T> {
     return api.get(url, config) as Promise<T>
   },
 
-  post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  post<T = any>(url: string, data?: any, config?: RequestConfig): Promise<T> {
     return api.post(url, data, config) as Promise<T>
   },
 
-  put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  put<T = any>(url: string, data?: any, config?: RequestConfig): Promise<T> {
     return api.put(url, data, config) as Promise<T>
   },
 
-  delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
+  delete<T = any>(url: string, config?: RequestConfig): Promise<T> {
     return api.delete(url, config) as Promise<T>
   },
 
-  patch<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  patch<T = any>(url: string, data?: any, config?: RequestConfig): Promise<T> {
     return api.patch(url, data, config) as Promise<T>
   },
 }

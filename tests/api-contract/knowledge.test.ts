@@ -12,6 +12,8 @@
  *  PUT    /knowledge/{owner_type}/{owner_id}/cards/{id}
  *  PATCH  /knowledge/{owner_type}/{owner_id}/cards/{id}/status
  *  GET    /knowledge/{owner_type}/{owner_id}/cards/{id}/versions
+ *  GET    /knowledge/card-types
+ *  DELETE /knowledge/{owner_type}/{owner_id}/cards/{id}
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import {
@@ -126,6 +128,22 @@ describe('Knowledge 模块', () => {
     })
   })
 
+  describe('Card Types', () => {
+    it('GET /knowledge/card-types 应返回类型数组（允许 code=200）', async () => {
+      const res = await authedGet('/knowledge/card-types')
+      expect(res.status).toBe(200)
+      expect(typeof (res.data as any).code).toBe('number')
+      expect((res.data as any).code).toBe(200)
+      expect(Array.isArray((res.data as any).data)).toBe(true)
+
+      const first = (res.data as any).data[0]
+      if (first) {
+        expect(typeof first.name).toBe('string')
+        expect(typeof first.code).toBe('string')
+      }
+    })
+  })
+
   // ─── Cards ───────────────────────────────────────────────
 
   describe('Cards', () => {
@@ -208,6 +226,26 @@ describe('Knowledge 模块', () => {
       expect(res.status).toBe(200)
       assertBaseResponseOk(res.data as Record<string, any>)
       expect(Array.isArray((res.data as any).data)).toBe(true)
+    })
+
+    it('DELETE cards/{id} 应返回 card_id 和 action', async () => {
+      if (!owner) return console.warn('跳过: 无可用 owner')
+
+      const createRes = await authedPost(`${basePath()}/cards`, {
+        title: `vitest-delete-${Date.now()}`,
+        type: 'rule',
+        content: '临时删除测试卡片',
+        tags: ['vitest'],
+      })
+      expect(createRes.status).toBe(200)
+      assertBaseResponseOk(createRes.data as Record<string, any>)
+
+      const cardId = (createRes.data as any).data.id
+      const deleteRes = await authedDelete(`${basePath()}/cards/${cardId}`)
+      expect(deleteRes.status).toBe(200)
+      assertBaseResponseOk(deleteRes.data as Record<string, any>)
+      expect((deleteRes.data as any).data.card_id).toBe(cardId)
+      expect((deleteRes.data as any).data.action).toBe('deleted')
     })
   })
 

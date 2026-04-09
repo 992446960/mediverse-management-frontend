@@ -151,7 +151,7 @@ const {
 
 const formState = reactive({
   title: '',
-  type: 'evidence' as CardType,
+  type: '' as CardType,
   content: '',
   tags: [] as string[],
   source_file_ids: [] as string[],
@@ -195,13 +195,21 @@ watch(
       }
     } else {
       formState.title = ''
-      formState.type = props.cardTypes?.[0]?.code ?? 'evidence'
+      formState.type = props.cardTypes?.[0]?.code ?? ('' as CardType)
       formState.content = ''
       formState.tags = []
       formState.source_file_ids = []
       formState.change_summary = ''
       loadEditorSourceFiles()
     }
+  }
+)
+
+watch(
+  () => props.cardTypes,
+  (cardTypes) => {
+    if (!props.open || props.card || formState.type !== '' || !cardTypes?.length) return
+    formState.type = cardTypes[0]!.code
   }
 )
 

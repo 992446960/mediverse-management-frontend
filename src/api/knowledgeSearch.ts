@@ -1,4 +1,5 @@
 import { request } from '@/api'
+import type { CardType } from '@/types/knowledge'
 
 /** API 返回的引用项（与 API 设计 4.2.1 一致；来源可与知识卡 `sources` 对齐） */
 export interface ApiCitation {
@@ -47,7 +48,7 @@ export interface Citation {
   content: string
   url?: string
   /** API card_type，用于展示类型标签 */
-  cardType?: string
+  cardType?: CardType
   /** 与知识卡 `sources` 对齐；有则展示「来源」 */
   sources?: Array<{ id?: string; name?: string; file_name?: string } | string>
   source_file_name?: string

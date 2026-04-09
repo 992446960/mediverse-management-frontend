@@ -58,6 +58,25 @@ export const mockKnowledgeCards: KnowledgeCard[] = [
     updated_at: '2024-02-01T10:00:00Z',
     version: 'v1.0.0',
   },
+  {
+    id: 'card_004',
+    title: '住院患者跌倒风险评分',
+    type: 'risk_point',
+    content:
+      '### 跌倒风险评分\n\n对高龄、步态不稳、近期使用镇静药物的住院患者，应在入院 24 小时内完成跌倒风险评分，并按高风险标签落实床旁提醒、陪护宣教和夜间巡视加密。',
+    tags: ['风险控制', '护理'],
+    online_status: 'online',
+    audit_status: 'approved',
+    reference_count: 5,
+    source_files: [{ id: 'file_003', name: '护理质控规范.pdf' }],
+    owner_type: 'org',
+    owner_id: 'org_001',
+    created_by: 'u_admin_001',
+    created_by_name: '系统管理员',
+    created_at: '2024-03-03T08:00:00Z',
+    updated_at: '2024-03-05T10:00:00Z',
+    version: 'v1.0.0',
+  },
 ]
 
 export const mockCardVersions: Record<string, KnowledgeCardVersion[]> = {

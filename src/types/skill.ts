@@ -1,3 +1,5 @@
+import type { CardType } from './knowledge'
+
 export interface Skill {
   skill_code: string
   title: string
@@ -41,7 +43,7 @@ export interface SkillCitation {
   id: string
   owner_type?: string
   owner_id?: string
-  type: 'evidence' | 'rule' | 'experience'
+  type: CardType
   title: string
   content: string
   /** 关联来源文件列表（SSE `result.citations[].sources`；元素可为 `{ name/file_name }` 或文件名字符串） */
