@@ -139,7 +139,7 @@ const goBack = () => {
           <a-button
             type="text"
             size="small"
-            class="shrink-0 text-gray-500 dark:text-gray-400"
+            class="shrink-0 text-gray-500 dark:text-gray-400 left-btn-icon"
             :aria-label="t('chat.skillPanelCollapse')"
             @click="collapseSkillPanel"
           >
@@ -326,8 +326,8 @@ const goBack = () => {
   background: var(--color-bg-container);
 }
 .skill-panel__header {
-  &:deep(.ant-btn) {
-    transform: rotate(180deg);
+  &:deep(.left-btn-icon .anticon-menu-fold) {
+    transform: rotate(180deg) scale(1.143) !important;
   }
 }
 
