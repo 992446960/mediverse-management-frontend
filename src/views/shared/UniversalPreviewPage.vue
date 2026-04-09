@@ -54,6 +54,8 @@ const emptyDescription = computed(() => {
 
 <style scoped>
 .universal-preview-page {
+  align-self: stretch;
+  height: 100vh;
   background-color: var(--color-bg-layout);
 }
 </style>
