@@ -342,6 +342,7 @@ export default {
       onlineToggle: 'Toggle Online',
       confirmToggleOnline: 'Are you sure to go online this card?',
       confirmToggleOffline: 'Are you sure to go offline this card?',
+      confirmDelete: 'Are you sure to delete this card? This action cannot be undone.',
       fetchFailed: 'Failed to fetch list',
       deleteSuccess: 'Deleted successfully',
       deleteFailed: 'Delete failed',

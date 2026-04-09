@@ -339,6 +339,7 @@ export default {
       onlineToggle: '上下线',
       confirmToggleOnline: '确定要上线该知识卡吗？',
       confirmToggleOffline: '确定要下线该知识卡吗？',
+      confirmDelete: '确定要删除该知识卡吗？删除后不可恢复。',
       fetchFailed: '获取列表失败',
       deleteSuccess: '删除成功',
       deleteFailed: '删除失败',

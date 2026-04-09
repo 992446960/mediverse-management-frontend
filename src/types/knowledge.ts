@@ -2,9 +2,22 @@ import type { PaginationParams } from './api'
 
 export type OwnerType = 'personal' | 'dept' | 'org' | 'avatar'
 export type FileStatus = 'uploading' | 'parsing' | 'extracting' | 'indexing' | 'done' | 'failed'
-export type CardType = 'evidence' | 'rule' | 'experience'
+/** 知识卡类型：由后端 GET /knowledge/card-types 动态下发，使用 string 保持扩展性 */
+export type CardType = string
 export type OnlineStatus = 'online' | 'offline'
 export type AuditStatus = 'pending' | 'approved' | 'rejected'
+
+/** GET /api/v1/knowledge/card-types 返回的单条 */
+export interface CardTypeOption {
+  name: string
+  code: string
+}
+
+/** DELETE /api/v1/knowledge/{owner_type}/{owner_id}/cards/{id} 返回的 data */
+export interface DeleteCardResult {
+  card_id: string
+  action: string
+}
 
 /** 目录树节点 */
 export interface DirectoryNode {
@@ -156,11 +169,22 @@ export const FILE_STATUS_CONFIG: Record<FileStatus, { color: string; label: stri
   failed: { color: 'error', label: '处理失败' },
 }
 
-/** 知识卡类型配置 */
-export const CARD_TYPE_CONFIG: Record<CardType, { color: string; label: string }> = {
+/** 知识卡类型配置（兜底/颜色映射；后端可动态扩展，未在此 Map 中的类型走 fallback） */
+export const CARD_TYPE_CONFIG: Record<string, { color: string; label: string }> = {
   evidence: { color: 'blue', label: '循证卡' },
   rule: { color: 'orange', label: '规则卡' },
   experience: { color: 'green', label: '经验卡' },
+  scale: { color: 'purple', label: '量表卡' },
+  risk_point: { color: 'red', label: '风险控制点卡' },
+  pathway_clause: { color: 'cyan', label: '路径条款卡' },
+  melody_element: { color: 'geekblue', label: '乐谱元素卡' },
+}
+
+/**
+ * 安全获取知识卡类型配置；未知类型返回 fallback（灰色 + code 原文）。
+ */
+export function getCardTypeConfig(type: string): { color: string; label: string } {
+  return CARD_TYPE_CONFIG[type] ?? { color: 'default', label: type }
 }
 
 /** 知识卡在线状态配置 */

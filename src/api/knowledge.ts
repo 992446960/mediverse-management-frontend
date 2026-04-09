@@ -13,6 +13,8 @@ import type {
   KnowledgeCardListParams,
   KnowledgeCardPayload,
   VersionDiffResult,
+  CardTypeOption,
+  DeleteCardResult,
 } from '@/types/knowledge'
 import type { PaginatedData } from '@/types/api'
 import type { AxiosRequestConfig } from 'axios'
@@ -305,6 +307,26 @@ export function rollbackKnowledgeCard(
       target_version: targetVersion,
     })
     .then(normalizeKnowledgeCard)
+}
+
+/**
+ * 查询知识卡类型（API 4.1.15）
+ * GET /api/v1/knowledge/card-types
+ */
+export function getCardTypes(): Promise<CardTypeOption[]> {
+  return request.get<CardTypeOption[]>(`${BASE_URL}/card-types`)
+}
+
+/**
+ * 删除知识卡（API 4.1.16）
+ * DELETE /api/v1/knowledge/{owner_type}/{owner_id}/cards/{id}
+ */
+export function deleteKnowledgeCard(
+  ownerType: OwnerType,
+  ownerId: string,
+  cardId: string
+): Promise<DeleteCardResult> {
+  return request.delete<DeleteCardResult>(`${BASE_URL}/${ownerType}/${ownerId}/cards/${cardId}`)
 }
 
 /**

@@ -314,6 +314,22 @@ export const knowledgeHandlers = [
     })
   }),
 
+  // 查询知识卡类型（4.1.15）
+  http.get(`${API_BASE}/knowledge/card-types`, async () => {
+    await delay(200)
+    return HttpResponse.json({
+      code: 0,
+      message: 'ok',
+      data: [
+        { name: '规则卡', code: 'rule' },
+        { name: '量表卡', code: 'scale' },
+        { name: '风险控制点卡', code: 'risk_point' },
+        { name: '路径条款卡', code: 'pathway_clause' },
+        { name: '乐谱元素卡', code: 'melody_element' },
+      ],
+    })
+  }),
+
   // 查询知识卡列表
   http.get(`${API_BASE}/knowledge/:ownerType/:ownerId/cards`, async ({ request }) => {
     const url = new URL(request.url)
@@ -447,6 +463,22 @@ export const knowledgeHandlers = [
       return HttpResponse.json({ code: 0, message: 'ok', data: versions })
     }
   ),
+
+  // 删除知识卡（4.1.16）
+  http.delete(`${API_BASE}/knowledge/:ownerType/:ownerId/cards/:cardId`, async ({ params }) => {
+    const { cardId } = params
+    const index = mutableCards.findIndex((c) => c.id === cardId)
+    if (index === -1) {
+      return HttpResponse.json({ code: 40002, message: 'Card not found', data: null })
+    }
+    mutableCards.splice(index, 1)
+    await delay(200)
+    return HttpResponse.json({
+      code: 0,
+      message: 'ok',
+      data: { card_id: cardId, action: 'deleted' },
+    })
+  }),
 
   // 版本回退（body: target_version 数字）
   http.post(

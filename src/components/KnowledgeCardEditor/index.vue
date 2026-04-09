@@ -31,8 +31,8 @@
             :rules="[{ required: true, message: t('knowledge.card.typeRequired') }]"
           >
             <a-select v-model:value="formState.type" :disabled="isEditMode">
-              <a-select-option v-for="(cfg, key) in CARD_TYPE_CONFIG" :key="key" :value="key">
-                {{ cfg.label }}
+              <a-select-option v-for="ct in props.cardTypes" :key="ct.code" :value="ct.code">
+                {{ ct.name }}
               </a-select-option>
             </a-select>
           </a-form-item>
@@ -108,8 +108,7 @@
 import { useI18n } from 'vue-i18n'
 import { message } from 'ant-design-vue'
 import { PlusOutlined } from '@ant-design/icons-vue'
-import type { KnowledgeCard, CardType, OwnerType } from '@/types/knowledge'
-import { CARD_TYPE_CONFIG } from '@/types/knowledge'
+import type { KnowledgeCard, CardType, OwnerType, CardTypeOption } from '@/types/knowledge'
 import { getKnowledgeCardDetail, saveKnowledgeCard, updateKnowledgeCard } from '@/api/knowledge'
 import TiptapEditor from './TiptapEditor.vue'
 import { useFileRemoteSearch } from '@/composables/useFileRemoteSearch'
@@ -121,6 +120,8 @@ const props = defineProps<{
   card?: KnowledgeCard
   ownerType: OwnerType
   ownerId: string
+  /** 由父级（KnowledgeCardList）传入，避免重复请求 */
+  cardTypes?: CardTypeOption[]
 }>()
 
 const emit = defineEmits<{
@@ -194,7 +195,7 @@ watch(
       }
     } else {
       formState.title = ''
-      formState.type = 'evidence'
+      formState.type = props.cardTypes?.[0]?.code ?? 'evidence'
       formState.content = ''
       formState.tags = []
       formState.source_file_ids = []

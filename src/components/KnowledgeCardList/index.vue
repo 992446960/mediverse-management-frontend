@@ -5,6 +5,7 @@ import {
   PlusOutlined,
   EditOutlined,
   EyeOutlined,
+  DeleteOutlined,
   CloudUploadOutlined,
   CloudDownloadOutlined,
   SearchOutlined,
@@ -16,14 +17,20 @@ import type {
   OnlineStatus,
   AuditStatus,
   OwnerType,
+  CardTypeOption,
 } from '@/types/knowledge'
-import { CARD_TYPE_CONFIG, ONLINE_STATUS_CONFIG, AUDIT_STATUS_CONFIG } from '@/types/knowledge'
+import { ONLINE_STATUS_CONFIG, AUDIT_STATUS_CONFIG, getCardTypeConfig } from '@/types/knowledge'
 import KnowledgeCardEditor from '../KnowledgeCardEditor/index.vue'
 import KnowledgeCardViewer from '../KnowledgeCardViewer/index.vue'
 import PageHead from '@/components/PageHead/index.vue'
 import PageFilter from '@/components/PageFilter/index.vue'
 import PageTable from '@/components/PageTable/index.vue'
-import { getKnowledgeCards, toggleKnowledgeCardStatus } from '@/api/knowledge'
+import {
+  getKnowledgeCards,
+  toggleKnowledgeCardStatus,
+  deleteKnowledgeCard,
+  getCardTypes,
+} from '@/api/knowledge'
 import { useFileRemoteSearch } from '@/composables/useFileRemoteSearch'
 import type { PageHeadConfig } from '@/components/PageHead/types'
 import type { PageFilterConfig } from '@/components/PageFilter/types'
@@ -58,6 +65,7 @@ const activeTab = ref<CardType | 'all'>('all')
 const loading = ref(false)
 const tableData = ref<KnowledgeCard[]>([])
 const total = ref(0)
+const cardTypes = ref<CardTypeOption[]>([])
 
 const editorOpen = ref(false)
 const editingCard = ref<KnowledgeCard | undefined>(undefined)
@@ -76,9 +84,7 @@ const headConf = computed<PageHeadConfig>(() => ({
   ],
   tabsOptions: [
     { label: t('common.all'), value: 'all' },
-    { label: t('knowledge.card.typeEvidence'), value: 'evidence' },
-    { label: t('knowledge.card.typeRule'), value: 'rule' },
-    { label: t('knowledge.card.typeExperience'), value: 'experience' },
+    ...cardTypes.value.map((ct) => ({ label: ct.name, value: ct.code })),
   ],
   defaultTab: activeTab.value,
   tabChangeHandle: (val) => {
@@ -176,8 +182,8 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
     width: 100,
     type: 'scope',
     scopeType: '_tag',
-    tagType: (row) => CARD_TYPE_CONFIG[row.type as CardType].color,
-    tagText: (row) => CARD_TYPE_CONFIG[row.type as CardType].label,
+    tagType: (row) => getCardTypeConfig(row.type as string).color,
+    tagText: (row) => getCardTypeConfig(row.type as string).label,
   },
   {
     label: t('knowledge.card.columnStatus'),
@@ -238,6 +244,13 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
             : t('knowledge.card.confirmToggleOnline'),
         handle: (row) => handleStatusToggle(row as KnowledgeCard),
       },
+      {
+        text: t('common.delete'),
+        icon: DeleteOutlined,
+        type: 'popconfirm',
+        popconfirmTitle: t('knowledge.card.confirmDelete'),
+        handle: (row) => handleDelete(row as KnowledgeCard),
+      },
     ],
   },
 ])
@@ -277,7 +290,27 @@ const fetchData = async () => {
   }
 }
 
+const fetchCardTypes = async () => {
+  try {
+    cardTypes.value = await getCardTypes()
+  } catch (err) {
+    console.error('Fetch card types failed:', err)
+  }
+}
+
+const handleDelete = async (record: KnowledgeCard) => {
+  try {
+    await deleteKnowledgeCard(props.ownerType, props.ownerId, record.id)
+    message.success(t('knowledge.card.deleteSuccess'))
+    fetchData()
+  } catch (err) {
+    console.error('Delete card failed:', err)
+    message.error(t('knowledge.card.deleteFailed'))
+  }
+}
+
 onMounted(() => {
+  fetchCardTypes()
   fetchData()
   loadDefaultSourceFiles()
 })
@@ -382,6 +415,7 @@ const handleStatusToggle = async (record: KnowledgeCard) => {
       :card="editingCard"
       :owner-type="ownerType"
       :owner-id="ownerId"
+      :card-types="cardTypes"
       @success="fetchData"
     />
 
@@ -392,6 +426,7 @@ const handleStatusToggle = async (record: KnowledgeCard) => {
       :owner-id="ownerId"
       @status-changed="handleViewerStatusChanged"
       @edit="handleEditFromViewer"
+      @deleted="fetchData"
     />
   </div>
 </template>

@@ -21,8 +21,8 @@
           <div class="flex flex-col gap-2">
             <h2 class="text-xl font-bold m-0">{{ card.title }}</h2>
             <a-space>
-              <a-tag :color="CARD_TYPE_CONFIG[card.type].color">{{
-                CARD_TYPE_CONFIG[card.type].label
+              <a-tag :color="getCardTypeConfig(card.type).color">{{
+                getCardTypeConfig(card.type).label
               }}</a-tag>
               <a-tag :color="ONLINE_STATUS_CONFIG[card.online_status].color">{{
                 ONLINE_STATUS_CONFIG[card.online_status].label
@@ -53,6 +53,19 @@
                   : t('knowledge.card.online')
               }}
             </a-button>
+            <a-popconfirm
+              :title="t('knowledge.card.confirmDelete')"
+              :ok-text="t('common.confirm')"
+              :cancel-text="t('common.cancel')"
+              @confirm="handleDelete"
+            >
+              <a-button danger>
+                <template #icon>
+                  <DeleteOutlined />
+                </template>
+                {{ t('common.delete') }}
+              </a-button>
+            </a-popconfirm>
           </div>
         </div>
 
@@ -165,7 +178,12 @@
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { CloudUploadOutlined, CloudDownloadOutlined, EditOutlined } from '@ant-design/icons-vue'
+import {
+  CloudUploadOutlined,
+  CloudDownloadOutlined,
+  EditOutlined,
+  DeleteOutlined,
+} from '@ant-design/icons-vue'
 import type {
   KnowledgeCard,
   KnowledgeCardVersion,
@@ -173,7 +191,7 @@ import type {
   OwnerType,
 } from '@/types/knowledge'
 import type { VersionDiffSegment } from '@/types/knowledge'
-import { CARD_TYPE_CONFIG, ONLINE_STATUS_CONFIG, AUDIT_STATUS_CONFIG } from '@/types/knowledge'
+import { getCardTypeConfig, ONLINE_STATUS_CONFIG, AUDIT_STATUS_CONFIG } from '@/types/knowledge'
 import { getFileOriginalUrl } from '@/types/knowledge'
 import { stashKnowledgePreviewFile } from '@/utils/knowledgePreviewStash'
 import {
@@ -183,6 +201,7 @@ import {
   getKnowledgeCardVersionDiff,
   toggleKnowledgeCardStatus,
   rollbackKnowledgeCard,
+  deleteKnowledgeCard,
 } from '@/api/knowledge'
 import { formatFileSize } from '@/utils/formatFileSize'
 import AssociatedFilesList from './AssociatedFilesList.vue'
@@ -221,6 +240,8 @@ const emit = defineEmits<{
   /** 上下线成功后通知父级就地更新列表行，不请求列表接口 */
   (e: 'status-changed', payload: { id: string; online_status: OnlineStatus }): void
   (e: 'edit', card: KnowledgeCard): void
+  /** 删除成功后通知父级刷新列表 */
+  (e: 'deleted', cardId: string): void
 }>()
 
 const activeTab = ref('content')
@@ -423,6 +444,20 @@ const handleStatusToggle = async () => {
   } catch (err) {
     console.error('Status toggle failed:', err)
     message.error(t('common.error'))
+  }
+}
+
+const handleDelete = async () => {
+  if (!card.value) return
+  const cardId = card.value.id
+  try {
+    await deleteKnowledgeCard(props.ownerType, props.ownerId, cardId)
+    message.success(t('knowledge.card.deleteSuccess'))
+    emit('deleted', cardId)
+    emit('update:open', false)
+  } catch (err) {
+    console.error('Delete card failed:', err)
+    message.error(t('knowledge.card.deleteFailed'))
   }
 }
 </script>
