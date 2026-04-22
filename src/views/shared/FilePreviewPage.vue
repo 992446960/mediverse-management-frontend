@@ -16,44 +16,79 @@
 import { useI18n } from 'vue-i18n'
 import FilePreview from '@/components/FilePreview/index.vue'
 import { useAuthStore } from '@/stores/auth'
-import { readKnowledgePreviewFile } from '@/utils/knowledgePreviewStash'
+import { readKnowledgePreviewContext } from '@/utils/knowledgePreviewStash'
+import {
+  getKnowledgePreviewOwnerTypeFromRoute,
+  isKnowledgePreviewRoute,
+} from '@/utils/knowledgePreviewRoute'
 import type { OwnerType } from '@/types/knowledge'
 import type { FileListItem } from '@/types/knowledge'
+import type { RouteLocationNormalizedLoaded, RouteLocationNormalized } from 'vue-router'
 
 const { t } = useI18n()
 const route = useRoute()
 const authStore = useAuthStore()
 
-const ownerType = computed<OwnerType>(() => {
-  const path = route.path
-  if (path.startsWith('/dept/')) return 'dept'
-  if (path.startsWith('/org/')) return 'org'
-  return 'personal'
-})
+interface PreviewContext {
+  ownerType: OwnerType
+  ownerId: string
+  fileId: string
+  file?: FileListItem
+}
 
-const ownerId = computed(() => {
-  switch (ownerType.value) {
+function getOwnerId(type: OwnerType): string {
+  switch (type) {
     case 'dept':
       return authStore.currentDeptId ?? ''
     case 'org':
       return authStore.currentOrgId ?? ''
+    case 'avatar':
+      return ''
     default:
       return authStore.user?.id ?? ''
   }
-})
+}
 
-const fileId = computed(() => route.params.id as string)
+function getHistoryFile(
+  targetRoute: RouteLocationNormalizedLoaded | RouteLocationNormalized
+): FileListItem | undefined {
+  const fromHistory = (history.state as { file?: FileListItem })?.file
+  const fromRoute = (targetRoute as { state?: { file?: FileListItem } }).state?.file
+  return fromHistory ?? fromRoute
+}
 
 /**
- * 列表传入的文件行：优先 history.state（若将来路由保留），否则 sessionStorage（Vue Router 5 下 push state 未出现在 history.state）
+ * 预览上下文只在进入/更新预览路由时刷新。
+ * 离开到 /chat/session 等路由时，旧预览组件可能仍处于过渡/缓存生命周期；不能用全局 route.path 重新推断 owner。
  */
-const fileFromState = computed<FileListItem | undefined>(() => {
-  const fromHistory = (history.state as { file?: FileListItem })?.file
-  const fromRoute = (route as { state?: { file?: FileListItem } }).state?.file
-  if (fromHistory) return fromHistory
-  if (fromRoute) return fromRoute
-  return readKnowledgePreviewFile(fileId.value)
+function buildPreviewContext(
+  targetRoute: RouteLocationNormalizedLoaded | RouteLocationNormalized
+): PreviewContext {
+  const fileId = String(targetRoute.params.id ?? '')
+  const stashed = readKnowledgePreviewContext(fileId)
+  const ownerType =
+    stashed?.ownerType ?? getKnowledgePreviewOwnerTypeFromRoute(targetRoute) ?? 'personal'
+  const ownerId = stashed?.ownerId ?? getOwnerId(ownerType)
+  return {
+    ownerType,
+    ownerId,
+    fileId,
+    file: getHistoryFile(targetRoute) ?? stashed?.file,
+  }
+}
+
+const previewContext = shallowRef<PreviewContext>(buildPreviewContext(route))
+
+onBeforeRouteUpdate((to) => {
+  if (isKnowledgePreviewRoute(to)) {
+    previewContext.value = buildPreviewContext(to)
+  }
 })
+
+const ownerType = computed(() => previewContext.value.ownerType)
+const ownerId = computed(() => previewContext.value.ownerId)
+const fileId = computed(() => previewContext.value.fileId)
+const fileFromState = computed(() => previewContext.value.file)
 
 const ready = computed(() => {
   if (!fileId.value) return false
