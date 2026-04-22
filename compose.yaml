@@ -1,0 +1,17 @@
+# 本地构建并预览生产镜像（nginx 托管静态资源 + /api 反代）
+# 使用：docker compose up --build
+# 浏览器访问：http://localhost:8080
+services:
+  frontend:
+    container_name: mediverse-management-frontend
+    image: mediverse-management-frontend:latest
+    platform: linux/amd64
+    build:
+      context: .
+      args:
+        VITE_API_BASE_URL: /api/v1
+    ports:
+      - "8080:80"
+    environment:
+      API_UPSTREAM: https://mediverse-management.huaxisy.com
+      API_PROXY_HOST: mediverse-management.huaxisy.com

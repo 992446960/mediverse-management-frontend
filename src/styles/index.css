@@ -1,0 +1,119 @@
+@import 'tailwindcss';
+@import './variables.css';
+@import './nprogress.css';
+
+/* 与 themeStore 一致：dark 由 html.dark 控制，不随系统 prefers-color-scheme 变化 */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-primary: var(--color-primary);
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-error: var(--color-error);
+  --color-info: var(--color-info);
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family, 'Figtree', 'Noto Sans SC', sans-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--color-bg-base);
+  color: var(--color-text-base);
+  transition:
+    background-color 0.3s,
+    color 0.3s;
+    
+}
+.layout-content-m-h{
+  max-height:var(--ant-layout-content-insert-height);
+}
+
+/* a-button 全局：icon 与文字垂直居中对齐 */
+.ant-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 去掉输入框内边框样式（outline / 内阴影），保留外边框 */
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-input-password {
+  outline: none !important;
+  box-shadow: none !important;
+}
+.ant-input:focus,
+.ant-input-affix-wrapper:focus-within,
+.ant-input-password:focus-within {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* 登录页：覆盖 autofill 背景 #E8F0FE，全局写一遍提高优先级 */
+.login-container input:-webkit-autofill,
+.login-container input:-webkit-autofill:hover,
+.login-container input:-webkit-autofill:focus,
+.login-container input:-webkit-autofill:active {
+  background-color: var(--login-input-autofill-cover) !important;
+  -webkit-box-shadow: 0 0 0 1000px var(--login-input-autofill-cover) inset !important;
+  box-shadow: 0 0 0 1000px var(--login-input-autofill-cover) inset !important;
+  -webkit-text-fill-color: var(--login-input-text) !important;
+  caret-color: var(--login-input-text);
+}
+
+.app-container {
+  background-color: var(--color-bg-container);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+/* 全局 Modal 样式 */
+.ant-modal {
+  .ant-modal-content {
+    padding: 0;
+    .ant-modal-header {
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--color-border);
+      background-color: var(--color-bg-base);
+      margin-bottom: 0;
+    }
+    .ant-modal-body {
+      padding: 10px 20px;
+    }
+    .ant-modal-footer {
+      padding: 10px 20px;
+      border-top: 1px solid var(--color-border);
+    }
+    /* 全局 Modal 表单样式 */
+    .ant-form-item {
+      margin-bottom: 14px;
+    }
+  }
+}
+
+/* 全局 Modal 确认框样式 */
+.ant-modal-confirm {
+  .ant-modal-content {
+    .ant-modal-body {
+      padding: 20px;
+    }
+  }
+}
+
+/* 全局 Alert 样式 */
+.ant-alert {
+  margin-bottom: 14px;
+}
+
+/**
+ * Tag 预设 color="blue"：与 KnowledgeCardPreview `.knowledge-card-preview__type-tag--evidence` 同色
+ * 使用项目 CSS 变量；!important 用于覆盖 Ant Design 预设色的内联样式
+ */
+.ant-tag.ant-tag-blue,
+.ant-tag.ant-tag-color-blue {
+  color: var(--color-primary) !important;
+  background: var(--color-primary-100) !important;
+  border-color: color-mix(in srgb, var(--color-primary) 10%, transparent) !important;
+}

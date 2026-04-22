@@ -1,0 +1,40 @@
+import type { ApiToken } from '@/types/apiTokens'
+
+export const apiTokens: ApiToken[] = [
+  {
+    id: 'token_001',
+    org_id: 'org_001',
+    org_name: '北京协和医院',
+    name: '外部系统集成',
+    description: '用于 HIS 系统对接',
+    token_hash: 'med_xxxxxxxxxxxxxxxxxxxxxxxx',
+    status: 'active',
+    last_used_at: '2026-03-02T15:00:00Z',
+    created_by: 'user_001',
+    created_at: '2026-01-01T00:00:00Z',
+  },
+  {
+    id: 'token_002',
+    org_id: 'org_002',
+    org_name: '上海交通大学医学院附属瑞金医院',
+    name: '数据分析平台',
+    description: 'BI 报表拉取',
+    token_hash: 'med_yyyyyyyyyyyyyyyyyyyyyyyy',
+    status: 'active',
+    last_used_at: null,
+    created_by: 'user_001',
+    created_at: '2026-02-10T08:00:00Z',
+  },
+  {
+    id: 'token_003',
+    org_id: 'org_001',
+    org_name: '北京协和医院',
+    name: '测试环境',
+    description: null,
+    token_hash: 'med_zzzzzzzzzzzzzzzzzzzzzzzz',
+    status: 'inactive',
+    last_used_at: '2026-02-28T12:00:00Z',
+    created_by: 'user_001',
+    created_at: '2026-02-20T10:00:00Z',
+  },
+]
