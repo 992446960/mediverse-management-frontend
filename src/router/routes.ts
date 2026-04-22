@@ -321,7 +321,7 @@ const routes: RouteRecordRaw[] = [
         meta: { title: 'menu.digitalDoctor', noCache: true },
       },
       {
-        path: 'session/:id',
+        path: 'session/:sessionId',
         name: 'ChatSession',
         component: () => import('@/views/chat/Session.vue'),
         meta: { title: 'menu.avatarChat' },

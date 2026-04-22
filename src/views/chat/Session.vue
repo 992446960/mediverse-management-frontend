@@ -6,13 +6,12 @@ defineOptions({ name: 'ChatSession' })
 const route = useRoute()
 
 /**
- * 必须用当前「叶子」路由名隔离：ChatLayout 在 keep-alive 中保留时，
- * useRoute() 会随全局导航变化；/dept/files/preview/:id 等与 /chat/session/:id
- * 均使用 params.id，否则会误把文件 id 当作会话 id 触发 getMessages。
+ * 双层保障：① `route.name === 'ChatSession'` 才解析；② 会话段使用专用名
+ * `params.sessionId`（路由为 `session/:sessionId`），与全站其它 `params.id`（如预览页文件 id）解耦。
  */
 const sessionId = computed(() => {
   if (route.name !== 'ChatSession') return ''
-  const raw = route.params.id
+  const raw = route.params.sessionId
   return typeof raw === 'string' ? raw : ''
 })
 

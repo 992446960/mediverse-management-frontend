@@ -26,7 +26,7 @@ provide('openSkillPanel', openSkillPanel)
 
 /** 切换会话时收起技能面板，避免沿用上一会话的上下文 */
 watch(
-  () => route.params.id,
+  () => route.params.sessionId,
   () => {
     skillPanelExpanded.value = false
   }

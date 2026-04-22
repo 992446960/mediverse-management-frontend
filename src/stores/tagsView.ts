@@ -15,7 +15,7 @@ export interface TagView {
 export const CHAT_HOME_TAG_PATH = '/chat'
 
 /**
- * 分身会话页签去重 path（非真实路由；真实 URL 仍为 /chat/session/:id，存在 fullPath）
+ * 分身会话页签去重 path（非真实路由；真实 URL 仍为 /chat/session/:sessionId，存在 fullPath）
  */
 export const CHAT_SESSION_TAG_PATH = '/chat/session'
 
