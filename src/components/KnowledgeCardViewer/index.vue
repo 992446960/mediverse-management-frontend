@@ -357,7 +357,7 @@ async function openSourceFilePreview(item: KnowledgeCard['source_files'][number]
       message.warning(t('knowledge.previewNoUrlHint'))
       return
     }
-    stashKnowledgePreviewFile(file)
+    stashKnowledgePreviewFile(file, { ownerType: props.ownerType, ownerId: props.ownerId })
     emit('update:open', false)
     router.push({
       name: routeName,

@@ -476,7 +476,7 @@ function openFilePreview(file: FileListItem, scopeCtx: KbHomeVisibleScope) {
     message.warning(t('knowledge.previewNoUrlHint'))
     return
   }
-  stashKnowledgePreviewFile(file)
+  stashKnowledgePreviewFile(file, { ownerType: scopeCtx.ownerType, ownerId: scopeCtx.ownerId })
   router.push({
     name: PREVIEW_ROUTE_NAMES[scopeCtx.scope],
     params: { id: file.id },

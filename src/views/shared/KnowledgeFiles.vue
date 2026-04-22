@@ -515,7 +515,7 @@ function handlePreview(record: FileListItem) {
     return
   }
   const name = PREVIEW_ROUTE_NAMES[props.ownerType]
-  stashKnowledgePreviewFile(record)
+  stashKnowledgePreviewFile(record, { ownerType: props.ownerType, ownerId: props.ownerId })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- FileListItem 需通过 state 传递，HistoryState 类型限制
   router.push({ name, params: { id: record.id }, state: { file: record } as any })
 }
