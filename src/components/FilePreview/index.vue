@@ -301,13 +301,8 @@ watch(
     loadFile()
     loadCards()
   },
-  { immediate: false }
+  { immediate: true }
 )
-
-onMounted(() => {
-  loadFile()
-  loadCards()
-})
 </script>
 
 <style scoped>
