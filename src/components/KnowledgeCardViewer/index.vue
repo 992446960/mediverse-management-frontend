@@ -113,7 +113,7 @@
           <a-tab-pane key="versions" :tab="t('knowledge.card.tabVersions')">
             <VersionTimeline
               :versions="versions"
-              :current-version="card.version"
+              :current-version-key="currentVersionKey"
               @compare="handleCompareFromTimeline"
               @rollback="handleRollback"
             />
@@ -125,6 +125,7 @@
               :from-version="diffFrom"
               :to-version="diffTo"
               :versions="versions"
+              :current-version-key="currentVersionKey"
               :loading="diffLoading"
               @change-versions="handleDiffVersionChange"
               @rollback-to="handleRollback"
@@ -195,6 +196,12 @@ import { getCardTypeConfig, ONLINE_STATUS_CONFIG, AUDIT_STATUS_CONFIG } from '@/
 import { getFileOriginalUrl } from '@/types/knowledge'
 import { stashKnowledgePreviewFile } from '@/utils/knowledgePreviewStash'
 import {
+  buildKnowledgeCardVersionOptions,
+  canCompareKnowledgeCardVersions,
+  canRollbackKnowledgeCardVersion,
+  resolveKnowledgeCardCurrentVersionKey,
+} from '@/utils/knowledgeCardVersion'
+import {
   getFileListItemById,
   getKnowledgeCardDetail,
   getKnowledgeCardVersions,
@@ -255,6 +262,12 @@ const diffResult = ref<VersionDiffSegment[]>([])
 const diffFrom = ref<number>(0)
 const diffTo = ref<number>(0)
 const diffLoading = ref(false)
+const currentVersionKey = computed(() =>
+  card.value ? resolveKnowledgeCardCurrentVersionKey(card.value, versions.value) : null
+)
+const validVersionKeys = computed(() =>
+  buildKnowledgeCardVersionOptions(versions.value).map((option) => option.value)
+)
 
 const renderedContent = computed(() => {
   const content = card.value?.content || ''
@@ -373,7 +386,11 @@ async function openSourceFilePreview(item: KnowledgeCard['source_files'][number]
 // ─── 版本对比 ───────────────────────────────────────────
 
 async function loadDiff(from: number, to: number) {
-  if (!props.cardId || from === to) return
+  if (!props.cardId || !canCompareKnowledgeCardVersions(from, to, validVersionKeys.value)) {
+    diffResult.value = []
+    return
+  }
+  diffResult.value = []
   diffLoading.value = true
   try {
     const result = await getKnowledgeCardVersionDiff(
@@ -394,6 +411,7 @@ async function loadDiff(from: number, to: number) {
 }
 
 async function handleCompareFromTimeline(fromVersion: number, toVersion: number) {
+  if (!canCompareKnowledgeCardVersions(fromVersion, toVersion, validVersionKeys.value)) return
   diffFrom.value = fromVersion
   diffTo.value = toVersion
   activeTab.value = 'diff'
@@ -401,6 +419,12 @@ async function handleCompareFromTimeline(fromVersion: number, toVersion: number)
 }
 
 async function handleDiffVersionChange(fromVersion: number, toVersion: number) {
+  if (!canCompareKnowledgeCardVersions(fromVersion, toVersion, validVersionKeys.value)) {
+    diffResult.value = []
+    diffFrom.value = 0
+    diffTo.value = 0
+    return
+  }
   diffFrom.value = fromVersion
   diffTo.value = toVersion
   await loadDiff(fromVersion, toVersion)
@@ -410,6 +434,12 @@ async function handleDiffVersionChange(fromVersion: number, toVersion: number) {
 
 const handleRollback = async (version: string, targetVersion: number) => {
   if (!props.cardId) return
+  if (
+    !canRollbackKnowledgeCardVersion(targetVersion, currentVersionKey.value, validVersionKeys.value)
+  ) {
+    message.warning(t('knowledge.card.rollbackInvalidVersion'))
+    return
+  }
   try {
     const updated = await rollbackKnowledgeCard(
       props.ownerType,

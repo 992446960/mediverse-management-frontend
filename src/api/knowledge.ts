@@ -25,7 +25,7 @@ const BASE_URL = '/knowledge'
 interface KnowledgeCardVersionRaw {
   id?: string
   version?: string
-  version_number?: number
+  version_number?: number | string
   summary?: string
   change_summary?: string | null
   created_by?: string
@@ -81,6 +81,8 @@ function normalizeKnowledgeCard(data: unknown): KnowledgeCard {
     ...base,
     source_files,
     version,
+    current_version:
+      typeof cv === 'number' || (typeof cv === 'string' && cv !== '') ? cv : base.current_version,
   }
 }
 
@@ -94,6 +96,7 @@ function normalizeKnowledgeCardVersion(raw: KnowledgeCardVersionRaw): KnowledgeC
   return {
     id: raw.id,
     version,
+    version_number: raw.version_number,
     summary: raw.change_summary ?? raw.summary ?? '',
     created_by: raw.operated_by ?? raw.created_by ?? '',
     created_by_name: raw.operated_by_name ?? raw.created_by_name ?? '',

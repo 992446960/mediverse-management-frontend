@@ -24,6 +24,10 @@
 | Docker Compose 校验 | `docker compose config` | Docker 相关变更时必须通过 |
 | API 合规测试 | `pnpm test:api` | 具备 `.env.api-test` 和网络条件时运行 |
 
+## 近期同步记录
+
+- 知识卡版本历史和版本对比交互已收口：当前版本不展示历史对比/回退入口，单版本、同版本、无效版本和回退到当前版本均不可操作；本次仅涉及前端交互边界和单元测试，不变更后端接口、Docker 或环境变量。
+
 ## 待维护规则
 
 - 新增 `src/api/*` 接口时，更新 `docs/development-guide.md` 的 API 规则或 `tests/api-contract/` 说明。

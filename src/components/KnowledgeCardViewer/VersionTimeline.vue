@@ -11,7 +11,7 @@
           <div class="flex items-center justify-between">
             <a-space>
               <span class="font-bold text-gray-800">{{ v.version }}</span>
-              <a-tag v-if="v.version === currentVersion" color="blue">
+              <a-tag v-if="isCurrentVersion(v)" color="blue">
                 {{ t('knowledge.card.currentVersion') }}
               </a-tag>
             </a-space>
@@ -23,12 +23,17 @@
           <div class="flex items-center justify-between text-xs text-gray-400">
             <span>{{ t('knowledge.card.operator') }}: {{ v.created_by_name }}</span>
             <a-space>
-              <a-button type="link" size="small" @click="handleCompare(v)">
+              <a-button
+                v-if="canCompareVersion(v)"
+                type="link"
+                size="small"
+                @click="handleCompare(v)"
+              >
                 <template #icon><SwapOutlined /></template>
                 {{ t('knowledge.card.compare') }}
               </a-button>
               <a-button
-                v-if="v.version !== currentVersion"
+                v-if="canRollbackVersion(v)"
                 type="link"
                 size="small"
                 danger
@@ -50,14 +55,20 @@ import { useI18n } from 'vue-i18n'
 import { Modal, message } from 'ant-design-vue'
 import { HistoryOutlined, RollbackOutlined, SwapOutlined } from '@ant-design/icons-vue'
 import type { KnowledgeCardVersion } from '@/types/knowledge'
-import { knowledgeCardVersionToNumeric } from '@/utils/knowledgeCardVersion'
+import {
+  buildKnowledgeCardVersionOptions,
+  canRollbackKnowledgeCardVersion,
+  findKnowledgeCardCompareTarget,
+  isKnowledgeCardCurrentVersion,
+  resolveKnowledgeCardVersionKey,
+} from '@/utils/knowledgeCardVersion'
 import dayjs from 'dayjs'
 
 const { t } = useI18n()
 
 const props = defineProps<{
   versions: KnowledgeCardVersion[]
-  currentVersion: string
+  currentVersionKey: number | null
 }>()
 
 const emit = defineEmits<{
@@ -65,31 +76,37 @@ const emit = defineEmits<{
   (e: 'rollback', version: string, targetVersion: number): void
 }>()
 
+const validVersionKeys = computed(() =>
+  buildKnowledgeCardVersionOptions(props.versions).map((option) => option.value)
+)
+
+function isCurrentVersion(v: KnowledgeCardVersion) {
+  return isKnowledgeCardCurrentVersion(v, props.currentVersionKey)
+}
+
+function canCompareVersion(v: KnowledgeCardVersion) {
+  return findKnowledgeCardCompareTarget(v, props.versions, props.currentVersionKey) != null
+}
+
+function canRollbackVersion(v: KnowledgeCardVersion) {
+  const targetVersion = resolveKnowledgeCardVersionKey(v)
+  return (
+    targetVersion != null &&
+    canRollbackKnowledgeCardVersion(targetVersion, props.currentVersionKey, validVersionKeys.value)
+  )
+}
+
 function handleCompare(v: KnowledgeCardVersion) {
-  const latestVersion = props.versions[0]
-  if (!latestVersion) return
-
-  const toNum = knowledgeCardVersionToNumeric(v.version)
-  if (toNum == null) return
-
-  /** 点击项作为 to；from 为当前列表最新。若点的就是最新，则与相邻上一版对比。 */
-  let fromRow: KnowledgeCardVersion | undefined
-  if (v.version === latestVersion.version) {
-    fromRow = props.versions[1]
-  } else {
-    fromRow = latestVersion
-  }
-  if (!fromRow) return
-
-  const fromNum = knowledgeCardVersionToNumeric(fromRow.version)
-  if (fromNum != null && fromNum !== toNum) {
-    emit('compare', fromNum, toNum)
-  }
+  const target = findKnowledgeCardCompareTarget(v, props.versions, props.currentVersionKey)
+  if (target) emit('compare', target.from, target.to)
 }
 
 const handleRollback = (v: KnowledgeCardVersion) => {
-  const targetVersion = knowledgeCardVersionToNumeric(v.version)
-  if (targetVersion == null) {
+  const targetVersion = resolveKnowledgeCardVersionKey(v)
+  if (
+    targetVersion == null ||
+    !canRollbackKnowledgeCardVersion(targetVersion, props.currentVersionKey, validVersionKeys.value)
+  ) {
     message.warning(t('knowledge.card.rollbackInvalidVersion'))
     return
   }

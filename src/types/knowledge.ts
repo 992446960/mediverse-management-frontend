@@ -105,6 +105,8 @@ export interface KnowledgeCard {
   created_at: string
   updated_at: string
   version: string
+  /** 后端显式当前版本号（若有），用于版本对比 / 回退操作键 */
+  current_version?: number | string
 }
 
 /** 知识卡版本 */
@@ -112,6 +114,8 @@ export interface KnowledgeCardVersion {
   /** 后端版本行 id（若有） */
   id?: string
   version: string
+  /** 后端显式版本号（若有），用于 diff / rollback 参数 */
+  version_number?: number | string
   summary: string
   created_by: string
   created_by_name: string
