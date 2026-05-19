@@ -26,8 +26,6 @@ dist-ssr
 .agents/
 .windsurf/
 .aider*
-AGENTS.md
-CLAUDE.md
 CLAUDE.local.md
 GEMINI.md
 .cursorrules
@@ -35,7 +33,6 @@ GEMINI.md
 copilot-instructions.md
 .github/copilot-instructions.md
 .idea
-docs
 .DS_Store
 *.suo
 *.ntvs*

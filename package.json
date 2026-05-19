@@ -10,6 +10,8 @@
     "prepare": "husky",
     "lint": "eslint . --fix",
     "format": "prettier --write .",
+    "check:docs": "bash scripts/check-docs-freshness.sh",
+    "verify": "pnpm check:docs && pnpm build",
     "test:api": "vitest run --config vitest.config.api.ts",
     "test:api:watch": "vitest --config vitest.config.api.ts",
     "docker:build": "bash scripts/docker-build.sh"

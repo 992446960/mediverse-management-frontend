@@ -1,5 +1,76 @@
-# Vue 3 + TypeScript + Vite
+# mediverse-management-frontend
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+面向医数智台管理端的前端项目，提供登录鉴权、组织/科室/用户管理、文件管理、知识卡管理、分身配置、知识库搜索和数字医生会话能力。
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+## 技术栈
+
+| 类型 | 选型 |
+| --- | --- |
+| 框架 | Vue 3 + TypeScript |
+| 构建 | Vite 7 |
+| UI | Ant Design Vue 4 + Ant Design X Vue |
+| 状态 | Pinia + pinia-plugin-persistedstate |
+| 请求 | Axios，统一封装在 `src/api/index.ts` |
+| Mock | MSW，入口在 `src/mocks/browser.ts` |
+| 测试 | Vitest API contract tests |
+| 部署 | Docker 多阶段构建 + Nginx |
+
+## 快速启动
+
+```bash
+pnpm install
+pnpm dev
+```
+
+开发服务默认由 Vite 启动，端口见 `vite.config.ts`。开发环境的 `/api` 代理默认指向线上 API；本机后端地址写入 `.env.development.local`，不要提交个人 IP。
+
+```bash
+DEV_PROXY_TARGET=http://127.0.0.1:8005
+```
+
+## 常用命令
+
+| 命令 | 说明 |
+| --- | --- |
+| `pnpm dev` | 启动 Vite 开发服务 |
+| `pnpm build` | 类型检查并构建生产产物 |
+| `pnpm preview` | 本地预览生产构建 |
+| `pnpm test:api` | 运行 API 合规性测试 |
+| `pnpm check:docs` | 检查文档新鲜度 |
+| `pnpm verify` | 执行文档检查和生产构建 |
+| `pnpm docker:build` | 构建 Docker 镜像、导出 tar 并上传到服务器 |
+
+## Docker
+
+Docker 打包、上传、服务器部署、API 上游覆盖、更新和回滚见 `README.Docker.md`。
+
+本地预览生产镜像：
+
+```bash
+docker compose up --build
+```
+
+访问 `http://localhost:8080`，停止时执行：
+
+```bash
+docker compose down
+```
+
+## 开发原则
+
+- 修改代码前先读对应模块实现和 `docs/development-guide.md`，不要按模板臆造结构。
+- 任何影响代码、接口、配置、Docker 或需求的改动，都必须同步更新 `docs/documentation-task-board.md`。
+- 提交前至少运行 `pnpm check:docs`；涉及运行时代码时运行 `pnpm verify`。
+- 不要提交真实服务器地址、Token、账号密码或 `.env.api-test`。
+
+## 文档索引
+
+| 文档 | 位置 | 说明 |
+| --- | --- | --- |
+| Agent 指令 | `AGENTS.md` | AI Agent 操作边界、命令和验证要求 |
+| Claude 红线 | `CLAUDE.md` | Claude Code / Cursor 核心原则 |
+| 开发规范 | `docs/development-guide.md` | 当前项目编码、架构、接口和测试规范 |
+| 开发文档 | `docs/frontend-development.md` | 启动、环境变量、联调、验证流程 |
+| Docker 文档 | `README.Docker.md` | Docker 打包、部署、更新与回滚 |
+| 文档任务看板 | `docs/documentation-task-board.md` | 文档资产和新鲜度维护状态 |
+| 定制需求 | `docs/requirements/shanghai-first-hospital-customization-requirements.md` | 上海市第一人民医院定制需求 |
