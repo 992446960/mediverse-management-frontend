@@ -6,6 +6,8 @@ import {
   type SearchMessage,
   type HistoryItem,
 } from '@/api/knowledgeSearch'
+import { useAuthStore } from '@/stores/auth'
+import { resolveKnowledgeOwnerFromUser } from '@/utils/skillArgs'
 
 /** 将历史项转为会话格式 */
 function historyToSession(item: HistoryItem): SearchSession {
@@ -85,7 +87,12 @@ export const useKnowledgeSearchStore = defineStore('knowledgeSearch', () => {
   async function createSession(query: string) {
     loading.value = true
     try {
-      const res = await knowledgeSearchApi.search({ query })
+      const authStore = useAuthStore()
+      const owner = resolveKnowledgeOwnerFromUser(authStore.user)
+      if (!owner) {
+        throw new Error('knowledge search owner missing')
+      }
+      const res = await knowledgeSearchApi.search(owner.owner_type, owner.owner_id, { query })
       const session: SearchSession = {
         id: res.qa_session_id,
         title: query,

@@ -1,5 +1,5 @@
 import { request } from '@/api'
-import type { CardType } from '@/types/knowledge'
+import type { CardType, OwnerType } from '@/types/knowledge'
 
 /** API 返回的引用项（与 API 设计 4.2.1 一致；来源可与知识卡 `sources` 对齐） */
 export interface ApiCitation {
@@ -97,10 +97,14 @@ function mapCitation(api: ApiCitation): Citation {
 export const knowledgeSearchApi = {
   /**
    * 搜索
-   * POST /knowledge-qa/search
+   * POST /knowledge-qa/{owner_type}/{owner_id}/search
    */
-  search: (data: { query: string; top_k?: number }) => {
-    return request.post<SearchResponse>('/knowledge-qa/search', data)
+  search: (
+    ownerType: Exclude<OwnerType, 'avatar'>,
+    ownerId: string,
+    data: { query: string; top_k?: number }
+  ) => {
+    return request.post<SearchResponse>(`/knowledge-qa/${ownerType}/${ownerId}/search`, data)
   },
 
   /**
