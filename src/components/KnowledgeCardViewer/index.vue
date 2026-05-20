@@ -15,7 +15,10 @@
     wrap-class-name="knowledge-card-detail-modal"
     @update:open="onDetailOpenChange"
   >
-    <a-spin :spinning="loading">
+    <div v-if="loading && !card" class="knowledge-card-detail-loading">
+      <a-spin />
+    </div>
+    <template v-else>
       <div v-if="card" class="card-viewer">
         <div class="flex items-center justify-between mb-6">
           <div class="flex flex-col gap-2">
@@ -180,8 +183,8 @@
           </a-tab-pane>
         </a-tabs>
       </div>
-      <a-empty v-else-if="!loading" :description="t('knowledge.card.notFound')" />
-    </a-spin>
+      <a-empty v-else :description="t('knowledge.card.notFound')" />
+    </template>
   </a-modal>
 
   <KnowledgeCardStatusConfirmModal
@@ -581,3 +584,12 @@ const handleDelete = async () => {
   }
 }
 </script>
+
+<style scoped>
+.knowledge-card-detail-loading {
+  display: flex;
+  min-height: min(520px, calc(100vh - 180px));
+  align-items: center;
+  justify-content: center;
+}
+</style>

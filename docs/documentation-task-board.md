@@ -31,6 +31,7 @@
 
 ## 近期同步记录
 
+- 知识卡详情初次加载态改为弹窗正文区域居中展示，避免空内容容器下 loading 出现在左上角。
 - 制定 Python mock 后端计划：在前端同级目录新建 FastAPI mock backend，按线上 Swagger 当前 67 个 path / 90 个 operation 做全量覆盖，不引入数据库，并以 API contract 测试作为验收门禁。
 - 落地 Python mock 后端联调入口：mock 后端位于工作区同级目录 `../mediverse-management-mock-backend`，默认监听 `127.0.0.1:8005`；API contract 测试支持 `API_TEST_USE_MOCK=true`，并新增 `skills`、`upload`、`knowledge-recall` 覆盖；默认账号为 `dev001-user` / `dev001-dept` / `dev001-org`，密码均为 `123456`。
 - `docs/API设计.md` §4.1.14 回滚接口补全 Request（`reason`）与 Response（`CardWithRollbackActionOut` + `rollback_action`）示例，与 Swagger 一致。
