@@ -14,6 +14,7 @@
 | `README.Docker.md` | `Dockerfile`、`compose.yaml`、`nginx.conf`、`scripts/docker-*.sh` | 已补全 | Docker 打包、部署、变量、回滚流程变化时更新 |
 | `docs/API设计.docx` | Management、Ecosys、KnowledgeBase API 详细设计 | 已存在 | 接口设计、字段约定或错误码变化时更新 |
 | `docs/API设计.md` | `docs/API设计.docx` 的 Markdown 副本 | 已存在 | 自 docx 导出或随 docx 同步更新，便于检索与 diff |
+| `docs/markdown-test-sample.md` | Markdown 预览、解析和样式测试文本 | 已新增 | Markdown 渲染测试场景变化时更新 |
 | `docs/requirements/shanghai-first-hospital-customization-requirements.md` | 定制需求和 `docs/requirements/assets/` | 已存在 | 需求范围、素材或验收标准变化时更新 |
 | `tests/api-contract/API_CONTRACT_TEST_REPORT.md` | `tests/api-contract/`、真实 API 测试结果 | 已存在 | API 合规测试覆盖或结果变化时更新 |
 
@@ -31,6 +32,10 @@
 - 新增 `docs/API设计.docx`，作为 Management、Ecosys、KnowledgeBase 域接口详细设计文档，并同步 README 文档索引。
 - 由 `docs/API设计.docx` 导出 `docs/API设计.md`（Markdown），便于版本 diff 与 IDE 阅读；后续 docx 变更时需同步更新 md。
 - 复查静态 i18n key 使用，知识卡 JSON 复制提示复用 `common.copied`，科室/机构文件页无权限提示复用 `knowledge.noDeptPermission` / `knowledge.noOrgPermission`。
+- 新增 `docs/markdown-test-sample.md`，用于 Markdown 预览、解析和样式检查。
+- 知识卡新建请求不再传 `json_content`；前端仅提交 Markdown 正文与现有可编辑字段，结构化 JSON 由后端生成或详情返回。
+- 知识卡 JSON 展示区仅在存在可展示 JSON 内容时展示“复制 JSON”按钮。
+- 开发规范明确 `vue`、`vue-router`、`pinia` 自动导入范围，禁止手动导入已覆盖的运行时 API，类型导入除外。
 - `components.d.ts`、`src/auto-imports.d.ts` 保留在版本库中（`pnpm build` 先执行 `vue-tsc`，忽略后 CI/Docker 会缺类型）；已从 ESLint / Prettier / lint-staged 排除，避免 pre-commit 与 `unplugin-*` 生成格式互相覆盖。
 - 知识卡版本历史和版本对比交互已收口：当前版本不展示历史对比/回退入口，单版本、同版本、无效版本和回退到当前版本均不可操作；本次仅涉及前端交互边界和单元测试，不变更后端接口、Docker 或环境变量。
 

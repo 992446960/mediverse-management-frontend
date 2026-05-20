@@ -393,6 +393,7 @@ export default {
       markdownPane: 'Markdown',
       copyJson: 'Copy JSON',
       jsonEmpty: 'No JSON data available',
+      markdownEmpty: 'No Markdown content available',
       tagMaxLimit: 'Maximum 10 tags allowed',
     },
   },

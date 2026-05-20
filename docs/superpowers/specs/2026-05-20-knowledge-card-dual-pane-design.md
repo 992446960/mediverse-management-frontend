@@ -15,7 +15,7 @@
 | 接口 | 字段 | 说明 |
 | --- | --- | --- |
 | 详情 (4.1.8) | `json_content` + `md_content` | 两个独立字段，前端分栏展示 |
-| 创建 (4.1.9) | `json_content`(非必填) + `md_content`(必填) | 创建时 json_content 传空串 |
+| 创建 (4.1.9) | `md_content`(必填)，`json_content` 后端生成/返回 | 创建时不传 `json_content` |
 | 编辑 (4.1.10) | `md_content` | 只提交 Markdown，不提交 JSON |
 | 版本对比 (4.1.13) | `diff[]` | 后端返回 diff 结果，前端只渲染，不涉及双字段 |
 
@@ -40,7 +40,6 @@ export interface KnowledgeCard {
 export interface KnowledgeCardPayload {
   id?: string
   title: string
-  json_content?: string  // 创建时可选，编辑时不传
   md_content: string     // 替代原 content
   type: CardType
   tags: string[]
@@ -58,7 +57,7 @@ export interface KnowledgeCardPayload {
 
 ### API 调用调整
 
-- `saveKnowledgeCard()`：payload 中 `json_content` 传空串 `""`，`md_content` 传 Markdown 内容
+- `saveKnowledgeCard()`：payload 中不传 `json_content`，仅传 `md_content` 等创建字段
 - `updateKnowledgeCard()`：payload 中只发 `md_content`（不发 `json_content`），字段名从 `content` 改为 `md_content`
 
 ## UI 层改造
@@ -112,7 +111,7 @@ content tab 内的正文区域改为左右双栏：
 
 - 引用从 `TiptapEditor` 改为 `MarkdownEditor`
 - `formState.content` 改为 `formState.md_content`
-- 创建时提交 `{ ..., json_content: "", md_content: formState.md_content }`
+- 创建时提交 `{ ..., md_content: formState.md_content }`，不传 `json_content`
 - 编辑时提交 `{ ..., md_content: formState.md_content }`
 
 ## 依赖变更
@@ -161,6 +160,6 @@ content tab 内的正文区域改为左右双栏：
 4. JSON 为空时左栏显示 `{}`
 5. 编辑知识卡时使用 Markdown 编辑器，直接编写 Markdown
 6. 保存时发送 `md_content`（Markdown 格式），不发送 HTML
-7. 创建知识卡时 `json_content` 传空字符串
+7. 创建知识卡时不提交 `json_content`
 8. 编辑知识卡时不提交 `json_content`
 9. 旧数据（仅有 `content`）能正常兼容展示

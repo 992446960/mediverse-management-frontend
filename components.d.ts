@@ -74,6 +74,7 @@ declare module 'vue' {
     AvatarStats: typeof import('./src/components/AvatarStats/index.vue')['default']
     AvatarTestPage: typeof import('./src/components/AvatarTestPage/index.vue')['default']
     BubbleRenderer: typeof import('./src/components/ChatWindow/BubbleRenderer.vue')['default']
+    CardContentBody: typeof import('./src/components/KnowledgeCardViewer/CardContentBody.vue')['default']
     ChangePasswordForm: typeof import('./src/components/ChangePasswordForm/index.vue')['default']
     ChatSidebar: typeof import('./src/components/ChatSidebar/index.vue')['default']
     ChatWindow: typeof import('./src/components/ChatWindow/index.vue')['default']

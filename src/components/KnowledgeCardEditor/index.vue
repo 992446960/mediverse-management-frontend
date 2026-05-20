@@ -232,7 +232,6 @@ const handleOk = async () => {
       await saveKnowledgeCard(props.ownerType, props.ownerId, {
         title: formState.title,
         md_content: formState.md_content,
-        json_content: '',
         type: formState.type,
         tags: formState.tags,
         source_file_ids: formState.source_file_ids.length ? formState.source_file_ids : undefined,

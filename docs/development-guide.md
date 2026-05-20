@@ -8,7 +8,7 @@
 - 使用 pnpm，版本以 `package.json` 的 `packageManager` 字段为准。
 - 使用 `@` 指向 `src/`，不要新增长相对路径链。
 - 代码风格以 `.prettierrc` 和 `eslint.config.js` 为准：无分号、单引号、`printWidth: 100`。
-- 自动导入由 `vite.config.ts` 配置，覆盖 `vue`、`vue-router`、`pinia`；新增显式导入前先确认是否已自动导入。
+- 自动导入由 `vite.config.ts` 配置，覆盖 `vue`、`vue-router`、`pinia`；`ref`、`computed`、`watch`、`h`、`useRoute`、`useRouter`、`defineStore` 等运行时 API 不要手动从对应包导入。类型导入（如 `import type { Ref } from 'vue'`）和未纳入自动导入的包仍按需显式导入。
 
 ## 2. 目录职责
 

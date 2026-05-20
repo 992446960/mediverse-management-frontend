@@ -388,6 +388,7 @@ export default {
       markdownPane: 'Markdown',
       copyJson: '复制 JSON',
       jsonEmpty: '暂无 JSON 数据',
+      markdownEmpty: '暂无 Markdown 内容',
       tagMaxLimit: '标签最多 10 个',
     },
   },

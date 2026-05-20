@@ -70,13 +70,12 @@ export interface KnowledgeCard {
 
 - [ ] **Step 2: KnowledgeCardPayload 接口替换 content 为 md_content**
 
-将 `KnowledgeCardPayload` 的 `content` 字段替换为 `json_content` 和 `md_content`：
+将 `KnowledgeCardPayload` 的 `content` 字段替换为 `md_content`，创建请求不传 `json_content`：
 
 ```typescript
 export interface KnowledgeCardPayload {
   id?: string
   title: string
-  json_content?: string
   md_content: string
   type: CardType
   tags: string[]
@@ -378,7 +377,6 @@ const handleOk = async () => {
       await saveKnowledgeCard(props.ownerType, props.ownerId, {
         title: formState.title,
         md_content: formState.md_content,
-        json_content: '',
         type: formState.type,
         tags: formState.tags,
         source_file_ids: formState.source_file_ids.length ? formState.source_file_ids : undefined,
@@ -696,7 +694,7 @@ const newCard: KnowledgeCard = {
   title: payload.title,
   content: payload.md_content || payload.content || '',
   md_content: payload.md_content || payload.content || '',
-  json_content: payload.json_content || '',
+  json_content: '',
   type: payload.type,
   // ...rest stays the same
 }
@@ -760,6 +758,7 @@ pnpm dev
 点击"新建知识卡"，确认：
 - 编辑器是 Markdown 编辑器（md-editor-v3），不是 Tiptap
 - 可以正常输入 Markdown 内容
+- 请求 payload 不包含 `json_content`
 - 提交成功
 
 - [ ] **Step 6: 手动验证 — 编辑知识卡**

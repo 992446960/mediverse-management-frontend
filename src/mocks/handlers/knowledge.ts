@@ -408,7 +408,7 @@ export const knowledgeHandlers = [
       title: payload.title,
       content: payload.md_content || payload.content || '',
       md_content: payload.md_content || payload.content || '',
-      json_content: payload.json_content || '',
+      json_content: '',
       type: payload.type,
       tags: payload.tags || [],
       online_status: 'offline',

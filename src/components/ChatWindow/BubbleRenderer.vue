@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { marked } from 'marked'
 import hljs from 'highlight.js'
@@ -66,7 +65,9 @@ const copyContent = async () => {
       v-if="showCopyButton"
       class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
     >
-      <a-button type="text" size="small" :icon="h(CopyOutlined)" @click="copyContent" />
+      <a-button type="text" size="small" @click="copyContent">
+        <template #icon><CopyOutlined /></template>
+      </a-button>
     </div>
   </div>
 </template>

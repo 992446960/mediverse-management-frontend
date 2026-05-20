@@ -2,12 +2,14 @@
   <div class="json-content-pane">
     <div class="flex items-center justify-between mb-2">
       <span class="text-sm font-medium text-gray-500">{{ t('knowledge.card.jsonPane') }}</span>
-      <a-button size="small" type="text" @click="handleCopy">
+      <a-button v-if="hasJsonContent" size="small" type="text" @click="handleCopy">
         <template #icon><CopyOutlined /></template>
         {{ t('knowledge.card.copyJson') }}
       </a-button>
     </div>
-    <div class="json-content-pane__body min-h-[200px]">
+    <div
+      class="json-content-pane__body p-4 bg-gray-50 rounded-lg min-h-[200px] h-[min(480px,calc(100vh-240px))] overflow-y-auto"
+    >
       <vue-json-pretty
         v-if="parsedData !== null"
         :data="parsedData"
@@ -25,7 +27,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { message, Empty } from 'ant-design-vue'
 import { CopyOutlined } from '@ant-design/icons-vue'
@@ -47,7 +48,10 @@ const parsedData = computed(() => {
   }
 })
 
+const hasJsonContent = computed(() => parsedData.value !== null)
+
 function handleCopy() {
+  if (!hasJsonContent.value) return
   const text = props.jsonContent || '{}'
   navigator.clipboard.writeText(text).then(() => {
     message.success(t('common.copied'))
@@ -57,10 +61,11 @@ function handleCopy() {
 
 <style scoped>
 .json-content-pane__body {
-  max-height: min(480px, calc(100vh - 240px));
-  overflow-y: auto;
-  padding: 12px;
-  background: #f9fafb;
-  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.json-content-pane__body :deep(.ant-empty) {
+  margin: auto;
 }
 </style>

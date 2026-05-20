@@ -210,8 +210,6 @@ export const AUDIT_STATUS_CONFIG: Record<AuditStatus, { color: string; label: st
 export interface KnowledgeCardPayload {
   id?: string
   title: string
-  /** 结构化 JSON 内容，仅创建时可选 */
-  json_content?: string
   /** Markdown 内容，替代旧版 content 字段 */
   md_content: string
   type: CardType
