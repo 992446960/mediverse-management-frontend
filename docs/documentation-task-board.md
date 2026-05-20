@@ -41,6 +41,8 @@
 - `components.d.ts`、`src/auto-imports.d.ts` 保留在版本库中（`pnpm build` 先执行 `vue-tsc`，忽略后 CI/Docker 会缺类型）；已从 ESLint / Prettier / lint-staged 排除，避免 pre-commit 与 `unplugin-*` 生成格式互相覆盖。
 - 知识卡版本历史和版本对比交互已收口：当前版本不展示历史对比/回退入口，单版本、同版本、无效版本和回退到当前版本均不可操作；本次仅涉及前端交互边界和单元测试，不变更后端接口、Docker 或环境变量。
 - 自飞书 Wiki「API设计」反向同步至 `docs/API设计.md`（§3.2.2 citations、`§4.1.9` 创建字段说明、`§4.1.17` 审核响应 `json_content`/`md_content`/`audit_reject_reason`）。
+- 全量自飞书 Wiki（`RjKPwTWUBivbaykfexbcBzaTnvb`）重新生成 `docs/API设计.md`，内容与飞书 docx 纯文本一致；本地不再自行改写 SSE/召回字段注释格式。
+- 同步策略调整为：**语义与飞书 Wiki 一致**，本地 `docs/API设计.md` 使用规范 Markdown（代码块、表格、缩进 JSON）；§3.2.2 SSE 示例拆分为流式 `http` 片段与展开的 `done` JSON。
 
 ## 待维护规则
 
