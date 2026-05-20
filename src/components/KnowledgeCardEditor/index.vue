@@ -89,14 +89,13 @@
         </a-form-item>
 
         <a-form-item
-          name="content"
+          name="md_content"
           :label="t('knowledge.card.contentLabel')"
           :rules="[{ required: true, message: t('knowledge.card.contentRequired') }]"
         >
-          <TiptapEditor
-            :model-value="formState.content"
+          <MarkdownEditor
+            v-model="formState.md_content"
             :placeholder="t('knowledge.card.contentPlaceholder')"
-            @update:model-value="(val) => (formState.content = val)"
           />
         </a-form-item>
       </a-form>
@@ -110,7 +109,7 @@ import { message } from 'ant-design-vue'
 import { PlusOutlined } from '@ant-design/icons-vue'
 import type { KnowledgeCard, CardType, OwnerType, CardTypeOption } from '@/types/knowledge'
 import { getKnowledgeCardDetail, saveKnowledgeCard, updateKnowledgeCard } from '@/api/knowledge'
-import TiptapEditor from './TiptapEditor.vue'
+import MarkdownEditor from './MarkdownEditor.vue'
 import { useFileRemoteSearch } from '@/composables/useFileRemoteSearch'
 
 const { t } = useI18n()
@@ -152,7 +151,7 @@ const {
 const formState = reactive({
   title: '',
   type: '' as CardType,
-  content: '',
+  md_content: '',
   tags: [] as string[],
   source_file_ids: [] as string[],
   change_summary: '',
@@ -173,30 +172,30 @@ watch(
       formState.source_file_ids = []
       formState.change_summary = ''
 
-      const fromList =
-        typeof props.card.content === 'string' && props.card.content.trim().length > 0
+      const mdSource = props.card.md_content || props.card.content
+      const fromList = typeof mdSource === 'string' && mdSource.trim().length > 0
       if (fromList) {
-        formState.content = props.card.content
+        formState.md_content = mdSource
       } else if (props.card.id) {
         contentResolving.value = true
         try {
           const detail = await getKnowledgeCardDetail(props.ownerType, props.ownerId, props.card.id)
           if (loadGen !== editorLoadGeneration) return
-          formState.content = detail.content ?? ''
+          formState.md_content = detail.md_content || detail.content || ''
         } catch {
           if (loadGen !== editorLoadGeneration) return
-          formState.content = ''
+          formState.md_content = ''
           message.error(t('knowledge.card.fetchDetailFailed'))
         } finally {
           if (loadGen === editorLoadGeneration) contentResolving.value = false
         }
       } else {
-        formState.content = ''
+        formState.md_content = ''
       }
     } else {
       formState.title = ''
       formState.type = props.cardTypes?.[0]?.code ?? ('' as CardType)
-      formState.content = ''
+      formState.md_content = ''
       formState.tags = []
       formState.source_file_ids = []
       formState.change_summary = ''
@@ -225,14 +224,15 @@ const handleOk = async () => {
     if (props.card?.id) {
       await updateKnowledgeCard(props.ownerType, props.ownerId, props.card.id, {
         title: formState.title,
-        content: formState.content,
+        md_content: formState.md_content,
         tags: formState.tags,
         change_summary: formState.change_summary || undefined,
       })
     } else {
       await saveKnowledgeCard(props.ownerType, props.ownerId, {
         title: formState.title,
-        content: formState.content,
+        md_content: formState.md_content,
+        json_content: '',
         type: formState.type,
         tags: formState.tags,
         source_file_ids: formState.source_file_ids.length ? formState.source_file_ids : undefined,
