@@ -276,13 +276,14 @@ const rowSelectionConfig = computed(() => {
   return {
     selectedRowKeys: selectedRowKeys.value,
     preserveSelectedRowKeys: col.reserveSelection,
+    ...(col.width != null && col.width !== '' ? { columnWidth: col.width } : {}),
+    ...(col.fixed != null && col.fixed !== false ? { fixed: col.fixed } : {}),
     getCheckboxProps: (record: Record<string, any>) => ({
       disabled: col.selectDisabled?.(record),
     }),
     onChange: (keys: Key[], rows: Record<string, any>[]) => {
       selectedRowKeys.value = keys
       multipleSelection.value = rows
-      emit('fetch-table-data')
     },
   }
 })

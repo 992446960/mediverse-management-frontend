@@ -42,9 +42,9 @@ export interface PageTableColumnConfig {
   prop?: string
   /** 列类型：selection | index | scope | slot | operation | (默认 text) */
   type?: string
-  /** 列最小宽度 */
+  /** 列宽度；selection 列映射为 rowSelection.columnWidth */
   width?: number | string
-  /** 固定列 */
+  /** 固定列；selection 列映射为 rowSelection.fixed */
   fixed?: boolean | 'left' | 'right'
   /** 对齐方式 */
   align?: 'left' | 'center' | 'right'
