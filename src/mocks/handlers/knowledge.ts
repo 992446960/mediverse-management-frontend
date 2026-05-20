@@ -362,7 +362,7 @@ export const knowledgeHandlers = [
     if (keyword) {
       const kw = keyword.toLowerCase()
       filtered = filtered.filter(
-        (c) => c.title.toLowerCase().includes(kw) || c.content.toLowerCase().includes(kw)
+        (c) => c.title.toLowerCase().includes(kw) || c.md_content.toLowerCase().includes(kw)
       )
     }
 
@@ -406,7 +406,9 @@ export const knowledgeHandlers = [
     const newCard: KnowledgeCard = {
       id: `card_${Date.now()}`,
       title: payload.title,
-      content: payload.content,
+      content: payload.md_content || payload.content || '',
+      md_content: payload.md_content || payload.content || '',
+      json_content: payload.json_content || '',
       type: payload.type,
       tags: payload.tags || [],
       online_status: 'offline',
@@ -502,6 +504,7 @@ export const knowledgeHandlers = [
 
       if (card && versionData) {
         card.content = versionData.content
+        card.md_content = versionData.content
         card.version = versionData.version
         card.updated_at = new Date().toISOString()
         return HttpResponse.json({ code: 0, message: 'ok', data: card })
