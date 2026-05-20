@@ -338,18 +338,21 @@ export function updateKnowledgeCard(
 }
 
 /**
- * 知识卡上下线切换（PATCH + online_status）
+ * 知识卡上下线切换（API 4.1.11）
  */
 export function toggleKnowledgeCardStatus(
   ownerType: OwnerType,
   ownerId: string,
   cardId: string,
-  status: 'online' | 'offline'
+  status: 'online' | 'offline',
+  note?: string
 ) {
+  const body: Record<string, unknown> = { online_status: status }
+  if (note) body.note = note
   return request
-    .patch<KnowledgeCard>(`${BASE_URL}/${ownerType}/${ownerId}/cards/${cardId}/status`, {
-      online_status: status,
-    })
+    .patch<
+      KnowledgeCard & { status_action?: { card_id: string; online_status: string } }
+    >(`${BASE_URL}/${ownerType}/${ownerId}/cards/${cardId}/status`, body)
     .then(normalizeKnowledgeCard)
 }
 
@@ -363,18 +366,21 @@ export function getKnowledgeCardVersions(ownerType: OwnerType, ownerId: string, 
 }
 
 /**
- * 知识卡版本回退（body: target_version 数字）
+ * 知识卡版本回退（API 4.1.14）
  */
 export function rollbackKnowledgeCard(
   ownerType: OwnerType,
   ownerId: string,
   cardId: string,
-  targetVersion: number
+  targetVersion: number,
+  reason?: string
 ) {
+  const body: Record<string, unknown> = { target_version: targetVersion }
+  if (reason) body.reason = reason
   return request
-    .post<KnowledgeCard>(`${BASE_URL}/${ownerType}/${ownerId}/cards/${cardId}/rollback`, {
-      target_version: targetVersion,
-    })
+    .post<
+      KnowledgeCard & { rollback_action?: { card_id: string; review_state: string } }
+    >(`${BASE_URL}/${ownerType}/${ownerId}/cards/${cardId}/rollback`, body)
     .then(normalizeKnowledgeCard)
 }
 
@@ -398,6 +404,28 @@ export function deleteKnowledgeCard(
   cardId: string
 ): Promise<DeleteCardResult> {
   return request.delete<DeleteCardResult>(`${BASE_URL}/${ownerType}/${ownerId}/cards/${cardId}`)
+}
+
+/**
+ * 修改知识卡审核状态（API 4.1.17）
+ * PATCH /api/v1/knowledge/{owner_type}/{owner_id}/cards/{id}/audit
+ */
+export function auditKnowledgeCard(
+  ownerType: OwnerType,
+  ownerId: string,
+  cardId: string,
+  auditStatus: 'approved' | 'rejected',
+  auditRejectReason?: string
+) {
+  const body: Record<string, unknown> = { audit_status: auditStatus }
+  if (auditStatus === 'rejected' && auditRejectReason) {
+    body.audit_reject_reason = auditRejectReason
+  }
+  return request
+    .patch<
+      KnowledgeCard & { review_action?: { card_id: string; review_state: string } }
+    >(`${BASE_URL}/${ownerType}/${ownerId}/cards/${cardId}/audit`, body)
+    .then(normalizeKnowledgeCard)
 }
 
 /**
