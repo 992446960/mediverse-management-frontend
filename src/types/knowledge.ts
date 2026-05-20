@@ -84,6 +84,8 @@ export interface KnowledgeCard {
   id: string
   title: string
   content: string
+  json_content: string
+  md_content: string
   type: CardType
   tags: string[]
   online_status: OnlineStatus
@@ -208,7 +210,10 @@ export const AUDIT_STATUS_CONFIG: Record<AuditStatus, { color: string; label: st
 export interface KnowledgeCardPayload {
   id?: string
   title: string
-  content: string
+  /** 结构化 JSON 内容，仅创建时可选 */
+  json_content?: string
+  /** Markdown 内容，替代旧版 content 字段 */
+  md_content: string
   type: CardType
   tags: string[]
   /** 来源文件 ID 列表，仅创建时可选（API 4.1.9） */
