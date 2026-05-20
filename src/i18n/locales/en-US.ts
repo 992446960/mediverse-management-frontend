@@ -260,6 +260,8 @@ export default {
     uploadFormatInvalid: '「{name}」 format not supported. Accepted: {accept}',
     uploadSizeInvalid: '「{name}」 exceeds size limit ({size})',
     uploadMaxCountInvalid: 'Maximum {max} files',
+    uploadDuplicate: 'This file is already in the upload queue',
+    uploadMd5Failed: 'File verification failed. Try again.',
     uploadStatusPending: 'Pending',
     uploadStatusUploading: 'Uploading',
     uploadStatusSuccess: 'Success',

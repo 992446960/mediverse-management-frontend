@@ -2,12 +2,14 @@ import { describe, expect, it } from 'vitest'
 import type { UploadQueueItem } from '../../src/components/FileUploader/types'
 import {
   clearUploadQueueItems,
+  hasUploadQueueItemMd5,
   removeUploadQueueItem,
 } from '../../src/components/FileUploader/queue'
 
 function queueItem(uid: string, status: UploadQueueItem['status']): UploadQueueItem {
   return {
     uid,
+    md5: uid,
     file: new File(['content'], `${uid}.txt`),
     fileName: `${uid}.txt`,
     status,
@@ -55,5 +57,12 @@ describe('upload queue helpers', () => {
     ]
 
     expect(clearUploadQueueItems(queue)).toEqual([])
+  })
+
+  it('checks duplicate queue items by file md5', () => {
+    const queue = [queueItem('5d41402abc4b2a76b9719d911017c592', 'pending')]
+
+    expect(hasUploadQueueItemMd5(queue, '5d41402abc4b2a76b9719d911017c592')).toBe(true)
+    expect(hasUploadQueueItemMd5(queue, '7d793037a0760186574b0282f2f435e7')).toBe(false)
   })
 })

@@ -258,6 +258,8 @@ export default {
     uploadFormatInvalid: '「{name}」格式不支持，仅支持 {accept}',
     uploadSizeInvalid: '「{name}」超过大小限制（{size}）',
     uploadMaxCountInvalid: '最多上传 {max} 个文件',
+    uploadDuplicate: '该文件已在上传列表中',
+    uploadMd5Failed: '文件校验失败，请重试',
     uploadStatusPending: '待上传',
     uploadStatusUploading: '上传中',
     uploadStatusSuccess: '成功',

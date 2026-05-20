@@ -92,6 +92,8 @@ import type { UploadFileResult } from '@/types/knowledge'
 import type { UploadQueueItem } from './types'
 import { getUploadErrorMessage } from '@/utils/uploadErrorMessage'
 import { KNOWLEDGE_FILE_ACCEPT } from '@/utils/documentUploadAccept'
+import { getFileMd5 } from '@/utils/fileMd5'
+import { hasUploadQueueItemMd5 } from './queue'
 
 const MAX_SIZE_DEFAULT = 50 * 1024 * 1024
 const MAX_COUNT_DEFAULT = 20
@@ -191,20 +193,33 @@ function validateFile(file: File): string | null {
   return null
 }
 
-function beforeUpload(file: File): boolean {
+async function beforeUpload(file: File): Promise<boolean> {
   const err = validateFile(file)
   if (err) {
     message.error(err)
     return false
   }
-  const current = props.queue.length
-  if (current >= props.maxCount) {
+
+  let md5: string
+  try {
+    md5 = await getFileMd5(file)
+  } catch {
+    message.error(t('knowledge.uploadMd5Failed'))
+    return false
+  }
+
+  if (hasUploadQueueItemMd5(props.queue, md5)) {
+    message.warning(t('knowledge.uploadDuplicate'))
+    return false
+  }
+
+  if (props.queue.length >= props.maxCount) {
     message.error(t('knowledge.uploadMaxCountInvalid', { max: props.maxCount }))
     return false
   }
-  const uid = `upload_${Date.now()}_${Math.random().toString(36).slice(2)}`
   const newItem: UploadQueueItem = {
-    uid,
+    uid: md5,
+    md5,
     file,
     fileName: file.name,
     status: 'pending',

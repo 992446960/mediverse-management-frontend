@@ -3,6 +3,7 @@ import type { UploadFileResult } from '@/types/knowledge'
 /** 上传队列单项 */
 export interface UploadQueueItem {
   uid: string
+  md5: string
   file: File
   fileName: string
   status: 'pending' | 'uploading' | 'success' | 'fail'
