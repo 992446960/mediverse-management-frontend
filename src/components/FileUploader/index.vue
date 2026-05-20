@@ -69,6 +69,9 @@
             {{ t('knowledge.retry') }}
           </a-button>
         </template>
+        <a-button type="link" size="small" danger class="shrink-0 px-0" @click="removeItem(item)">
+          {{ t('knowledge.uploadRemove') }}
+        </a-button>
       </div>
     </div>
   </div>
@@ -103,6 +106,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  dirId: undefined,
   accept: () => KNOWLEDGE_FILE_ACCEPT,
   maxSize: MAX_SIZE_DEFAULT,
   maxCount: MAX_COUNT_DEFAULT,
@@ -112,6 +116,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   (e: 'success', results: UploadFileResult[]): void
   (e: 'add-to-queue', item: UploadQueueItem): void
+  (e: 'remove-from-queue', uid: string): void
 }>()
 
 const { t } = useI18n()
@@ -214,6 +219,10 @@ function retryItem(item: UploadQueueItem) {
   item.percent = 0
   item.result = undefined
   processQueue()
+}
+
+function removeItem(item: UploadQueueItem) {
+  emit('remove-from-queue', item.uid)
 }
 
 /** 启动单个文件上传，完成后调用 processQueue 补充下一批 */

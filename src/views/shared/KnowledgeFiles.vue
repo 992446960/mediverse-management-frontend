@@ -63,6 +63,7 @@
         :queue="uploadQueue"
         :tree-data="treeData"
         @add-to-queue="addToQueue"
+        @remove-from-queue="removeFromQueue"
         @success="onUploadSuccess"
       />
       <template #footer>
@@ -116,6 +117,7 @@ import {
 } from '@ant-design/icons-vue'
 import { DirectoryTree } from '@/components/DirectoryTree'
 import FileUploader from '@/components/FileUploader/index.vue'
+import { removeUploadQueueItem } from '@/components/FileUploader/queue'
 import PageHead from '@/components/PageHead/index.vue'
 import PageFilter from '@/components/PageFilter/index.vue'
 import PageTable from '@/components/PageTable/index.vue'
@@ -265,6 +267,13 @@ function openUploadModal() {
 
 function addToQueue(item: UploadQueueItem) {
   uploadQueue.value.push(item)
+}
+
+function removeFromQueue(uid: string) {
+  uploadQueue.value = removeUploadQueueItem(uploadQueue.value, uid)
+  if (uploadQueue.value.length === 0) {
+    hasUserStartedUpload.value = false
+  }
 }
 
 function onUploadStart() {
