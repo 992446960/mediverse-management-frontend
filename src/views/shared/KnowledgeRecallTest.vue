@@ -24,7 +24,7 @@
         </div>
         <a-button type="primary" :loading="loading" :disabled="!canSubmit" @click="handleRecall">
           <template #icon>
-            <SearchOutlined />
+            <CaretRightOutlined />
           </template>
           {{ t('knowledge.recall.execute') }}
         </a-button>
@@ -191,7 +191,7 @@
 
 <script setup lang="ts">
 import { message } from 'ant-design-vue'
-import { ArrowLeftOutlined, FilterOutlined, SearchOutlined } from '@ant-design/icons-vue'
+import { ArrowLeftOutlined, FilterOutlined, CaretRightOutlined } from '@ant-design/icons-vue'
 import { useI18n } from 'vue-i18n'
 import { getCardTypes } from '@/api/knowledge'
 import { recallKnowledgeCards } from '@/api/knowledgeRecall'
