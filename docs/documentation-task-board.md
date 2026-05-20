@@ -12,6 +12,7 @@
 | `docs/development-guide.md` | `wang-convention`、`src/`、`tests/` | 已补全 | 编码规范、架构约束或模块边界变化时更新 |
 | `docs/frontend-development.md` | `package.json`、`.env.*`、`vite.config.ts`、Docker 配置 | 已补全 | 启动、联调、验证、环境变量变化时更新 |
 | `README.Docker.md` | `Dockerfile`、`compose.yaml`、`nginx.conf`、`scripts/docker-*.sh` | 已补全 | Docker 打包、部署、变量、回滚流程变化时更新 |
+| `docs/API设计.docx` | Management、Ecosys、KnowledgeBase API 详细设计 | 已存在 | 接口设计、字段约定或错误码变化时更新 |
 | `docs/requirements/shanghai-first-hospital-customization-requirements.md` | 定制需求和 `docs/requirements/assets/` | 已存在 | 需求范围、素材或验收标准变化时更新 |
 | `tests/api-contract/API_CONTRACT_TEST_REPORT.md` | `tests/api-contract/`、真实 API 测试结果 | 已存在 | API 合规测试覆盖或结果变化时更新 |
 
@@ -26,6 +27,7 @@
 
 ## 近期同步记录
 
+- 新增 `docs/API设计.docx`，作为 Management、Ecosys、KnowledgeBase 域接口详细设计文档，并同步 README 文档索引。
 - `components.d.ts`、`src/auto-imports.d.ts` 保留在版本库中（`pnpm build` 先执行 `vue-tsc`，忽略后 CI/Docker 会缺类型）；已从 ESLint / Prettier / lint-staged 排除，避免 pre-commit 与 `unplugin-*` 生成格式互相覆盖。
 - 知识卡版本历史和版本对比交互已收口：当前版本不展示历史对比/回退入口，单版本、同版本、无效版本和回退到当前版本均不可操作；本次仅涉及前端交互边界和单元测试，不变更后端接口、Docker 或环境变量。
 

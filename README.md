@@ -72,5 +72,6 @@ docker compose down
 | 开发规范 | `docs/development-guide.md` | 当前项目编码、架构、接口和测试规范 |
 | 开发文档 | `docs/frontend-development.md` | 启动、环境变量、联调、验证流程 |
 | Docker 文档 | `README.Docker.md` | Docker 打包、部署、更新与回滚 |
+| API 设计 | `docs/API设计.docx` | Management、Ecosys、KnowledgeBase 域接口详细设计 |
 | 文档任务看板 | `docs/documentation-task-board.md` | 文档资产和新鲜度维护状态 |
 | 定制需求 | `docs/requirements/shanghai-first-hospital-customization-requirements.md` | 上海市第一人民医院定制需求 |
