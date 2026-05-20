@@ -1492,25 +1492,28 @@ GET /api/v1/skills
 POST /api/v1/skills/{skill_code}/execute
 ```
 
+**Parameters**
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| skill_code | string | ✅ | 路径参数，技能编码 |
+
+**Request Body**
 
 ```json
-Parameters：
-skill_code：string
-Request Body：
 {
-"args": {
-"query": "string",
-"owner_type": "string",
-"owner_id": "string",
-"type": "string",
-"top_k": 5
-},
-"context": {
-"additionalProp1": {}
-}
+  "args": {
+    "query": "string",
+    "owner_type": "string",
+    "owner_id": "string",
+    "type": "string",
+    "top_k": 5
+  },
+  "context": {
+    "additionalProp1": {}
+  }
 }
 ```
-
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
@@ -1518,7 +1521,6 @@ Request Body：
 | context | object | ❌ | 复用上下文（会话/分身等），按需提供 |
 
 ..............(其他参数代码块）
-
 
 **Response**
 
@@ -1549,12 +1551,10 @@ data: {"type":"thinking_step","index":0,"title":"加载知识库上下文","stat
 
 data: {"type":"delta","content":"根据患者描述..."}
 
-data: {"type":"done","skill_run_id":"cd156f32-ef4b-47bb-8fc6-634b7a0be74a","tokens_used":0,"duration_ms":500,"result":{"parts":[{"type":"text","text":"已按标题检索到 2 条知识卡：神经内科、神经内科2.0"}],"citations":[{"id":"13f3d07a-e0ab-4bd6-ba09-94ab18f02170","owner_type":"dept","owner_id":"4851d166-47b5-4211-901b-81a4303924d9","type":"evidence","title":"神经内科","json_content":"","md_content":"","tags":["神经内科"],"online_status":"offline","audit_status":"approved","audit_reject_reason":"","current_version":1,"reference_count":0,"created_by":"26f39d63-b2a9-4b21-ae3e-9090cd4f130c","create_by":"26f39d63-b2a9-4b21-ae3e-9090cd4f130c","update_by":"26f39d63-b2a9-4b21-ae3e-9090cd4f130c","deleted":false,"created_at":"2026-03-11T03:17:20.212513+00:00","updated_at":"2026-03-11T03:17:20.212513+00:00","sources":[{"id":"500b58fc-bd83-4d08-b0db-8ed03bb3c52e","file_name":"余洋_第三季度考核.docx","file_type":"docx","file_size":18041,"storage_url":"https://minio.example.com/bucket/path","parsed_file_url":"https://minio.example.com/bucket/path","page_hint":null}]}]}}
-
 data: {"type":"error","code":50002,"message":"AI 服务暂时不可用，请稍后重试"}
 ```
 
-**done 事件 result 结构示例（格式化）**
+**done 事件示例（展开）**
 
 ```json
 {
