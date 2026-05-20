@@ -39,7 +39,19 @@
               </template>
               {{ t('common.edit') }}
             </a-button>
+            <a-tooltip
+              v-if="card.online_status === 'offline' && card.audit_status === 'rejected'"
+              :title="t('knowledge.card.onlineBlockedByAudit')"
+            >
+              <a-button type="primary" disabled>
+                <template #icon>
+                  <CloudUploadOutlined />
+                </template>
+                {{ t('knowledge.card.online') }}
+              </a-button>
+            </a-tooltip>
             <a-button
+              v-else
               :type="card.online_status === 'online' ? 'default' : 'primary'"
               @click="handleStatusToggle"
             >
@@ -66,6 +78,26 @@
                 {{ t('common.delete') }}
               </a-button>
             </a-popconfirm>
+            <template v-if="card.audit_status === 'pending'">
+              <a-divider type="vertical" />
+              <a-button
+                type="primary"
+                :loading="auditLoading"
+                class="!bg-green-600 !border-green-600 hover:!bg-green-500"
+                @click="handleAuditAction('approved')"
+              >
+                <template #icon>
+                  <CheckOutlined />
+                </template>
+                {{ t('knowledge.card.auditApprove') }}
+              </a-button>
+              <a-button danger :loading="auditLoading" @click="handleAuditAction('rejected')">
+                <template #icon>
+                  <CloseOutlined />
+                </template>
+                {{ t('knowledge.card.auditReject') }}
+              </a-button>
+            </template>
           </div>
         </div>
 
@@ -131,6 +163,13 @@
                 <span class="text-gray-500">{{ t('knowledge.card.referenceCount') }}</span>
                 <span>{{ card.reference_count }} {{ t('knowledge.card.times') }}</span>
               </div>
+              <div
+                v-if="card.audit_status === 'rejected' && card.audit_reject_reason"
+                class="flex flex-col gap-2 border-b pb-2"
+              >
+                <span class="text-gray-500">{{ t('knowledge.card.auditRejectReason') }}</span>
+                <span class="text-red-500">{{ card.audit_reject_reason }}</span>
+              </div>
               <div class="flex flex-col gap-2">
                 <span class="text-gray-500">{{ t('knowledge.card.tagsLabel') }}</span>
                 <div class="flex flex-wrap gap-1">
@@ -144,22 +183,38 @@
       <a-empty v-else-if="!loading" :description="t('knowledge.card.notFound')" />
     </a-spin>
   </a-modal>
+
+  <KnowledgeCardStatusConfirmModal
+    v-model:open="statusConfirmOpen"
+    :target-status="statusConfirmTargetStatus"
+    :confirm-loading="statusConfirmLoading"
+    @confirm="handleStatusConfirm"
+  />
+
+  <KnowledgeCardAuditModal
+    v-model:open="auditModalOpen"
+    :action="auditAction"
+    :confirm-loading="auditLoading"
+    @confirm="handleAuditConfirm"
+  />
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import {
   CloudUploadOutlined,
   CloudDownloadOutlined,
   EditOutlined,
   DeleteOutlined,
+  CheckOutlined,
+  CloseOutlined,
 } from '@ant-design/icons-vue'
 import type {
   KnowledgeCard,
   KnowledgeCardVersion,
   OnlineStatus,
+  AuditStatus,
   OwnerType,
 } from '@/types/knowledge'
 import type { VersionDiffSegment } from '@/types/knowledge'
@@ -180,11 +235,14 @@ import {
   toggleKnowledgeCardStatus,
   rollbackKnowledgeCard,
   deleteKnowledgeCard,
+  auditKnowledgeCard,
 } from '@/api/knowledge'
 import { formatFileSize } from '@/utils/formatFileSize'
 import CardContentBody from './CardContentBody.vue'
 import VersionTimeline from './VersionTimeline.vue'
 import VersionDiffView from './VersionDiffView.vue'
+import KnowledgeCardStatusConfirmModal from '../KnowledgeCardStatusConfirmModal.vue'
+import KnowledgeCardAuditModal from '../KnowledgeCardAuditModal.vue'
 import dayjs from 'dayjs'
 
 const { t } = useI18n()
@@ -218,6 +276,8 @@ const emit = defineEmits<{
   (e: 'edit', card: KnowledgeCard): void
   /** 删除成功后通知父级刷新列表 */
   (e: 'deleted', cardId: string): void
+  /** 审核状态变更后通知父级更新列表行 */
+  (e: 'audit-changed', payload: { id: string; audit_status: AuditStatus }): void
 }>()
 
 const activeTab = ref('content')
@@ -231,6 +291,12 @@ const diffResult = ref<VersionDiffSegment[]>([])
 const diffFrom = ref<number>(0)
 const diffTo = ref<number>(0)
 const diffLoading = ref(false)
+const statusConfirmOpen = ref(false)
+const statusConfirmLoading = ref(false)
+const statusConfirmTargetStatus = ref<OnlineStatus>('offline')
+const auditModalOpen = ref(false)
+const auditLoading = ref(false)
+const auditAction = ref<'approved' | 'rejected'>('approved')
 const currentVersionKey = computed(() =>
   card.value ? resolveKnowledgeCardCurrentVersionKey(card.value, versions.value) : null
 )
@@ -403,7 +469,7 @@ async function handleDiffVersionChange(fromVersion: number, toVersion: number) {
 
 // ─── 回滚 & 上下线 ─────────────────────────────────────
 
-const handleRollback = async (version: string, targetVersion: number) => {
+const handleRollback = async (version: string, targetVersion: number, reason?: string) => {
   if (!props.cardId) return
   if (
     !canRollbackKnowledgeCardVersion(targetVersion, currentVersionKey.value, validVersionKeys.value)
@@ -416,7 +482,8 @@ const handleRollback = async (version: string, targetVersion: number) => {
       props.ownerType,
       props.ownerId,
       props.cardId,
-      targetVersion
+      targetVersion,
+      reason
     )
     card.value = updated
     versions.value = await getKnowledgeCardVersions(props.ownerType, props.ownerId, props.cardId)
@@ -433,8 +500,20 @@ const handleRollback = async (version: string, targetVersion: number) => {
 const handleStatusToggle = async () => {
   if (!card.value) return
   const newStatus = card.value.online_status === 'online' ? 'offline' : 'online'
+
+  if (newStatus === 'online' && card.value.audit_status === 'rejected') {
+    message.warning(t('knowledge.card.onlineBlockedByAudit'))
+    return
+  }
+
+  statusConfirmTargetStatus.value = newStatus
+  statusConfirmOpen.value = true
+}
+
+const doStatusToggle = async (newStatus: 'online' | 'offline', note?: string) => {
+  if (!card.value) return false
   try {
-    await toggleKnowledgeCardStatus(props.ownerType, props.ownerId, card.value.id, newStatus)
+    await toggleKnowledgeCardStatus(props.ownerType, props.ownerId, card.value.id, newStatus, note)
     card.value.online_status = newStatus
     message.success(
       newStatus === 'online'
@@ -442,9 +521,49 @@ const handleStatusToggle = async () => {
         : t('knowledge.card.offlineSuccess')
     )
     emit('status-changed', { id: card.value.id, online_status: newStatus })
+    return true
   } catch (err) {
     console.error('Status toggle failed:', err)
     message.error(t('common.error'))
+    return false
+  }
+}
+
+const handleStatusConfirm = async (note?: string) => {
+  statusConfirmLoading.value = true
+  const ok = await doStatusToggle(
+    statusConfirmTargetStatus.value,
+    statusConfirmTargetStatus.value === 'offline' ? note : undefined
+  )
+  statusConfirmLoading.value = false
+  if (ok) statusConfirmOpen.value = false
+}
+
+const handleAuditAction = (action: 'approved' | 'rejected') => {
+  auditAction.value = action
+  auditModalOpen.value = true
+}
+
+const handleAuditConfirm = async (reason?: string) => {
+  if (!card.value) return
+  auditLoading.value = true
+  try {
+    const updated = await auditKnowledgeCard(
+      props.ownerType,
+      props.ownerId,
+      card.value.id,
+      auditAction.value,
+      reason
+    )
+    card.value = updated
+    message.success(t('knowledge.card.auditSuccess'))
+    emit('audit-changed', { id: card.value.id, audit_status: auditAction.value })
+    auditModalOpen.value = false
+  } catch (err) {
+    console.error('Audit failed:', err)
+    message.error(t('knowledge.card.auditFailed'))
+  } finally {
+    auditLoading.value = false
   }
 }
 
