@@ -77,12 +77,24 @@ function normalizeKnowledgeCard(data: unknown): KnowledgeCard {
         ? `v${cv}`
         : base.version
 
+  const json_content = typeof raw.json_content === 'string' ? raw.json_content : ''
+  const md_content =
+    typeof raw.md_content === 'string' && raw.md_content !== ''
+      ? raw.md_content
+      : typeof base.content === 'string'
+        ? base.content
+        : ''
+  const content = md_content || (typeof base.content === 'string' ? base.content : '')
+
   return {
     ...base,
     source_files,
     version,
     current_version:
       typeof cv === 'number' || (typeof cv === 'string' && cv !== '') ? cv : base.current_version,
+    json_content,
+    md_content,
+    content,
   }
 }
 
@@ -263,7 +275,7 @@ export function updateKnowledgeCard(
   ownerId: string,
   cardId: string,
   payload: Partial<
-    Pick<KnowledgeCardPayload, 'title' | 'content' | 'tags'> & { change_summary?: string }
+    Pick<KnowledgeCardPayload, 'title' | 'md_content' | 'tags'> & { change_summary?: string }
   >
 ) {
   return request
