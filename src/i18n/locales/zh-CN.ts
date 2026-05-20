@@ -67,6 +67,13 @@ export default {
   app: {
     brandName: '公济乐谱',
   },
+  welcome: {
+    pageTitle: '欢迎',
+    orgName: '上海市第一人民医院',
+    title: '欢迎使用 {brand}',
+    subtitle: '面向临床知识、文件与数字分身管理的统一工作台，服务院内知识沉淀、共享与智能化应用。',
+    statusTitle: '工作台已就绪',
+  },
   org: {
     title: '机构管理',
     name: '机构名称',

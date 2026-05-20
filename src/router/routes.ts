@@ -160,12 +160,12 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'Dashboard',
-    component: () => import('@/views/Dashboard.vue'),
+    component: () => import('@/views/Welcome.vue'),
     meta: {
       layout: 'MainLayout',
-      title: 'menu.dashboard',
+      title: 'welcome.pageTitle',
       requiresAuth: true,
-      affix: true,
+      hidden: true,
     },
   },
   {

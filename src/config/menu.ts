@@ -25,6 +25,8 @@ export interface MenuConfig {
   requiredRoles?: UserRole[]
   /** 存在时按 user.has_*_avatar 显示工作台，不按 requiredRoles */
   showWhenAvatar?: WorkbenchAvatarKind
+  /** 为 true 时不在侧边栏展示该项，不影响路由访问 */
+  hidden?: boolean
   children?: MenuConfig[]
 }
 
@@ -34,6 +36,7 @@ export const menuConfig: MenuConfig[] = [
     label: 'menu.dashboard',
     icon: () => h(DashboardOutlined),
     path: '/',
+    hidden: true,
   },
   {
     key: 'my',
@@ -76,12 +79,14 @@ export const menuConfig: MenuConfig[] = [
     label: 'menu.digitalDoctor',
     icon: () => h(RobotOutlined),
     path: '/chat',
+    hidden: true,
   },
   {
     key: 'knowledge-base',
     label: 'menu.knowledgeBase',
     icon: () => h(SearchOutlined),
     path: '/knowledge-base',
+    hidden: true,
   },
   {
     key: 'admin',
@@ -116,6 +121,7 @@ export const menuConfig: MenuConfig[] = [
         path: '/admin/avatars',
         requiredRoles: ['sysadmin', 'org_admin', 'dept_admin'],
         icon: () => h(IdcardOutlined),
+        hidden: true,
       },
       {
         key: 'admin-token',
@@ -123,6 +129,7 @@ export const menuConfig: MenuConfig[] = [
         path: '/admin/api-tokens',
         requiredRoles: ['sysadmin', 'org_admin'],
         icon: () => h(SafetyCertificateOutlined),
+        hidden: true,
       },
     ],
   },

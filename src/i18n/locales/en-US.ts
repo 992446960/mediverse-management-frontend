@@ -67,6 +67,14 @@ export default {
   app: {
     brandName: 'Mediverse Management',
   },
+  welcome: {
+    pageTitle: 'Welcome',
+    orgName: 'Shanghai General Hospital',
+    title: 'Welcome to {brand}',
+    subtitle:
+      'A unified workspace for clinical knowledge, files, and digital avatar management across hospital workflows.',
+    statusTitle: 'Workspace Ready',
+  },
   org: {
     title: 'Organization Management',
     name: 'Name',

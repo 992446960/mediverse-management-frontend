@@ -108,7 +108,7 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useThemeStore } from '@/stores/theme'
 import { usePermission } from '@/composables/usePermission'
-import { menuConfig } from '@/config/menu'
+import { menuConfig, type MenuConfig } from '@/config/menu'
 import { buildBreadcrumbItems } from '@/utils/breadcrumb'
 import ThemeSwitcher from '@/components/ThemeSwitcher/index.vue'
 import LocaleSwitcher from '@/components/LocaleSwitcher/index.vue'
@@ -145,40 +145,44 @@ function getTooltipContainer(triggerNode: HTMLElement) {
 
 const breadcrumbItems = computed(() => buildBreadcrumbItems(currentRoute, menuConfig))
 
-// Filter menu items: 工作台按 user.has_*_avatar + requiredRoles（权限矩阵），其余按 requiredRoles
-const filterMenu = (items: any[]): ItemType[] => {
-  return items
-    .filter((item) => {
-      if (item.showWhenAvatar) {
-        let avatarOk = false
-        if (item.showWhenAvatar === 'expert') avatarOk = authStore.hasExpertAvatar
-        else if (item.showWhenAvatar === 'dept') avatarOk = authStore.hasDeptAvatar
-        else if (item.showWhenAvatar === 'org') avatarOk = authStore.hasOrgAvatar
-        if (!avatarOk) return false
-        // 工作台需同时满足角色：我的工作台仅 user，机构工作台仅 org_admin，科室工作台仅 dept_admin
-        if (item.requiredRoles && !checkRoles(item.requiredRoles)) return false
-        return true
-      }
-      if (item.requiredRoles && !checkRoles(item.requiredRoles)) return false
-      return true
-    })
-    .map((item) => {
-      const newItem: any = {
-        key: item.key,
-        label: t(item.label),
-        icon: item.icon,
-        title: t(item.label),
-      }
-      if (item.children) {
-        newItem.children = filterMenu(item.children)
-      }
-      return newItem
-    })
-    .filter((newItem: any) => {
-      // 有 children 但被过滤成空时不再展示该父级
-      if (newItem.children && newItem.children.length === 0) return false
-      return true
-    })
+function hasMenuAccess(item: MenuConfig) {
+  if (item.showWhenAvatar) {
+    let avatarOk = false
+    if (item.showWhenAvatar === 'expert') avatarOk = authStore.hasExpertAvatar
+    else if (item.showWhenAvatar === 'dept') avatarOk = authStore.hasDeptAvatar
+    else if (item.showWhenAvatar === 'org') avatarOk = authStore.hasOrgAvatar
+    if (!avatarOk) return false
+    // 工作台需同时满足角色：我的工作台仅 user，机构工作台仅 org_admin，科室工作台仅 dept_admin
+    if (item.requiredRoles && !checkRoles(item.requiredRoles)) return false
+    return true
+  }
+  if (item.requiredRoles && !checkRoles(item.requiredRoles)) return false
+  return true
+}
+
+// Filter menu items: 仅影响侧边栏展示；路由、权限守卫、面包屑仍使用完整 menuConfig
+const filterMenu = (items: MenuConfig[]): ItemType[] => {
+  const result: ItemType[] = []
+
+  items.forEach((item) => {
+    if (item.hidden === true) return
+    if (!hasMenuAccess(item)) return
+
+    const children = item.children ? filterMenu(item.children) : undefined
+    const newItem: any = {
+      key: item.key,
+      label: t(item.label),
+      icon: item.icon,
+      title: t(item.label),
+    }
+    if (children) {
+      if (children.length === 0) return
+      newItem.children = children
+    }
+    result.push(newItem)
+  })
+
+  return result
 }
 
 const menuItems = computed(() => filterMenu(menuConfig))
@@ -220,6 +224,7 @@ watch(
 
     const findKey = (items: any[]): string | undefined => {
       for (const item of items) {
+        if (item.hidden === true) continue
         if (item.path === currentRoute.path) return item.key
         if (item.children) {
           const key = findKey(item.children)
