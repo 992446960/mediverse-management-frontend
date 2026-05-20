@@ -43,7 +43,7 @@
               {{ t('common.edit') }}
             </a-button>
             <a-tooltip
-              v-if="card.online_status === 'offline' && card.audit_status === 'rejected'"
+              v-if="card.online_status === 'offline' && !canPublishKnowledgeCard(card.audit_status)"
               :title="t('knowledge.card.onlineBlockedByAudit')"
             >
               <a-button type="primary" disabled>
@@ -221,7 +221,12 @@ import type {
   OwnerType,
 } from '@/types/knowledge'
 import type { VersionDiffSegment } from '@/types/knowledge'
-import { getCardTypeConfig, ONLINE_STATUS_CONFIG, AUDIT_STATUS_CONFIG } from '@/types/knowledge'
+import {
+  AUDIT_STATUS_CONFIG,
+  ONLINE_STATUS_CONFIG,
+  canPublishKnowledgeCard,
+  getCardTypeConfig,
+} from '@/types/knowledge'
 import { getFileOriginalUrl } from '@/types/knowledge'
 import { stashKnowledgePreviewFile } from '@/utils/knowledgePreviewStash'
 import {
@@ -504,7 +509,7 @@ const handleStatusToggle = async () => {
   if (!card.value) return
   const newStatus = card.value.online_status === 'online' ? 'offline' : 'online'
 
-  if (newStatus === 'online' && card.value.audit_status === 'rejected') {
+  if (newStatus === 'online' && !canPublishKnowledgeCard(card.value.audit_status)) {
     message.warning(t('knowledge.card.onlineBlockedByAudit'))
     return
   }

@@ -355,7 +355,7 @@ export default {
       onlineSuccess: '已上线',
       offlineSuccess: '已下线',
       offlineNotePlaceholder: '请输入下线原因（选填）',
-      onlineBlockedByAudit: '审核不通过，无法上线',
+      onlineBlockedByAudit: '仅审核通过的知识卡可上线',
       detailTitle: '知识卡详情',
       fetchDetailFailed: '获取详情失败',
       rollbackSuccess: '已成功回退到版本 {version}',

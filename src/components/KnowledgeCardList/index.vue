@@ -21,7 +21,12 @@ import type {
   OwnerType,
   CardTypeOption,
 } from '@/types/knowledge'
-import { ONLINE_STATUS_CONFIG, AUDIT_STATUS_CONFIG, getCardTypeConfig } from '@/types/knowledge'
+import {
+  ONLINE_STATUS_CONFIG,
+  AUDIT_STATUS_CONFIG,
+  canPublishKnowledgeCard,
+  getCardTypeConfig,
+} from '@/types/knowledge'
 import KnowledgeCardEditor from '../KnowledgeCardEditor/index.vue'
 import KnowledgeCardViewer from '../KnowledgeCardViewer/index.vue'
 import KnowledgeCardStatusConfirmModal from '../KnowledgeCardStatusConfirmModal.vue'
@@ -399,7 +404,7 @@ const doStatusToggle = async (record: KnowledgeCard, newStatus: OnlineStatus, no
 
 const handleStatusToggle = (record: KnowledgeCard) => {
   const newStatus = record.online_status === 'online' ? 'offline' : 'online'
-  if (newStatus === 'online' && record.audit_status === 'rejected') {
+  if (newStatus === 'online' && !canPublishKnowledgeCard(record.audit_status)) {
     message.warning(t('knowledge.card.onlineBlockedByAudit'))
     return
   }

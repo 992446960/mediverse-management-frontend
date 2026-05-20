@@ -253,6 +253,10 @@ export const AUDIT_STATUS_CONFIG: Record<AuditStatus, { color: string; label: st
   rejected: { color: 'error', label: '已驳回' },
 }
 
+export function canPublishKnowledgeCard(auditStatus: AuditStatus): boolean {
+  return auditStatus === 'approved'
+}
+
 /** 创建/更新知识卡请求负载 */
 export interface KnowledgeCardPayload {
   id?: string

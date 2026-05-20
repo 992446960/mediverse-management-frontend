@@ -359,7 +359,7 @@ export default {
       onlineSuccess: 'Online',
       offlineSuccess: 'Offline',
       offlineNotePlaceholder: 'Enter offline reason (optional)',
-      onlineBlockedByAudit: 'Rejected by audit, cannot go online',
+      onlineBlockedByAudit: 'Only approved knowledge cards can go online',
       detailTitle: 'Knowledge Card Detail',
       fetchDetailFailed: 'Failed to fetch details',
       rollbackSuccess: 'Successfully rolled back to version {version}',
