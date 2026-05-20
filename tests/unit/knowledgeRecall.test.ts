@@ -67,6 +67,20 @@ describe('knowledge recall card type selection', () => {
     })
   })
 
+  it('clears all concrete types when all option is clicked while all is selected', () => {
+    expect(
+      resolveRecallCardTypeSelection({
+        current: allTypes,
+        clicked: ALL_RECALL_CARD_TYPES_VALUE,
+        availableCardTypes: allTypes,
+        allSelected: true,
+      })
+    ).toEqual({
+      allSelected: false,
+      cardTypes: [],
+    })
+  })
+
   it('removes all option when a concrete type is changed after all was selected', () => {
     expect(
       resolveRecallCardTypeSelection({

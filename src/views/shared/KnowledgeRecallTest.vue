@@ -1,28 +1,37 @@
 <template>
   <div class="knowledge-recall-test flex flex-1 flex-col overflow-y-auto">
-    <div class="app-container p-5 mb-4">
-      <PageHead :head-conf="headConf">
-        <template #title>
-          <div class="min-w-0">
-            <h1 class="m-0 text-xl font-semibold leading-8 text-(--color-text-base)">
+    <header class="knowledge-recall-test__header app-container mb-4">
+      <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div class="flex min-w-0 items-start gap-3">
+          <a-button
+            type="link"
+            class="knowledge-recall-test__back shrink-0 px-0 text-sm text-slate-500 hover:text-primary"
+            @click="handleBack"
+          >
+            <template #icon>
+              <ArrowLeftOutlined />
+            </template>
+            {{ t('common.back') }}
+          </a-button>
+          <div class="min-w-0 pt-0.5">
+            <h1 class="m-0 text-xl font-semibold leading-7 text-(--color-text-base)">
               {{ t('knowledge.recall.title') }}
             </h1>
             <p class="m-0 mt-1 text-sm leading-5 text-(--color-text-secondary)">
               {{ t('knowledge.recall.subtitle') }}
             </p>
           </div>
-        </template>
-
+        </div>
         <a-button type="primary" :loading="loading" :disabled="!canSubmit" @click="handleRecall">
           <template #icon>
             <SearchOutlined />
           </template>
           {{ t('knowledge.recall.execute') }}
         </a-button>
-      </PageHead>
-    </div>
+      </div>
+    </header>
 
-    <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_340px] gap-4 mb-4">
+    <div class="knowledge-recall-test__form-grid mb-4">
       <section class="app-container min-w-0 p-5">
         <div class="mb-3 flex items-center justify-between gap-3">
           <h2 class="m-0 text-base font-semibold text-(--color-text-base)">
@@ -94,7 +103,13 @@
               :disabled="loading"
             />
           </div>
-          <a-slider v-model:value="topK" :min="1" :max="20" :disabled="loading" />
+          <a-slider
+            v-model:value="topK"
+            class="knowledge-recall-test__top-k-slider"
+            :min="1"
+            :max="20"
+            :disabled="loading"
+          />
           <div class="flex justify-between text-xs text-(--color-text-tertiary)">
             <span>1</span>
             <span>20</span>
@@ -176,10 +191,8 @@
 
 <script setup lang="ts">
 import { message } from 'ant-design-vue'
-import { FilterOutlined, SearchOutlined } from '@ant-design/icons-vue'
+import { ArrowLeftOutlined, FilterOutlined, SearchOutlined } from '@ant-design/icons-vue'
 import { useI18n } from 'vue-i18n'
-import PageHead from '@/components/PageHead/index.vue'
-import type { PageHeadConfig } from '@/components/PageHead/types'
 import { getCardTypes } from '@/api/knowledge'
 import { recallKnowledgeCards } from '@/api/knowledgeRecall'
 import type { CardType, CardTypeOption } from '@/types/knowledge'
@@ -198,6 +211,7 @@ const props = defineProps<{
 }>()
 
 const { t } = useI18n()
+const router = useRouter()
 
 const query = ref('')
 const topK = ref(5)
@@ -207,10 +221,6 @@ const cardTypes = ref<CardTypeOption[]>([])
 const cardTypesLoading = ref(false)
 const loading = ref(false)
 const result = ref<KnowledgeRecallResult | null>(null)
-
-const headConf = computed<PageHeadConfig>(() => ({
-  backLeft: true,
-}))
 
 const availableCardTypes = computed(() => cardTypes.value.map((item) => item.code))
 const normalizedTopK = computed(() => Math.min(20, Math.max(1, Number(topK.value) || 5)))
@@ -305,6 +315,10 @@ function handleCardTypeClick(clicked: CardType | typeof ALL_RECALL_CARD_TYPES_VA
   selectedCardTypes.value = selection.cardTypes
 }
 
+function handleBack() {
+  router.go(-1)
+}
+
 async function handleRecall() {
   const text = query.value.trim()
   if (!text) {
@@ -343,3 +357,43 @@ function formatScore(score: number) {
 
 onMounted(fetchCardTypes)
 </script>
+
+<style scoped>
+.knowledge-recall-test {
+  --knowledge-recall-top-k-color: #0ea5e9;
+}
+
+.knowledge-recall-test__header {
+  min-height: 5.5rem;
+  padding: 1.25rem;
+  overflow: visible;
+}
+
+.knowledge-recall-test__form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 720px) {
+  .knowledge-recall-test__form-grid {
+    grid-template-columns: minmax(0, 1fr) 320px;
+  }
+}
+
+.knowledge-recall-test :deep(.knowledge-recall-test__top-k-slider .ant-slider-track) {
+  background-color: var(--knowledge-recall-top-k-color);
+}
+
+.knowledge-recall-test :deep(.knowledge-recall-test__top-k-slider:hover .ant-slider-track) {
+  background-color: var(--knowledge-recall-top-k-color);
+}
+
+.knowledge-recall-test :deep(.knowledge-recall-test__top-k-slider .ant-slider-handle::after) {
+  box-shadow: 0 0 0 2px var(--knowledge-recall-top-k-color);
+}
+
+.knowledge-recall-test :deep(.knowledge-recall-test__top-k-slider:hover .ant-slider-handle::after) {
+  box-shadow: 0 0 0 2px var(--knowledge-recall-top-k-color);
+}
+</style>

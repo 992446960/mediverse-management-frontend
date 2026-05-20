@@ -36,6 +36,13 @@ export function resolveRecallCardTypeSelection({
   const available = uniqueAvailableCardTypes(availableCardTypes)
 
   if (clicked === ALL_RECALL_CARD_TYPES_VALUE) {
+    if (allSelected) {
+      return {
+        allSelected: false,
+        cardTypes: [],
+      }
+    }
+
     return {
       allSelected: true,
       cardTypes: available,
