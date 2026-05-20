@@ -141,7 +141,7 @@ export const useTagsViewStore = defineStore(
     }
 
     function addVisitedView(route: RouteLocationNormalized) {
-      if (route.meta.hidden) return
+      if (route.meta.hidden && !route.meta.showInTagsView) return
       const tagPath = getCanonicalTagPathForRoute(route)
       const index = visitedViews.value.findIndex((v) => v.path === tagPath)
       if (index >= 0) {

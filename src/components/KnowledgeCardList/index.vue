@@ -48,6 +48,7 @@ import type { PageTableConfig, PageTableColumnConfig } from '@/components/PageTa
 import dayjs from 'dayjs'
 
 const { t } = useI18n()
+const router = useRouter()
 
 const props = defineProps<{
   ownerType: OwnerType
@@ -121,6 +122,10 @@ const recallTestPath = computed(() => {
 
   return pathMap[props.ownerType]
 })
+
+function handleOpenRecallTest() {
+  router.push(recallTestPath.value)
+}
 
 const filterConf = computed<PageFilterConfig>(() => ({
   filterForm: [
@@ -489,13 +494,12 @@ const handleAuditConfirm = async (reason?: string) => {
   <div class="knowledge-card-list flex flex-1 flex-col overflow-hidden">
     <div class="app-container p-4 mb-4">
       <PageHead :head-conf="headConf">
-        <a
-          :href="recallTestPath"
-          class="inline-flex h-8 items-center gap-1 rounded-md border border-slate-300 px-3 text-sm text-(--color-text-base) hover:border-primary hover:text-primary dark:border-slate-700"
-        >
-          <SearchOutlined />
+        <a-button @click="handleOpenRecallTest">
+          <template #icon>
+            <SearchOutlined />
+          </template>
           {{ t('knowledge.recall.entry') }}
-        </a>
+        </a-button>
       </PageHead>
       <PageFilter ref="pageFilterRef" :filter-conf="filterConf" @fetch-table-data="handleSearch">
         <template #sourceFileFilter="{ formData }">

@@ -210,6 +210,7 @@ const routes: RouteRecordRaw[] = [
         meta: {
           title: 'knowledge.recall.title',
           hidden: true,
+          showInTagsView: true,
           requiredRoles: ['user'],
           activeMenu: 'my-knowledge',
         },
@@ -265,6 +266,7 @@ const routes: RouteRecordRaw[] = [
         meta: {
           title: 'knowledge.recall.title',
           hidden: true,
+          showInTagsView: true,
           activeMenu: 'dept-knowledge',
         },
       },
@@ -319,6 +321,7 @@ const routes: RouteRecordRaw[] = [
         meta: {
           title: 'knowledge.recall.title',
           hidden: true,
+          showInTagsView: true,
           activeMenu: 'org-knowledge',
         },
       },
