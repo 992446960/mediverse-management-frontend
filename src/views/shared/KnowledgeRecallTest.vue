@@ -136,6 +136,7 @@
 
     <div
       class="knowledge-recall-test__results relative rounded-md bg-white p-5 dark:bg-[--color-bg-container]"
+      :class="{ 'knowledge-recall-test__results--placeholder': !result }"
     >
       <div
         v-if="loading"
@@ -148,7 +149,7 @@
         </a-spin>
       </div>
 
-      <div v-if="!result && !loading" class="flex min-h-[240px] items-center justify-center">
+      <div v-if="!result && !loading" class="flex items-center justify-center">
         <a-empty :description="t('knowledge.recall.emptyResult')" />
       </div>
 
@@ -438,7 +439,8 @@ onMounted(fetchCardTypes)
   box-shadow: 0 0 0 2px var(--knowledge-recall-top-k-color);
 }
 
-.knowledge-recall-test__results {
+/* loading 遮罩为 absolute，不占文档流；无结果时外层需 min-height 才能居中且不被压扁 */
+.knowledge-recall-test__results--placeholder {
   min-height: 240px;
 }
 </style>
