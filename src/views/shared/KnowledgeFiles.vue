@@ -9,6 +9,8 @@
         :fetch-data="loadTree"
         @node-click="onTreeSelect"
         @create-dir="handleCreateDir"
+        @rename-dir="handleRenameDir"
+        @delete-dir="handleDeleteDir"
       />
     </aside>
 
@@ -75,6 +77,27 @@
         </a-button>
       </template>
     </a-modal>
+
+    <a-modal
+      v-model:open="batchMoveModalVisible"
+      :title="t('knowledge.batchMoveFiles')"
+      :confirm-loading="batchMoveLoading"
+      @ok="handleBatchMove"
+    >
+      <a-form layout="vertical">
+        <a-form-item :label="t('knowledge.targetDirectory')">
+          <a-tree-select
+            v-model:value="batchMoveTargetDirId"
+            :tree-data="directoryTreeSelectData"
+            allow-clear
+            tree-default-expand-all
+            class="w-full"
+            :placeholder="t('knowledge.selectDirectory')"
+            :field-names="{ label: 'title', value: 'value' }"
+          />
+        </a-form-item>
+      </a-form>
+    </a-modal>
   </div>
 </template>
 
@@ -89,6 +112,7 @@ import {
   DeleteOutlined,
   DownloadOutlined,
   UploadOutlined,
+  SwapOutlined,
 } from '@ant-design/icons-vue'
 import { DirectoryTree } from '@/components/DirectoryTree'
 import FileUploader from '@/components/FileUploader/index.vue'
@@ -97,7 +121,16 @@ import PageFilter from '@/components/PageFilter/index.vue'
 import PageTable from '@/components/PageTable/index.vue'
 import { useFileStatusPoll } from '@/composables/useFileStatusPoll'
 import type { UploadQueueItem } from '@/components/FileUploader/types'
-import { getDirectoryTree, createDirectory, getFileList, deleteFile } from '@/api/knowledge'
+import {
+  getDirectoryTree,
+  createDirectory,
+  renameDirectory,
+  deleteDirectory,
+  getFileList,
+  deleteFile,
+  batchMoveFiles,
+  retryFileIndexingTask,
+} from '@/api/knowledge'
 import { confirmDelete } from '@/utils/confirm'
 import { stashKnowledgePreviewFile } from '@/utils/knowledgePreviewStash'
 import { sanitizeDownloadFilename, triggerFileDownload } from '@/utils/triggerFileDownload'
@@ -157,6 +190,35 @@ async function handleCreateDir(parentId: string | null, name: string) {
   } catch {
     // 错误已由拦截器处理
   }
+}
+
+async function handleRenameDir(directoryId: string, name: string) {
+  try {
+    await renameDirectory(props.ownerType, props.ownerId, directoryId, { name })
+    message.success(t('common.success'))
+    await loadTree()
+    await loadData()
+  } catch {
+    // 错误已由拦截器处理
+  }
+}
+
+async function handleDeleteDir(directoryId: string) {
+  confirmDelete({
+    title: t('knowledge.deleteDirectory'),
+    content: t('knowledge.deleteDirectoryConfirm'),
+    okText: t('common.confirm'),
+    cancelText: t('common.cancel'),
+    onOk: async () => {
+      await deleteDirectory(props.ownerType, props.ownerId, directoryId)
+      if (selectedDirId.value === directoryId) {
+        selectedDirId.value = '__all__'
+      }
+      message.success(t('common.success'))
+      await loadTree()
+      await loadData()
+    },
+  })
 }
 
 // ----- 状态列展示（FILE_STATUS_CONFIG + i18n 映射） -----
@@ -278,6 +340,11 @@ const headConf = computed<PageHeadConfig>(() => {
       icon: UploadOutlined,
       handle: openUploadModal,
     },
+    {
+      text: t('knowledge.batchMoveFiles'),
+      icon: SwapOutlined,
+      handle: openBatchMoveModal,
+    },
   ]
   const hasActive = uploadQueue.value.length > 0 && !allDone.value
   if (hasActive) {
@@ -365,6 +432,11 @@ function formatFileSize(bytes: number): string {
 
 const tableColumns = computed<PageTableColumnConfig[]>(() => [
   {
+    type: 'selection',
+    width: 40,
+    fixed: 'left',
+  },
+  {
     label: t('knowledge.fileName'),
     prop: 'file_name',
     width: 200,
@@ -433,7 +505,7 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
             text: t('knowledge.retry'),
             icon: ReloadOutlined,
             btnIsShow: (row) => (row.status as string) === 'failed',
-            handle: () => handleRetry(),
+            handle: (row: Record<string, unknown>) => handleRetry(row as unknown as FileListItem),
           },
         ],
       },
@@ -450,6 +522,62 @@ function resolveDirIdForFileListApi(selectedKey: string): string | undefined {
 
 /** 上传时与当前侧栏一致：未分类传 -1 */
 const uploadContextDirId = computed(() => resolveDirIdForFileListApi(selectedDirId.value))
+
+interface TreeSelectNode {
+  key: string
+  value: string
+  title: string
+  children?: TreeSelectNode[]
+}
+
+const directoryTreeSelectData = computed<TreeSelectNode[]>(() => {
+  const map = (nodes: DirectoryNode[]): TreeSelectNode[] =>
+    nodes.map((node) => ({
+      key: node.id,
+      value: node.id,
+      title: node.name,
+      children: node.children?.length ? map(node.children) : undefined,
+    }))
+  return map(treeData.value)
+})
+
+const selectedFiles = computed(
+  () => (pageTableRef.value?.multipleSelection ?? []) as FileListItem[]
+)
+const selectedFileIds = computed(() => selectedFiles.value.map((item) => item.id))
+const batchMoveModalVisible = ref(false)
+const batchMoveLoading = ref(false)
+const batchMoveTargetDirId = ref<string | null>(null)
+
+function openBatchMoveModal() {
+  if (selectedFileIds.value.length === 0) {
+    message.warning(t('knowledge.batchMoveNoSelection'))
+    return
+  }
+  batchMoveTargetDirId.value = null
+  batchMoveModalVisible.value = true
+}
+
+async function handleBatchMove() {
+  if (selectedFileIds.value.length === 0) {
+    message.warning(t('knowledge.batchMoveNoSelection'))
+    return
+  }
+  batchMoveLoading.value = true
+  try {
+    const result = await batchMoveFiles(props.ownerType, props.ownerId, {
+      file_ids: selectedFileIds.value,
+      target_dir_id: batchMoveTargetDirId.value ?? null,
+    })
+    message.success(t('knowledge.batchMoveSuccess', { count: result.moved_count }))
+    batchMoveModalVisible.value = false
+    pageTableRef.value?.clearSelection()
+    await loadTree()
+    await loadData()
+  } finally {
+    batchMoveLoading.value = false
+  }
+}
 
 // ----- 数据拉取 -----
 async function loadData() {
@@ -547,10 +675,16 @@ async function handleDownload(record: FileListItem) {
   }
 }
 
-async function handleRetry() {
-  // 打开上传弹窗，让用户重新上传
-  openUploadModal()
-  // TODO: 如果需要预填目录，可以在这里设置 selectedDirId 或传递给 FileUploader
+async function handleRetry(record: FileListItem) {
+  const taskId = record.indexing_task_id
+  if (!taskId) {
+    message.warning(t('knowledge.retryTaskMissing'))
+    return
+  }
+  await retryFileIndexingTask(props.ownerType, props.ownerId, taskId)
+  message.success(t('knowledge.retryTaskSubmitted'))
+  await loadData()
+  startPoll()
 }
 
 onMounted(() => {

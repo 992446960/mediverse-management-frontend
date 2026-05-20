@@ -91,6 +91,8 @@
             :selected-key="selectedKey"
             @node-click="onNodeClick"
             @add-click="openAddModal"
+            @rename-click="openRenameModal"
+            @delete-click="handleDeleteDirectory"
           />
         </div>
         <a-empty v-else :description="t('common.noData')" class="py-4" />
@@ -108,6 +110,23 @@
         <a-form-item :label="t('knowledge.directoryName')" required>
           <a-input
             v-model:value="newDirName"
+            :placeholder="t('knowledge.directoryNamePlaceholder')"
+          />
+        </a-form-item>
+      </a-form>
+    </a-modal>
+
+    <!-- 重命名目录弹窗 -->
+    <a-modal
+      v-model:open="renameModalVisible"
+      :title="t('knowledge.renameDirectory')"
+      :confirm-loading="renameLoading"
+      @ok="handleRenameDirectory"
+    >
+      <a-form layout="vertical">
+        <a-form-item :label="t('knowledge.directoryName')" required>
+          <a-input
+            v-model:value="renameDirName"
             :placeholder="t('knowledge.directoryNamePlaceholder')"
           />
         </a-form-item>
@@ -148,6 +167,8 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   (e: 'node-click', payload: DirectoryTreeClickPayload): void
   (e: 'create-dir', parentId: string | null, name: string): Promise<void>
+  (e: 'rename-dir', directoryId: string, name: string): Promise<void>
+  (e: 'delete-dir', directoryId: string): Promise<void>
 }>()
 
 const { t } = useI18n()
@@ -221,6 +242,35 @@ async function handleAddDirectory() {
   } finally {
     addLoading.value = false
   }
+}
+
+// 重命名 / 删除目录
+const renameModalVisible = ref(false)
+const renameLoading = ref(false)
+const renamingNode = ref<DirectoryTreeNode | null>(null)
+const renameDirName = ref('')
+
+function openRenameModal(node: DirectoryTreeNode) {
+  renamingNode.value = node
+  renameDirName.value = node.name
+  renameModalVisible.value = true
+}
+
+async function handleRenameDirectory() {
+  const node = renamingNode.value
+  const name = renameDirName.value.trim()
+  if (!node || !name) return
+  renameLoading.value = true
+  try {
+    await emit('rename-dir', node.id, name)
+    renameModalVisible.value = false
+  } finally {
+    renameLoading.value = false
+  }
+}
+
+async function handleDeleteDirectory(node: DirectoryTreeNode) {
+  await emit('delete-dir', node.id)
 }
 </script>
 

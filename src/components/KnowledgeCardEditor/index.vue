@@ -224,6 +224,7 @@ const handleOk = async () => {
     if (props.card?.id) {
       await updateKnowledgeCard(props.ownerType, props.ownerId, props.card.id, {
         title: formState.title,
+        type: formState.type,
         md_content: formState.md_content,
         tags: formState.tags,
         change_summary: formState.change_summary || undefined,

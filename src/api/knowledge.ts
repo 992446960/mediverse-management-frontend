@@ -15,6 +15,11 @@ import type {
   VersionDiffResult,
   CardTypeOption,
   DeleteCardResult,
+  RenameDirectoryPayload,
+  BatchMoveFilesPayload,
+  BatchMoveFilesResult,
+  FileIndexingRetryResult,
+  CreateKnowledgeCardResult,
 } from '@/types/knowledge'
 import type { PaginatedData } from '@/types/api'
 import type { AxiosRequestConfig } from 'axios'
@@ -169,6 +174,28 @@ export function createDirectory(
 }
 
 /**
+ * 重命名非默认目录
+ */
+export function renameDirectory(
+  ownerType: OwnerType,
+  ownerId: string,
+  directoryId: string,
+  payload: RenameDirectoryPayload
+) {
+  return request.patch<DirectoryNode>(
+    `${BASE_URL}/${ownerType}/${ownerId}/directories/${directoryId}/rename`,
+    payload
+  )
+}
+
+/**
+ * 删除非默认空目录
+ */
+export function deleteDirectory(ownerType: OwnerType, ownerId: string, directoryId: string) {
+  return request.delete<string>(`${BASE_URL}/${ownerType}/${ownerId}/directories/${directoryId}`)
+}
+
+/**
  * 查询文件列表
  */
 export function getFileList(ownerType: OwnerType, ownerId: string, params: FileListParams) {
@@ -220,6 +247,29 @@ export function deleteFile(ownerType: OwnerType, ownerId: string, fileId: string
 }
 
 /**
+ * 批量移动文件到指定目录
+ */
+export function batchMoveFiles(
+  ownerType: OwnerType,
+  ownerId: string,
+  payload: BatchMoveFilesPayload
+) {
+  return request.post<BatchMoveFilesResult>(
+    `${BASE_URL}/${ownerType}/${ownerId}/files/batch/move`,
+    payload
+  )
+}
+
+/**
+ * 重试失败的文件索引任务
+ */
+export function retryFileIndexingTask(ownerType: OwnerType, ownerId: string, taskId: string) {
+  return request.post<FileIndexingRetryResult>(
+    `${BASE_URL}/${ownerType}/${ownerId}/files/indexing-tasks/${taskId}/retry`
+  )
+}
+
+/**
  * 查询文件关联的知识卡
  * GET /api/v1/knowledge/{owner_type}/{owner_id}/files/{id}/cards
  */
@@ -262,10 +312,11 @@ export function saveKnowledgeCard(
   ownerType: OwnerType,
   ownerId: string,
   payload: KnowledgeCardPayload
-) {
-  return request
-    .post<KnowledgeCard>(`${BASE_URL}/${ownerType}/${ownerId}/cards`, payload)
-    .then(normalizeKnowledgeCard)
+): Promise<CreateKnowledgeCardResult> {
+  return request.post<CreateKnowledgeCardResult>(
+    `${BASE_URL}/${ownerType}/${ownerId}/cards`,
+    payload
+  )
 }
 
 /**
@@ -276,7 +327,9 @@ export function updateKnowledgeCard(
   ownerId: string,
   cardId: string,
   payload: Partial<
-    Pick<KnowledgeCardPayload, 'title' | 'md_content' | 'tags'> & { change_summary?: string }
+    Pick<KnowledgeCardPayload, 'title' | 'type' | 'md_content' | 'tags'> & {
+      change_summary?: string
+    }
   >
 ) {
   return request

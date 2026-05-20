@@ -19,6 +19,44 @@ export interface DeleteCardResult {
   action: string
 }
 
+/** 文件来源项（知识卡 sources / source_files 通用） */
+export interface FileSource {
+  id?: string
+  name?: string
+  file_name?: string
+  file_type?: string
+  file_size?: number
+  storage_url?: string | null
+  parsed_file_url?: string | null
+  page_hint?: string | null
+}
+
+/** PATCH /knowledge/{owner_type}/{owner_id}/directories/{directory_id}/rename */
+export interface RenameDirectoryPayload {
+  name: string
+}
+
+/** POST /knowledge/{owner_type}/{owner_id}/files/batch/move */
+export interface BatchMoveFilesPayload {
+  file_ids: string[]
+  target_dir_id: string | null
+}
+
+export interface BatchMoveFilesResult {
+  moved_count: number
+}
+
+/** POST /knowledge/{owner_type}/{owner_id}/files/indexing-tasks/{task_id}/retry */
+export interface FileIndexingRetryResult {
+  task_id: string
+  file_id: string
+}
+
+/** POST /knowledge/{owner_type}/{owner_id}/cards 返回的 data */
+export interface CreateKnowledgeCardResult {
+  card_id: string
+}
+
 /** 目录树节点 */
 export interface DirectoryNode {
   id: string
@@ -60,6 +98,7 @@ export interface FileListItem {
   created_by_name: string
   created_at: string
   updated_at: string
+  indexing_task_id?: string | null
 }
 
 /** 原文件可下载/预览 URL（兼容 file_url 与 storage_url） */
@@ -76,7 +115,10 @@ export interface FileCard {
   title: string
   tags: string[]
   online_status?: OnlineStatus
+  audit_status?: AuditStatus
+  audit_reject_reason?: string | null
   confidence?: number
+  sources?: FileSource[]
 }
 
 /** 知识卡详情 */
@@ -93,6 +135,7 @@ export interface KnowledgeCard {
   tags: string[]
   online_status: OnlineStatus
   audit_status: AuditStatus
+  audit_reject_reason?: string | null
   reference_count: number
   /** 关联原文件；详情接口也可能以 `sources` 返回，由 API 层归一化 */
   source_files: {
@@ -132,6 +175,7 @@ export interface KnowledgeCardVersion {
 export interface FileStatusResponse {
   id: string
   status: FileStatus
+  indexing_task_id?: string | null
   progress: {
     current_step: FileStatus
     steps: FileStatus[]

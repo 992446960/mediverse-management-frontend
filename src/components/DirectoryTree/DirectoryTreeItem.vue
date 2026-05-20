@@ -38,6 +38,18 @@
             @click.stop="$emit('add-click', node)"
           />
         </a-tooltip>
+        <a-tooltip v-if="!node.is_default" :title="t('knowledge.renameDirectory')">
+          <EditOutlined
+            class="text-[14px] text-slate-400 hover:text-primary transition-colors p-1"
+            @click.stop="$emit('rename-click', node)"
+          />
+        </a-tooltip>
+        <a-tooltip v-if="!node.is_default" :title="t('knowledge.deleteDirectory')">
+          <DeleteOutlined
+            class="text-[14px] text-slate-400 hover:text-red-500 transition-colors p-1"
+            @click.stop="$emit('delete-click', node)"
+          />
+        </a-tooltip>
       </div>
     </div>
 
@@ -51,6 +63,8 @@
         :selected-key="selectedKey"
         @node-click="$emit('node-click', $event)"
         @add-click="$emit('add-click', $event)"
+        @rename-click="$emit('rename-click', $event)"
+        @delete-click="$emit('delete-click', $event)"
       />
     </div>
   </div>
@@ -63,6 +77,8 @@ import {
   FolderOpenOutlined,
   CaretRightOutlined,
   PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
 } from '@ant-design/icons-vue'
 import type { DirectoryTreeNode } from './types'
 
@@ -76,6 +92,8 @@ defineProps<{
 defineEmits<{
   (e: 'node-click', node: DirectoryTreeNode): void
   (e: 'add-click', node: DirectoryTreeNode): void
+  (e: 'rename-click', node: DirectoryTreeNode): void
+  (e: 'delete-click', node: DirectoryTreeNode): void
 }>()
 
 const { t } = useI18n()
