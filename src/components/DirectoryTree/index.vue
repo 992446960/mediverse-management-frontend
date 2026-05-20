@@ -1,6 +1,6 @@
 <template>
   <div
-    class="directory-tree pb-4 bg-white dark:bg-(--color-bg-container) rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none flex flex-col overflow-hidden border border-slate-200/60 dark:border-slate-800"
+    class="directory-tree pb-4 bg-white dark:bg-(--color-bg-container) rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none flex flex-col overflow-hidden border border-slate-200/60 dark:border-(--color-border)"
     :style="treeStyle"
   >
     <div class="px-5 pt-6 pb-4">

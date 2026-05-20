@@ -1,12 +1,12 @@
 <template>
   <div
-    class="page-table p-2.5 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-(--color-bg-container) shadow-sm overflow-hidden flex flex-col flex-1 min-h-0"
+    class="page-table p-2.5 rounded-md border border-slate-200 dark:border-(--color-border) bg-white dark:bg-(--color-bg-container) shadow-sm overflow-hidden flex flex-col flex-1 min-h-0"
     :style="{ '--min-height': tableConf?.tableMinHeight ?? '200px' }"
   >
     <!-- 顶部工具栏 -->
     <div
       v-if="!tableConf?.hideTableBar"
-      class="page-table__toolbar h-[52px] px-6 py-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 shrink-0"
+      class="page-table__toolbar h-[52px] px-6 py-4 flex items-center justify-between border-b border-slate-100 dark:border-(--color-border) shrink-0"
     >
       <div class="flex items-center gap-2">
         <span v-if="(tableConf?.total ?? 0) > 0" class="text-sm text-slate-500">
@@ -85,7 +85,7 @@
     <!-- 分页器 -->
     <div
       v-if="paginationConfig"
-      class="page-table__pagination px-6 py-4 flex justify-end border-t border-slate-100 dark:border-slate-800"
+      class="page-table__pagination px-6 py-4 flex justify-end border-t border-slate-100 dark:border-(--color-border)"
     >
       <a-pagination
         v-model:current="currentPage"
