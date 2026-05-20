@@ -362,7 +362,6 @@ const fetchCardDetails = async (id: string) => {
     }
   } catch (err) {
     console.error('Fetch card failed:', err)
-    message.error(t('knowledge.card.fetchDetailFailed'))
   } finally {
     loading.value = false
   }
@@ -448,7 +447,6 @@ async function loadDiff(from: number, to: number) {
     diffResult.value = result.diff
   } catch (err) {
     console.error('Load diff failed:', err)
-    message.error(t('knowledge.card.diffFailed'))
     diffResult.value = []
   } finally {
     diffLoading.value = false
@@ -501,7 +499,6 @@ const handleRollback = async (version: string, targetVersion: number, reason?: s
     message.success(t('knowledge.card.rollbackSuccess', { version }))
   } catch (err) {
     console.error('Rollback failed:', err)
-    message.error(t('knowledge.card.rollbackFailed'))
   }
 }
 
@@ -532,7 +529,6 @@ const doStatusToggle = async (newStatus: 'online' | 'offline', note?: string) =>
     return true
   } catch (err) {
     console.error('Status toggle failed:', err)
-    message.error(t('common.error'))
     return false
   }
 }
@@ -569,7 +565,6 @@ const handleAuditConfirm = async (reason?: string) => {
     auditModalOpen.value = false
   } catch (err) {
     console.error('Audit failed:', err)
-    message.error(t('knowledge.card.auditFailed'))
   } finally {
     auditLoading.value = false
   }
@@ -585,7 +580,6 @@ const handleDelete = async () => {
     emit('update:open', false)
   } catch (err) {
     console.error('Delete card failed:', err)
-    message.error(t('knowledge.card.deleteFailed'))
   }
 }
 </script>

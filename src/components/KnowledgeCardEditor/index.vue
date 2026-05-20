@@ -185,7 +185,6 @@ watch(
         } catch {
           if (loadGen !== editorLoadGeneration) return
           formState.md_content = ''
-          message.error(t('knowledge.card.fetchDetailFailed'))
         } finally {
           if (loadGen === editorLoadGeneration) contentResolving.value = false
         }

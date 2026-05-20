@@ -318,7 +318,6 @@ const fetchData = async () => {
     total.value = result.total
   } catch (err) {
     console.error('Fetch failed:', err)
-    message.error(t('knowledge.card.fetchFailed'))
   } finally {
     loading.value = false
   }
@@ -339,7 +338,6 @@ const handleDelete = async (record: KnowledgeCard) => {
     fetchData()
   } catch (err) {
     console.error('Delete card failed:', err)
-    message.error(t('knowledge.card.deleteFailed'))
   }
 }
 
@@ -397,7 +395,6 @@ const doStatusToggle = async (record: KnowledgeCard, newStatus: OnlineStatus, no
     return true
   } catch (err) {
     console.error('Status toggle failed:', err)
-    message.error(t('common.error'))
     return false
   }
 }
@@ -471,7 +468,6 @@ const handleAuditConfirm = async (reason?: string) => {
     auditCard.value = null
   } catch (err) {
     console.error('Audit failed:', err)
-    message.error(t('knowledge.card.auditFailed'))
   } finally {
     auditLoading.value = false
   }
