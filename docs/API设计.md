@@ -1760,6 +1760,9 @@ GET /api/v1/knowledge/{owner_type}/{owner_id}/files/{id}/status
 
 ```json
 {
+"code": 0,
+"message": "ok",
+"data": {
 "id": "uuid",
 "status": "indexing",
 "progress": {
@@ -1767,7 +1770,11 @@ GET /api/v1/knowledge/{owner_type}/{owner_id}/files/{id}/status
 "steps": ["uploading","parsing","extracting","indexing","done"],
 "step_index": 3
 },
-"error_msg": null
+"error_msg": null,
+"indexing_task_id": "9ae51771-49a3-48d1-b4a9-27a24fac2c40",
+"file_uuid": null,
+"cards": []
+}
 }
 ```
 
@@ -1944,7 +1951,6 @@ POST /api/v1/knowledge/{owner_type}/{owner_id}/cards
 {
 "type": "string",
 "title": "",
-"json_content": "string",非必填（手动创建不传）
 "md_content": "string",必填
 "tags": [
 "string"
@@ -2102,31 +2108,98 @@ GET /api/v1/knowledge/{owner_type}/{owner_id}/cards/{id}/versions/diff
 
 ##### 4.1.14 回滚版本
 
+版本回滚：先调用下游 `POST /api/v1/cards/{card_id}/rollback`，再按本库 `target_version` 对应的历史快照落库；成功后 `current_version` 递增。
+
 ```http
 POST /api/v1/knowledge/{owner_type}/{owner_id}/cards/{id}/rollback
 ```
 
+**Request body**
+
+
 ```json
-{ "target_version": 2 }
+{
+"target_version": 2,
+"reason": "回滚到审核通过前的版本"
+}
 ```
 
 
-**Response data：返回回滚后的完整知识卡对象（新版本号为 current_version+1）**
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| target_version | int | ✅ | 要回退到的历史版本号 |
+| reason | string | ❌ | 回滚原因，最多 2000 字；同步到下游 `reason` 并写入 `change_summary` |
+
+
+**Response data**
+
+返回 `CardWithRollbackActionOut`：知识卡详情 + `rollback_action`（下游回滚动作摘要）。
+
+
+```json
+{
+"code": 0,
+"message": "ok",
+"data": {
+"id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+"type": "pathway_clause",
+"title": "string",
+"json_content": "string",
+"md_content": "string",
+"tags": [
+"string"
+],
+"online_status": "offline",
+"audit_status": "pending",
+"audit_reject_reason": null,
+"current_version": 3,
+"reference_count": 0,
+"sources": [
+{
+"id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+"file_name": "string",
+"file_type": "pdf",
+"file_size": 0,
+"storage_url": "string",
+"parsed_file_url": null,
+"page_hint": null
+}
+],
+"created_by": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+"created_by_name": "string",
+"created_at": "2026-05-19T06:11:51.198Z",
+"updated_at": "2026-05-19T07:00:00.000Z",
+"rollback_action": {
+"card_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+"review_state": "pending"
+}
+}
+}
+```
+
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| data | object | 回滚后的知识卡详情，字段与 §4.1.8 一致 |
+| data.current_version | int | 回滚落库后的新版本号（较回滚前 +1） |
+| data.rollback_action | object | 下游回滚结果摘要 |
+| data.rollback_action.card_id | string (uuid) | 知识卡 ID |
+| data.rollback_action.review_state | string | 下游审核状态，默认 `pending` |
 
 
 ##### 4.1.15 查询知识卡类型
-GET
 
-api/v1/knowledge/card-types
-
+```http
+GET /api/v1/knowledge/card-types
+```
 
 **Response data**
 
 
 ```json
 {
-"code": 200,
-"message": "",
+"code": 0,
+"message": "ok",
 "data": [
 { "name": "规则卡", "code": "rule" },
 { "name": "量表卡", "code": "scale" },
@@ -2139,10 +2212,10 @@ api/v1/knowledge/card-types
 
 
 ##### 4.1.16 删除知识卡
-DELETE
 
-api/v1/knowledge/{owner_type}/{owner_id}/cards/{id}
-
+```http
+DELETE /api/v1/knowledge/{owner_type}/{owner_id}/cards/{id}
+```
 
 **Response data**
 
@@ -2160,16 +2233,28 @@ api/v1/knowledge/{owner_type}/{owner_id}/cards/{id}
 
 
 ##### 4.1.17 修改知识卡审核状态
-PATCH
 
-api/v1/{owner_type}/{owner_id}/cards/{id}/audit
+更新知识卡审核状态（`approved` / `pending` / `rejected`）；管理服务会同步调用下游 `PATCH …/cards/{card_id}/review`。
 
+```http
+PATCH /api/v1/knowledge/{owner_type}/{owner_id}/cards/{id}/audit
+```
 
 **Request body**
 
-audit_status：str 审核状态，必填(approved | pending | rejected）
 
-audit_reject_reason：str  审核未通过的原因 audit_status==rejected时必填
+```json
+{
+"audit_status": "approved",
+"audit_reject_reason": "string"
+}
+```
+
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| audit_status | string | ✅ | `approved` / `pending` / `rejected` |
+| audit_reject_reason | string | ❌ | 审核不通过原因；`audit_status=rejected` 时必填；非 `rejected` 时忽略并清空已存原因 |
 
 
 **Response data**
@@ -2226,15 +2311,20 @@ audit_reject_reason：str  审核未通过的原因 audit_status==rejected时必
 
 ##### 4.1.18 重命名非默认目录
 
+重命名自建目录（`is_default=false`）；系统默认目录不可重命名。
+
 ```http
-PATCH /api/v1/knowledge/{owner_type}/{owner_id}/directoris/{directoris}/rename
+PATCH /api/v1/knowledge/{owner_type}/{owner_id}/directories/{directory_id}/rename
 ```
 
 **Request body**
 
 
-| Python<br>{<br>  "name": "string"<br>} |
-| --- |
+```json
+{
+"name": "string"
+}
+```
 
 
 **Response data**
@@ -2256,19 +2346,23 @@ PATCH /api/v1/knowledge/{owner_type}/{owner_id}/directoris/{directoris}/rename
 
 
 ##### 4.1.19 删除非默认目录
-接口描述：只允许删除非默认目录以及该目录下不存在目录和文件
 
+软删目录。仅非默认目录；须无子目录且无直接挂载文件，否则拒绝。
 
 ```http
-DELETE /api/v1/knowledge/{owner_type}/{owner_id}/directoris/{directoris}
+DELETE /api/v1/knowledge/{owner_type}/{owner_id}/directories/{directory_id}
 ```
-
 
 **Response data**
 
 
-| Python<br>{<br>  "code": 0,<br>  "message": "ok",<br>  "data": "string"<br>} |
-| --- |
+```json
+{
+"code": 0,
+"message": "ok",
+"data": null
+}
+```
 
 
 ##### 4.1.20 批量移动文件到指定目录
@@ -2279,30 +2373,64 @@ DELETE /api/v1/knowledge/{owner_type}/{owner_id}/directoris/{directoris}
 POST /api/v1/knowledge/{owner_type}/{owner_id}/files/batch/move
 ```
 
-**Request body：（target_dir_id允许为null）**
+**Request body**
 
 
-| Python<br>{<br>  "file_ids": [<br>    "3fa85f64-5717-4562-b3fc-2c963f66afa6"<br>  ],<br>  "target_dir_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6"<br>} |
-| --- |
-
-
-**Responses data**
-
-
-| Python<br>{<br>  "code": 0,<br>  "message": "ok",<br>  "data": {<br>    "moved_count": 0<br>  }<br>} |
-| --- |
-
-
-##### 4.1.21 文件上传重试
-
-```http
-POST /api/v1/knowledge/{owner_type}/{owner_id}/files/indexing-tasks/task_is/retry
+```json
+{
+"file_ids": [
+"3fa85f64-5717-4562-b3fc-2c963f66afa6"
+],
+"target_dir_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+}
 ```
 
-**Parameters**
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| file_ids | string[] (uuid) | ✅ | 待移动文件 ID，最多 200 个，自动去重 |
+| target_dir_id | string (uuid) / null | ❌ | 目标目录；不传或 `null` 表示未归类（清空 `dir_id`） |
 
 
-**Responses**
+**Response data**
+
+
+```json
+{
+"code": 0,
+"message": "ok",
+"data": {
+"moved_count": 0
+}
+}
+```
+
+
+##### 4.1.21 重试失败的下游索引任务
+
+重试失败的下游索引 Celery 任务。
+
+`task_id` 取自文件列表（`indexing_task_id`）或 `GET .../files/{id}/status` 返回的 `indexing_task_id`（对应 `tasks` 表主键）。仅当 `tasks.status=failed`、关联文件仍属于当前路径 owner、且 `files.status` 尚未 `done` 时允许重试；成功后任务重置为 `pending` 并再次入队，`retry_count` 递增。
+
+```http
+POST /api/v1/knowledge/{owner_type}/{owner_id}/files/indexing-tasks/{task_id}/retry
+```
+
+**Path Parameters**
+
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| owner_type | string | ✅ | `personal` / `dept` / `org` |
+| owner_id | string (uuid) | ✅ | 对应 `user_id` / `dept_id` / `org_id` |
+| task_id | string (uuid) | ✅ | 下游索引任务 ID，与列表/状态接口中的 `indexing_task_id` 一致 |
+
+
+**Request body**
+
+无。
+
+**Response data**
 
 
 ```json
@@ -2317,6 +2445,67 @@ POST /api/v1/knowledge/{owner_type}/{owner_id}/files/indexing-tasks/task_is/retr
 ```
 
 
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| data.task_id | string (uuid) | 重新入队后的任务 ID |
+| data.file_id | string (uuid) | 关联文件 ID |
+
+
+##### 4.1.22 更新目录
+
+更新目录（当前仅支持修改 `name`）；`is_default=true` 的目录不可改名。与 §4.1.18 重命名能力等价，可按实现选用 `PUT` 或 `PATCH …/rename`。
+
+```http
+PUT /api/v1/knowledge/{owner_type}/{owner_id}/directories/{directory_id}
+```
+
+**Request body**
+
+
+```json
+{
+"name": "string"
+}
+```
+
+**Response data**
+
+
+```json
+{
+"code": 0,
+"message": "ok",
+"data": {
+"id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+"name": "string",
+"is_default": false,
+"sort_order": 0,
+"file_count": 0
+}
+}
+```
+
+
+##### 4.1.23 删除文件
+
+软删文件。
+
+```http
+DELETE /api/v1/knowledge/{owner_type}/{owner_id}/files/{id}
+```
+
+**Response data**
+
+
+```json
+{
+"code": 0,
+"message": "ok",
+"data": null
+}
+```
+
+
 #### 4.2 知识库搜索
 复用 sessions（type=kb_search）+ messages，搜索历史从会话列表取。
 
@@ -2324,7 +2513,7 @@ POST /api/v1/knowledge/{owner_type}/{owner_id}/files/indexing-tasks/task_is/retr
 ##### 4.2.1 搜索
 
 ```http
-POST /api/v1/knowledge-qa/{owner_type}/{owner_id}search
+POST /api/v1/knowledge-qa/{owner_type}/{owner_id}/search
 ```
 
 ```json
@@ -2749,22 +2938,53 @@ GET /api/v1/knowledge-recall/sessions/{session_id}
 ```
 
 
-##### 4.4.3 删除某owner下召回历史
+##### 4.4.3 删除某 owner 下召回历史
 
 ```http
 DELETE /api/v1/knowledge-recall/{owner_type}/{owner_id}/history
 ```
 
-**Parameters**
-
-owner_type、owner_id
+**Path Parameters**
 
 
-**Responses**
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| owner_type | string | ✅ | `personal` / `dept` / `org` |
+| owner_id | string (uuid) | ✅ | 对应 owner 主键 |
 
 
-| Python<br>{<br>  "code": 0,<br>  "message": "ok",<br>  "data": {<br>    "deleted_count": 0<br>  }<br>} |
-| --- |
+**Response data**
+
+
+```json
+{
+"code": 0,
+"message": "ok",
+"data": {
+"deleted_count": 0
+}
+}
+```
+
+
+##### 4.4.6 一键清除当前用户全部召回历史
+
+```http
+DELETE /api/v1/knowledge-recall/history
+```
+
+**Response data**
+
+
+```json
+{
+"code": 0,
+"message": "ok",
+"data": {
+"deleted_count": 0
+}
+}
+```
 
 
 ##### 4.4.4 删除某条记录
