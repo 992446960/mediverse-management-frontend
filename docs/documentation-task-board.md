@@ -4,31 +4,35 @@
 
 ## 文档资产
 
-| 文档 | 事实来源 | 状态 | 维护要求 |
-| --- | --- | --- | --- |
-| `README.md` | `package.json`、`vite.config.ts`、`README.Docker.md`、`docs/` | 已补全 | 项目定位、命令和文档索引变化时更新 |
-| `AGENTS.md` | `project-init`、当前仓库结构、验证命令 | 已补全 | Agent 操作边界、命令或文档索引变化时更新 |
-| `CLAUDE.md` | `project-init`、项目红线规则 | 已补全 | 核心红线变化时更新，保持 20 行以内 |
-| `docs/development-guide.md` | `wang-convention`、`src/`、`tests/` | 已补全 | 编码规范、架构约束或模块边界变化时更新 |
-| `docs/frontend-development.md` | `package.json`、`.env.*`、`vite.config.ts`、Docker 配置 | 已补全 | 启动、联调、验证、环境变量变化时更新 |
-| `README.Docker.md` | `Dockerfile`、`compose.yaml`、`nginx.conf`、`scripts/docker-*.sh` | 已补全 | Docker 打包、部署、变量、回滚流程变化时更新 |
-| `docs/API设计.docx` | Management、Ecosys、KnowledgeBase API 详细设计 | 已存在 | 接口设计、字段约定或错误码变化时更新 |
-| `docs/API设计.md` | `docs/API设计.docx` 的 Markdown 副本 | 已存在 | 自 docx 导出或随 docx 同步更新，便于检索与 diff |
-| `docs/markdown-test-sample.md` | Markdown 预览、解析和样式测试文本 | 已新增 | Markdown 渲染测试场景变化时更新 |
-| `docs/requirements/shanghai-first-hospital-customization-requirements.md` | 定制需求和 `docs/requirements/assets/` | 已存在 | 需求范围、素材或验收标准变化时更新 |
-| `tests/api-contract/API_CONTRACT_TEST_REPORT.md` | `tests/api-contract/`、真实 API 测试结果 | 已存在 | API 合规测试覆盖或结果变化时更新 |
+| 文档                                                                      | 事实来源                                                          | 状态   | 维护要求                                        |
+| ------------------------------------------------------------------------- | ----------------------------------------------------------------- | ------ | ----------------------------------------------- |
+| `README.md`                                                               | `package.json`、`vite.config.ts`、`README.Docker.md`、`docs/`     | 已补全 | 项目定位、命令和文档索引变化时更新              |
+| `AGENTS.md`                                                               | `project-init`、当前仓库结构、验证命令                            | 已补全 | Agent 操作边界、命令或文档索引变化时更新        |
+| `CLAUDE.md`                                                               | `project-init`、项目红线规则                                      | 已补全 | 核心红线变化时更新，保持 20 行以内              |
+| `docs/development-guide.md`                                               | `wang-convention`、`src/`、`tests/`                               | 已补全 | 编码规范、架构约束或模块边界变化时更新          |
+| `docs/frontend-development.md`                                            | `package.json`、`.env.*`、`vite.config.ts`、Docker 配置           | 已补全 | 启动、联调、验证、环境变量变化时更新            |
+| `README.Docker.md`                                                        | `Dockerfile`、`compose.yaml`、`nginx.conf`、`scripts/docker-*.sh` | 已补全 | Docker 打包、部署、变量、回滚流程变化时更新     |
+| `docs/API设计.docx`                                                       | Management、Ecosys、KnowledgeBase API 详细设计                    | 已存在 | 接口设计、字段约定或错误码变化时更新            |
+| `docs/API设计.md`                                                         | `docs/API设计.docx` 的 Markdown 副本                              | 已存在 | 自 docx 导出或随 docx 同步更新，便于检索与 diff |
+| `docs/markdown-test-sample.md`                                            | Markdown 预览、解析和样式测试文本                                 | 已新增 | Markdown 渲染测试场景变化时更新                 |
+| `docs/requirements/shanghai-first-hospital-customization-requirements.md` | 定制需求和 `docs/requirements/assets/`                            | 已存在 | 需求范围、素材或验收标准变化时更新              |
+| `tests/api-contract/API_CONTRACT_TEST_REPORT.md`                          | `tests/api-contract/`、真实 API 测试结果                          | 已存在 | API 合规测试覆盖或结果变化时更新                |
 
 ## 检查任务
 
-| 任务 | 命令 | 状态 |
-| --- | --- | --- |
-| 文档新鲜度检查 | `pnpm check:docs` | 必须通过 |
-| 聚合验证 | `pnpm verify` | 代码或配置变更时必须通过 |
-| Docker Compose 校验 | `docker compose config` | Docker 相关变更时必须通过 |
-| API 合规测试 | `pnpm test:api` | 具备 `.env.api-test` 和网络条件时运行 |
+| 任务                | 命令                    | 状态                                  |
+| ------------------- | ----------------------- | ------------------------------------- |
+| 文档新鲜度检查      | `pnpm check:docs`       | 必须通过                              |
+| 聚合验证            | `pnpm verify`           | 代码或配置变更时必须通过              |
+| Docker Compose 校验 | `docker compose config` | Docker 相关变更时必须通过             |
+| API 合规测试        | `pnpm test:api`         | 具备 `.env.api-test` 和网络条件时运行 |
 
 ## 近期同步记录
 
+- `docs/API设计.md` §4.1.14 回滚接口补全 Request（`reason`）与 Response（`CardWithRollbackActionOut` + `rollback_action`）示例，与 Swagger 一致。
+- 按线上 OpenAPI 对 `docs/API设计.md` §四二次 diff：修正目录/搜索路径拼写，补 §4.1.5 `indexing_task_id`、§4.1.22/4.1.23/4.4.6，规范 §4.1.15–20 的 http 与 JSON 示例；§4.1.17/4.1.21 已与 Swagger 一致。
+- 执行知识库 API 合同对齐计划：接入非默认目录重命名/删除、文件批量移动、失败索引任务重试、知识库搜索 owner 隔离路径，并同步 MSW mock 后端真实接口路径、请求体和响应字段。
+- `docs/API设计.md` §4.1.21 按线上 Swagger 对齐「重试失败的下游索引任务」：路径 `{task_id}`、Path Parameters 表、无 Request body、`FileIndexingRetryOut` 响应示例与字段说明。
 - 知识卡与技能执行字段合同对齐：知识卡正文前端统一消费 `md_content`，技能执行 `done.result.citations` 归一化为 `md_content` / `json_content`，mock 不再继续写旧 `content` 字段。
 - 新增 `docs/API设计.docx`，作为 Management、Ecosys、KnowledgeBase 域接口详细设计文档，并同步 README 文档索引。
 - 由 `docs/API设计.docx` 导出 `docs/API设计.md`（Markdown），便于版本 diff 与 IDE 阅读；后续 docx 变更时需同步更新 md。
@@ -44,6 +48,7 @@
 - 自飞书 Wiki「API设计」反向同步至 `docs/API设计.md`（§3.2.2 citations、`§4.1.9` 创建字段说明、`§4.1.17` 审核响应 `json_content`/`md_content`/`audit_reject_reason`）。
 - 全量自飞书 Wiki（`RjKPwTWUBivbaykfexbcBzaTnvb`）重新生成 `docs/API设计.md`，内容与飞书 docx 纯文本一致；本地不再自行改写 SSE/召回字段注释格式。
 - 同步策略调整为：**语义与飞书 Wiki 一致**，本地 `docs/API设计.md` 使用规范 Markdown（代码块、表格、缩进 JSON）；§3.2.2 SSE 示例拆分为流式 `http` 片段与展开的 `done` JSON。
+- `PageTable` 的 `type: 'selection'` 列配置现映射 `width` → `rowSelection.columnWidth`、`fixed` → `rowSelection.fixed`，列宽与固定列设置可生效。
 
 ## 待维护规则
 
