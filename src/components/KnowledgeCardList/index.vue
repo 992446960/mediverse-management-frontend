@@ -10,6 +10,8 @@ import {
   CloudDownloadOutlined,
   SearchOutlined,
   ReloadOutlined,
+  CheckOutlined,
+  CloseOutlined,
 } from '@ant-design/icons-vue'
 import type {
   KnowledgeCard,
@@ -22,6 +24,8 @@ import type {
 import { ONLINE_STATUS_CONFIG, AUDIT_STATUS_CONFIG, getCardTypeConfig } from '@/types/knowledge'
 import KnowledgeCardEditor from '../KnowledgeCardEditor/index.vue'
 import KnowledgeCardViewer from '../KnowledgeCardViewer/index.vue'
+import KnowledgeCardStatusConfirmModal from '../KnowledgeCardStatusConfirmModal.vue'
+import KnowledgeCardAuditModal from '../KnowledgeCardAuditModal.vue'
 import PageHead from '@/components/PageHead/index.vue'
 import PageFilter from '@/components/PageFilter/index.vue'
 import PageTable from '@/components/PageTable/index.vue'
@@ -30,6 +34,7 @@ import {
   toggleKnowledgeCardStatus,
   deleteKnowledgeCard,
   getCardTypes,
+  auditKnowledgeCard,
 } from '@/api/knowledge'
 import { useFileRemoteSearch } from '@/composables/useFileRemoteSearch'
 import type { PageHeadConfig } from '@/components/PageHead/types'
@@ -71,6 +76,14 @@ const editorOpen = ref(false)
 const editingCard = ref<KnowledgeCard | undefined>(undefined)
 const viewerOpen = ref(false)
 const viewingCardId = ref<string | null>(null)
+const statusConfirmOpen = ref(false)
+const statusConfirmLoading = ref(false)
+const statusConfirmCard = ref<KnowledgeCard | null>(null)
+const statusConfirmTargetStatus = ref<OnlineStatus>('offline')
+const auditModalOpen = ref(false)
+const auditLoading = ref(false)
+const auditCard = ref<KnowledgeCard | null>(null)
+const auditAction = ref<'approved' | 'rejected'>('approved')
 
 const headConf = computed<PageHeadConfig>(() => ({
   title: t('knowledge.card.title'),
@@ -218,7 +231,7 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
   {
     label: t('common.actions'),
     type: 'operation',
-    width: 240,
+    width: 260,
     fixed: 'right',
     btns: [
       {
@@ -237,19 +250,35 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
           row.online_status === 'online' ? t('knowledge.card.offline') : t('knowledge.card.online'),
         dynamicIcon: (row) =>
           row.online_status === 'online' ? CloudDownloadOutlined : CloudUploadOutlined,
-        type: 'popconfirm',
-        dynamicPopconfirmTitle: (row) =>
-          row.online_status === 'online'
-            ? t('knowledge.card.confirmToggleOffline')
-            : t('knowledge.card.confirmToggleOnline'),
         handle: (row) => handleStatusToggle(row as KnowledgeCard),
       },
       {
-        text: t('common.delete'),
-        icon: DeleteOutlined,
-        type: 'popconfirm',
-        popconfirmTitle: t('knowledge.card.confirmDelete'),
-        handle: (row) => handleDelete(row as KnowledgeCard),
+        text: t('common.more'),
+        type: 'popover',
+        moreList: [
+          {
+            text: t('knowledge.card.auditApprove'),
+            icon: CheckOutlined,
+            color: 'success',
+            btnIsShow: (row) => row.audit_status === 'pending',
+            handle: (row) => handleAuditAction(row as KnowledgeCard, 'approved'),
+          },
+          {
+            text: t('knowledge.card.auditReject'),
+            icon: CloseOutlined,
+            color: 'danger',
+            btnIsShow: (row) => row.audit_status === 'pending',
+            handle: (row) => handleAuditAction(row as KnowledgeCard, 'rejected'),
+          },
+          {
+            text: t('common.delete'),
+            icon: DeleteOutlined,
+            color: 'danger',
+            type: 'popconfirm',
+            popconfirmTitle: t('knowledge.card.confirmDelete'),
+            handle: (row) => handleDelete(row as KnowledgeCard),
+          },
+        ],
       },
     ],
   },
@@ -351,19 +380,95 @@ const handleViewerStatusChanged = (payload: { id: string; online_status: OnlineS
   patchTableRowOnlineStatus(payload.id, payload.online_status)
 }
 
-const handleStatusToggle = async (record: KnowledgeCard) => {
-  const newStatus = record.online_status === 'online' ? 'offline' : 'online'
+const doStatusToggle = async (record: KnowledgeCard, newStatus: OnlineStatus, note?: string) => {
   try {
-    await toggleKnowledgeCardStatus(props.ownerType, props.ownerId, record.id, newStatus)
+    await toggleKnowledgeCardStatus(props.ownerType, props.ownerId, record.id, newStatus, note)
     message.success(
       newStatus === 'online'
         ? t('knowledge.card.onlineSuccess')
         : t('knowledge.card.offlineSuccess')
     )
     patchTableRowOnlineStatus(record.id, newStatus)
+    return true
   } catch (err) {
     console.error('Status toggle failed:', err)
     message.error(t('common.error'))
+    return false
+  }
+}
+
+const handleStatusToggle = (record: KnowledgeCard) => {
+  const newStatus = record.online_status === 'online' ? 'offline' : 'online'
+  if (newStatus === 'online' && record.audit_status === 'rejected') {
+    message.warning(t('knowledge.card.onlineBlockedByAudit'))
+    return
+  }
+  statusConfirmCard.value = record
+  statusConfirmTargetStatus.value = newStatus
+  statusConfirmOpen.value = true
+}
+
+const handleStatusConfirm = async (note?: string) => {
+  if (!statusConfirmCard.value) return
+  statusConfirmLoading.value = true
+  const ok = await doStatusToggle(
+    statusConfirmCard.value,
+    statusConfirmTargetStatus.value,
+    statusConfirmTargetStatus.value === 'offline' ? note : undefined
+  )
+  statusConfirmLoading.value = false
+  if (ok) {
+    statusConfirmOpen.value = false
+    statusConfirmCard.value = null
+  }
+}
+
+function patchTableRowAuditStatus(
+  id: string,
+  audit_status: AuditStatus,
+  audit_reject_reason?: string
+) {
+  const row = tableData.value.find((r) => r.id === id)
+  if (row) {
+    row.audit_status = audit_status
+    row.audit_reject_reason = audit_reject_reason ?? null
+  }
+}
+
+const handleViewerAuditChanged = (payload: { id: string; audit_status: AuditStatus }) => {
+  patchTableRowAuditStatus(payload.id, payload.audit_status)
+}
+
+const handleAuditAction = (record: KnowledgeCard, action: 'approved' | 'rejected') => {
+  auditCard.value = record
+  auditAction.value = action
+  auditModalOpen.value = true
+}
+
+const handleAuditConfirm = async (reason?: string) => {
+  if (!auditCard.value) return
+  auditLoading.value = true
+  try {
+    await auditKnowledgeCard(
+      props.ownerType,
+      props.ownerId,
+      auditCard.value.id,
+      auditAction.value,
+      reason
+    )
+    message.success(t('knowledge.card.auditSuccess'))
+    patchTableRowAuditStatus(
+      auditCard.value.id,
+      auditAction.value,
+      auditAction.value === 'rejected' ? reason : undefined
+    )
+    auditModalOpen.value = false
+    auditCard.value = null
+  } catch (err) {
+    console.error('Audit failed:', err)
+    message.error(t('knowledge.card.auditFailed'))
+  } finally {
+    auditLoading.value = false
   }
 }
 </script>
@@ -425,8 +530,23 @@ const handleStatusToggle = async (record: KnowledgeCard) => {
       :owner-type="ownerType"
       :owner-id="ownerId"
       @status-changed="handleViewerStatusChanged"
+      @audit-changed="handleViewerAuditChanged"
       @edit="handleEditFromViewer"
       @deleted="fetchData"
+    />
+
+    <KnowledgeCardStatusConfirmModal
+      v-model:open="statusConfirmOpen"
+      :target-status="statusConfirmTargetStatus"
+      :confirm-loading="statusConfirmLoading"
+      @confirm="handleStatusConfirm"
+    />
+
+    <KnowledgeCardAuditModal
+      v-model:open="auditModalOpen"
+      :action="auditAction"
+      :confirm-loading="auditLoading"
+      @confirm="handleAuditConfirm"
     />
   </div>
 </template>
