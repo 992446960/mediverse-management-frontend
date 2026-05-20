@@ -204,6 +204,17 @@ const routes: RouteRecordRaw[] = [
         meta: { title: 'menu.knowledgeCards', requiredRoles: ['user'] },
       },
       {
+        path: 'knowledge-cards/recall-test',
+        name: 'MyKnowledgeRecallTest',
+        component: () => import('@/views/my/KnowledgeRecallTest.vue'),
+        meta: {
+          title: 'knowledge.recall.title',
+          hidden: true,
+          requiredRoles: ['user'],
+          activeMenu: 'my-knowledge',
+        },
+      },
+      {
         path: 'avatar',
         name: 'MyAvatar',
         component: () => import('@/views/my/Avatar.vue'),
@@ -248,6 +259,16 @@ const routes: RouteRecordRaw[] = [
         meta: { title: 'menu.knowledgeCards' },
       },
       {
+        path: 'knowledge-cards/recall-test',
+        name: 'DeptKnowledgeRecallTest',
+        component: () => import('@/views/dept/KnowledgeRecallTest.vue'),
+        meta: {
+          title: 'knowledge.recall.title',
+          hidden: true,
+          activeMenu: 'dept-knowledge',
+        },
+      },
+      {
         path: 'avatar',
         name: 'DeptAvatar',
         component: () => import('@/views/dept/Avatar.vue'),
@@ -290,6 +311,16 @@ const routes: RouteRecordRaw[] = [
         name: 'OrgKnowledgeCards',
         component: () => import('@/views/org/KnowledgeCards.vue'),
         meta: { title: 'menu.knowledgeCards' },
+      },
+      {
+        path: 'knowledge-cards/recall-test',
+        name: 'OrgKnowledgeRecallTest',
+        component: () => import('@/views/org/KnowledgeRecallTest.vue'),
+        meta: {
+          title: 'knowledge.recall.title',
+          hidden: true,
+          activeMenu: 'org-knowledge',
+        },
       },
       {
         path: 'avatar',

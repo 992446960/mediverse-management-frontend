@@ -111,6 +111,17 @@ const headConf = computed<PageHeadConfig>(() => ({
   },
 }))
 
+const recallTestPath = computed(() => {
+  const pathMap = {
+    personal: '/my/knowledge-cards/recall-test',
+    dept: '/dept/knowledge-cards/recall-test',
+    org: '/org/knowledge-cards/recall-test',
+    avatar: '/my/knowledge-cards/recall-test',
+  } satisfies Record<OwnerType, string>
+
+  return pathMap[props.ownerType]
+})
+
 const filterConf = computed<PageFilterConfig>(() => ({
   filterForm: [
     {
@@ -477,7 +488,15 @@ const handleAuditConfirm = async (reason?: string) => {
 <template>
   <div class="knowledge-card-list flex flex-1 flex-col overflow-hidden">
     <div class="app-container p-4 mb-4">
-      <PageHead :head-conf="headConf" />
+      <PageHead :head-conf="headConf">
+        <a
+          :href="recallTestPath"
+          class="inline-flex h-8 items-center gap-1 rounded-md border border-slate-300 px-3 text-sm text-(--color-text-base) hover:border-primary hover:text-primary dark:border-slate-700"
+        >
+          <SearchOutlined />
+          {{ t('knowledge.recall.entry') }}
+        </a>
+      </PageHead>
       <PageFilter ref="pageFilterRef" :filter-conf="filterConf" @fetch-table-data="handleSearch">
         <template #sourceFileFilter="{ formData }">
           <a-select

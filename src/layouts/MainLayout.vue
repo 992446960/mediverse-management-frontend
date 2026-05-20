@@ -195,6 +195,12 @@ const handleUserMenuClick = async ({ key }: { key: string }) => {
 watch(
   () => currentRoute.path,
   () => {
+    const activeMenu = currentRoute.meta.activeMenu
+    if (typeof activeMenu === 'string' && activeMenu !== '') {
+      selectedKeys.value = [activeMenu]
+      return
+    }
+
     const findKey = (items: any[]): string | undefined => {
       for (const item of items) {
         if (item.path === currentRoute.path) return item.key
