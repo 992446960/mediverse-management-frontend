@@ -11,6 +11,7 @@
 
 <script setup lang="ts">
 import { MdEditor } from 'md-editor-v3'
+import type { ToolbarNames } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
 import { useI18n } from 'vue-i18n'
 
@@ -22,7 +23,7 @@ defineProps<{
 
 const content = defineModel<string>({ default: '' })
 
-const toolbars = [
+const toolbars: ToolbarNames[] = [
   'bold',
   'italic',
   'strikeThrough',
@@ -38,5 +39,5 @@ const toolbars = [
   '-',
   'table',
   'link',
-] as const
+]
 </script>
