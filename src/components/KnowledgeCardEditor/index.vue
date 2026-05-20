@@ -172,7 +172,7 @@ watch(
       formState.source_file_ids = []
       formState.change_summary = ''
 
-      const mdSource = props.card.md_content || props.card.content
+      const mdSource = props.card.md_content
       const fromList = typeof mdSource === 'string' && mdSource.trim().length > 0
       if (fromList) {
         formState.md_content = mdSource
@@ -181,7 +181,7 @@ watch(
         try {
           const detail = await getKnowledgeCardDetail(props.ownerType, props.ownerId, props.card.id)
           if (loadGen !== editorLoadGeneration) return
-          formState.md_content = detail.md_content || detail.content || ''
+          formState.md_content = detail.md_content || ''
         } catch {
           if (loadGen !== editorLoadGeneration) return
           formState.md_content = ''

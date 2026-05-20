@@ -29,6 +29,7 @@
 
 ## 近期同步记录
 
+- 知识卡与技能执行字段合同对齐：知识卡正文前端统一消费 `md_content`，技能执行 `done.result.citations` 归一化为 `md_content` / `json_content`，mock 不再继续写旧 `content` 字段。
 - 新增 `docs/API设计.docx`，作为 Management、Ecosys、KnowledgeBase 域接口详细设计文档，并同步 README 文档索引。
 - 由 `docs/API设计.docx` 导出 `docs/API设计.md`（Markdown），便于版本 diff 与 IDE 阅读；后续 docx 变更时需同步更新 md。
 - 复查静态 i18n key 使用，知识卡 JSON 复制提示复用 `common.copied`，科室/机构文件页无权限提示复用 `knowledge.noDeptPermission` / `knowledge.noOrgPermission`。

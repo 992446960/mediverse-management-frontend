@@ -5,8 +5,6 @@ export const mockKnowledgeCards: KnowledgeCard[] = [
     id: 'card_001',
     title: '高血压诊断标准',
     type: 'evidence',
-    content:
-      '### 高血压诊断标准\n\n根据《中国高血压防治指南（2018年修订版）》，在未用抗高血压药的情况下，非同日3次测量血压，收缩压≥140mmHg和/或舒张压≥90mmHg即可诊断为高血压。\n\n#### 血压水平分类：\n- **正常血压**：收缩压 <120 且 舒张压 <80\n- **正常高值**：收缩压 120-139 或 舒张压 80-89\n- **1级高血压**：收缩压 140-159 或 舒张压 90-99\n- **2级高血压**：收缩压 160-179 或 舒张压 100-109\n- **3级高血压**：收缩压 ≥180 或 舒张压 ≥110',
     json_content: JSON.stringify(
       {
         title: '高血压诊断标准',
@@ -42,8 +40,6 @@ export const mockKnowledgeCards: KnowledgeCard[] = [
     id: 'card_002',
     title: '降压药物选用原则',
     type: 'rule',
-    content:
-      '### 降压药物选用原则\n\n1. **小剂量开始**：初始治疗通常应采用较小有效剂量，根据需要逐步增加剂量。\n2. **优先选择长效制剂**：尽可能使用一天一次给药而有持续24小时降压作用的长效药物。\n3. **联合用药**：2级高血压及以上或高危患者，初始即可采用两种药物联合治疗。\n4. **个体化治疗**：根据患者具体情况、药物有效性及耐受性选择药物。',
     json_content: JSON.stringify(
       {
         title: '降压药物选用原则',
@@ -71,8 +67,6 @@ export const mockKnowledgeCards: KnowledgeCard[] = [
     id: 'card_003',
     title: '顽固性高血压处理经验',
     type: 'experience',
-    content:
-      '### 顽固性高血压处理经验\n\n在临床实践中，遇到顽固性高血压（使用三种及以上降压药仍未达标）时，应首先排除以下因素：\n\n- **伪难治性高血压**：如白大衣高血压、测量不准。\n- **生活方式未改善**：高盐饮食、肥胖、大量饮酒。\n- **药物干扰**：如非甾体抗炎药、甘草等。\n\n**经验建议**：尝试加入螺内酯（25mg/d）往往能取得意想不到的效果。',
     json_content: JSON.stringify(
       {
         title: '顽固性高血压处理经验',
@@ -101,8 +95,6 @@ export const mockKnowledgeCards: KnowledgeCard[] = [
     id: 'card_004',
     title: '住院患者跌倒风险评分',
     type: 'risk_point',
-    content:
-      '### 跌倒风险评分\n\n对高龄、步态不稳、近期使用镇静药物的住院患者，应在入院 24 小时内完成跌倒风险评分，并按高风险标签落实床旁提醒、陪护宣教和夜间巡视加密。',
     json_content: JSON.stringify(
       {
         title: '跌倒风险评分',

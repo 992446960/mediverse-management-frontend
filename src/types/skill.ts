@@ -45,7 +45,8 @@ export interface SkillCitation {
   owner_id?: string
   type: CardType
   title: string
-  content: string
+  json_content?: string
+  md_content: string
   /** 关联来源文件列表（SSE `result.citations[].sources`；元素可为 `{ name/file_name }` 或文件名字符串） */
   sources?: Array<SkillCitationSource | string>
   /** 单文件来源名（兼容旧字段）；无 `sources` 时可用于展示「来源」 */

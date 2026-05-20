@@ -85,9 +85,8 @@ function normalizeKnowledgeCard(data: unknown): KnowledgeCard {
       : typeof base.content === 'string'
         ? base.content
         : ''
-  const content = md_content || (typeof base.content === 'string' ? base.content : '')
 
-  return {
+  const normalized: KnowledgeCard = {
     ...base,
     source_files,
     version,
@@ -95,8 +94,9 @@ function normalizeKnowledgeCard(data: unknown): KnowledgeCard {
       typeof cv === 'number' || (typeof cv === 'string' && cv !== '') ? cv : base.current_version,
     json_content,
     md_content,
-    content,
   }
+  if (typeof base.content === 'string') normalized.content = base.content
+  return normalized
 }
 
 function normalizeKnowledgeCardVersion(raw: KnowledgeCardVersionRaw): KnowledgeCardVersion {

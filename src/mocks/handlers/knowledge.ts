@@ -406,8 +406,7 @@ export const knowledgeHandlers = [
     const newCard: KnowledgeCard = {
       id: `card_${Date.now()}`,
       title: payload.title,
-      content: payload.md_content || payload.content || '',
-      md_content: payload.md_content || payload.content || '',
+      md_content: payload.md_content || '',
       json_content: '',
       type: payload.type,
       tags: payload.tags || [],
@@ -557,8 +556,7 @@ export const knowledgeHandlers = [
       )
 
       if (card && versionData) {
-        card.content = versionData.md_content
-        card.md_content = versionData.md_content
+        card.md_content = versionData.md_content ?? ''
         card.version = versionData.version
         card.updated_at = new Date().toISOString()
         return HttpResponse.json({ code: 0, message: 'ok', data: card })

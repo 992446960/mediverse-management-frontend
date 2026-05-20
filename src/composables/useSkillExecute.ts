@@ -2,6 +2,12 @@ import type { Ref } from 'vue'
 import type { ThinkingProcessStep } from '@/types/chat'
 import type { SkillExecuteContext, SkillExecuteResult } from '@/types/skill'
 
+type RawSkillCitation = SkillExecuteResult['citations'][number] & {
+  content?: unknown
+  md_content?: unknown
+  json_content?: unknown
+}
+
 export interface SkillExecuteCallbacks {
   onDelta?: (text: string) => void
   onThinkingStep?: () => void
@@ -57,6 +63,29 @@ export function useSkillExecute(): UseSkillExecuteReturn {
   }
 
   const yieldToEventLoop = () => new Promise<void>((r) => setTimeout(r, 0))
+
+  function normalizeSkillExecuteResult(raw: SkillExecuteResult): SkillExecuteResult {
+    return {
+      ...raw,
+      parts: Array.isArray(raw.parts) ? raw.parts : [],
+      citations: Array.isArray(raw.citations)
+        ? raw.citations.map((citation) => {
+            const row = citation as RawSkillCitation
+            const normalized = {
+              ...citation,
+              md_content:
+                typeof row.md_content === 'string'
+                  ? row.md_content
+                  : typeof row.content === 'string'
+                    ? row.content
+                    : '',
+            }
+            if (typeof row.json_content === 'string') normalized.json_content = row.json_content
+            return normalized
+          })
+        : [],
+    }
+  }
 
   async function processSSEStream(
     reader: ReadableStreamDefaultReader<Uint8Array>,
@@ -132,7 +161,8 @@ export function useSkillExecute(): UseSkillExecuteReturn {
                 const skillRunId = event.skill_run_id as string | undefined
                 const tokensUsed = event.tokens_used as number | undefined
                 const durationMs = event.duration_ms as number | undefined
-                const res = event.result as SkillExecuteResult | undefined
+                const rawResult = event.result as SkillExecuteResult | undefined
+                const res = rawResult ? normalizeSkillExecuteResult(rawResult) : undefined
 
                 if (res) {
                   result.value = res
@@ -184,7 +214,8 @@ export function useSkillExecute(): UseSkillExecuteReturn {
               const skillRunId = event.skill_run_id as string | undefined
               const tokensUsed = event.tokens_used as number | undefined
               const durationMs = event.duration_ms as number | undefined
-              const res = event.result as SkillExecuteResult | undefined
+              const rawResult = event.result as SkillExecuteResult | undefined
+              const res = rawResult ? normalizeSkillExecuteResult(rawResult) : undefined
 
               if (res) {
                 result.value = res

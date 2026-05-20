@@ -306,7 +306,7 @@ const goBack = () => {
               :tags="citation.tags"
               :source-file-name="formatCitationSourceForPreview(citation)"
             >
-              <CitationPreviewHtml :content="citation.content" variant="skill" />
+              <CitationPreviewHtml :content="citation.md_content" variant="skill" />
             </KnowledgeCardPreview>
           </div>
         </div>

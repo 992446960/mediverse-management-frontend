@@ -270,7 +270,7 @@ const sourceFileRows = computed(() => {
 
 const contentBodyBindings = computed(() => ({
   jsonContent: card.value!.json_content,
-  mdContent: card.value!.md_content || card.value!.content || '',
+  mdContent: card.value!.md_content || '',
   tags: card.value!.tags,
   sourceFileRows: sourceFileRows.value,
   openingId: openingSourceFileId.value,

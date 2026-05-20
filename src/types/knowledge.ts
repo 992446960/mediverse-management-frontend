@@ -83,7 +83,10 @@ export interface FileCard {
 export interface KnowledgeCard {
   id: string
   title: string
-  content: string
+  /** 旧版兼容字段；新接口正文使用 md_content */
+  content?: string
+  /** 列表接口返回的搜索预览 */
+  content_preview?: string
   json_content: string
   md_content: string
   type: CardType
@@ -122,7 +125,7 @@ export interface KnowledgeCardVersion {
   created_by: string
   created_by_name: string
   created_at: string
-  md_content: string
+  md_content?: string
 }
 
 /** 文件处理状态响应 */
