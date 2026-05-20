@@ -115,6 +115,7 @@ import type { Key } from 'ant-design-vue/es/table/interface'
 import type { ColumnsType } from 'ant-design-vue/es/table'
 import { ReloadOutlined, SettingOutlined } from '@ant-design/icons-vue'
 import ColumnsEditor from './ColumnsEditor.vue'
+import { getPageTableScrollY } from './height'
 import OperationCell from './OperationCell.vue'
 import ScopeCell from './ScopeCell.vue'
 import type { PageTableConfig, PageTableColumnConfig } from './types'
@@ -122,7 +123,6 @@ import type { PageTableConfig, PageTableColumnConfig } from './types'
 const { t } = useI18n()
 
 const DEFAULT_SCROLL_Y = 400
-const TABLE_MARGIN_BOTTOM = 100
 
 const props = withDefaults(
   defineProps<{
@@ -378,7 +378,7 @@ function setTableHeight() {
   const el = tableContainerRef.value
   if (!el) return
   const h = el.getBoundingClientRect().height
-  measuredScrollY.value = Math.max(100, Math.floor(h) - TABLE_MARGIN_BOTTOM)
+  measuredScrollY.value = getPageTableScrollY(h, props.tableConf?.tableMarginBottom)
 }
 
 onMounted(() => {
@@ -389,7 +389,7 @@ onMounted(() => {
     const entry = entries[0]
     if (!entry) return
     const { height } = entry.contentRect
-    const nextY = Math.max(100, Math.floor(height) - TABLE_MARGIN_BOTTOM)
+    const nextY = getPageTableScrollY(height, props.tableConf?.tableMarginBottom)
     if (!hasAppliedObserverScrollY) {
       measuredScrollY.value = nextY
       hasAppliedObserverScrollY = true

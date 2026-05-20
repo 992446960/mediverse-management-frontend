@@ -119,6 +119,6 @@ export interface PageTableConfig {
   paginationSizes?: number[]
   /** 固定表格高度（传入时跳过自动高度计算） */
   tableHeight?: number | string
-  /** 计算自适应高度时底部留白，默认 100 */
+  /** 计算自适应高度时底部留白，默认 0 */
   tableMarginBottom?: number
 }
