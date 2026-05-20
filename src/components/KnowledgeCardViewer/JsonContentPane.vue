@@ -50,7 +50,7 @@ const parsedData = computed(() => {
 function handleCopy() {
   const text = props.jsonContent || '{}'
   navigator.clipboard.writeText(text).then(() => {
-    message.success(t('common.copySuccess'))
+    message.success(t('common.copied'))
   })
 }
 </script>

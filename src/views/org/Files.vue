@@ -7,7 +7,7 @@
       :title="t('menu.orgFilesManagement')"
     />
     <div v-else class="flex flex-1 items-center justify-center">
-      <a-empty :description="t('common.noPermission')" />
+      <a-empty :description="t('knowledge.noOrgPermission')" />
     </div>
   </div>
 </template>
