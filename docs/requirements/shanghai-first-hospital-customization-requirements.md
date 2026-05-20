@@ -289,11 +289,44 @@ export interface MenuConfig {
 3. 在定制分支 `menu.ts` 按 5.4.4 配置表打标。
 4. 本地验证：侧栏仅见 6 类入口；直接访问 `/`、`/chat`、`/admin/api-tokens` 等仍可打开且权限正常；面包屑与 TagsView 无异常。
 
+##### 主分支合并策略
+
+菜单定制与主分支隔离：**机制可共享，打标与品牌不进入主分支**。未打标时 `hidden` / `flattenChildren` 为 `undefined`，主分支侧栏与现网一致。
+
+| 变更内容 | 是否允许合入 `main` | 说明 |
+| -------- | ------------------- | ---- |
+| `MenuConfig` 类型扩展（`hidden?`、`flattenChildren?`） | **允许** | 可选字段，默认不赋值即全量展示 |
+| `MainLayout.filterMenu` 对两字段的展示过滤 | **允许** | 不改变角色/工作台权限结论；合入后需在主分支做一次侧栏冒烟 |
+| `menu.ts` 中的 `hidden` / `flattenChildren` 打标 | **禁止** | 合入后主分支侧栏会被动裁剪 |
+| 品牌 i18n、Logo、登录背景、`index.html` 标题等样式定制 | **禁止** | 属 5.2 / 5.3 项目定制，仅留在定制分支 |
+| 整支 `feature/shanghai-first-hospital-customization` merge 进 `main` | **禁止** | 易夹带菜单打标与品牌改动 |
+| 知识卡详情、召回测试等通用能力（见 2.1） | **按文件拆分合入** | cherry-pick / 独立 PR 时不得夹带 `menu.ts` 打标与品牌文件 |
+
+**推荐 PR 拆分：**
+
+```text
+PR-A（可合 main）  MenuConfig 类型 + MainLayout.filterMenu；menu.ts 无任何 hidden / flattenChildren
+PR-B（仅定制分支） menu.ts 打标 + 品牌 / 登录 / Logo 等资源（长期保留在定制分支或医院交付分支）
+PR-C（按 2.1 合 main） 知识卡等通用能力；合并前 diff 重点检查 menu.ts、i18n、.env*
+```
+
+**构建与交付：**
+
+- 主分支构建：完整侧栏菜单 + 默认品牌（`医数智台` 等），流程与现网一致。
+- 上海市第一人民医院交付：从 `feature/shanghai-first-hospital-customization`（或从 main 拉取 PR-A 后再叠加 PR-B）构建，不将 PR-B 反向合并进 `main`。
+
+**合并前检查清单：**
+
+- [ ] `menu.ts` 中不存在 `hidden: true` 或 `flattenChildren: true`（合入主分支时）
+- [ ] `zh-CN.ts` / `en-US.ts` 的 `app.brandName` 仍为通用品牌（合入主分支时）
+- [ ] cherry-pick 通用功能提交时，未夹带定制菜单打标或品牌资源文件
+
 ##### 禁止事项
 
 - **禁止**从 `menuConfig` 中删除节点以「实现裁剪」（会导致面包屑 `leafPaths`、菜单 key 与路由同步缺失）。
 - **禁止**为裁剪而在 `routes.ts` 或路由守卫中禁用访问。
 - **禁止**改动 `requiredRoles` / `showWhenAvatar` 以变相隐藏菜单。
+- **禁止**将 5.4.4 配置表中的菜单打标或 5.2 / 5.3 品牌定制随整分支或误拆 PR 合入 `main`。
 
 #### 5.4.5 关联文件
 

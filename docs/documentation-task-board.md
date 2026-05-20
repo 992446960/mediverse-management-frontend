@@ -31,7 +31,7 @@
 
 ## 近期同步记录
 
-- 上海市第一人民医院定制需求：菜单开发方案定为 `MenuConfig.hidden` + `flattenChildren`，仅改 `menu.ts` 与 `MainLayout.filterMenu`（5.4.4）；含配置清单与验收对齐。
+- 上海市第一人民医院定制需求：补充 5.4.4「主分支合并策略」（机制可合 main、打标与品牌禁止合 main、PR 拆分与合并前检查清单）。
 - `DirectoryTree` 与 `PageTable` 暗色边框改为使用 `dark:border-(--color-border)`，与暗色主题变量保持一致。
 - `DirectoryTree` 与 `PageTable` 暗色容器背景改为使用 `--color-bg-container`，避免继续固定到 `slate-900`。
 - 文件上传队列改为先计算文件内容 MD5，并以 MD5 作为队列唯一标识；加入队列前按 MD5 去重，避免同一文件重复进入上传队列。
