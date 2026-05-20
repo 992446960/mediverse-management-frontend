@@ -17,18 +17,22 @@
 | `docs/markdown-test-sample.md`                                            | Markdown 预览、解析和样式测试文本                                 | 已新增 | Markdown 渲染测试场景变化时更新                 |
 | `docs/requirements/shanghai-first-hospital-customization-requirements.md` | 定制需求和 `docs/requirements/assets/`                            | 已存在 | 需求范围、素材或验收标准变化时更新              |
 | `tests/api-contract/API_CONTRACT_TEST_REPORT.md`                          | `tests/api-contract/`、真实 API 测试结果                          | 已存在 | API 合规测试覆盖或结果变化时更新                |
+| `docs/superpowers/plans/2026-05-20-python-mock-backend-openapi.md`        | 线上 Swagger、Python mock 后端实现计划                            | 已新增 | mock 后端接口范围、路径或验证命令变化时更新     |
 
 ## 检查任务
 
-| 任务                | 命令                    | 状态                                  |
-| ------------------- | ----------------------- | ------------------------------------- |
-| 文档新鲜度检查      | `pnpm check:docs`       | 必须通过                              |
-| 聚合验证            | `pnpm verify`           | 代码或配置变更时必须通过              |
-| Docker Compose 校验 | `docker compose config` | Docker 相关变更时必须通过             |
-| API 合规测试        | `pnpm test:api`         | 具备 `.env.api-test` 和网络条件时运行 |
+| 任务                 | 命令                                                                             | 状态                                  |
+| -------------------- | -------------------------------------------------------------------------------- | ------------------------------------- |
+| 文档新鲜度检查       | `pnpm check:docs`                                                                | 必须通过                              |
+| 聚合验证             | `pnpm verify`                                                                    | 代码或配置变更时必须通过              |
+| Docker Compose 校验  | `docker compose config`                                                          | Docker 相关变更时必须通过             |
+| API 合规测试         | `pnpm test:api`                                                                  | 具备 `.env.api-test` 和网络条件时运行 |
+| Python mock 合同测试 | `API_TEST_USE_MOCK=true API_BASE_URL=http://127.0.0.1:8005/api/v1 pnpm test:api` | mock 后端运行时执行                   |
 
 ## 近期同步记录
 
+- 制定 Python mock 后端计划：在前端同级目录新建 FastAPI mock backend，按线上 Swagger 当前 67 个 path / 90 个 operation 做全量覆盖，不引入数据库，并以 API contract 测试作为验收门禁。
+- 落地 Python mock 后端联调入口：mock 后端位于工作区同级目录 `../mediverse-management-mock-backend`，默认监听 `127.0.0.1:8005`；API contract 测试支持 `API_TEST_USE_MOCK=true`，并新增 `skills`、`upload`、`knowledge-recall` 覆盖；默认账号为 `dev001-user` / `dev001-dept` / `dev001-org`，密码均为 `123456`。
 - `docs/API设计.md` §4.1.14 回滚接口补全 Request（`reason`）与 Response（`CardWithRollbackActionOut` + `rollback_action`）示例，与 Swagger 一致。
 - 按线上 OpenAPI 对 `docs/API设计.md` §四二次 diff：修正目录/搜索路径拼写，补 §4.1.5 `indexing_task_id`、§4.1.22/4.1.23/4.4.6，规范 §4.1.15–20 的 http 与 JSON 示例；§4.1.17/4.1.21 已与 Swagger 一致。
 - 执行知识库 API 合同对齐计划：接入非默认目录重命名/删除、文件批量移动、失败索引任务重试、知识库搜索 owner 隔离路径，并同步 MSW mock 后端真实接口路径、请求体和响应字段。

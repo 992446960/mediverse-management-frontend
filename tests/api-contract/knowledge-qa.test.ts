@@ -61,7 +61,10 @@ describe('Knowledge QA 模块', () => {
         expect(Array.isArray(data.citations)).toBe(true)
         expect(Array.isArray(data.matched_files)).toBe(true)
 
-        await assertMatchesSchema('search_knowledge_api_v1_knowledge_qa_search_post', res.data)
+        await assertMatchesSchema(
+          'search_knowledge_api_v1_knowledge_qa__owner_type___owner_id__search_post',
+          res.data
+        )
       }
     })
 

@@ -18,8 +18,11 @@ export function getBaseUrl(): string {
 }
 
 function getCredentials() {
-  const username = process.env.TEST_USERNAME
-  const password = process.env.TEST_PASSWORD
+  const useMock = process.env.API_TEST_USE_MOCK === 'true'
+  const username =
+    process.env.API_TEST_USERNAME || process.env.TEST_USERNAME || (useMock ? 'dev001-user' : '')
+  const password =
+    process.env.API_TEST_PASSWORD || process.env.TEST_PASSWORD || (useMock ? '123456' : '')
   if (!username || !password) {
     throw new Error('缺少环境变量 TEST_USERNAME 或 TEST_PASSWORD')
   }

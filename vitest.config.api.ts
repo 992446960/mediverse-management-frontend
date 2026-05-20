@@ -5,6 +5,7 @@ import { loadEnv } from 'vite'
 export default defineConfig(({ mode }) => {
   const envDir = fileURLToPath(new URL('.', import.meta.url))
   const env = loadEnv(mode, envDir, ['API_', 'TEST_'])
+  const useMock = env.API_TEST_USE_MOCK === 'true'
 
   return {
     resolve: {
@@ -18,9 +19,16 @@ export default defineConfig(({ mode }) => {
       hookTimeout: 30_000,
       isolate: false,
       env: {
-        API_BASE_URL: env.API_BASE_URL || 'https://mediverse-management.huaxisy.com/api/v1',
-        TEST_USERNAME: env.TEST_USERNAME || 'string',
-        TEST_PASSWORD: env.TEST_PASSWORD || 'string',
+        API_BASE_URL:
+          env.API_BASE_URL ||
+          (useMock
+            ? 'http://127.0.0.1:8005/api/v1'
+            : 'https://mediverse-management.huaxisy.com/api/v1'),
+        TEST_USERNAME:
+          env.API_TEST_USERNAME || env.TEST_USERNAME || (useMock ? 'dev001-user' : 'string'),
+        TEST_PASSWORD:
+          env.API_TEST_PASSWORD || env.TEST_PASSWORD || (useMock ? '123456' : 'string'),
+        API_TEST_USE_MOCK: env.API_TEST_USE_MOCK,
       },
     },
   }
