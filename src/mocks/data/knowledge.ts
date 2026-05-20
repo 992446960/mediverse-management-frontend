@@ -113,6 +113,7 @@ export const mockFiles: FileListItem[] = [
     created_by_name: '北京协和医院',
     created_at: '2026-01-01T10:00:00Z',
     updated_at: '2026-01-01T10:05:00Z',
+    indexing_task_id: 'task_file_001',
   },
   {
     id: 'file_002',
@@ -132,6 +133,7 @@ export const mockFiles: FileListItem[] = [
     created_by_name: '北京协和医院',
     created_at: '2026-03-09T09:00:00Z',
     updated_at: '2026-03-09T09:00:00Z',
+    indexing_task_id: 'task_file_002',
   },
   {
     id: 'file_003',
@@ -151,6 +153,7 @@ export const mockFiles: FileListItem[] = [
     created_by_name: '北京协和医院',
     created_at: '2026-03-08T15:30:00Z',
     updated_at: '2026-03-08T15:31:00Z',
+    indexing_task_id: 'task_file_003',
   },
   {
     id: 'file_004',
@@ -170,6 +173,7 @@ export const mockFiles: FileListItem[] = [
     created_by_name: '北京协和医院',
     created_at: '2026-03-09T09:10:00Z',
     updated_at: '2026-03-09T09:10:00Z',
+    indexing_task_id: 'task_file_004',
   },
   {
     id: 'file_005',
@@ -189,6 +193,7 @@ export const mockFiles: FileListItem[] = [
     created_by_name: '北京协和医院',
     created_at: '2026-03-09T09:15:00Z',
     updated_at: '2026-03-09T09:15:00Z',
+    indexing_task_id: 'task_file_005',
   },
 ]
 

@@ -5,7 +5,11 @@
  * 覆盖接口：
  *  GET    /knowledge/{owner_type}/{owner_id}/directories
  *  POST   /knowledge/{owner_type}/{owner_id}/directories
+ *  PATCH  /knowledge/{owner_type}/{owner_id}/directories/{directory_id}/rename
+ *  DELETE /knowledge/{owner_type}/{owner_id}/directories/{directory_id}
  *  GET    /knowledge/{owner_type}/{owner_id}/files
+ *  POST   /knowledge/{owner_type}/{owner_id}/files/batch/move
+ *  POST   /knowledge/{owner_type}/{owner_id}/files/indexing-tasks/{task_id}/retry
  *  GET    /knowledge/{owner_type}/{owner_id}/cards
  *  POST   /knowledge/{owner_type}/{owner_id}/cards
  *  GET    /knowledge/{owner_type}/{owner_id}/cards/{id}
@@ -96,6 +100,24 @@ describe('Knowledge 模块', () => {
       const res = await authedPost(`${basePath()}/directories`, {})
       expect(res.status).toBe(400)
     })
+
+    it('PATCH directories/{id}/rename 不存在目录应返回 400 或 404', async () => {
+      if (!owner) return console.warn('跳过: 无可用 owner')
+
+      const fakeId = '00000000-0000-0000-0000-000000000000'
+      const res = await authedPatch(`${basePath()}/directories/${fakeId}/rename`, {
+        name: 'vitest-rename',
+      })
+      expect([400, 404]).toContain(res.status)
+    })
+
+    it('DELETE directories/{id} 不存在目录应返回 400 或 404', async () => {
+      if (!owner) return console.warn('跳过: 无可用 owner')
+
+      const fakeId = '00000000-0000-0000-0000-000000000000'
+      const res = await authedDelete(`${basePath()}/directories/${fakeId}`)
+      expect([400, 404]).toContain(res.status)
+    })
   })
 
   // ─── Files ───────────────────────────────────────────────
@@ -118,6 +140,7 @@ describe('Knowledge 模块', () => {
         expect(typeof file.file_type).toBe('string')
         expect(typeof file.file_size).toBe('number')
         expect(typeof file.status).toBe('string')
+        expect('indexing_task_id' in file).toBe(true)
         assertDatetime(file.created_at, 'file.created_at')
       }
 
@@ -125,6 +148,50 @@ describe('Knowledge 模块', () => {
         'list_files_api_v1_knowledge__owner_type___owner_id__files_get',
         res.data
       )
+    })
+
+    it('GET files/{id}/cards 应返回知识卡审核字段和来源字段', async () => {
+      if (!owner) return console.warn('跳过: 无可用 owner')
+
+      const listRes = await authedGet(`${basePath()}/files`, { page: 1, page_size: 1 })
+      const items = (listRes.data as any).data?.items
+      if (!items || items.length === 0) {
+        console.warn('跳过: 无文件数据')
+        return
+      }
+
+      const fileId = items[0].id
+      const res = await authedGet(`${basePath()}/files/${fileId}/cards`)
+      expect(res.status).toBe(200)
+      assertBaseResponseOk(res.data as Record<string, any>)
+
+      const cards = (res.data as any).data
+      expect(Array.isArray(cards)).toBe(true)
+      if (cards.length > 0) {
+        const card = cards[0]
+        expect('audit_status' in card).toBe(true)
+        expect('audit_reject_reason' in card).toBe(true)
+        expect('sources' in card).toBe(true)
+      }
+    })
+
+    it('POST files/batch/move 无效文件应返回 400 或 404', async () => {
+      if (!owner) return console.warn('跳过: 无可用 owner')
+
+      const fakeId = '00000000-0000-0000-0000-000000000000'
+      const res = await authedPost(`${basePath()}/files/batch/move`, {
+        file_ids: [fakeId],
+        target_dir_id: null,
+      })
+      expect([400, 404]).toContain(res.status)
+    })
+
+    it('POST files/indexing-tasks/{task_id}/retry 无效任务应返回 400 或 404', async () => {
+      if (!owner) return console.warn('跳过: 无可用 owner')
+
+      const fakeId = '00000000-0000-0000-0000-000000000000'
+      const res = await authedPost(`${basePath()}/files/indexing-tasks/${fakeId}/retry`)
+      expect([400, 404]).toContain(res.status)
     })
   })
 
@@ -165,6 +232,7 @@ describe('Knowledge 模块', () => {
         expect(Array.isArray(card.tags)).toBe(true)
         expect(typeof card.online_status).toBe('string')
         expect(typeof card.audit_status).toBe('string')
+        expect('audit_reject_reason' in card).toBe(true)
         assertDatetime(card.created_at, 'card.created_at')
       }
 
@@ -204,6 +272,7 @@ describe('Knowledge 模块', () => {
       const res = await authedGet(`${basePath()}/cards/${cardId}`)
       expect(res.status).toBe(200)
       assertBaseResponseOk(res.data as Record<string, any>)
+      expect('audit_reject_reason' in (res.data as any).data).toBe(true)
 
       await assertMatchesSchema(
         'get_card_detail_api_v1_knowledge__owner_type___owner_id__cards__id__get',
@@ -234,13 +303,14 @@ describe('Knowledge 模块', () => {
       const createRes = await authedPost(`${basePath()}/cards`, {
         title: `vitest-delete-${Date.now()}`,
         type: 'rule',
-        content: '临时删除测试卡片',
+        md_content: '临时删除测试卡片',
         tags: ['vitest'],
       })
       expect(createRes.status).toBe(200)
       assertBaseResponseOk(createRes.data as Record<string, any>)
 
-      const cardId = (createRes.data as any).data.id
+      const created = (createRes.data as any).data
+      const cardId = created.card_id ?? created.id
       const deleteRes = await authedDelete(`${basePath()}/cards/${cardId}`)
       expect(deleteRes.status).toBe(200)
       assertBaseResponseOk(deleteRes.data as Record<string, any>)

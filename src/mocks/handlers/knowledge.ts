@@ -37,7 +37,10 @@ const mockFileCards: Record<string, FileCard[]> = {
       title: '高血压诊断标准',
       tags: ['高血压', '诊断'],
       online_status: 'online',
+      audit_status: 'approved',
+      audit_reject_reason: '',
       confidence: 0.92,
+      sources: [{ id: 'file_001', file_name: '中国高血压防治指南2023.pdf' }],
     },
     {
       id: 'card_002',
@@ -45,7 +48,10 @@ const mockFileCards: Record<string, FileCard[]> = {
       title: '降压药物选用原则',
       tags: ['用药', '指南'],
       online_status: 'online',
+      audit_status: 'approved',
+      audit_reject_reason: '',
       confidence: 0.88,
+      sources: [{ id: 'file_001', file_name: '中国高血压防治指南2023.pdf' }],
     },
     {
       id: 'card_003',
@@ -53,7 +59,10 @@ const mockFileCards: Record<string, FileCard[]> = {
       title: '顽固性高血压处理经验',
       tags: ['临床经验'],
       online_status: 'online',
+      audit_status: 'approved',
+      audit_reject_reason: '',
       confidence: 0.85,
+      sources: [{ id: 'file_001', file_name: '中国高血压防治指南2023.pdf' }],
     },
     {
       id: 'card_004',
@@ -61,7 +70,10 @@ const mockFileCards: Record<string, FileCard[]> = {
       title: '高血压评估量表',
       tags: ['量表', '评估'],
       online_status: 'online',
+      audit_status: 'approved',
+      audit_reject_reason: '',
       confidence: 0.9,
+      sources: [{ id: 'file_001', file_name: '中国高血压防治指南2023.pdf' }],
     },
   ],
 }
@@ -70,6 +82,42 @@ const mockFileCards: Record<string, FileCard[]> = {
 const mutableDirectories = [...mockDirectories]
 const mutableFiles = [...mockFiles]
 const mutableCards = [...mockKnowledgeCards]
+
+function findDirectoryById(nodes: DirectoryNode[], id: string): DirectoryNode | null {
+  for (const node of nodes) {
+    if (node.id === id) return node
+    const child = node.children?.length ? findDirectoryById(node.children, id) : null
+    if (child) return child
+  }
+  return null
+}
+
+function findDirectoryName(nodes: DirectoryNode[], id: string): string | null {
+  return findDirectoryById(nodes, id)?.name ?? null
+}
+
+function removeDirectoryById(
+  nodes: DirectoryNode[],
+  id: string
+): 'deleted' | 'blocked' | 'missing' {
+  const index = nodes.findIndex((node) => node.id === id)
+  if (index >= 0) {
+    const dir = nodes[index]!
+    const hasFiles = mutableFiles.some((file) => file.dir_id === id)
+    if (dir.is_default || dir.children?.length || dir.file_count > 0 || hasFiles) {
+      return 'blocked'
+    }
+    nodes.splice(index, 1)
+    return 'deleted'
+  }
+
+  for (const node of nodes) {
+    if (!node.children?.length) continue
+    const result = removeDirectoryById(node.children, id)
+    if (result !== 'missing') return result
+  }
+  return 'missing'
+}
 
 export const knowledgeHandlers = [
   // 获取目录树
@@ -117,6 +165,61 @@ export const knowledgeHandlers = [
       data: newDir,
     })
   }),
+
+  // 重命名非默认目录
+  http.patch(
+    `${API_BASE}/knowledge/:ownerType/:ownerId/directories/:directoryId/rename`,
+    async ({ params, request }) => {
+      const directoryId = String(params.directoryId ?? '')
+      const payload = (await request.json()) as { name?: string }
+      const nextName = payload.name?.trim()
+      if (!nextName) {
+        return HttpResponse.json(
+          { code: 400, message: 'name is required', data: null },
+          { status: 400 }
+        )
+      }
+
+      const dir = findDirectoryById(mutableDirectories, directoryId)
+      if (!dir) {
+        return HttpResponse.json(
+          { code: 404, message: 'Directory not found', data: null },
+          { status: 404 }
+        )
+      }
+      if (dir.is_default) {
+        return HttpResponse.json(
+          { code: 400, message: 'Default directory cannot be renamed', data: null },
+          { status: 400 }
+        )
+      }
+
+      dir.name = nextName
+      return HttpResponse.json({ code: 0, message: 'ok', data: dir })
+    }
+  ),
+
+  // 删除非默认空目录
+  http.delete(
+    `${API_BASE}/knowledge/:ownerType/:ownerId/directories/:directoryId`,
+    async ({ params }) => {
+      const directoryId = String(params.directoryId ?? '')
+      const result = removeDirectoryById(mutableDirectories, directoryId)
+      if (result === 'missing') {
+        return HttpResponse.json(
+          { code: 404, message: 'Directory not found', data: null },
+          { status: 404 }
+        )
+      }
+      if (result === 'blocked') {
+        return HttpResponse.json(
+          { code: 400, message: 'Directory cannot be deleted', data: null },
+          { status: 400 }
+        )
+      }
+      return HttpResponse.json({ code: 0, message: 'ok', data: 'deleted' })
+    }
+  ),
 
   // 上传文件（单文件，FormData: file + 可选 dir_id）
   http.post(`${API_BASE}/knowledge/:ownerType/:ownerId/files`, async ({ request }) => {
@@ -171,6 +274,7 @@ export const knowledgeHandlers = [
         created_by_name: '北京协和医院',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+        indexing_task_id: `task_${id}`,
       }
       mutableFiles.push(newItem)
       await delay(200)
@@ -248,6 +352,52 @@ export const knowledgeHandlers = [
     })
   }),
 
+  // 批量移动文件到指定目录
+  http.post(`${API_BASE}/knowledge/:ownerType/:ownerId/files/batch/move`, async ({ request }) => {
+    const payload = (await request.json()) as {
+      file_ids?: string[]
+      target_dir_id?: string | null
+    }
+    const fileIds = Array.isArray(payload.file_ids) ? payload.file_ids : []
+    if (fileIds.length === 0) {
+      return HttpResponse.json(
+        { code: 400, message: 'file_ids is required', data: null },
+        { status: 400 }
+      )
+    }
+
+    const targetDirId = payload.target_dir_id ?? null
+    const targetDirName =
+      targetDirId == null ? '未分类' : findDirectoryName(mutableDirectories, targetDirId)
+    if (targetDirId != null && targetDirName == null) {
+      return HttpResponse.json(
+        { code: 404, message: 'Target directory not found', data: null },
+        { status: 404 }
+      )
+    }
+
+    let movedCount = 0
+    for (const file of mutableFiles) {
+      if (!fileIds.includes(file.id)) continue
+      file.dir_id = targetDirId ?? ''
+      file.dir_name = targetDirName ?? '未分类'
+      file.updated_at = new Date().toISOString()
+      movedCount++
+    }
+    if (movedCount === 0) {
+      return HttpResponse.json(
+        { code: 404, message: 'Files not found', data: null },
+        { status: 404 }
+      )
+    }
+
+    return HttpResponse.json({
+      code: 0,
+      message: 'ok',
+      data: { moved_count: movedCount },
+    })
+  }),
+
   // 查询文件处理状态（轮询）
   http.get(`${API_BASE}/knowledge/:ownerType/:ownerId/files/:fileId/status`, async ({ params }) => {
     const { fileId } = params
@@ -274,6 +424,7 @@ export const knowledgeHandlers = [
       data: {
         id: fileId,
         status: file.status,
+        indexing_task_id: file.indexing_task_id,
         progress: {
           current_step: file.status,
           steps: FILE_STATUS_STEPS,
@@ -283,6 +434,32 @@ export const knowledgeHandlers = [
       },
     })
   }),
+
+  // 重试失败的文件索引任务
+  http.post(
+    `${API_BASE}/knowledge/:ownerType/:ownerId/files/indexing-tasks/:taskId/retry`,
+    async ({ params }) => {
+      const taskId = String(params.taskId ?? '')
+      const file = mutableFiles.find((item) => item.indexing_task_id === taskId)
+      if (!file) {
+        return HttpResponse.json(
+          { code: 404, message: 'Task not found', data: null },
+          { status: 404 }
+        )
+      }
+      file.status = 'indexing'
+      file.error_msg = null
+      file.updated_at = new Date().toISOString()
+      return HttpResponse.json({
+        code: 0,
+        message: 'ok',
+        data: {
+          task_id: taskId,
+          file_id: file.id,
+        },
+      })
+    }
+  ),
 
   // 删除文件
   http.delete(`${API_BASE}/knowledge/:ownerType/:ownerId/files/:fileId`, async ({ params }) => {
@@ -412,8 +589,11 @@ export const knowledgeHandlers = [
       tags: payload.tags || [],
       online_status: 'offline',
       audit_status: 'pending',
+      audit_reject_reason: '',
       reference_count: 0,
-      source_files: payload.source_files || [],
+      source_files: Array.isArray(payload.source_file_ids)
+        ? payload.source_file_ids.map((id: string) => ({ id, name: id }))
+        : [],
       owner_type: ownerType as any,
       owner_id: ownerId,
       created_by: 'u_current_user',
@@ -423,7 +603,7 @@ export const knowledgeHandlers = [
       version: 'v1.0.0',
     }
     mutableCards.unshift(newCard)
-    return HttpResponse.json({ code: 0, message: 'created', data: newCard })
+    return HttpResponse.json({ code: 0, message: 'ok', data: { card_id: newCard.id } })
   }),
 
   // 更新知识卡

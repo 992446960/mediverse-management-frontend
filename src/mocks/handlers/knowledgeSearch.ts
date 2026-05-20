@@ -43,8 +43,16 @@ function createSearchResponse(
 }
 
 export const knowledgeSearchHandlers = [
-  http.post(`${API_BASE}/knowledge-qa/search`, async ({ request }) => {
+  http.post(`${API_BASE}/knowledge-qa/:ownerType/:ownerId/search`, async ({ request, params }) => {
     await delay(400)
+    const ownerType = String(params.ownerType ?? '')
+    const ownerId = String(params.ownerId ?? '')
+    if (!ownerType || !ownerId) {
+      return HttpResponse.json(
+        { code: 400, message: 'owner is required', data: null },
+        { status: 400 }
+      )
+    }
     const body = (await request.json()) as { query: string; top_k?: number }
     if (!body.query?.trim()) {
       return HttpResponse.json({ code: 400, message: 'query is required' }, { status: 400 })

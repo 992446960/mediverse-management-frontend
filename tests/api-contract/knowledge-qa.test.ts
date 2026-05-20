@@ -3,7 +3,7 @@
  * Knowledge QA 模块 — API 合规性测试
  *
  * 覆盖接口：
- *  POST /knowledge-qa/search
+ *  POST /knowledge-qa/{owner_type}/{owner_id}/search
  *  POST /knowledge-qa/follow-up
  *  GET  /knowledge-qa/history
  */
@@ -23,16 +23,33 @@ import {
   assertDatetime,
 } from './schema-validator'
 
+async function getTestOwner(): Promise<{ ownerType: string; ownerId: string } | null> {
+  const meRes = await authedGet('/auth/me')
+  const meData = (meRes.data as any).data
+  if (!meData?.user) return null
+
+  const user = meData.user
+  if (user.org_id) return { ownerType: 'org', ownerId: user.org_id }
+  if (user.dept_id) return { ownerType: 'dept', ownerId: user.dept_id }
+  return { ownerType: 'personal', ownerId: user.id }
+}
+
 describe('Knowledge QA 模块', () => {
+  let owner: { ownerType: string; ownerId: string } | null = null
+  const searchPath = () => `/knowledge-qa/${owner!.ownerType}/${owner!.ownerId}/search`
+
   beforeAll(async () => {
     await loginAndGetToken()
+    owner = await getTestOwner()
   })
 
-  // ─── POST /knowledge-qa/search ───────────────────────────
+  // ─── POST /knowledge-qa/{owner_type}/{owner_id}/search ───
 
-  describe('POST /knowledge-qa/search', () => {
+  describe('POST /knowledge-qa/{owner_type}/{owner_id}/search', () => {
     it('正常搜索应返回结果且符合 Schema', async () => {
-      const res = await authedPost('/knowledge-qa/search', { query: '测试查询' })
+      if (!owner) return console.warn('跳过: 无可用 owner')
+
+      const res = await authedPost(searchPath(), { query: '测试查询' })
 
       // 可能因为没有知识库数据返回空结果，但结构应正确
       if (res.status === 200) {
@@ -49,12 +66,16 @@ describe('Knowledge QA 模块', () => {
     })
 
     it('缺少 query 应返回 400', async () => {
-      const res = await authedPost('/knowledge-qa/search', {})
+      if (!owner) return console.warn('跳过: 无可用 owner')
+
+      const res = await authedPost(searchPath(), {})
       expect(res.status).toBe(400)
     })
 
     it('不带 Token 应返回 401', async () => {
-      const res = await unauthPost('/knowledge-qa/search', { query: 'test' })
+      if (!owner) return console.warn('跳过: 无可用 owner')
+
+      const res = await unauthPost(searchPath(), { query: 'test' })
       expect(res.status).toBe(401)
     })
   })
