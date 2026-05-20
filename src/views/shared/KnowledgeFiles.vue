@@ -64,6 +64,7 @@
         :tree-data="treeData"
         @add-to-queue="addToQueue"
         @remove-from-queue="removeFromQueue"
+        @clear-queue="clearUploadQueue"
         @success="onUploadSuccess"
       />
       <template #footer>
@@ -117,7 +118,7 @@ import {
 } from '@ant-design/icons-vue'
 import { DirectoryTree } from '@/components/DirectoryTree'
 import FileUploader from '@/components/FileUploader/index.vue'
-import { removeUploadQueueItem } from '@/components/FileUploader/queue'
+import { clearUploadQueueItems, removeUploadQueueItem } from '@/components/FileUploader/queue'
 import PageHead from '@/components/PageHead/index.vue'
 import PageFilter from '@/components/PageFilter/index.vue'
 import PageTable from '@/components/PageTable/index.vue'
@@ -282,7 +283,7 @@ function onUploadStart() {
 }
 
 function clearUploadQueue() {
-  uploadQueue.value = []
+  uploadQueue.value = clearUploadQueueItems(uploadQueue.value)
   hasUserStartedUpload.value = false
 }
 

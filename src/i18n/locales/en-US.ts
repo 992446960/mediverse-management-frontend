@@ -265,6 +265,7 @@ export default {
     uploadStatusSuccess: 'Success',
     uploadStatusFail: 'Failed',
     uploadRemove: 'Remove',
+    uploadRemoveAll: 'Remove all',
     uploadSuccess: 'Upload successful',
     uploadFailed: 'Upload failed',
     uploadErrorNetwork: 'Network error. Check your connection and try again.',

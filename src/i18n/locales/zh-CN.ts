@@ -263,6 +263,7 @@ export default {
     uploadStatusSuccess: '成功',
     uploadStatusFail: '失败',
     uploadRemove: '移除',
+    uploadRemoveAll: '一键移除',
     uploadSuccess: '上传成功',
     uploadFailed: '上传失败',
     uploadErrorNetwork: '网络连接失败，请检查网络后重试',

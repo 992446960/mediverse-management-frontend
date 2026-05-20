@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import type { UploadQueueItem } from '../../src/components/FileUploader/types'
-import { removeUploadQueueItem } from '../../src/components/FileUploader/queue'
+import {
+  clearUploadQueueItems,
+  removeUploadQueueItem,
+} from '../../src/components/FileUploader/queue'
 
 function queueItem(uid: string, status: UploadQueueItem['status']): UploadQueueItem {
   return {
@@ -41,5 +44,16 @@ describe('upload queue helpers', () => {
       'uploading-item',
       'success-item',
     ])
+  })
+
+  it('clears all local queue items', () => {
+    const queue = [
+      queueItem('pending-item', 'pending'),
+      queueItem('uploading-item', 'uploading'),
+      queueItem('success-item', 'success'),
+      queueItem('fail-item', 'fail'),
+    ]
+
+    expect(clearUploadQueueItems(queue)).toEqual([])
   })
 })

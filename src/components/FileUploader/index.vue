@@ -45,6 +45,11 @@
     </div>
 
     <div v-if="queue.length > 0" class="mt-4 space-y-2">
+      <div class="flex justify-end">
+        <a-button type="default" size="small" danger @click="clearQueue">
+          {{ t('knowledge.uploadRemoveAll') }}
+        </a-button>
+      </div>
       <div
         v-for="item in queue"
         :key="item.uid"
@@ -69,7 +74,7 @@
             {{ t('knowledge.retry') }}
           </a-button>
         </template>
-        <a-button type="link" size="small" danger class="shrink-0 px-0" @click="removeItem(item)">
+        <a-button type="default" size="small" danger class="shrink-0" @click="removeItem(item)">
           {{ t('knowledge.uploadRemove') }}
         </a-button>
       </div>
@@ -117,6 +122,7 @@ const emit = defineEmits<{
   (e: 'success', results: UploadFileResult[]): void
   (e: 'add-to-queue', item: UploadQueueItem): void
   (e: 'remove-from-queue', uid: string): void
+  (e: 'clear-queue'): void
 }>()
 
 const { t } = useI18n()
@@ -223,6 +229,10 @@ function retryItem(item: UploadQueueItem) {
 
 function removeItem(item: UploadQueueItem) {
   emit('remove-from-queue', item.uid)
+}
+
+function clearQueue() {
+  emit('clear-queue')
 }
 
 /** 启动单个文件上传，完成后调用 processQueue 补充下一批 */
