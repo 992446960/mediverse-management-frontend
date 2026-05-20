@@ -19,8 +19,13 @@
         </div>
       </div>
     </div>
-    <div v-if="tags?.length" class="mt-4 flex flex-wrap gap-1.5">
-      <a-tag v-for="tag in tags" :key="tag" class="m-0"> #{{ tag }} </a-tag>
+    <div v-if="tags?.length" class="mt-4">
+      <div class="mb-3 text-sm font-semibold text-(--color-text-base)">
+        {{ t('knowledge.card.tagsLabel') }}
+      </div>
+      <div class="flex flex-wrap gap-1.5">
+        <a-tag v-for="tag in tags" :key="tag" class="m-0"> #{{ tag }} </a-tag>
+      </div>
     </div>
     <div class="mt-6">
       <AssociatedFilesList

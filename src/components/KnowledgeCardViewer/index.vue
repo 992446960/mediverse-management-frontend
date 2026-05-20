@@ -2,7 +2,7 @@
   <a-modal
     :open="open"
     :title="t('knowledge.card.detailTitle')"
-    width="min(960px, 94vw)"
+    width="max(960px, 70vw)"
     centered
     :footer="null"
     destroy-on-close
