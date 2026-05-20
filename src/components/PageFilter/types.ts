@@ -69,6 +69,6 @@ export interface PageFilterConfig {
   filterForm: PageFilterField[]
   /** 右侧操作按钮（查询/重置/导出等） */
   btns?: PageFilterBtn[]
-  /** 按钮栏栅格宽度（24 栅格制），默认 6 */
+  /** 按钮栏栅格宽度下限（24 栅格制）；组件会按按钮内容自动放大 */
   btnsCol?: number
 }

@@ -93,7 +93,7 @@
         </a-col>
 
         <!-- 按钮栏 -->
-        <a-col v-if="filterConf.btns?.length" :span="filterConf.btnsCol ?? 6">
+        <a-col v-if="filterConf.btns?.length" :span="actionColSpan">
           <a-space>
             <a-button
               v-for="(btn, idx) in filterConf.btns"
@@ -143,6 +143,8 @@ const datePresets = computed(() => [
 const GRID_COLS = 24
 const ROW_COLLAPSE_TOGGLE_SPAN = 2
 const MORE_FILTER_BTN_SPAN = 2
+const MIN_ACTION_COL_SPAN = 4
+const MAX_ACTION_COL_SPAN = 12
 
 const props = withDefaults(
   defineProps<{
@@ -229,11 +231,37 @@ function countRowsFromSpans(spans: number[]): number {
   return rows
 }
 
+function countTextUnits(text: string): number {
+  return [...text].reduce((sum, char) => sum + (char.charCodeAt(0) <= 0xff ? 0.55 : 1), 0)
+}
+
+const estimatedActionColSpan = computed(() => {
+  const btns = props.filterConf.btns ?? []
+  if (!btns.length) return 0
+
+  const units = btns.reduce(
+    (sum, btn) => {
+      const textUnits = countTextUnits(btn.text)
+      const iconUnits = btn.icon ? 2 : 0
+      const buttonPaddingUnits = 4
+      return sum + textUnits + iconUnits + buttonPaddingUnits
+    },
+    Math.max(0, btns.length - 1) * 2
+  )
+
+  return Math.min(MAX_ACTION_COL_SPAN, Math.max(MIN_ACTION_COL_SPAN, Math.ceil(units / 4)))
+})
+
+const actionColSpan = computed(() => {
+  if (!props.filterConf.btns?.length) return 0
+  return Math.max(props.filterConf.btnsCol ?? 0, estimatedActionColSpan.value)
+})
+
 /** 不含「单行收起」按钮时，字段 + 更多 + 操作钮占用的栅格行数 */
 const filterLayoutRowCount = computed(() => {
   const spans = visibleFields.value.map((f) => f.col ?? 6)
   if (hasMoreFields.value) spans.push(MORE_FILTER_BTN_SPAN)
-  if (props.filterConf.btns?.length) spans.push(props.filterConf.btnsCol ?? 6)
+  if (props.filterConf.btns?.length) spans.push(actionColSpan.value)
   return countRowsFromSpans(spans)
 })
 
@@ -251,7 +279,7 @@ watch(showRowCollapseToggle, (ok) => {
 const tailReservedSpans = computed(() => {
   let n = 0
   if (hasMoreFields.value) n += MORE_FILTER_BTN_SPAN
-  if (props.filterConf.btns?.length) n += props.filterConf.btnsCol ?? 6
+  if (props.filterConf.btns?.length) n += actionColSpan.value
   if (showRowCollapseToggle.value) n += ROW_COLLAPSE_TOGGLE_SPAN
   return n
 })

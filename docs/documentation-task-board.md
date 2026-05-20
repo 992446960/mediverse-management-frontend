@@ -36,9 +36,11 @@
 - 知识卡新建请求不再传 `json_content`；前端仅提交 Markdown 正文与现有可编辑字段，结构化 JSON 由后端生成或详情返回。
 - 知识卡 JSON 展示区仅在存在可展示 JSON 内容时展示“复制 JSON”按钮。
 - 知识卡详情正文区标签列表补充“标签”标题，避免标签区与上方内容断层。
+- `PageFilter` 按操作按钮数量、图标和文案动态计算按钮栏宽度，避免按钮栏与“展开/收起”控件重叠。
 - 开发规范明确 `vue`、`vue-router`、`pinia` 自动导入范围，禁止手动导入已覆盖的运行时 API，类型导入除外。
 - `components.d.ts`、`src/auto-imports.d.ts` 保留在版本库中（`pnpm build` 先执行 `vue-tsc`，忽略后 CI/Docker 会缺类型）；已从 ESLint / Prettier / lint-staged 排除，避免 pre-commit 与 `unplugin-*` 生成格式互相覆盖。
 - 知识卡版本历史和版本对比交互已收口：当前版本不展示历史对比/回退入口，单版本、同版本、无效版本和回退到当前版本均不可操作；本次仅涉及前端交互边界和单元测试，不变更后端接口、Docker 或环境变量。
+- 自飞书 Wiki「API设计」反向同步至 `docs/API设计.md`（§3.2.2 citations、`§4.1.9` 创建字段说明、`§4.1.17` 审核响应 `json_content`/`md_content`/`audit_reject_reason`）。
 
 ## 待维护规则
 
