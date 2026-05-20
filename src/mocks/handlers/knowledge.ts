@@ -588,7 +588,7 @@ export const knowledgeHandlers = [
       type: payload.type,
       tags: payload.tags || [],
       online_status: 'offline',
-      audit_status: 'pending',
+      audit_status: 'approved',
       audit_reject_reason: '',
       reference_count: 0,
       source_files: Array.isArray(payload.source_file_ids)
@@ -633,11 +633,21 @@ export const knowledgeHandlers = [
     `${API_BASE}/knowledge/:ownerType/:ownerId/cards/:cardId/status`,
     async ({ params, request }) => {
       const { cardId } = params
-      const { online_status } = (await request.json()) as { online_status: 'online' | 'offline' }
+      const { online_status, note } = (await request.json()) as {
+        online_status: 'online' | 'offline'
+        note?: string
+      }
       const card = mutableCards.find((c) => c.id === cardId)
       if (card) {
         card.online_status = online_status
-        return HttpResponse.json({ code: 0, message: 'ok', data: card })
+        return HttpResponse.json({
+          code: 0,
+          message: 'ok',
+          data: {
+            ...card,
+            status_action: { card_id: card.id, online_status, note: note || undefined },
+          },
+        })
       }
       return HttpResponse.json({ code: 404, message: 'not found' })
     }
@@ -723,12 +733,41 @@ export const knowledgeHandlers = [
     })
   }),
 
-  // 版本回退（body: target_version 数字）
+  // 修改审核状态（API 4.1.17）
+  http.patch(
+    `${API_BASE}/knowledge/:ownerType/:ownerId/cards/:cardId/audit`,
+    async ({ params, request }) => {
+      const { cardId } = params
+      const { audit_status, audit_reject_reason } = (await request.json()) as {
+        audit_status: 'approved' | 'pending' | 'rejected'
+        audit_reject_reason?: string
+      }
+      const card = mutableCards.find((c) => c.id === cardId)
+      if (card) {
+        card.audit_status = audit_status
+        card.audit_reject_reason = audit_status === 'rejected' ? audit_reject_reason || '' : ''
+        return HttpResponse.json({
+          code: 0,
+          message: 'ok',
+          data: {
+            ...card,
+            review_action: { card_id: card.id, review_state: audit_status },
+          },
+        })
+      }
+      return HttpResponse.json({ code: 404, message: 'not found' })
+    }
+  ),
+
+  // 版本回退（API 4.1.14）
   http.post(
     `${API_BASE}/knowledge/:ownerType/:ownerId/cards/:cardId/rollback`,
     async ({ params, request }) => {
       const { cardId } = params
-      const { target_version } = (await request.json()) as { target_version: number }
+      const { target_version } = (await request.json()) as {
+        target_version: number
+        reason?: string
+      }
       const card = mutableCards.find((c) => c.id === cardId)
       const versions = mockCardVersions[cardId as string] || []
       const versionData = versions.find(
@@ -739,7 +778,14 @@ export const knowledgeHandlers = [
         card.md_content = versionData.md_content ?? ''
         card.version = versionData.version
         card.updated_at = new Date().toISOString()
-        return HttpResponse.json({ code: 0, message: 'ok', data: card })
+        return HttpResponse.json({
+          code: 0,
+          message: 'ok',
+          data: {
+            ...card,
+            rollback_action: { card_id: card.id, review_state: 'pending' },
+          },
+        })
       }
       return HttpResponse.json({ code: 404, message: 'not found' })
     }
