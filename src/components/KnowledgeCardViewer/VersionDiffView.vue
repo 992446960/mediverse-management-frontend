@@ -124,8 +124,9 @@
 </template>
 
 <script setup lang="ts">
+import { h } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Modal } from 'ant-design-vue'
+import { Modal, Textarea as ATextarea } from 'ant-design-vue'
 import { RollbackOutlined } from '@ant-design/icons-vue'
 import type { VersionDiffSegment, KnowledgeCardVersion } from '@/types/knowledge'
 import {
@@ -151,7 +152,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'change-versions', fromVersion: number, toVersion: number): void
-  (e: 'rollback-to', versionLabel: string, targetVersion: number): void
+  (e: 'rollback-to', versionLabel: string, targetVersion: number, reason?: string): void
 }>()
 
 const viewMode = ref<'unified' | 'split'>('unified')
@@ -218,18 +219,34 @@ function handleCompare() {
   }
 }
 
+const rollbackReason = ref('')
+
 function handleRollbackClick() {
   if (!canRollbackToTarget.value) return
   const targetVersion = localFrom.value
   const row = props.versions.find((v) => resolveKnowledgeCardVersionKey(v) === targetVersion)
   const versionLabel = row?.version ?? `v${targetVersion}`
+  rollbackReason.value = ''
   Modal.confirm({
     title: t('knowledge.card.rollbackConfirmTitle'),
-    content: t('knowledge.card.rollbackConfirmContent', { version: versionLabel }),
+    content: h('div', [
+      h('p', t('knowledge.card.rollbackConfirmContent', { version: versionLabel })),
+      h(ATextarea, {
+        value: rollbackReason.value,
+        'onUpdate:value': (val: string) => {
+          rollbackReason.value = val
+        },
+        placeholder: t('knowledge.card.rollbackReasonPlaceholder'),
+        maxlength: 2000,
+        showCount: true,
+        rows: 3,
+        style: 'margin-top: 8px',
+      }),
+    ]),
     okText: t('common.confirm'),
     cancelText: t('common.cancel'),
     onOk: () => {
-      emit('rollback-to', versionLabel, targetVersion)
+      emit('rollback-to', versionLabel, targetVersion, rollbackReason.value || undefined)
     },
   })
 }
