@@ -2,12 +2,15 @@ import { describe, expect, it } from 'vitest'
 import type { InternalAxiosRequestConfig } from 'axios'
 import { checkRepeatSubmit } from '../../src/utils/requestDedup'
 
-function buildUploadConfig(file: File): InternalAxiosRequestConfig {
+function buildUploadConfig(
+  file: File,
+  url = '/knowledge/personal/user-1/files'
+): InternalAxiosRequestConfig {
   const form = new FormData()
   form.append('files', file)
   return {
     method: 'post',
-    url: '/knowledge/personal/user-1/files',
+    url,
     data: form,
     params: {},
     headers: {},
@@ -19,8 +22,21 @@ describe('request deduplication', () => {
     const first = new File(['first'], 'first.txt', { type: 'text/plain' })
     const second = new File(['second'], 'second.txt', { type: 'text/plain' })
 
-    checkRepeatSubmit(buildUploadConfig(first))
+    checkRepeatSubmit(buildUploadConfig(first, '/knowledge/personal/user-1/files/different'))
 
-    expect(() => checkRepeatSubmit(buildUploadConfig(second))).not.toThrow()
+    expect(() =>
+      checkRepeatSubmit(buildUploadConfig(second, '/knowledge/personal/user-1/files/different'))
+    ).not.toThrow()
+  })
+
+  it('blocks repeated FormData upload with the same file metadata', () => {
+    const file = new File(['same'], 'same.txt', { type: 'text/plain' })
+    const url = '/knowledge/personal/user-1/files/repeated'
+
+    checkRepeatSubmit(buildUploadConfig(file, url))
+
+    expect(() => checkRepeatSubmit(buildUploadConfig(file, url))).toThrow(
+      '数据正在处理，请勿重复提交'
+    )
   })
 })
