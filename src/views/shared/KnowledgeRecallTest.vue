@@ -134,65 +134,78 @@
       <div class="h-px flex-1 bg-(--color-border)" />
     </div>
 
-    <div class="bg-white dark:bg-[--color-bg-container] p-5 rounded-md">
-      <a-spin :spinning="loading" :tip="t('knowledge.recall.loading')">
-        <a-empty v-if="!result && !loading" :description="t('knowledge.recall.emptyResult')" />
+    <div
+      class="knowledge-recall-test__results relative rounded-md bg-white p-5 dark:bg-[--color-bg-container]"
+    >
+      <div
+        v-if="loading"
+        class="absolute inset-0 z-10 flex items-center justify-center rounded-md bg-white/80 dark:bg-[--color-bg-container]/80"
+        role="status"
+        :aria-label="t('knowledge.recall.loading')"
+      >
+        <a-spin :spinning="true" :tip="t('knowledge.recall.loading')">
+          <div class="min-h-[120px] min-w-[160px]" aria-hidden="true" />
+        </a-spin>
+      </div>
 
-        <div v-else-if="result" class="space-y-4">
-          <section
-            class="rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900"
-          >
-            <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-              <h2 class="m-0 text-base font-semibold text-(--color-text-base)">
-                {{ t('knowledge.recall.finalAnswer') }}
-              </h2>
-              <div class="flex flex-wrap gap-2 text-xs text-(--color-text-tertiary)">
-                <a-tag v-if="queryTimeText">{{ queryTimeText }}</a-tag>
-                <a-tag v-if="confidenceText">{{ confidenceText }}</a-tag>
+      <div v-if="!result && !loading" class="flex min-h-[240px] items-center justify-center">
+        <a-empty :description="t('knowledge.recall.emptyResult')" />
+      </div>
+
+      <div v-else-if="result" class="space-y-4">
+        <section
+          class="rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+        >
+          <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <h2 class="m-0 text-base font-semibold text-(--color-text-base)">
+              {{ t('knowledge.recall.finalAnswer') }}
+            </h2>
+            <div class="flex flex-wrap gap-2 text-xs text-(--color-text-tertiary)">
+              <a-tag v-if="queryTimeText">{{ queryTimeText }}</a-tag>
+              <a-tag v-if="confidenceText">{{ confidenceText }}</a-tag>
+            </div>
+          </div>
+          <div class="whitespace-pre-wrap text-sm leading-6 text-(--color-text-base)">
+            {{ result.answer || t('knowledge.recall.noAnswer') }}
+          </div>
+        </section>
+
+        <section
+          class="rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+        >
+          <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <h2 class="m-0 text-base font-semibold text-(--color-text-base)">
+              {{ t('knowledge.recall.retrievedSources') }}
+            </h2>
+            <span class="text-sm text-(--color-text-secondary)">
+              {{ t('knowledge.recall.sourceCount', { count: sourceCount }) }}
+            </span>
+          </div>
+
+          <a-empty
+            v-if="result.sources.length === 0"
+            :description="t('knowledge.recall.noSources')"
+          />
+          <div v-else class="space-y-3">
+            <article
+              v-for="source in result.sources"
+              :key="source.id"
+              class="rounded-md border border-slate-200 p-3 dark:border-slate-800"
+            >
+              <div class="mb-2 flex flex-wrap items-center gap-2">
+                <a-tag color="blue">{{ formatScore(source.relevance_score) }}</a-tag>
+                <span class="font-medium text-(--color-text-base)">{{ source.title }}</span>
+                <a-tag :color="getCardTypeConfig(source.card_type).color">
+                  {{ getCardTypeConfig(source.card_type).label }}
+                </a-tag>
               </div>
-            </div>
-            <div class="whitespace-pre-wrap text-sm leading-6 text-(--color-text-base)">
-              {{ result.answer || t('knowledge.recall.noAnswer') }}
-            </div>
-          </section>
-
-          <section
-            class="rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900"
-          >
-            <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-              <h2 class="m-0 text-base font-semibold text-(--color-text-base)">
-                {{ t('knowledge.recall.retrievedSources') }}
-              </h2>
-              <span class="text-sm text-(--color-text-secondary)">
-                {{ t('knowledge.recall.sourceCount', { count: sourceCount }) }}
-              </span>
-            </div>
-
-            <a-empty
-              v-if="result.sources.length === 0"
-              :description="t('knowledge.recall.noSources')"
-            />
-            <div v-else class="space-y-3">
-              <article
-                v-for="source in result.sources"
-                :key="source.id"
-                class="rounded-md border border-slate-200 p-3 dark:border-slate-800"
-              >
-                <div class="mb-2 flex flex-wrap items-center gap-2">
-                  <a-tag color="blue">{{ formatScore(source.relevance_score) }}</a-tag>
-                  <span class="font-medium text-(--color-text-base)">{{ source.title }}</span>
-                  <a-tag :color="getCardTypeConfig(source.card_type).color">
-                    {{ getCardTypeConfig(source.card_type).label }}
-                  </a-tag>
-                </div>
-                <p class="m-0 text-sm leading-6 text-(--color-text-secondary)">
-                  {{ source.excerpt }}
-                </p>
-              </article>
-            </div>
-          </section>
-        </div>
-      </a-spin>
+              <p class="m-0 text-sm leading-6 text-(--color-text-secondary)">
+                {{ source.excerpt }}
+              </p>
+            </article>
+          </div>
+        </section>
+      </div>
     </div>
   </div>
 </template>
@@ -423,5 +436,9 @@ onMounted(fetchCardTypes)
 
 .knowledge-recall-test :deep(.knowledge-recall-test__top-k-slider:hover .ant-slider-handle::after) {
   box-shadow: 0 0 0 2px var(--knowledge-recall-top-k-color);
+}
+
+.knowledge-recall-test__results {
+  min-height: 240px;
 }
 </style>
