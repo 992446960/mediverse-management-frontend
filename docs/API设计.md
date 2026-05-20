@@ -2029,6 +2029,8 @@ PUT /api/v1/knowledge/{owner_type}/{owner_id}/cards/{id}
 
 ##### 4.1.11 上线/下线知识卡
 
+映射下游 `PATCH /api/v1/cards/{id}/status` 的 `online_status` / `note`。
+
 ```http
 PATCH /api/v1/knowledge/{owner_type}/{owner_id}/cards/{id}/status
 ```
@@ -2037,7 +2039,51 @@ PATCH /api/v1/knowledge/{owner_type}/{owner_id}/cards/{id}/status
 
 
 ```json
-{ "online_status": "offline" }
+{
+"online_status": "offline",
+"note": "指南修订中，暂不对外展示"
+}
+```
+
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| online_status | string | ✅ | `online` / `offline` |
+| note | string | ❌ | 下线原因等，最多 2000 字；映射下游 `note` |
+
+
+**Response data**
+
+返回 `CardWithStatusActionOut`：知识卡详情（含 `audit_reject_reason`）+ `status_action`。
+
+
+```json
+{
+"code": 0,
+"message": "ok",
+"data": {
+"id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+"type": "rule",
+"title": "降压药用药规范",
+"json_content": "string",
+"md_content": "string",
+"tags": ["高血压"],
+"online_status": "offline",
+"audit_status": "approved",
+"audit_reject_reason": null,
+"current_version": 2,
+"reference_count": 0,
+"sources": [],
+"created_by": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+"created_by_name": "张三",
+"created_at": "2026-05-19T06:11:51.198Z",
+"updated_at": "2026-05-19T07:00:00.000Z",
+"status_action": {
+"card_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+"online_status": "offline"
+}
+}
+}
 ```
 
 
@@ -2303,10 +2349,22 @@ PATCH /api/v1/knowledge/{owner_type}/{owner_id}/cards/{id}/audit
 "created_by": "03093fe2-cfb7-4a63-b1ec-033ffb7e6794",
 "created_by_name": "科室管理员开发",
 "created_at": "2026-05-09T06:40:05.821078Z",
-"updated_at": "2026-05-14T09:14:48.587691Z"
+"updated_at": "2026-05-14T09:14:48.587691Z",
+"review_action": {
+"card_id": "d6b0a0b7-b401-4b05-a196-3760043175a6",
+"review_state": "approved"
+}
 }
 }
 ```
+
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| data.audit_reject_reason | string / null | 审核驳回理由；非 `rejected` 时通常为 `null` |
+| data.review_action | object | 下游审核同步结果 |
+| data.review_action.card_id | string (uuid) | 知识卡 ID |
+| data.review_action.review_state | string | 下游审核态，与 `audit_status` 对应 |
 
 
 ##### 4.1.18 重命名非默认目录
@@ -2967,7 +3025,7 @@ DELETE /api/v1/knowledge-recall/{owner_type}/{owner_id}/history
 ```
 
 
-##### 4.4.6 一键清除当前用户全部召回历史
+##### 4.4.7 一键清除当前用户全部召回历史
 
 ```http
 DELETE /api/v1/knowledge-recall/history
@@ -3005,7 +3063,9 @@ session_id：路径参数（召回记录id）
 | --- |
 
 
-##### 4.4.5 知识卡召回
+##### 4.4.5 知识卡 Agentic 智能召回
+
+代理下游 `KB_AGENTIC_RAG_URL`（`POST /api/v1/agentic-search`）。入参与 §4.4.6 一致；响应在 BM25 检索结果基础上增加 LLM 合成的 `answer`。
 
 ```http
 POST /api/v1/knowledge-recall/{owner_type}/{owner_id}/recall
@@ -3016,14 +3076,28 @@ POST /api/v1/knowledge-recall/{owner_type}/{owner_id}/recall
 
 ```json
 {
-"query": "string", // 召回query
-"card_type": "string", // 知识卡类型
-"topk": 5 // 召回数量
+"query": "高血压患者可以服用哪些降压药？",
+"top_k": 5,
+"metadata": {
+"card_type": ["rule", "evidence"],
+"input_data": {}
+}
 }
 ```
 
 
-**Responses**
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| query | string | ✅ | 搜索关键词 / 临床问题，最多 2000 字 |
+| top_k | int | ❌ | 最大命中数，默认 5，范围 1–20 |
+| metadata | object | ❌ | 过滤元数据 |
+| metadata.card_type | string[] | ❌ | 6 类知识卡 `code`；不传则全域检索；空数组 → 422 |
+| metadata.input_data | object | ❌ | ES filter 透传白名单字段 |
+| metadata.owner_id | string | — | 由路由从路径注入，调用方无需传 |
+| metadata.owner_scope | string | — | 由路由从路径注入，调用方无需传 |
+
+
+**Response data**
 
 
 ```json
@@ -3031,89 +3105,87 @@ POST /api/v1/knowledge-recall/{owner_type}/{owner_id}/recall
 "code": 0,
 "message": "ok",
 "data": {
-"id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-"owner_type": "string",
-"owner_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-"query": "string", // 召回query
-"card_type": "string", // 知识卡类型
-"topk": 0, // 召回数量
-"final_answer": "string", // 最终答案
-"card_count": 0, // 召回数量
-"latency": 0, // 延迟
-"token": 0, // token用量
-"error": "string", // 错误信息
-"recall_status": "string", // 召回结果状态
-"created_at": "2026-05-19T07:32:02.691Z",
-"updated_at": "2026-05-19T07:32:02.691Z",
-"retrieved_sources": [
-{
-"card_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-"recall_score": 0, // 召回得分
-"card_title": "string", // 知识卡title
-"card_type": "string", // 知识卡类型
-"card_preview_content": "string", // 知识卡预内容
-"source_files": [
-{
-"id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-"file_name": "string",
-"file_size": 0,
-"file_type": "",
-"storage_url": "",
-"parsed_file_url": "string",
-"page_hint": "string",
-"created_at": "string",
-"updated_at": "string"
-}
-], // 知识卡关联文件
-"tags": [
-"string"
-],
-"online_status": "string", // 知识卡上线状态
-"audit_status": "string", // 知识卡审核状态
-"audit_reject_reason": "string",
-"reference_count": 0,
-"created_at": "string",
-"updated_at": "string"
-}
-], // 召回知识卡
-"citations": [
-{
-"index": 0,
-"card_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-"card_title": "string",
-"card_type": "string", // 知识卡类型
-"relevance_score": 0,
-"content_preview": "string",
-"audit_status": "string",
-"audit_reject_reason": "string",
-"online_status": "string",
+"query": "高血压患者可以服用哪些降压药？",
+"answer": "根据知识库资料，常用降压药包括…[1][2]",
+"confidence": 0.85,
+"query_time_ms": 320.5,
 "sources": [
 {
 "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-"file_name": "string",
-"file_type": "string",
-"file_size": 0,
-"storage_url": "string",
-"parsed_file_url": "string",
-"page_hint": "string"
+"card_type": "rule",
+"title": "降压药用药规范",
+"excerpt": "一线降压药包括…",
+"relevance_score": 0.92
 }
-],
-"raw": {
-"additionalProp1": {}
-}
-}
-],
-"downstream": {
-"url": "string",
-"http_status": 0,
-"sync_code": "string",
-"latency_ms": 0,
-"message": "string"
-},
-"latency_ms": 0
+]
 }
 }
 ```
+
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| data.answer | string | LLM 生成的中文答案；LLM 失败时为 fallback 文本 |
+| data.sources | array | 命中知识卡列表（`NonAgenticSearchResultItem`） |
+| data.sources[].id | string | 知识卡 ID（`card_id`） |
+| data.confidence | number | 置信度（下游：`0.6 × LLM 自评 + 0.4 × search_coverage`） |
+| data.query_time_ms | number | 查询耗时（毫秒） |
+
+
+##### 4.4.6 知识卡非 Agentic 智能召回
+
+代理下游 `KB_NON_AGENTIC_SEARCH_URL`（`POST /api/v1/search`）。ES BM25 为主路径，不可用时降级 PG ILIKE；不走 LLM，纯关键词检索。
+
+```http
+POST /api/v1/knowledge-recall/{owner_type}/{owner_id}/search
+```
+
+**Request body**
+
+与 §4.4.5 相同（`NonAgenticSearchRequest`）。
+
+
+```json
+{
+"query": "高血压 降压药",
+"top_k": 5,
+"metadata": {
+"card_type": ["rule"]
+}
+}
+```
+
+
+**Response data**
+
+
+```json
+{
+"code": 0,
+"message": "ok",
+"data": {
+"query": "高血压 降压药",
+"confidence": 0.6,
+"query_time_ms": 48.2,
+"sources": [
+{
+"id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+"card_type": "rule",
+"title": "降压药用药规范",
+"excerpt": "一线降压药包括…",
+"relevance_score": 0.88
+}
+]
+}
+}
+```
+
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| data | object | `NonAgenticSearchResponseData`，无 `answer` 字段 |
+| data.sources | array | BM25 降序命中列表 |
+| data.confidence | number | `min(found, top_k) / top_k` |
 
 
 本文档覆盖第一期所有核心接口，运维监控类接口（任务管理、会话管理、日志等）在第二期补充。
