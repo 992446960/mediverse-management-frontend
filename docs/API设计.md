@@ -1524,29 +1524,88 @@ Request Body：
 
 SSE：
 
+```http
+Content-Type: text/event-stream
+Cache-Control: no-cache
+Connection: keep-alive
+```
 
-| Plain Text<br>Content-Type: text/event-stream<br>Cache-Control: no-cache<br>Connection: keep-alive |
-| --- |
-
-
-SSE 事件流（每行 data: {JSON}\n\n）
-
+SSE 事件流（每行 `data: {JSON}\n\n`）
 
 事件类型与字段约定（复用会话流式协议）：
 
-thinking_step：思考过程步骤
+| 事件类型 | 说明 |
+| --- | --- |
+| thinking_step | 思考过程步骤 |
+| delta | 技能输出正文流式增量 |
+| done | 技能执行完成（服务端已落库或完成记录） |
+| error | 异常终止 |
 
-delta：技能输出正文流式增量
+**事件示例**
 
-done：技能执行完成（服务端已落库或完成记录）
+```http
+data: {"type":"thinking_step","index":0,"title":"加载知识库上下文","status":"processing"}
+data: {"type":"thinking_step","index":0,"title":"加载知识库上下文","status":"done","description":"找到 3 条相关知识","duration_ms":120}
 
-error：异常终止
+data: {"type":"delta","content":"根据患者描述..."}
 
-事件示例：
+data: {"type":"done","skill_run_id":"cd156f32-ef4b-47bb-8fc6-634b7a0be74a","tokens_used":0,"duration_ms":500,"result":{"parts":[{"type":"text","text":"已按标题检索到 2 条知识卡：神经内科、神经内科2.0"}],"citations":[{"id":"13f3d07a-e0ab-4bd6-ba09-94ab18f02170","owner_type":"dept","owner_id":"4851d166-47b5-4211-901b-81a4303924d9","type":"evidence","title":"神经内科","json_content":"","md_content":"","tags":["神经内科"],"online_status":"offline","audit_status":"approved","audit_reject_reason":"","current_version":1,"reference_count":0,"created_by":"26f39d63-b2a9-4b21-ae3e-9090cd4f130c","create_by":"26f39d63-b2a9-4b21-ae3e-9090cd4f130c","update_by":"26f39d63-b2a9-4b21-ae3e-9090cd4f130c","deleted":false,"created_at":"2026-03-11T03:17:20.212513+00:00","updated_at":"2026-03-11T03:17:20.212513+00:00","sources":[{"id":"500b58fc-bd83-4d08-b0db-8ed03bb3c52e","file_name":"余洋_第三季度考核.docx","file_type":"docx","file_size":18041,"storage_url":"https://minio.example.com/bucket/path","parsed_file_url":"https://minio.example.com/bucket/path","page_hint":null}]}]}}
 
+data: {"type":"error","code":50002,"message":"AI 服务暂时不可用，请稍后重试"}
+```
 
-| Plain Text<br>data: {"type":"thinking_step","index":0,"title":"加载知识库上下文","status":"processing"}<br>data: {"type":"thinking_step","index":0,"title":"加载知识库上下文","status":"done","description":"找到 3 条相关知识","duration_ms":120}<br><br>data: {"type":"delta","content":"根据患者描述..."}<br><br>{<br>  "type": "done",<br>  "skill_run_id": "cd156f32-ef4b-47bb-8fc6-634b7a0be74a",<br>  "tokens_used": 0,<br>  "duration_ms": 500,<br>  "result": {<br>    "parts": [<br>      {<br>        "type": "text",<br>        "text": "已按标题检索到 2 条知识卡：神经内科、神经内科2.0"<br>      }<br>    ],<br>    "citations": [<br>      {<br>        "id": "13f3d07a-e0ab-4bd6-ba09-94ab18f02170",<br>        "owner_type": "dept",<br>        "owner_id": "4851d166-47b5-4211-901b-81a4303924d9",<br>        "type": "evidence",<br>        "title": "神经内科",<br>        "content": "神经内科患者不一定精神病",<br>        "tags": ["神经内科"],<br>        "online_status": "offline",<br>        "audit_status": "approved",<br>        "current_version": 1,<br>        "reference_count": 0,<br>        "created_by": "26f39d63-b2a9-4b21-ae3e-9090cd4f130c",<br>        "create_by": "26f39d63-b2a9-4b21-ae3e-9090cd4f130c",<br>        "update_by": "26f39d63-b2a9-4b21-ae3e-9090cd4f130c",<br>        "deleted": false,<br>        "created_at": "2026-03-11T03:17:20.212513+00:00",<br>        "updated_at": "2026-03-11T03:17:20.212513+00:00",<br>        "sources": [<br>          {<br>            "id": "500b58fc-bd83-4d08-b0db-8ed03bb3c52e",<br>            "file_name": "余洋_第三季度考核.docx",<br>            "file_type": "docx",<br>            "file_size": 18041,<br>            "storage_url": "https://minio.example.com/bucket/path",<br>            "parsed_file_url": "https://minio.example.com/bucket/path",<br>            "page_hint": null<br>          }<br>        ]<br>      }<br>    }<br><br>data: {"type":"error","code":50002,"message":"AI 服务暂时不可用，请稍后重试"} |
-| --- |
+**done 事件 result 结构示例（格式化）**
+
+```json
+{
+  "type": "done",
+  "skill_run_id": "cd156f32-ef4b-47bb-8fc6-634b7a0be74a",
+  "tokens_used": 0,
+  "duration_ms": 500,
+  "result": {
+    "parts": [
+      {
+        "type": "text",
+        "text": "已按标题检索到 2 条知识卡：神经内科、神经内科2.0"
+      }
+    ],
+    "citations": [
+      {
+        "id": "13f3d07a-e0ab-4bd6-ba09-94ab18f02170",
+        "owner_type": "dept",
+        "owner_id": "4851d166-47b5-4211-901b-81a4303924d9",
+        "type": "evidence",
+        "title": "神经内科",
+        "json_content": "",
+        "md_content": "",
+        "tags": ["神经内科"],
+        "online_status": "offline",
+        "audit_status": "approved",
+        "audit_reject_reason": "",
+        "current_version": 1,
+        "reference_count": 0,
+        "created_by": "26f39d63-b2a9-4b21-ae3e-9090cd4f130c",
+        "create_by": "26f39d63-b2a9-4b21-ae3e-9090cd4f130c",
+        "update_by": "26f39d63-b2a9-4b21-ae3e-9090cd4f130c",
+        "deleted": false,
+        "created_at": "2026-03-11T03:17:20.212513+00:00",
+        "updated_at": "2026-03-11T03:17:20.212513+00:00",
+        "sources": [
+          {
+            "id": "500b58fc-bd83-4d08-b0db-8ed03bb3c52e",
+            "file_name": "余洋_第三季度考核.docx",
+            "file_type": "docx",
+            "file_size": 18041,
+            "storage_url": "https://minio.example.com/bucket/path",
+            "parsed_file_url": "https://minio.example.com/bucket/path",
+            "page_hint": null
+          }
+        ]
+      }
+    ]
+  }
+}
+```
 
 
 ## 四、KnowledgeBase 域
@@ -1885,7 +1944,7 @@ POST /api/v1/knowledge/{owner_type}/{owner_id}/cards
 {
 "type": "string",
 "title": "",
-"json_content": "string",非必填
+"json_content": "string",非必填（手动创建不传）
 "md_content": "string",必填
 "tags": [
 "string"
@@ -2124,7 +2183,8 @@ audit_reject_reason：str  审核未通过的原因 audit_status==rejected时必
 "id": "d6b0a0b7-b401-4b05-a196-3760043175a6",
 "type": "pathway_clause",
 "title": "3",
-"content": "{\"title\": \"3\", \"text\": \"<p>3</p>\"}",
+"json_content": "string",
+"md_content": "string",
 "tags": [
 "1",
 "2",
@@ -2132,6 +2192,7 @@ audit_reject_reason：str  审核未通过的原因 audit_status==rejected时必
 ],
 "online_status": "offline",
 "audit_status": "approved",
+"audit_reject_reason": "string",
 "current_version": 1,
 "reference_count": 0,
 "sources": [
@@ -2564,8 +2625,8 @@ GET /api/v1/knowledge-recall/{owner_type}/{owner_id}/history
 "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
 "owner_type": "string",
 "owner_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-"query": "string",
-"card_type": "string",
+"query": "string", // 召回query
+"card_type": "string", // 知识卡类型
 "topk": 0,
 "final_answer": "string",
 "card_count": 0,
@@ -2606,24 +2667,24 @@ GET /api/v1/knowledge-recall/sessions/{session_id}
 "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
 "owner_type": "string",
 "owner_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-"query": "string",召回query
-"card_type": "string",知识卡类型
-"topk": 0,召回数量
-"final_answer": "string",最终答案
-"card_count": 0,召回数量
-"latency": 0,延迟
-"token": 0,token用量
-"error": "string",错误信息
-"recall_status": "string",召回结果状态
+"query": "string", // 召回query
+"card_type": "string", // 知识卡类型
+"topk": 0, // 召回数量
+"final_answer": "string", // 最终答案
+"card_count": 0, // 召回数量
+"latency": 0, // 延迟
+"token": 0, // token用量
+"error": "string", // 错误信息
+"recall_status": "string", // 召回结果状态
 "created_at": "2026-05-19T07:32:02.691Z",
 "updated_at": "2026-05-19T07:32:02.691Z",
 "retrieved_sources": [
 {
 "card_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-"recall_score": 0,召回得分
-"card_title": "string",知识卡title
-"card_type": "string",知识卡类型
-"card_preview_content": "string",知识卡预内容
+"recall_score": 0, // 召回得分
+"card_title": "string", // 知识卡title
+"card_type": "string", // 知识卡类型
+"card_preview_content": "string", // 知识卡预内容
 "source_files": [
 {
 "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
@@ -2636,24 +2697,24 @@ GET /api/v1/knowledge-recall/sessions/{session_id}
 "created_at": "string",
 "updated_at": "string"
 }
-],知识卡关联文件
+], // 知识卡关联文件
 "tags": [
 "string"
 ],
-"online_status": "string",知识卡上线状态
-"audit_status": "string",知识卡审核状态
+"online_status": "string", // 知识卡上线状态
+"audit_status": "string", // 知识卡审核状态
 "audit_reject_reason": "string",
 "reference_count": 0,
 "created_at": "string",
 "updated_at": "string"
 }
-],召回知识卡
+], // 召回知识卡
 "citations": [
 {
 "index": 0,
 "card_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
 "card_title": "string",
-"card_type": "string",
+"card_type": "string", // 知识卡类型
 "relevance_score": 0,
 "content_preview": "string",
 "audit_status": "string",
@@ -2735,9 +2796,9 @@ POST /api/v1/knowledge-recall/{owner_type}/{owner_id}/recall
 
 ```json
 {
-"query": "string",
-"card_type": "string",
-"topk": 5
+"query": "string", // 召回query
+"card_type": "string", // 知识卡类型
+"topk": 5 // 召回数量
 }
 ```
 
@@ -2753,24 +2814,24 @@ POST /api/v1/knowledge-recall/{owner_type}/{owner_id}/recall
 "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
 "owner_type": "string",
 "owner_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-"query": "string",召回query
-"card_type": "string",知识卡类型
-"topk": 0,召回数量
-"final_answer": "string",最终答案
-"card_count": 0,召回数量
-"latency": 0,延迟
-"token": 0,token用量
-"error": "string",错误信息
-"recall_status": "string",召回结果状态
+"query": "string", // 召回query
+"card_type": "string", // 知识卡类型
+"topk": 0, // 召回数量
+"final_answer": "string", // 最终答案
+"card_count": 0, // 召回数量
+"latency": 0, // 延迟
+"token": 0, // token用量
+"error": "string", // 错误信息
+"recall_status": "string", // 召回结果状态
 "created_at": "2026-05-19T07:32:02.691Z",
 "updated_at": "2026-05-19T07:32:02.691Z",
 "retrieved_sources": [
 {
 "card_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-"recall_score": 0,召回得分
-"card_title": "string",知识卡title
-"card_type": "string",知识卡类型
-"card_preview_content": "string",知识卡预内容
+"recall_score": 0, // 召回得分
+"card_title": "string", // 知识卡title
+"card_type": "string", // 知识卡类型
+"card_preview_content": "string", // 知识卡预内容
 "source_files": [
 {
 "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
@@ -2783,24 +2844,24 @@ POST /api/v1/knowledge-recall/{owner_type}/{owner_id}/recall
 "created_at": "string",
 "updated_at": "string"
 }
-],知识卡关联文件
+], // 知识卡关联文件
 "tags": [
 "string"
 ],
-"online_status": "string",知识卡上线状态
-"audit_status": "string",知识卡审核状态
+"online_status": "string", // 知识卡上线状态
+"audit_status": "string", // 知识卡审核状态
 "audit_reject_reason": "string",
 "reference_count": 0,
 "created_at": "string",
 "updated_at": "string"
 }
-],召回知识卡
+], // 召回知识卡
 "citations": [
 {
 "index": 0,
 "card_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
 "card_title": "string",
-"card_type": "string",
+"card_type": "string", // 知识卡类型
 "relevance_score": 0,
 "content_preview": "string",
 "audit_status": "string",
