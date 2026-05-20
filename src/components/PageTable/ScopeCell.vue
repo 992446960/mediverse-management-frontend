@@ -74,7 +74,7 @@
 
 <script setup lang="ts">
 import { EyeOutlined } from '@ant-design/icons-vue'
-import errorImgUrl from '@/assets/error_img.png'
+import errorImgUrl from '@/assets/images/error_img.png'
 import { toAbsoluteFileUrl } from '@/api/upload'
 import type { PageTableColumnConfig } from './types'
 

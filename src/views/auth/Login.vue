@@ -5,7 +5,7 @@ import { useThemeStore } from '@/stores/theme'
 import { message } from 'ant-design-vue'
 import { UserOutlined, LockOutlined } from '@ant-design/icons-vue'
 import ThemeSwitcher from '@/components/ThemeSwitcher/index.vue'
-import logoUrl from '@/assets/logo.svg?url'
+import logoUrl from '@/assets/images/logo.svg'
 
 const LOGIN_REMEMBER_KEY = 'login_remember'
 
@@ -162,8 +162,8 @@ const handleLogin = async () => {
   position: absolute;
   inset: 0;
   z-index: 0;
-  background-image: url('/login-bg.png');
-  background-size: cover;
+  background-image: url('@/assets/images/login-bg.png');
+  background-size: 100% 100%;
   background-position: center;
   background-repeat: no-repeat;
   pointer-events: none;

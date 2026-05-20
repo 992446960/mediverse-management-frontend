@@ -111,7 +111,7 @@ import {
 import { toAbsoluteFileUrl } from '@/api/upload'
 import TagsView from '@/components/TagsView/index.vue'
 import type { ItemType } from 'ant-design-vue'
-import logoUrl from '@/assets/logo.svg?url'
+import logoUrl from '@/assets/images/logo.svg'
 
 const collapsed = ref(false)
 const selectedKeys = ref<string[]>([])
