@@ -46,6 +46,22 @@ function createThrottle(interval: number) {
 
 const throttle = createThrottle(INTERVAL)
 
+function getFormDataBody(form: FormData): string {
+  const parts: string[] = []
+  form.forEach((value, key) => {
+    if (typeof File !== 'undefined' && value instanceof File) {
+      parts.push(`${key}=File(${value.name},${value.size},${value.type},${value.lastModified})`)
+      return
+    }
+    if (typeof Blob !== 'undefined' && value instanceof Blob) {
+      parts.push(`${key}=Blob(${value.size},${value.type})`)
+      return
+    }
+    parts.push(`${key}=${String(value)}`)
+  })
+  return parts.join('&')
+}
+
 /** 根据请求信息生成唯一标识 */
 function generateKey(config: InternalAxiosRequestConfig): string {
   const { method, url, data, params } = config
@@ -55,7 +71,7 @@ function generateKey(config: InternalAxiosRequestConfig): string {
       : ''
   const body =
     data instanceof FormData
-      ? 'FormData'
+      ? getFormDataBody(data)
       : typeof data === 'object'
         ? JSON.stringify(data)
         : String(data ?? '')
