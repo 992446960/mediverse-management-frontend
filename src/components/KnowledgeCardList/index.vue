@@ -528,7 +528,9 @@ const handleAuditConfirm = async (reason?: string) => {
       >
         <template #title="{ row }">
           <div class="flex flex-col">
-            <span class="font-medium text-gray-800">{{ (row as KnowledgeCard).title }}</span>
+            <span class="font-medium text-gray-800 dark:text-gray-100">{{
+              (row as KnowledgeCard).title
+            }}</span>
             <div class="flex flex-wrap gap-1 mt-1">
               <a-tag v-for="tag in (row as KnowledgeCard).tags" :key="tag" size="small">
                 {{ tag }}
