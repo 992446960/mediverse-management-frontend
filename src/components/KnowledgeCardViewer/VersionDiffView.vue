@@ -197,10 +197,10 @@ const canRollbackToTarget = computed(() => {
   return (
     isAppliedSelection.value &&
     canRollbackKnowledgeCardVersion(
-      localTo.value,
+      localFrom.value,
       props.currentVersionKey,
       validVersionKeys.value,
-      localFrom.value
+      localTo.value
     )
   )
 })
@@ -220,7 +220,7 @@ function handleCompare() {
 
 function handleRollbackClick() {
   if (!canRollbackToTarget.value) return
-  const targetVersion = localTo.value
+  const targetVersion = localFrom.value
   const row = props.versions.find((v) => resolveKnowledgeCardVersionKey(v) === targetVersion)
   const versionLabel = row?.version ?? `v${targetVersion}`
   Modal.confirm({
