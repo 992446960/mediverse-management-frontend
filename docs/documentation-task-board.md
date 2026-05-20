@@ -31,6 +31,7 @@
 
 ## 近期同步记录
 
+- 上海市第一人民医院定制需求：菜单开发方案定为 `MenuConfig.hidden` + `flattenChildren`，仅改 `menu.ts` 与 `MainLayout.filterMenu`（5.4.4）；含配置清单与验收对齐。
 - `DirectoryTree` 与 `PageTable` 暗色边框改为使用 `dark:border-(--color-border)`，与暗色主题变量保持一致。
 - `DirectoryTree` 与 `PageTable` 暗色容器背景改为使用 `--color-bg-container`，避免继续固定到 `slate-900`。
 - 文件上传队列改为先计算文件内容 MD5，并以 MD5 作为队列唯一标识；加入队列前按 MD5 去重，避免同一文件重复进入上传队列。
@@ -42,7 +43,7 @@
 - 上传请求去重对 `FormData` 追加文件元信息，避免多个文件同路径并发上传被误判为重复提交。
 - 文件上传队列支持任意状态本地移除，仅更新弹窗内本地队列，不触发后端删除。
 - `PageTable` 自动高度计算默认不再额外扣除 100px 底部预留，表格滚动区与分页器之间不再出现大块空白；如个别页面需要底部预留，可通过 `tableConf.tableMarginBottom` 显式配置。
-- 自飞书 Wiki「API设计」（`RjKPwTWUBivbaykfexbcBzaTnvb`）同步 §4.4 智能召回：§4.4.2 更名、§4.4.4 响应示例规范化、§4.4.5/§4.4.6 补 `count` 与字段表、章节顺序调整为 4.4.1–4.4.7；非 Agentic 响应仍无 `answer`（与 Swagger 一致）。
+- 自飞书 Wiki「API 设计」（`RjKPwTWUBivbaykfexbcBzaTnvb`）同步 §4.4 智能召回：§4.4.2 更名、§4.4.4 响应示例规范化、§4.4.5/§4.4.6 补 `count` 与字段表、章节顺序调整为 4.4.1–4.4.7；非 Agentic 响应仍无 `answer`（与 Swagger 一致）。
 - 知识卡详情初次加载态改为弹窗正文区域居中展示，避免空内容容器下 loading 出现在左上角。
 - 知识卡上线交互收口：前端仅允许 `audit_status=approved` 的知识卡进入上线确认；待审核/已驳回统一提示“仅审核通过的知识卡可上线”，并移除知识卡 request 失败后的组件二次错误提示，避免同一次失败出现两条 toast。
 - 制定 Python mock 后端计划：在前端同级目录新建 FastAPI mock backend，按线上 Swagger 当前 67 个 path / 90 个 operation 做全量覆盖，不引入数据库，并以 API contract 测试作为验收门禁。
@@ -65,7 +66,7 @@
 - 开发规范明确 `vue`、`vue-router`、`pinia` 自动导入范围，禁止手动导入已覆盖的运行时 API，类型导入除外。
 - `components.d.ts`、`src/auto-imports.d.ts` 保留在版本库中（`pnpm build` 先执行 `vue-tsc`，忽略后 CI/Docker 会缺类型）；已从 ESLint / Prettier / lint-staged 排除，避免 pre-commit 与 `unplugin-*` 生成格式互相覆盖。
 - 知识卡版本历史和版本对比交互已收口：当前版本不展示历史对比/回退入口，单版本、同版本、无效版本和回退到当前版本均不可操作；本次仅涉及前端交互边界和单元测试，不变更后端接口、Docker 或环境变量。
-- 自飞书 Wiki「API设计」反向同步至 `docs/API设计.md`（§3.2.2 citations、`§4.1.9` 创建字段说明、`§4.1.17` 审核响应 `json_content`/`md_content`/`audit_reject_reason`）。
+- 自飞书 Wiki「API 设计」反向同步至 `docs/API设计.md`（§3.2.2 citations、`§4.1.9` 创建字段说明、`§4.1.17` 审核响应 `json_content`/`md_content`/`audit_reject_reason`）。
 - 全量自飞书 Wiki（`RjKPwTWUBivbaykfexbcBzaTnvb`）重新生成 `docs/API设计.md`，内容与飞书 docx 纯文本一致；本地不再自行改写 SSE/召回字段注释格式。
 - 同步策略调整为：**语义与飞书 Wiki 一致**，本地 `docs/API设计.md` 使用规范 Markdown（代码块、表格、缩进 JSON）；§3.2.2 SSE 示例拆分为流式 `http` 片段与展开的 `done` JSON。
 - `PageTable` 的 `type: 'selection'` 列配置现映射 `width` → `rowSelection.columnWidth`、`fixed` → `rowSelection.fixed`，列宽与固定列设置可生效。
