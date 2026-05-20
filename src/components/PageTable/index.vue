@@ -1,6 +1,6 @@
 <template>
   <div
-    class="page-table p-2.5 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden flex flex-col flex-1 min-h-0"
+    class="page-table p-2.5 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-(--color-bg-container) shadow-sm overflow-hidden flex flex-col flex-1 min-h-0"
     :style="{ '--min-height': tableConf?.tableMinHeight ?? '200px' }"
   >
     <!-- 顶部工具栏 -->

@@ -31,6 +31,7 @@
 
 ## 近期同步记录
 
+- `DirectoryTree` 与 `PageTable` 暗色容器背景改为使用 `--color-bg-container`，避免继续固定到 `slate-900`。
 - 知识卡管理新增隐藏的召回测试页入口，调用 `POST /knowledge-recall/{owner_type}/{owner_id}/recall` 并展示最终回答与召回知识卡列表；不实现测试历史。
 - 文件上传队列新增「一键移除」入口，移除类按钮保留默认按钮类型并使用 danger 状态提示。
 - 上传请求去重对 `FormData` 追加文件元信息，避免多个文件同路径并发上传被误判为重复提交。
