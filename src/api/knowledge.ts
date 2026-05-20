@@ -33,6 +33,7 @@ interface KnowledgeCardVersionRaw {
   created_by_name?: string
   operated_by_name?: string
   created_at: string
+  md_content?: string
   content?: string
 }
 
@@ -113,7 +114,7 @@ function normalizeKnowledgeCardVersion(raw: KnowledgeCardVersionRaw): KnowledgeC
     created_by: raw.operated_by ?? raw.created_by ?? '',
     created_by_name: raw.operated_by_name ?? raw.created_by_name ?? '',
     created_at: raw.created_at,
-    content: raw.content ?? '',
+    md_content: raw.md_content ?? raw.content ?? '',
   }
 }
 
@@ -350,15 +351,25 @@ export function deleteKnowledgeCard(
  * 知识卡版本对比（API 4.1.13）
  * GET /api/v1/knowledge/{owner_type}/{owner_id}/cards/{id}/versions/diff
  */
-export function getKnowledgeCardVersionDiff(
+export async function getKnowledgeCardVersionDiff(
   ownerType: OwnerType,
   ownerId: string,
   cardId: string,
   fromVersion: number,
   toVersion: number
-) {
-  return request.get<VersionDiffResult>(
+): Promise<VersionDiffResult> {
+  const raw = await request.get<VersionDiffResult>(
     `${BASE_URL}/${ownerType}/${ownerId}/cards/${cardId}/versions/diff`,
     { params: { from_version: fromVersion, to_version: toVersion } }
   )
+  // 兼容后端可能返回 content（旧字段）或 md_content（新字段）
+  if (raw.diff) {
+    raw.diff = raw.diff.map((seg: any) => ({
+      ...seg,
+      md_content: seg.md_content ?? seg.content ?? '',
+    }))
+  }
+  raw.from_md_content = raw.from_md_content ?? (raw as any).from_content ?? ''
+  raw.to_md_content = raw.to_md_content ?? (raw as any).to_content ?? ''
+  return raw
 }

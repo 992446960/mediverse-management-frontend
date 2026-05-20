@@ -474,6 +474,60 @@ export const knowledgeHandlers = [
     }
   ),
 
+  // 版本对比（4.1.13）
+  http.get(
+    `${API_BASE}/knowledge/:ownerType/:ownerId/cards/:cardId/versions/diff`,
+    async ({ params, request }) => {
+      const { cardId } = params
+      const url = new URL(request.url)
+      const fromVersion = Number(url.searchParams.get('from_version'))
+      const toVersion = Number(url.searchParams.get('to_version'))
+      const versions = mockCardVersions[cardId as string] || []
+      const fromData = versions.find(
+        (v) => knowledgeCardVersionToNumeric(v.version) === fromVersion
+      )
+      const toData = versions.find((v) => knowledgeCardVersionToNumeric(v.version) === toVersion)
+      const fromContent = fromData?.md_content ?? ''
+      const toContent = toData?.md_content ?? ''
+      const diff = []
+      if (fromContent !== toContent) {
+        if (fromContent)
+          diff.push({
+            type: 'delete',
+            md_content: fromContent,
+            highlight_version: toVersion,
+            md_content_snapshot_version: fromVersion,
+          })
+        if (toContent)
+          diff.push({
+            type: 'insert',
+            md_content: toContent,
+            highlight_version: toVersion,
+            md_content_snapshot_version: toVersion,
+          })
+      } else {
+        diff.push({
+          type: 'equal',
+          md_content: fromContent,
+          highlight_version: toVersion,
+          md_content_snapshot_version: fromVersion,
+        })
+      }
+      await delay(300)
+      return HttpResponse.json({
+        code: 0,
+        message: 'ok',
+        data: {
+          from_version: fromVersion,
+          to_version: toVersion,
+          from_md_content: fromContent,
+          to_md_content: toContent,
+          diff,
+        },
+      })
+    }
+  ),
+
   // 删除知识卡（4.1.16）
   http.delete(`${API_BASE}/knowledge/:ownerType/:ownerId/cards/:cardId`, async ({ params }) => {
     const { cardId } = params
@@ -503,8 +557,8 @@ export const knowledgeHandlers = [
       )
 
       if (card && versionData) {
-        card.content = versionData.content
-        card.md_content = versionData.content
+        card.content = versionData.md_content
+        card.md_content = versionData.md_content
         card.version = versionData.version
         card.updated_at = new Date().toISOString()
         return HttpResponse.json({ code: 0, message: 'ok', data: card })

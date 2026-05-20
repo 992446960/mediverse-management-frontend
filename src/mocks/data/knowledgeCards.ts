@@ -138,7 +138,7 @@ export const mockCardVersions: Record<string, KnowledgeCardVersion[]> = {
       created_by: 'u_admin_001',
       created_by_name: '系统管理员',
       created_at: '2024-03-01T10:30:00Z',
-      content: '### 高血压诊断标准\n\n根据《中国高血压防治指南（2018年修订版）》...',
+      md_content: '### 高血压诊断标准\n\n根据《中国高血压防治指南（2018年修订版）》...',
     },
     {
       version: 'v1.1.0',
@@ -146,7 +146,7 @@ export const mockCardVersions: Record<string, KnowledgeCardVersion[]> = {
       created_by: 'u_admin_001',
       created_by_name: '系统管理员',
       created_at: '2024-02-10T15:00:00Z',
-      content: '### 高血压诊断标准\n\n旧版本内容...',
+      md_content: '### 高血压诊断标准\n\n旧版本内容...',
     },
     {
       version: 'v1.0.0',
@@ -154,7 +154,7 @@ export const mockCardVersions: Record<string, KnowledgeCardVersion[]> = {
       created_by: 'u_admin_001',
       created_by_name: '系统管理员',
       created_at: '2024-01-10T08:00:00Z',
-      content: '### 高血压诊断标准\n\n最初的内容...',
+      md_content: '### 高血压诊断标准\n\n最初的内容...',
     },
   ],
 }

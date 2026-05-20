@@ -122,7 +122,7 @@ export interface KnowledgeCardVersion {
   created_by: string
   created_by_name: string
   created_at: string
-  content: string
+  md_content: string
 }
 
 /** 文件处理状态响应 */
@@ -223,12 +223,16 @@ export interface KnowledgeCardPayload {
 /** 版本 Diff 单元（API 4.1.13） */
 export interface VersionDiffSegment {
   type: 'equal' | 'delete' | 'insert'
-  content: string
+  md_content: string
+  highlight_version?: number
+  md_content_snapshot_version?: number
 }
 
 /** 版本对比响应（API 4.1.13） */
 export interface VersionDiffResult {
   from_version: number
   to_version: number
+  from_md_content: string
+  to_md_content: string
   diff: VersionDiffSegment[]
 }

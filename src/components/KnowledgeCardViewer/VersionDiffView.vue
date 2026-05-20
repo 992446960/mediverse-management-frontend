@@ -61,13 +61,13 @@
             <span
               v-if="seg.type === 'equal'"
               class="diff-equal"
-              v-html="renderSegment(seg.content)"
+              v-html="renderSegment(seg.md_content)"
             ></span>
             <!-- eslint-disable-next-line vue/no-v-html -- marked + DOMPurify -->
             <span
               v-else-if="seg.type === 'delete'"
               class="diff-delete"
-              v-html="renderSegment(seg.content)"
+              v-html="renderSegment(seg.md_content)"
             ></span>
           </template>
         </div>
@@ -80,13 +80,13 @@
             <span
               v-if="seg.type === 'equal'"
               class="diff-equal"
-              v-html="renderSegment(seg.content)"
+              v-html="renderSegment(seg.md_content)"
             ></span>
             <!-- eslint-disable-next-line vue/no-v-html -- marked + DOMPurify -->
             <span
               v-else-if="seg.type === 'insert'"
               class="diff-insert"
-              v-html="renderSegment(seg.content)"
+              v-html="renderSegment(seg.md_content)"
             ></span>
           </template>
         </div>
@@ -204,6 +204,7 @@ function handleRollbackClick() {
 
 /** 将 Markdown 片段渲染为安全 HTML */
 function renderSegment(content: string): string {
+  if (!content) return ''
   const html = marked.parse(content) as string
   return DOMPurify.sanitize(html)
 }
