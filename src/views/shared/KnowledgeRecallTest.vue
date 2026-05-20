@@ -1,75 +1,117 @@
 <template>
-  <div class="knowledge-recall-test flex flex-1 flex-col overflow-hidden">
-    <div class="app-container p-4 mb-4">
-      <PageHead :head-conf="headConf" />
+  <div class="knowledge-recall-test flex flex-1 flex-col overflow-y-auto">
+    <div class="app-container p-5 mb-4">
+      <PageHead :head-conf="headConf">
+        <template #title>
+          <div class="min-w-0">
+            <h1 class="m-0 text-xl font-semibold leading-8 text-(--color-text-base)">
+              {{ t('knowledge.recall.title') }}
+            </h1>
+            <p class="m-0 mt-1 text-sm leading-5 text-(--color-text-secondary)">
+              {{ t('knowledge.recall.subtitle') }}
+            </p>
+          </div>
+        </template>
+
+        <a-button type="primary" :loading="loading" :disabled="!canSubmit" @click="handleRecall">
+          <template #icon>
+            <SearchOutlined />
+          </template>
+          {{ t('knowledge.recall.execute') }}
+        </a-button>
+      </PageHead>
     </div>
 
-    <div class="app-container p-4 mb-4">
-      <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_320px] gap-4">
-        <section class="min-w-0">
-          <div class="mb-2 text-sm font-medium text-(--color-text-base)">
+    <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_340px] gap-4 mb-4">
+      <section class="app-container min-w-0 p-5">
+        <div class="mb-3 flex items-center justify-between gap-3">
+          <h2 class="m-0 text-base font-semibold text-(--color-text-base)">
             {{ t('knowledge.recall.queryLabel') }}
-          </div>
-          <a-textarea
-            v-model:value="query"
-            :placeholder="t('knowledge.recall.queryPlaceholder')"
-            :auto-size="{ minRows: 7, maxRows: 10 }"
-            :maxlength="2000"
-            :disabled="loading"
-            show-count
-          />
-        </section>
+          </h2>
+          <span class="text-xs text-(--color-text-tertiary)"> {{ query.length }} / 2000 </span>
+        </div>
+        <a-textarea
+          v-model:value="query"
+          :placeholder="t('knowledge.recall.queryPlaceholder')"
+          :auto-size="{ minRows: 8, maxRows: 12 }"
+          :maxlength="2000"
+          :disabled="loading"
+        />
+      </section>
 
-        <section class="min-w-0">
-          <div class="mb-4">
-            <div class="mb-2 text-sm font-medium text-(--color-text-base)">
-              {{ t('knowledge.recall.cardTypeLabel') }}
+      <aside class="app-container min-w-0 p-5">
+        <div class="mb-5 flex items-center gap-2">
+          <FilterOutlined class="text-primary" />
+          <h2 class="m-0 text-base font-semibold text-(--color-text-base)">
+            {{ t('knowledge.recall.paramsTitle') }}
+          </h2>
+        </div>
+
+        <div class="mb-5">
+          <div class="mb-2 text-sm font-medium text-(--color-text-base)">
+            {{ t('knowledge.recall.cardTypeLabel') }}
+          </div>
+          <a-spin :spinning="cardTypesLoading" size="small">
+            <div class="flex flex-wrap gap-2">
+              <a-button
+                size="small"
+                :type="selectedAllCardTypes ? 'primary' : 'default'"
+                :disabled="loading"
+                @click="handleCardTypeClick(ALL_RECALL_CARD_TYPES_VALUE)"
+              >
+                {{ t('knowledge.recall.allTypes') }}
+              </a-button>
+              <a-button
+                v-for="item in cardTypes"
+                :key="item.code"
+                size="small"
+                :type="isCardTypeActive(item.code) ? 'primary' : 'default'"
+                :disabled="loading"
+                @click="handleCardTypeClick(item.code)"
+              >
+                {{ item.name }}
+              </a-button>
             </div>
-            <a-select
-              v-model:value="selectedCardTypes"
-              mode="multiple"
-              allow-clear
-              :placeholder="t('knowledge.recall.allTypes')"
-              :options="cardTypeOptions"
-              :loading="cardTypesLoading"
+          </a-spin>
+          <p
+            v-if="!hasSelectedCardType"
+            class="m-0 mt-2 text-xs leading-5 text-(--ant-color-error)"
+          >
+            {{ t('knowledge.recall.cardTypeRequired') }}
+          </p>
+        </div>
+
+        <div>
+          <div class="mb-2 flex items-center justify-between gap-2">
+            <span class="text-sm font-medium text-(--color-text-base)">
+              {{ t('knowledge.recall.topKLabel') }}
+            </span>
+            <a-input-number
+              v-model:value="topK"
+              :min="1"
+              :max="20"
+              :precision="0"
               :disabled="loading"
             />
           </div>
-
-          <div>
-            <div class="mb-2 flex items-center justify-between gap-2">
-              <span class="text-sm font-medium text-(--color-text-base)">
-                {{ t('knowledge.recall.topKLabel') }}
-              </span>
-              <a-input-number
-                v-model:value="topK"
-                :min="1"
-                :max="20"
-                :precision="0"
-                :disabled="loading"
-              />
-            </div>
-            <a-slider v-model:value="topK" :min="1" :max="20" :disabled="loading" />
+          <a-slider v-model:value="topK" :min="1" :max="20" :disabled="loading" />
+          <div class="flex justify-between text-xs text-(--color-text-tertiary)">
+            <span>1</span>
+            <span>20</span>
           </div>
-
-          <a-button
-            type="primary"
-            block
-            class="mt-4"
-            :loading="loading"
-            :disabled="!canSubmit"
-            @click="handleRecall"
-          >
-            <template #icon>
-              <SearchOutlined />
-            </template>
-            {{ t('knowledge.recall.execute') }}
-          </a-button>
-        </section>
-      </div>
+        </div>
+      </aside>
     </div>
 
-    <div class="app-container p-4 flex-1 overflow-y-auto min-h-0">
+    <div
+      class="mb-4 flex items-center gap-3 text-xs font-semibold tracking-wide text-(--color-text-tertiary)"
+    >
+      <div class="h-px flex-1 bg-(--color-border)" />
+      <span>{{ t('knowledge.recall.resultTitle') }}</span>
+      <div class="h-px flex-1 bg-(--color-border)" />
+    </div>
+
+    <div class="app-container p-5 min-h-64">
       <a-spin :spinning="loading" :tip="t('knowledge.recall.loading')">
         <a-empty v-if="!result && !loading" :description="t('knowledge.recall.emptyResult')" />
 
@@ -134,7 +176,7 @@
 
 <script setup lang="ts">
 import { message } from 'ant-design-vue'
-import { SearchOutlined } from '@ant-design/icons-vue'
+import { FilterOutlined, SearchOutlined } from '@ant-design/icons-vue'
 import { useI18n } from 'vue-i18n'
 import PageHead from '@/components/PageHead/index.vue'
 import type { PageHeadConfig } from '@/components/PageHead/types'
@@ -143,6 +185,12 @@ import { recallKnowledgeCards } from '@/api/knowledgeRecall'
 import type { CardType, CardTypeOption } from '@/types/knowledge'
 import { getCardTypeConfig } from '@/types/knowledge'
 import type { KnowledgeRecallOwnerType, KnowledgeRecallResult } from '@/types/knowledgeRecall'
+import {
+  ALL_RECALL_CARD_TYPES_VALUE,
+  resolveRecallCardTypeSelection,
+} from '@/utils/knowledgeRecall'
+
+const CARD_TYPES_CACHE_KEY = 'knowledge-recall-card-types'
 
 const props = defineProps<{
   ownerType: KnowledgeRecallOwnerType
@@ -153,6 +201,7 @@ const { t } = useI18n()
 
 const query = ref('')
 const topK = ref(5)
+const selectedAllCardTypes = ref(true)
 const selectedCardTypes = ref<CardType[]>([])
 const cardTypes = ref<CardTypeOption[]>([])
 const cardTypesLoading = ref(false)
@@ -160,19 +209,17 @@ const loading = ref(false)
 const result = ref<KnowledgeRecallResult | null>(null)
 
 const headConf = computed<PageHeadConfig>(() => ({
-  title: t('knowledge.recall.title'),
   backLeft: true,
 }))
 
-const cardTypeOptions = computed(() =>
-  cardTypes.value.map((item) => ({
-    label: item.name,
-    value: item.code,
-  }))
-)
-
+const availableCardTypes = computed(() => cardTypes.value.map((item) => item.code))
 const normalizedTopK = computed(() => Math.min(20, Math.max(1, Number(topK.value) || 5)))
-const canSubmit = computed(() => query.value.trim().length > 0 && props.ownerId !== '')
+const hasSelectedCardType = computed(
+  () => selectedAllCardTypes.value || selectedCardTypes.value.length > 0
+)
+const canSubmit = computed(
+  () => query.value.trim().length > 0 && props.ownerId !== '' && hasSelectedCardType.value
+)
 const sourceCount = computed(() => result.value?.count ?? result.value?.sources.length ?? 0)
 const queryTimeText = computed(() => {
   const value = result.value?.query_time_ms
@@ -186,14 +233,76 @@ const confidenceText = computed(() => {
 })
 
 async function fetchCardTypes() {
+  const cachedCardTypes = readCachedCardTypes()
+  if (cachedCardTypes.length > 0) {
+    cardTypes.value = cachedCardTypes
+    syncAllCardTypesSelection()
+    return
+  }
+
   cardTypesLoading.value = true
   try {
-    cardTypes.value = await getCardTypes()
-  } catch (err) {
-    console.error('Fetch card types failed:', err)
+    const remoteCardTypes = await getCardTypes()
+    cardTypes.value = remoteCardTypes
+    writeCachedCardTypes(remoteCardTypes)
+    syncAllCardTypesSelection()
+  } catch {
+    cardTypes.value = []
   } finally {
     cardTypesLoading.value = false
   }
+}
+
+function isCardTypeOption(item: unknown): item is CardTypeOption {
+  if (!item || typeof item !== 'object') return false
+
+  const record = item as Record<string, unknown>
+  return typeof record.name === 'string' && typeof record.code === 'string'
+}
+
+function readCachedCardTypes(): CardTypeOption[] {
+  try {
+    const raw = localStorage.getItem(CARD_TYPES_CACHE_KEY)
+    if (!raw) return []
+
+    const parsed: unknown = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+
+    return parsed.filter(isCardTypeOption)
+  } catch {
+    return []
+  }
+}
+
+function writeCachedCardTypes(types: CardTypeOption[]) {
+  if (types.length === 0) return
+
+  try {
+    localStorage.setItem(CARD_TYPES_CACHE_KEY, JSON.stringify(types))
+  } catch {
+    return
+  }
+}
+
+function syncAllCardTypesSelection() {
+  if (!selectedAllCardTypes.value) return
+  selectedCardTypes.value = [...availableCardTypes.value]
+}
+
+function isCardTypeActive(type: CardType) {
+  return selectedAllCardTypes.value || selectedCardTypes.value.includes(type)
+}
+
+function handleCardTypeClick(clicked: CardType | typeof ALL_RECALL_CARD_TYPES_VALUE) {
+  const selection = resolveRecallCardTypeSelection({
+    current: selectedCardTypes.value,
+    clicked,
+    availableCardTypes: availableCardTypes.value,
+    allSelected: selectedAllCardTypes.value,
+  })
+
+  selectedAllCardTypes.value = selection.allSelected
+  selectedCardTypes.value = selection.cardTypes
 }
 
 async function handleRecall() {
@@ -206,6 +315,10 @@ async function handleRecall() {
     message.warning(t('knowledge.recall.ownerMissing'))
     return
   }
+  if (!hasSelectedCardType.value) {
+    message.warning(t('knowledge.recall.cardTypeRequired'))
+    return
+  }
 
   loading.value = true
   result.value = null
@@ -214,9 +327,10 @@ async function handleRecall() {
       query: text,
       topK: normalizedTopK.value,
       cardTypes: selectedCardTypes.value,
+      availableCardTypes: availableCardTypes.value,
     })
-  } catch (err) {
-    console.error('Knowledge recall failed:', err)
+  } catch {
+    result.value = null
   } finally {
     loading.value = false
   }

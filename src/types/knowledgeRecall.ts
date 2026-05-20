@@ -4,6 +4,7 @@ export interface KnowledgeRecallFormState {
   query: string
   topK: number
   cardTypes: CardType[]
+  availableCardTypes?: CardType[]
 }
 
 export interface KnowledgeRecallRequest {

@@ -422,15 +422,18 @@ export default {
     },
     recall: {
       title: 'Knowledge Card Recall Test',
+      subtitle: 'Validate semantic recall accuracy and AI answer quality',
       entry: 'Recall Test',
       queryLabel: 'Test query',
       queryPlaceholder:
         'Enter a test question, e.g. How should knowledge base permissions be managed?',
+      paramsTitle: 'Parameters',
       cardTypeLabel: 'Knowledge card type',
       allTypes: 'All types',
       topKLabel: 'Top-K',
       execute: 'Run Test',
       loading: 'Retrieving knowledge cards...',
+      resultTitle: 'Test Results',
       emptyResult:
         'Enter a query and run the test to view the final answer and retrieved knowledge cards.',
       finalAnswer: 'Final Answer',
@@ -442,6 +445,7 @@ export default {
       noSources: 'No retrieved knowledge cards',
       queryRequired: 'Enter a test query',
       ownerMissing: 'Current workspace is missing a knowledge base ID',
+      cardTypeRequired: 'Select at least one knowledge card type',
     },
   },
   knowledgeSearch: {
