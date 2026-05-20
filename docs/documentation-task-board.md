@@ -33,6 +33,7 @@
 
 - `DirectoryTree` 与 `PageTable` 暗色边框改为使用 `dark:border-(--color-border)`，与暗色主题变量保持一致。
 - `DirectoryTree` 与 `PageTable` 暗色容器背景改为使用 `--color-bg-container`，避免继续固定到 `slate-900`。
+- 文件上传队列改为先计算文件内容 MD5，并以 MD5 作为队列唯一标识；加入队列前按 MD5 去重，避免同一文件重复进入上传队列。
 - 知识卡管理新增隐藏的召回测试页入口，调用 `POST /knowledge-recall/{owner_type}/{owner_id}/recall` 并展示最终回答与召回知识卡列表；不实现测试历史。
 - 知识卡召回测试页调整为左侧问题、右侧参数布局，标题补充副标题提示；知识卡类型优先读取本地缓存，缺失时调用 `GET /knowledge/card-types`，并补齐“全部/多选”选中边界。
 - 知识卡召回测试入口改为前端路由跳转，隐藏菜单但保留 nav-tag，避免点击入口时出现整页加载跳转。
