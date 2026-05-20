@@ -7,7 +7,7 @@
         {{ t('knowledge.card.copyJson') }}
       </a-button>
     </div>
-    <div class="json-content-pane__body">
+    <div class="json-content-pane__body min-h-[200px]">
       <vue-json-pretty
         v-if="parsedData !== null"
         :data="parsedData"
