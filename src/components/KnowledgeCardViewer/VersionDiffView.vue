@@ -11,7 +11,7 @@
         style="width: 160px"
         :placeholder="t('knowledge.card.diffFromLabel')"
       />
-      <span class="text-gray-400">→</span>
+      <span class="text-gray-400">vs</span>
       <a-select
         v-model:value="localTo"
         :options="versionOptions"
@@ -27,10 +27,12 @@
         </template>
         {{ t('knowledge.card.rollback') }}
       </a-button>
-    </div>
-    <!-- 默认固定分栏展示，单栏与 Radio 切换已停用
-    <div v-if="diff.length > 0" class="flex justify-end mb-4">
-      <a-radio-group v-model:value="viewMode" size="small">
+      <a-radio-group
+        v-if="displayedDiff.length > 0"
+        v-model:value="viewMode"
+        size="small"
+        class="ml-auto"
+      >
         <a-radio-button value="unified">
           {{ t('knowledge.card.diffUnified') }}
         </a-radio-button>
@@ -39,18 +41,44 @@
         </a-radio-button>
       </a-radio-group>
     </div>
-    -->
 
     <a-spin :spinning="loading">
-      <!-- 无数据提示 -->
       <a-empty
         v-if="!loading && displayedDiff.length === 0"
         :description="t('knowledge.card.diffNoData')"
       />
 
-      <!-- 单栏 unified 已移除；与上方 Radio 一并恢复时，需恢复 script 内 viewMode -->
+      <!-- 单栏 unified：所有 segment 按顺序渲染在一个块中 -->
+      <div
+        v-else-if="viewMode === 'unified'"
+        class="markdown-body p-4 bg-gray-50 rounded-lg overflow-auto max-h-[calc(100vh-320px)]"
+      >
+        <div class="text-xs text-gray-400 mb-2 font-medium">
+          {{ fromVersionLabel }} vs {{ toVersionLabel }}
+        </div>
+        <template v-for="(seg, i) in displayedDiff" :key="'u-' + i">
+          <!-- eslint-disable-next-line vue/no-v-html -- marked + DOMPurify -->
+          <span
+            v-if="seg.type === 'equal'"
+            class="diff-equal"
+            v-html="renderSegment(seg.md_content)"
+          ></span>
+          <!-- eslint-disable-next-line vue/no-v-html -- marked + DOMPurify -->
+          <span
+            v-else-if="seg.type === 'delete'"
+            class="diff-delete"
+            v-html="renderSegment(seg.md_content)"
+          ></span>
+          <!-- eslint-disable-next-line vue/no-v-html -- marked + DOMPurify -->
+          <span
+            v-else-if="seg.type === 'insert'"
+            class="diff-insert"
+            v-html="renderSegment(seg.md_content)"
+          ></span>
+        </template>
+      </div>
 
-      <!-- 左右分栏（默认唯一展示方式） -->
+      <!-- 左右分栏：左=from（旧版本），右=to（新版本） -->
       <div v-else class="diff-split grid grid-cols-2 gap-4">
         <div
           class="markdown-body p-4 bg-gray-50 rounded-lg overflow-auto max-h-[calc(100vh-320px)]"
@@ -126,8 +154,7 @@ const emit = defineEmits<{
   (e: 'rollback-to', versionLabel: string, targetVersion: number): void
 }>()
 
-/** 单栏/分栏切换已移除，固定分栏；原 viewMode 保留注释便于恢复 */
-// const viewMode = ref<'unified' | 'split'>('split')
+const viewMode = ref<'unified' | 'split'>('unified')
 const localFrom = ref<number>(0)
 const localTo = ref<number>(0)
 
@@ -139,7 +166,6 @@ function versionLabelForNumeric(n: number): string {
 const fromVersionLabel = computed(() => versionLabelForNumeric(props.fromVersion))
 const toVersionLabel = computed(() => versionLabelForNumeric(props.toVersion))
 
-/** 同步外部传入的版本号到本地 Select */
 watch(
   () => [props.fromVersion, props.toVersion],
   ([f, t]) => {
@@ -163,12 +189,10 @@ const isAppliedSelection = computed(() =>
 )
 const displayedDiff = computed(() => (isAppliedSelection.value ? props.diff : []))
 
-/** from 和 to 必须不同且都已选择 */
 const canCompare = computed(() => {
   return canCompareKnowledgeCardVersions(localFrom.value, localTo.value, validVersionKeys.value)
 })
 
-/** 回退目标为右侧 to，必须来自当前已应用的有效对比选择 */
 const canRollbackToTarget = computed(() => {
   return (
     isAppliedSelection.value &&
@@ -183,7 +207,15 @@ const canRollbackToTarget = computed(() => {
 
 function handleCompare() {
   if (!canCompare.value) return
-  emit('change-versions', localFrom.value, localTo.value)
+  const f = localFrom.value
+  const t = localTo.value
+  if (f > t) {
+    localFrom.value = t
+    localTo.value = f
+    emit('change-versions', t, f)
+  } else {
+    emit('change-versions', f, t)
+  }
 }
 
 function handleRollbackClick() {
@@ -202,7 +234,6 @@ function handleRollbackClick() {
   })
 }
 
-/** 将 Markdown 片段渲染为安全 HTML */
 function renderSegment(content: string): string {
   if (!content) return ''
   const html = marked.parse(content) as string

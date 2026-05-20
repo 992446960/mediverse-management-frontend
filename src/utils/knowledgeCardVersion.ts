@@ -139,7 +139,7 @@ export function findKnowledgeCardCompareTarget<T extends KnowledgeCardVersionRef
       ? currentOption.value
       : options.find((option) => option.value !== targetKey)?.value
 
-  return fromKey == null ? null : { from: fromKey, to: targetKey }
+  return fromKey == null ? null : { from: targetKey, to: fromKey }
 }
 
 export function isKnowledgeCardDiffSelectionApplied(
