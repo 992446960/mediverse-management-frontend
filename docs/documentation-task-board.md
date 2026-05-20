@@ -31,9 +31,12 @@
 
 ## 近期同步记录
 
+- 自飞书 Wiki「API设计」（`RjKPwTWUBivbaykfexbcBzaTnvb`）同步 §4.4 智能召回：§4.4.2 更名、§4.4.4 响应示例规范化、§4.4.5/§4.4.6 补 `count` 与字段表、章节顺序调整为 4.4.1–4.4.7；非 Agentic 响应仍无 `answer`（与 Swagger 一致）。
 - 知识卡详情初次加载态改为弹窗正文区域居中展示，避免空内容容器下 loading 出现在左上角。
+- 知识卡上线交互收口：前端仅允许 `audit_status=approved` 的知识卡进入上线确认；待审核/已驳回统一提示“仅审核通过的知识卡可上线”，并移除知识卡 request 失败后的组件二次错误提示，避免同一次失败出现两条 toast。
 - 制定 Python mock 后端计划：在前端同级目录新建 FastAPI mock backend，按线上 Swagger 当前 67 个 path / 90 个 operation 做全量覆盖，不引入数据库，并以 API contract 测试作为验收门禁。
 - 落地 Python mock 后端联调入口：mock 后端位于工作区同级目录 `../mediverse-management-mock-backend`，默认监听 `127.0.0.1:8005`；API contract 测试支持 `API_TEST_USE_MOCK=true`，并新增 `skills`、`upload`、`knowledge-recall` 覆盖；默认账号为 `dev001-user` / `dev001-dept` / `dev001-org`，密码均为 `123456`。
+- 按余洋反馈对照线上 OpenAPI 更新 `docs/API设计.md`：§4.1.11 增 `note` 与 `status_action` 响应；§4.1.17 响应补 `audit_reject_reason`/`review_action`；§4.4.5/4.4.6 重写为 Agentic/非 Agentic 召回（`recall`/`search`）；清除全部历史调整为 §4.4.7。
 - `docs/API设计.md` §4.1.14 回滚接口补全 Request（`reason`）与 Response（`CardWithRollbackActionOut` + `rollback_action`）示例，与 Swagger 一致。
 - 按线上 OpenAPI 对 `docs/API设计.md` §四二次 diff：修正目录/搜索路径拼写，补 §4.1.5 `indexing_task_id`、§4.1.22/4.1.23/4.4.6，规范 §4.1.15–20 的 http 与 JSON 示例；§4.1.17/4.1.21 已与 Swagger 一致。
 - 执行知识库 API 合同对齐计划：接入非默认目录重命名/删除、文件批量移动、失败索引任务重试、知识库搜索 owner 隔离路径，并同步 MSW mock 后端真实接口路径、请求体和响应字段。
@@ -47,6 +50,7 @@
 - 知识卡 JSON 展示区仅在存在可展示 JSON 内容时展示“复制 JSON”按钮。
 - 知识卡详情正文区标签列表补充“标签”标题，避免标签区与上方内容断层。
 - `PageFilter` 按操作按钮数量、图标和文案动态计算按钮栏宽度，避免按钮栏与“展开/收起”控件重叠。
+- 知识卡上下线确认改为复用 `a-modal` 的 header/body/footer 结构，列表与详情共用同一确认弹框组件。
 - 开发规范明确 `vue`、`vue-router`、`pinia` 自动导入范围，禁止手动导入已覆盖的运行时 API，类型导入除外。
 - `components.d.ts`、`src/auto-imports.d.ts` 保留在版本库中（`pnpm build` 先执行 `vue-tsc`，忽略后 CI/Docker 会缺类型）；已从 ESLint / Prettier / lint-staged 排除，避免 pre-commit 与 `unplugin-*` 生成格式互相覆盖。
 - 知识卡版本历史和版本对比交互已收口：当前版本不展示历史对比/回退入口，单版本、同版本、无效版本和回退到当前版本均不可操作；本次仅涉及前端交互边界和单元测试，不变更后端接口、Docker 或环境变量。
