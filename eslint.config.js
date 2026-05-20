@@ -5,7 +5,16 @@ import pluginVue from 'eslint-plugin-vue'
 import eslintConfigPrettier from 'eslint-config-prettier'
 
 export default tseslint.config(
-  { ignores: ['dist', 'node_modules', 'public', '.cursor'] },
+  {
+    ignores: [
+      'dist',
+      'node_modules',
+      'public',
+      '.cursor',
+      'components.d.ts',
+      'src/auto-imports.d.ts',
+    ],
+  },
   {
     extends: [
       js.configs.recommended,
