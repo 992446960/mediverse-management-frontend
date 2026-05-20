@@ -77,7 +77,8 @@
   --login-orb-1: rgba(14, 165, 233, 0.25);
   --login-orb-2: rgba(5, 150, 105, 0.15);
   --login-orb-3: rgba(14, 165, 233, 0.08);
-  --login-card-bg: rgba(255, 255, 255, 0.92);
+  --login-overlay: linear-gradient(180deg, rgba(2, 6, 23, 0.15) 0%, rgba(2, 6, 23, 0.25) 100%);
+  --login-card-bg: rgba(255, 255, 255, 0.65);
   --login-card-border: rgba(14, 165, 233, 0.18);
   --login-card-shadow: 0 8px 32px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.04);
   --login-title-color: var(--color-text-base);
@@ -138,7 +139,8 @@
   --login-orb-1: rgba(14, 165, 233, 0.20);
   --login-orb-2: rgba(16, 185, 129, 0.12);
   --login-orb-3: rgba(56, 189, 248, 0.08);
-  --login-card-bg: rgba(11, 17, 32, 0.82);
+  --login-overlay: linear-gradient(180deg, rgba(2, 6, 23, 0.7) 0%, rgba(2, 6, 23, 0.85) 100%);
+  --login-card-bg: rgba(11, 17, 32, 0.95);
   --login-card-border: rgba(56, 189, 248, 0.15);
   --login-card-shadow: 0 24px 48px rgba(0, 0, 0, 0.40), 0 8px 16px rgba(0, 0, 0, 0.30);
   --login-title-color: #F1F5F9;

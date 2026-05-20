@@ -116,6 +116,8 @@ function goLater() {
   max-width: 400px;
   padding: var(--spacing-2xl);
   background: var(--login-card-bg);
+  backdrop-filter: blur(100px);
+  -webkit-backdrop-filter: blur(100px);
   border: 1px solid var(--login-card-border);
   border-radius: var(--radius-xl);
   box-shadow: var(--login-card-shadow);

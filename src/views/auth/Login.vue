@@ -173,7 +173,7 @@ const handleLogin = async () => {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(2, 6, 23, 0.5) 0%, rgba(2, 6, 23, 0.65) 100%);
+  background: var(--login-overlay);
   pointer-events: none;
 }
 
@@ -227,8 +227,8 @@ const handleLogin = async () => {
   margin: 24px;
   padding: 48px 40px 36px;
   background: var(--login-card-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(100px);
+  -webkit-backdrop-filter: blur(100px);
   border: 1px solid var(--login-card-border);
   border-radius: 16px;
   box-shadow: var(--login-card-shadow);
