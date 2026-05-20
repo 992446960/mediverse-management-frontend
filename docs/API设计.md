@@ -2890,7 +2890,7 @@ GET /api/v1/knowledge-recall/{owner_type}/{owner_id}/history
 ```
 
 
-##### 4.4.2 召回历史记录详情查询
+##### 4.4.2 召回记录详情查询
 
 ```http
 GET /api/v1/knowledge-recall/sessions/{session_id}
@@ -3025,26 +3025,6 @@ DELETE /api/v1/knowledge-recall/{owner_type}/{owner_id}/history
 ```
 
 
-##### 4.4.7 一键清除当前用户全部召回历史
-
-```http
-DELETE /api/v1/knowledge-recall/history
-```
-
-**Response data**
-
-
-```json
-{
-"code": 0,
-"message": "ok",
-"data": {
-"deleted_count": 0
-}
-}
-```
-
-
 ##### 4.4.4 删除某条记录
 
 ```http
@@ -3059,8 +3039,13 @@ session_id：路径参数（召回记录id）
 **Responses**
 
 
-| Python<br>{<br>  "code": 0,<br>  "message": "ok",<br>  "data": null<br>} |
-| --- |
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": null
+}
+```
 
 
 ##### 4.4.5 知识卡 Agentic 智能召回
@@ -3076,12 +3061,12 @@ POST /api/v1/knowledge-recall/{owner_type}/{owner_id}/recall
 
 ```json
 {
-"query": "高血压患者可以服用哪些降压药？",
-"top_k": 5,
-"metadata": {
-"card_type": ["rule", "evidence"],
-"input_data": {}
-}
+  "query": "高血压患者可以服用哪些降压药？",
+  "top_k": 5,
+  "metadata": {
+    "card_type": ["rule", "evidence"],
+    "input_data": {}
+  }
 }
 ```
 
@@ -3090,7 +3075,7 @@ POST /api/v1/knowledge-recall/{owner_type}/{owner_id}/recall
 | --- | --- | --- | --- |
 | query | string | ✅ | 搜索关键词 / 临床问题，最多 2000 字 |
 | top_k | int | ❌ | 最大命中数，默认 5，范围 1–20 |
-| metadata | object | ❌ | 过滤元数据 |
+| metadata | object | ❌ | 过滤元数据（`NonAgenticSearchMetadata`） |
 | metadata.card_type | string[] | ❌ | 6 类知识卡 `code`；不传则全域检索；空数组 → 422 |
 | metadata.input_data | object | ❌ | ES filter 透传白名单字段 |
 | metadata.owner_id | string | — | 由路由从路径注入，调用方无需传 |
@@ -3102,34 +3087,39 @@ POST /api/v1/knowledge-recall/{owner_type}/{owner_id}/recall
 
 ```json
 {
-"code": 0,
-"message": "ok",
-"data": {
-"query": "高血压患者可以服用哪些降压药？",
-"answer": "根据知识库资料，常用降压药包括…[1][2]",
-"confidence": 0.85,
-"query_time_ms": 320.5,
-"sources": [
-{
-"id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-"card_type": "rule",
-"title": "降压药用药规范",
-"excerpt": "一线降压药包括…",
-"relevance_score": 0.92
-}
-]
-}
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "query": "高血压患者可以服用哪些降压药？",
+    "answer": "根据知识库资料，常用降压药包括…[1][2]",
+    "confidence": 0.85,
+    "query_time_ms": 320.5,
+    "count": 2,
+    "sources": [
+      {
+        "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "card_type": "rule",
+        "title": "降压药用药规范",
+        "excerpt": "一线降压药包括…",
+        "relevance_score": 0.92
+      }
+    ]
+  }
 }
 ```
 
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
+| data.query | string | 回显检索问题 |
 | data.answer | string | LLM 生成的中文答案；LLM 失败时为 fallback 文本 |
 | data.sources | array | 命中知识卡列表（`NonAgenticSearchResultItem`） |
 | data.sources[].id | string | 知识卡 ID（`card_id`） |
+| data.sources[].excerpt | string | 摘要片段 |
+| data.sources[].relevance_score | number | BM25 相关性得分 |
 | data.confidence | number | 置信度（下游：`0.6 × LLM 自评 + 0.4 × search_coverage`） |
 | data.query_time_ms | number | 查询耗时（毫秒） |
+| data.count | int | 命中条数（与 `sources` 长度一致；飞书 Wiki 已收录，待线上 Swagger 同步） |
 
 
 ##### 4.4.6 知识卡非 Agentic 智能召回
@@ -3147,11 +3137,11 @@ POST /api/v1/knowledge-recall/{owner_type}/{owner_id}/search
 
 ```json
 {
-"query": "高血压 降压药",
-"top_k": 5,
-"metadata": {
-"card_type": ["rule"]
-}
+  "query": "高血压 降压药",
+  "top_k": 5,
+  "metadata": {
+    "card_type": ["rule"]
+  }
 }
 ```
 
@@ -3161,31 +3151,54 @@ POST /api/v1/knowledge-recall/{owner_type}/{owner_id}/search
 
 ```json
 {
-"code": 0,
-"message": "ok",
-"data": {
-"query": "高血压 降压药",
-"confidence": 0.6,
-"query_time_ms": 48.2,
-"sources": [
-{
-"id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-"card_type": "rule",
-"title": "降压药用药规范",
-"excerpt": "一线降压药包括…",
-"relevance_score": 0.88
-}
-]
-}
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "query": "高血压 降压药",
+    "confidence": 0.6,
+    "query_time_ms": 48.2,
+    "count": 1,
+    "sources": [
+      {
+        "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "card_type": "rule",
+        "title": "降压药用药规范",
+        "excerpt": "一线降压药包括…",
+        "relevance_score": 0.88
+      }
+    ]
+  }
 }
 ```
 
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| data | object | `NonAgenticSearchResponseData`，无 `answer` 字段 |
+| data | object | `NonAgenticSearchResponseData`，**无** `answer` 字段（飞书示例若含 `answer` 为笔误，以实现为准） |
 | data.sources | array | BM25 降序命中列表 |
 | data.confidence | number | `min(found, top_k) / top_k` |
+| data.query_time_ms | number | 查询耗时（毫秒） |
+| data.count | int | 命中条数（飞书 Wiki 已收录，待线上 Swagger 同步） |
+
+
+##### 4.4.7 一键清除当前用户全部召回历史
+
+```http
+DELETE /api/v1/knowledge-recall/history
+```
+
+**Response data**
+
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "deleted_count": 0
+  }
+}
+```
 
 
 本文档覆盖第一期所有核心接口，运维监控类接口（任务管理、会话管理、日志等）在第二期补充。
