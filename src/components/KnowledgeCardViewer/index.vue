@@ -71,11 +71,19 @@
 
         <!-- 知识库入口：仅正文 + 溯源，无 Tab、无上下线 -->
         <template v-if="readonlyPreview">
-          <div
-            class="p-4 bg-gray-50 rounded-lg min-h-[200px] max-h-[min(480px,calc(100vh-240px))] overflow-y-auto"
-          >
-            <!-- eslint-disable-next-line vue/no-v-html -- marked + DOMPurify -->
-            <div class="markdown-body" v-html="renderedContent"></div>
+          <div class="grid grid-cols-2 gap-4">
+            <JsonContentPane :json-content="card.json_content" />
+            <div>
+              <div class="text-sm font-medium text-gray-500 mb-2">
+                {{ t('knowledge.card.markdownPane') }}
+              </div>
+              <div
+                class="p-4 bg-gray-50 rounded-lg min-h-[200px] max-h-[min(480px,calc(100vh-240px))] overflow-y-auto"
+              >
+                <!-- eslint-disable-next-line vue/no-v-html -- marked + DOMPurify -->
+                <div class="markdown-body" v-html="renderedContent"></div>
+              </div>
+            </div>
           </div>
           <div v-if="card.tags?.length" class="mt-4 flex flex-wrap gap-1.5">
             <a-tag v-for="tag in card.tags" :key="tag" class="m-0"> #{{ tag }} </a-tag>
@@ -91,16 +99,23 @@
 
         <a-tabs v-else v-model:active-key="activeTab">
           <a-tab-pane key="content" :tab="t('knowledge.card.tabContent')">
-            <div
-              class="p-4 bg-gray-50 rounded-lg min-h-[200px] max-h-[min(480px,calc(100vh-240px))] overflow-y-auto"
-            >
-              <!-- eslint-disable-next-line vue/no-v-html -- marked + DOMPurify -->
-              <div class="markdown-body" v-html="renderedContent"></div>
+            <div class="grid grid-cols-2 gap-4">
+              <JsonContentPane :json-content="card.json_content" />
+              <div>
+                <div class="text-sm font-medium text-gray-500 mb-2">
+                  {{ t('knowledge.card.markdownPane') }}
+                </div>
+                <div
+                  class="p-4 bg-gray-50 rounded-lg min-h-[200px] max-h-[min(480px,calc(100vh-240px))] overflow-y-auto"
+                >
+                  <!-- eslint-disable-next-line vue/no-v-html -- marked + DOMPurify -->
+                  <div class="markdown-body" v-html="renderedContent"></div>
+                </div>
+              </div>
             </div>
             <div v-if="card.tags?.length" class="mt-4 flex flex-wrap gap-1.5">
               <a-tag v-for="tag in card.tags" :key="tag" class="m-0"> #{{ tag }} </a-tag>
             </div>
-
             <div class="mt-6">
               <AssociatedFilesList
                 :rows="sourceFileRows"
@@ -212,6 +227,7 @@ import {
 } from '@/api/knowledge'
 import { formatFileSize } from '@/utils/formatFileSize'
 import AssociatedFilesList from './AssociatedFilesList.vue'
+import JsonContentPane from './JsonContentPane.vue'
 import VersionTimeline from './VersionTimeline.vue'
 import VersionDiffView from './VersionDiffView.vue'
 import { marked } from 'marked'
@@ -270,7 +286,7 @@ const validVersionKeys = computed(() =>
 )
 
 const renderedContent = computed(() => {
-  const content = card.value?.content || ''
+  const content = card.value?.md_content || card.value?.content || ''
   const html = marked.parse(content) as string
   return DOMPurify.sanitize(html)
 })
