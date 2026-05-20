@@ -434,6 +434,7 @@ export default {
       allTypes: 'All types',
       topKLabel: 'Top-K',
       execute: 'Run Test',
+      reset: 'Reset',
       loading: 'Retrieving knowledge cards...',
       resultTitle: 'Test Results',
       emptyResult:

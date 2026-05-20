@@ -22,12 +22,20 @@
             </p>
           </div>
         </div>
-        <a-button type="primary" :loading="loading" :disabled="!canSubmit" @click="handleRecall">
-          <template #icon>
-            <CaretRightOutlined />
-          </template>
-          {{ t('knowledge.recall.execute') }}
-        </a-button>
+        <div class="flex items-center gap-2">
+          <a-button :disabled="loading || !canReset" @click="handleReset">
+            <template #icon>
+              <UndoOutlined />
+            </template>
+            {{ t('knowledge.recall.reset') }}
+          </a-button>
+          <a-button type="primary" :loading="loading" :disabled="!canSubmit" @click="handleRecall">
+            <template #icon>
+              <CaretRightOutlined />
+            </template>
+            {{ t('knowledge.recall.execute') }}
+          </a-button>
+        </div>
       </div>
     </header>
 
@@ -126,7 +134,7 @@
       <div class="h-px flex-1 bg-(--color-border)" />
     </div>
 
-    <div class="app-container p-5 min-h-64">
+    <div class="bg-white dark:bg-[--color-bg-container] p-5 rounded-md">
       <a-spin :spinning="loading" :tip="t('knowledge.recall.loading')">
         <a-empty v-if="!result && !loading" :description="t('knowledge.recall.emptyResult')" />
 
@@ -191,7 +199,12 @@
 
 <script setup lang="ts">
 import { message } from 'ant-design-vue'
-import { ArrowLeftOutlined, FilterOutlined, CaretRightOutlined } from '@ant-design/icons-vue'
+import {
+  ArrowLeftOutlined,
+  FilterOutlined,
+  CaretRightOutlined,
+  UndoOutlined,
+} from '@ant-design/icons-vue'
 import { useI18n } from 'vue-i18n'
 import { getCardTypes } from '@/api/knowledge'
 import { recallKnowledgeCards } from '@/api/knowledgeRecall'
@@ -229,6 +242,13 @@ const hasSelectedCardType = computed(
 )
 const canSubmit = computed(
   () => query.value.trim().length > 0 && props.ownerId !== '' && hasSelectedCardType.value
+)
+const canReset = computed(
+  () =>
+    query.value.length > 0 ||
+    topK.value !== 5 ||
+    !selectedAllCardTypes.value ||
+    result.value !== null
 )
 const sourceCount = computed(() => result.value?.count ?? result.value?.sources.length ?? 0)
 const queryTimeText = computed(() => {
@@ -313,6 +333,14 @@ function handleCardTypeClick(clicked: CardType | typeof ALL_RECALL_CARD_TYPES_VA
 
   selectedAllCardTypes.value = selection.allSelected
   selectedCardTypes.value = selection.cardTypes
+}
+
+function handleReset() {
+  query.value = ''
+  topK.value = 5
+  selectedAllCardTypes.value = true
+  selectedCardTypes.value = [...availableCardTypes.value]
+  result.value = null
 }
 
 function handleBack() {

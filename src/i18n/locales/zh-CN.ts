@@ -427,6 +427,7 @@ export default {
       allTypes: '全部类型',
       topKLabel: 'Top-K 数量',
       execute: '执行测试',
+      reset: '重置',
       loading: '正在召回知识卡...',
       resultTitle: '测试结果',
       emptyResult: '输入问题并执行测试后，这里会展示最终回答和召回知识卡。',
