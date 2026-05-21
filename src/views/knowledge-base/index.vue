@@ -480,8 +480,6 @@ function openFilePreview(file: FileListItem, scopeCtx: KbHomeVisibleScope) {
   router.push({
     name: PREVIEW_ROUTE_NAMES[scopeCtx.scope],
     params: { id: file.id },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- 与 KnowledgeFiles 预览一致
-    state: { file } as any,
   })
 }
 

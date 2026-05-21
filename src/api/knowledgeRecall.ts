@@ -6,7 +6,7 @@ import type {
 } from '@/types/knowledgeRecall'
 import { buildKnowledgeRecallPayload } from '@/utils/knowledgeRecall'
 
-const KNOWLEDGE_RECALL_TIMEOUT = 30_000
+const KNOWLEDGE_RECALL_TIMEOUT = 600_000
 
 export function recallKnowledgeCards(
   ownerType: KnowledgeRecallOwnerType,
