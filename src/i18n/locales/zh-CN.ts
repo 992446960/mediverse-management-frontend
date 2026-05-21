@@ -242,7 +242,7 @@ export default {
     searchFilePlaceholder: '搜索文件名',
     statusProcessing: '处理中',
     statusDone: '已完成',
-    statusFailed: '失败',
+    statusFailed: '解析失败',
     retry: '重试',
     batchMoveFiles: '批量移动',
     batchMoveNoSelection: '请先选择文件',

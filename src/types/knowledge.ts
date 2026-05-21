@@ -219,7 +219,7 @@ export const FILE_STATUS_CONFIG: Record<FileStatus, { color: string; label: stri
   indexing: { color: 'purple', label: '正在建立索引...' },
   /** 已完成：#53b614 */
   done: { color: '#53b614', label: '已完成' },
-  failed: { color: 'error', label: '处理失败' },
+  failed: { color: 'error', label: '解析失败' },
 }
 
 /** 知识卡类型配置（兜底/颜色映射；后端可动态扩展，未在此 Map 中的类型走 fallback） */

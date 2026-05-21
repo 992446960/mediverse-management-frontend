@@ -489,7 +489,6 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
     label: t('common.actions'),
     type: 'operation',
     width: 300,
-    fixed: 'right',
     btns: [
       {
         text: t('knowledge.preview'),
