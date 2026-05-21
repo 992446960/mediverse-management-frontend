@@ -253,81 +253,69 @@
       </template>
 
       <div class="knowledge-recall-detail">
-        <div
-          v-if="detailLoading"
-          class="flex min-h-[360px] items-center justify-center bg-(--color-bg-container)"
-        >
-          <a-spin :tip="t('common.loading')" />
-        </div>
-        <template v-else>
-          <div class="knowledge-recall-detail__body">
-            <section class="knowledge-recall-detail__content">
-              <div
-                class="knowledge-recall-detail__markdown markdown-body prose prose-sm max-w-none dark:prose-invert"
-              >
-                <!-- eslint-disable-next-line vue/no-v-html -- 知识卡详情正文为 Markdown，已通过 marked + DOMPurify 清洗 -->
-                <div v-if="hasDetailMarkdown" v-html="detailMarkdownHtml" />
-                <a-empty v-else :description="t('knowledge.recall.noCardContent')" />
+        <div class="knowledge-recall-detail__body">
+          <section class="knowledge-recall-detail__content">
+            <div
+              class="knowledge-recall-detail__markdown markdown-body prose prose-sm max-w-none dark:prose-invert"
+            >
+              <!-- eslint-disable-next-line vue/no-v-html -- 召回详情返回的 md_content 为 Markdown，已通过 marked + DOMPurify 清洗 -->
+              <div v-if="hasDetailMarkdown" v-html="detailMarkdownHtml" />
+              <a-empty v-else :description="t('knowledge.recall.noCardContent')" />
+            </div>
+          </section>
+
+          <aside class="knowledge-recall-detail__aside">
+            <section class="knowledge-recall-detail__panel">
+              <div class="mb-3 flex items-center gap-2 text-sm font-semibold uppercase">
+                <BarChartOutlined class="text-primary" />
+                <span>{{ t('knowledge.recall.recallPerformance') }}</span>
+              </div>
+              <div class="rounded-md border border-(--color-border) bg-white p-4 dark:bg-slate-900">
+                <div class="text-xs text-(--color-text-secondary)">
+                  {{ t('knowledge.recall.recallScore') }}
+                </div>
+                <div class="mt-2 flex items-end gap-2">
+                  <span class="text-3xl font-semibold leading-none text-primary">
+                    {{ selectedRecallScoreText }}
+                  </span>
+                </div>
+                <div class="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                  <div
+                    class="h-full rounded-full bg-primary"
+                    :style="{ width: selectedRecallScorePercent }"
+                  />
+                </div>
               </div>
             </section>
 
-            <aside class="knowledge-recall-detail__aside">
-              <section class="knowledge-recall-detail__panel">
-                <div class="mb-3 flex items-center gap-2 text-sm font-semibold uppercase">
-                  <BarChartOutlined class="text-primary" />
-                  <span>{{ t('knowledge.recall.recallPerformance') }}</span>
-                </div>
+            <section class="knowledge-recall-detail__panel">
+              <div class="mb-3 flex items-center gap-2 text-sm font-semibold">
+                <LinkOutlined class="text-primary" />
+                <span>{{ t('knowledge.recall.relatedFiles') }}</span>
+              </div>
+              <div v-if="detailSourceFiles.length" class="knowledge-recall-detail__files">
                 <div
-                  class="rounded-md border border-(--color-border) bg-white p-4 dark:bg-slate-900"
+                  v-for="(file, index) in detailSourceFiles"
+                  :key="file.id || file.name || file.file_name || `file-${index}`"
+                  class="rounded-md border border-(--color-border) bg-white p-3 dark:bg-slate-900"
                 >
-                  <div class="text-xs text-(--color-text-secondary)">
-                    {{ t('knowledge.recall.recallScore') }}
-                  </div>
-                  <div class="mt-2 flex items-end gap-2">
-                    <span class="text-3xl font-semibold leading-none text-primary">
-                      {{ selectedRecallScoreText }}
-                    </span>
-                  </div>
-                  <div
-                    class="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"
-                  >
-                    <div
-                      class="h-full rounded-full bg-primary"
-                      :style="{ width: selectedRecallScorePercent }"
-                    />
-                  </div>
-                </div>
-              </section>
-
-              <section class="knowledge-recall-detail__panel">
-                <div class="mb-3 flex items-center gap-2 text-sm font-semibold">
-                  <LinkOutlined class="text-primary" />
-                  <span>{{ t('knowledge.recall.relatedFiles') }}</span>
-                </div>
-                <div v-if="detailSourceFiles.length" class="knowledge-recall-detail__files">
-                  <div
-                    v-for="(file, index) in detailSourceFiles"
-                    :key="file.id || file.name || file.file_name || `file-${index}`"
-                    class="rounded-md border border-(--color-border) bg-white p-3 dark:bg-slate-900"
-                  >
-                    <div class="flex min-w-0 items-start gap-2">
-                      <FileTextOutlined class="mt-0.5 shrink-0 text-primary" />
-                      <div class="min-w-0">
-                        <div class="wrap-break-word text-sm font-medium text-(--color-text-base)">
-                          {{ getSourceFileName(file) }}
-                        </div>
-                        <div class="mt-1 text-xs text-(--color-text-tertiary)">
-                          {{ getSourceFileMeta(file) }}
-                        </div>
+                  <div class="flex min-w-0 items-start gap-2">
+                    <FileTextOutlined class="mt-0.5 shrink-0 text-primary" />
+                    <div class="min-w-0">
+                      <div class="wrap-break-word text-sm font-medium text-(--color-text-base)">
+                        {{ getSourceFileName(file) }}
+                      </div>
+                      <div class="mt-1 text-xs text-(--color-text-tertiary)">
+                        {{ getSourceFileMeta(file) }}
                       </div>
                     </div>
                   </div>
                 </div>
-                <a-empty v-else :description="t('knowledge.recall.noRelatedFiles')" />
-              </section>
-            </aside>
-          </div>
-        </template>
+              </div>
+              <a-empty v-else :description="t('knowledge.recall.noRelatedFiles')" />
+            </section>
+          </aside>
+        </div>
       </div>
 
       <template #footer>
@@ -350,9 +338,9 @@ import {
   LinkOutlined,
 } from '@ant-design/icons-vue'
 import { useI18n } from 'vue-i18n'
-import { getCardTypes, getKnowledgeCardDetail } from '@/api/knowledge'
+import { getCardTypes } from '@/api/knowledge'
 import { recallKnowledgeCards } from '@/api/knowledgeRecall'
-import type { CardType, CardTypeOption, FileSource, KnowledgeCard } from '@/types/knowledge'
+import type { CardType, CardTypeOption, FileSource } from '@/types/knowledge'
 import { getCardTypeConfig } from '@/types/knowledge'
 import type {
   KnowledgeRecallOwnerType,
@@ -385,9 +373,7 @@ const cardTypesLoading = ref(false)
 const loading = ref(false)
 const result = ref<KnowledgeRecallResult | null>(null)
 const detailOpen = ref(false)
-const detailLoading = ref(false)
 const selectedSource = ref<KnowledgeRecallSource | null>(null)
-const detailCard = ref<KnowledgeCard | null>(null)
 
 const availableCardTypes = computed(() => cardTypes.value.map((item) => item.code))
 const normalizedTopK = computed(() => Math.min(20, Math.max(1, Number(topK.value) || 5)))
@@ -407,25 +393,16 @@ const canReset = computed(
 const sourceCount = computed(() => result.value?.count ?? result.value?.sources.length ?? 0)
 const hasFinalAnswer = computed(() => (result.value?.answer ?? '').trim() !== '')
 const finalAnswerHtml = computed(() => renderMarkdownSafe(result.value?.answer))
-const detailTitle = computed(() => detailCard.value?.title || selectedSource.value?.title || '-')
-const detailCardId = computed(() => detailCard.value?.id || selectedSource.value?.id || '-')
-const detailCardType = computed(
-  () => detailCard.value?.type || selectedSource.value?.card_type || 'rule'
-)
+const detailTitle = computed(() => selectedSource.value?.title || '-')
+const detailCardId = computed(() => selectedSource.value?.id || '-')
+const detailCardType = computed(() => selectedSource.value?.card_type || 'rule')
 const detailUpdatedAt = computed(() => {
-  const raw = detailCard.value?.updated_at || selectedSource.value?.updated_at
+  const raw = selectedSource.value?.updated_at
   if (!raw) return '-'
   const value = dayjs(raw)
   return value.isValid() ? value.format('YYYY-MM-DD HH:mm:ss') : raw
 })
-const detailMarkdown = computed(() => {
-  return (
-    detailCard.value?.md_content ||
-    selectedSource.value?.md_content ||
-    selectedSource.value?.excerpt ||
-    ''
-  )
-})
+const detailMarkdown = computed(() => selectedSource.value?.md_content ?? '')
 const hasDetailMarkdown = computed(() => detailMarkdown.value.trim() !== '')
 const detailMarkdownHtml = computed(() => renderMarkdownSafe(detailMarkdown.value))
 const selectedRecallScore = computed(() => {
@@ -438,8 +415,6 @@ const selectedRecallScorePercent = computed(() => {
   return `${Math.round(value * 100)}%`
 })
 const detailSourceFiles = computed<FileSource[]>(() => {
-  const detailFiles = detailCard.value?.source_files ?? []
-  if (detailFiles.length > 0) return detailFiles
   return selectedSource.value?.source_files ?? selectedSource.value?.sources ?? []
 })
 const queryTimeText = computed(() => {
@@ -569,18 +544,9 @@ async function handleRecall() {
   }
 }
 
-async function handleOpenSourceDetail(source: KnowledgeRecallSource) {
+function handleOpenSourceDetail(source: KnowledgeRecallSource) {
   selectedSource.value = source
-  detailCard.value = null
   detailOpen.value = true
-  detailLoading.value = true
-  try {
-    detailCard.value = await getKnowledgeCardDetail(props.ownerType, props.ownerId, source.id)
-  } catch {
-    message.error(t('knowledge.recall.detailLoadFailed'))
-  } finally {
-    detailLoading.value = false
-  }
 }
 
 function handleCloseDetail() {
@@ -685,7 +651,6 @@ onMounted(fetchCardTypes)
 
 .knowledge-recall-detail__content {
   min-width: 0;
-  padding: 1.5rem 1.75rem;
   overflow: hidden;
 }
 

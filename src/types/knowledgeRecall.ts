@@ -22,10 +22,12 @@ export interface KnowledgeRecallSource {
   excerpt: string
   relevance_score: number
   recall_score?: number
+  json_content?: string
   md_content?: string
-  updated_at?: string
-  source_files?: FileSource[]
-  sources?: FileSource[]
+  created_at?: string | null
+  updated_at?: string | null
+  source_files?: FileSource[] | null
+  sources?: FileSource[] | null
 }
 
 export interface KnowledgeRecallResult {
