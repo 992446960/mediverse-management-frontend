@@ -48,11 +48,18 @@
       </a-timeline-item>
     </a-timeline>
   </div>
+
+  <RollbackConfirmModal
+    v-model:open="rollbackConfirmOpen"
+    :version-label="rollbackTarget?.version ?? ''"
+    :confirm-loading="rollbackLoading"
+    @confirm="handleRollbackConfirm"
+  />
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { Modal, message } from 'ant-design-vue'
+import { message } from 'ant-design-vue'
 import { HistoryOutlined, RollbackOutlined, SwapOutlined } from '@ant-design/icons-vue'
 import type { KnowledgeCardVersion } from '@/types/knowledge'
 import {
@@ -63,17 +70,20 @@ import {
   resolveKnowledgeCardVersionKey,
 } from '@/utils/knowledgeCardVersion'
 import dayjs from 'dayjs'
+import RollbackConfirmModal from './RollbackConfirmModal.vue'
 
 const { t } = useI18n()
 
 const props = defineProps<{
   versions: KnowledgeCardVersion[]
   currentVersionKey: number | null
+  rollbackLoading: boolean
+  rollbackSuccessKey: number
 }>()
 
 const emit = defineEmits<{
   (e: 'compare', fromVersion: number, toVersion: number): void
-  (e: 'rollback', version: string, targetVersion: number): void
+  (e: 'rollback', version: string, targetVersion: number, reason?: string): void
 }>()
 
 const validVersionKeys = computed(() =>
@@ -101,6 +111,18 @@ function handleCompare(v: KnowledgeCardVersion) {
   if (target) emit('compare', target.from, target.to)
 }
 
+const rollbackConfirmOpen = ref(false)
+const rollbackTarget = ref<{ version: string; targetVersion: number } | null>(null)
+
+watch(
+  () => props.rollbackSuccessKey,
+  () => {
+    if (!rollbackConfirmOpen.value) return
+    rollbackConfirmOpen.value = false
+    rollbackTarget.value = null
+  }
+)
+
 const handleRollback = (v: KnowledgeCardVersion) => {
   const targetVersion = resolveKnowledgeCardVersionKey(v)
   if (
@@ -110,14 +132,12 @@ const handleRollback = (v: KnowledgeCardVersion) => {
     message.warning(t('knowledge.card.rollbackInvalidVersion'))
     return
   }
-  Modal.confirm({
-    title: t('knowledge.card.rollbackConfirmTitle'),
-    content: t('knowledge.card.rollbackConfirmContent', { version: v.version }),
-    okText: t('common.confirm'),
-    cancelText: t('common.cancel'),
-    onOk: () => {
-      emit('rollback', v.version, targetVersion)
-    },
-  })
+  rollbackTarget.value = { version: v.version, targetVersion }
+  rollbackConfirmOpen.value = true
+}
+
+function handleRollbackConfirm(reason?: string) {
+  if (!rollbackTarget.value) return
+  emit('rollback', rollbackTarget.value.version, rollbackTarget.value.targetVersion, reason)
 }
 </script>

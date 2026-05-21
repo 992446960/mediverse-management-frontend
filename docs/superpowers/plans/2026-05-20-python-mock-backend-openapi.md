@@ -624,7 +624,7 @@ Status patch returns `CardWithStatusActionOut`; audit patch returns `CardWithRev
 
 - [ ] **Step 4: Implement versions, diff, rollback**
 
-Version list returns deterministic versions. Diff returns line-level `md_content` diff items. Rollback rejects current version, applies old version content, creates a new version, and returns `rollback_action`.
+Version list returns deterministic versions. Diff returns line-level `md_content` diff items. Rollback only moves the current version to the previous version, creates a new version, and returns the full knowledge card object.
 
 - [ ] **Step 5: Add tests**
 

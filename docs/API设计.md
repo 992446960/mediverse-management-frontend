@@ -2154,7 +2154,7 @@ GET /api/v1/knowledge/{owner_type}/{owner_id}/cards/{id}/versions/diff
 
 ##### 4.1.14 回滚版本
 
-版本回滚：先调用下游 `POST /api/v1/cards/{card_id}/rollback`，再按本库 `target_version` 对应的历史快照落库；成功后 `current_version` 递增。
+版本回滚：仅支持从当前版本回退到上一版本；其他历史版本只支持对比，不支持回退。成功后返回新的完整知识卡对象，`current_version` 为回滚前 `current_version + 1`。
 
 ```http
 POST /api/v1/knowledge/{owner_type}/{owner_id}/cards/{id}/rollback
@@ -2165,7 +2165,6 @@ POST /api/v1/knowledge/{owner_type}/{owner_id}/cards/{id}/rollback
 
 ```json
 {
-"target_version": 2,
 "reason": "回滚到审核通过前的版本"
 }
 ```
@@ -2173,13 +2172,12 @@ POST /api/v1/knowledge/{owner_type}/{owner_id}/cards/{id}/rollback
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
-| target_version | int | ✅ | 要回退到的历史版本号 |
 | reason | string | ❌ | 回滚原因，最多 2000 字；同步到下游 `reason` 并写入 `change_summary` |
 
 
 **Response data**
 
-返回 `CardWithRollbackActionOut`：知识卡详情 + `rollback_action`（下游回滚动作摘要）。
+返回回滚后的完整知识卡对象，字段与 §4.1.8 一致。
 
 
 ```json
@@ -2214,11 +2212,7 @@ POST /api/v1/knowledge/{owner_type}/{owner_id}/cards/{id}/rollback
 "created_by": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
 "created_by_name": "string",
 "created_at": "2026-05-19T06:11:51.198Z",
-"updated_at": "2026-05-19T07:00:00.000Z",
-"rollback_action": {
-"card_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-"review_state": "pending"
-}
+"updated_at": "2026-05-19T07:00:00.000Z"
 }
 }
 ```
@@ -2228,9 +2222,6 @@ POST /api/v1/knowledge/{owner_type}/{owner_id}/cards/{id}/rollback
 | --- | --- | --- |
 | data | object | 回滚后的知识卡详情，字段与 §4.1.8 一致 |
 | data.current_version | int | 回滚落库后的新版本号（较回滚前 +1） |
-| data.rollback_action | object | 下游回滚结果摘要 |
-| data.rollback_action.card_id | string (uuid) | 知识卡 ID |
-| data.rollback_action.review_state | string | 下游审核状态，默认 `pending` |
 
 
 ##### 4.1.15 查询知识卡类型

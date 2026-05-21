@@ -120,13 +120,18 @@
         </div>
       </div>
     </a-spin>
+
+    <RollbackConfirmModal
+      v-model:open="rollbackConfirmOpen"
+      :version-label="rollbackTarget?.versionLabel ?? ''"
+      :confirm-loading="rollbackLoading"
+      @confirm="handleRollbackConfirm"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { h } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Modal, Textarea as ATextarea } from 'ant-design-vue'
 import { RollbackOutlined } from '@ant-design/icons-vue'
 import type { VersionDiffSegment, KnowledgeCardVersion } from '@/types/knowledge'
 import {
@@ -134,10 +139,12 @@ import {
   canCompareKnowledgeCardVersions,
   canRollbackKnowledgeCardVersion,
   isKnowledgeCardDiffSelectionApplied,
+  resolveKnowledgeCardPreviousVersionKey,
   resolveKnowledgeCardVersionKey,
 } from '@/utils/knowledgeCardVersion'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
+import RollbackConfirmModal from './RollbackConfirmModal.vue'
 
 const { t } = useI18n()
 
@@ -148,6 +155,8 @@ const props = defineProps<{
   versions: KnowledgeCardVersion[]
   currentVersionKey: number | null
   loading: boolean
+  rollbackLoading: boolean
+  rollbackSuccessKey: number
 }>()
 
 const emit = defineEmits<{
@@ -194,15 +203,19 @@ const canCompare = computed(() => {
   return canCompareKnowledgeCardVersions(localFrom.value, localTo.value, validVersionKeys.value)
 })
 
+const rollbackTargetVersion = computed(() =>
+  resolveKnowledgeCardPreviousVersionKey(props.currentVersionKey, validVersionKeys.value)
+)
+
 const canRollbackToTarget = computed(() => {
+  const targetVersion = rollbackTargetVersion.value
   return (
     isAppliedSelection.value &&
-    canRollbackKnowledgeCardVersion(
-      localFrom.value,
-      props.currentVersionKey,
-      validVersionKeys.value,
-      localTo.value
-    )
+    targetVersion != null &&
+    [localFrom.value, localTo.value].includes(targetVersion) &&
+    props.currentVersionKey != null &&
+    [localFrom.value, localTo.value].includes(props.currentVersionKey) &&
+    canRollbackKnowledgeCardVersion(targetVersion, props.currentVersionKey, validVersionKeys.value)
   )
 })
 
@@ -219,36 +232,31 @@ function handleCompare() {
   }
 }
 
-const rollbackReason = ref('')
+const rollbackConfirmOpen = ref(false)
+const rollbackTarget = ref<{ versionLabel: string; targetVersion: number } | null>(null)
+
+watch(
+  () => props.rollbackSuccessKey,
+  () => {
+    if (!rollbackConfirmOpen.value) return
+    rollbackConfirmOpen.value = false
+    rollbackTarget.value = null
+  }
+)
 
 function handleRollbackClick() {
   if (!canRollbackToTarget.value) return
-  const targetVersion = localFrom.value
+  const targetVersion = rollbackTargetVersion.value
+  if (targetVersion == null) return
   const row = props.versions.find((v) => resolveKnowledgeCardVersionKey(v) === targetVersion)
   const versionLabel = row?.version ?? `v${targetVersion}`
-  rollbackReason.value = ''
-  Modal.confirm({
-    title: t('knowledge.card.rollbackConfirmTitle'),
-    content: h('div', [
-      h('p', t('knowledge.card.rollbackConfirmContent', { version: versionLabel })),
-      h(ATextarea, {
-        value: rollbackReason.value,
-        'onUpdate:value': (val: string) => {
-          rollbackReason.value = val
-        },
-        placeholder: t('knowledge.card.rollbackReasonPlaceholder'),
-        maxlength: 2000,
-        showCount: true,
-        rows: 3,
-        style: 'margin-top: 8px',
-      }),
-    ]),
-    okText: t('common.confirm'),
-    cancelText: t('common.cancel'),
-    onOk: () => {
-      emit('rollback-to', versionLabel, targetVersion, rollbackReason.value || undefined)
-    },
-  })
+  rollbackTarget.value = { versionLabel, targetVersion }
+  rollbackConfirmOpen.value = true
+}
+
+function handleRollbackConfirm(reason?: string) {
+  if (!rollbackTarget.value) return
+  emit('rollback-to', rollbackTarget.value.versionLabel, rollbackTarget.value.targetVersion, reason)
 }
 
 function renderSegment(content: string): string {

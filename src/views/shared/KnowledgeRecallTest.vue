@@ -166,8 +166,12 @@
               <a-tag v-if="confidenceText">{{ confidenceText }}</a-tag>
             </div>
           </div>
-          <div class="whitespace-pre-wrap text-sm leading-6 text-(--color-text-base)">
-            {{ result.answer || t('knowledge.recall.noAnswer') }}
+          <div
+            class="knowledge-recall-test__answer-body markdown-body prose prose-sm max-w-none dark:prose-invert"
+          >
+            <!-- eslint-disable-next-line vue/no-v-html -- 召回 answer 为 Markdown 文本，已通过 marked + DOMPurify 清洗 -->
+            <div v-if="hasFinalAnswer" v-html="finalAnswerHtml" />
+            <span v-else>{{ t('knowledge.recall.noAnswer') }}</span>
           </div>
         </section>
 
@@ -187,11 +191,16 @@
             v-if="result.sources.length === 0"
             :description="t('knowledge.recall.noSources')"
           />
-          <div v-else class="space-y-3">
+          <div v-else class="knowledge-recall-test__sources-list space-y-3">
             <article
               v-for="source in result.sources"
               :key="source.id"
-              class="rounded-md border border-slate-200 p-3 dark:border-slate-800"
+              class="cursor-pointer rounded-md border border-slate-200 p-3 transition-colors hover:border-primary hover:bg-(--ant-color-fill-tertiary) dark:border-slate-800"
+              role="button"
+              tabindex="0"
+              :aria-label="`${t('knowledge.recall.viewCardDetail')}: ${source.title}`"
+              @click="handleOpenSourceDetail(source)"
+              @keydown.enter.prevent="handleOpenSourceDetail(source)"
             >
               <div class="mb-2 flex flex-wrap items-center gap-2">
                 <a-tag color="blue">{{ formatScore(source.relevance_score) }}</a-tag>
@@ -208,23 +217,150 @@
         </section>
       </div>
     </div>
+
+    <a-modal
+      v-model:open="detailOpen"
+      width="min(980px, calc(100vw - 48px))"
+      centered
+      destroy-on-close
+      wrap-class-name="knowledge-recall-detail-modal"
+      :body-style="{ padding: 0 }"
+    >
+      <template #title>
+        <div class="knowledge-recall-detail__title min-w-0">
+          <div class="flex min-w-0 items-center gap-3">
+            <span
+              class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-sky-50 text-primary dark:bg-sky-950"
+            >
+              <FileTextOutlined />
+            </span>
+            <div class="min-w-0">
+              <h2 class="m-0 truncate text-lg font-semibold text-(--color-text-base)">
+                {{ detailTitle }}
+              </h2>
+              <div
+                class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-normal text-(--color-text-tertiary)"
+              >
+                <a-tag :color="getCardTypeConfig(detailCardType).color" class="m-0">
+                  {{ getCardTypeConfig(detailCardType).label }}
+                </a-tag>
+                <span>ID: {{ detailCardId }}</span>
+                <span>{{ t('common.updatedAt') }}: {{ detailUpdatedAt }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <div class="knowledge-recall-detail">
+        <div
+          v-if="detailLoading"
+          class="flex min-h-[360px] items-center justify-center bg-(--color-bg-container)"
+        >
+          <a-spin :tip="t('common.loading')" />
+        </div>
+        <template v-else>
+          <div class="knowledge-recall-detail__body">
+            <section class="knowledge-recall-detail__content">
+              <div
+                class="knowledge-recall-detail__markdown markdown-body prose prose-sm max-w-none dark:prose-invert"
+              >
+                <!-- eslint-disable-next-line vue/no-v-html -- 知识卡详情正文为 Markdown，已通过 marked + DOMPurify 清洗 -->
+                <div v-if="hasDetailMarkdown" v-html="detailMarkdownHtml" />
+                <a-empty v-else :description="t('knowledge.recall.noCardContent')" />
+              </div>
+            </section>
+
+            <aside class="knowledge-recall-detail__aside">
+              <section class="knowledge-recall-detail__panel">
+                <div class="mb-3 flex items-center gap-2 text-sm font-semibold uppercase">
+                  <BarChartOutlined class="text-primary" />
+                  <span>{{ t('knowledge.recall.recallPerformance') }}</span>
+                </div>
+                <div
+                  class="rounded-md border border-(--color-border) bg-white p-4 dark:bg-slate-900"
+                >
+                  <div class="text-xs text-(--color-text-secondary)">
+                    {{ t('knowledge.recall.recallScore') }}
+                  </div>
+                  <div class="mt-2 flex items-end gap-2">
+                    <span class="text-3xl font-semibold leading-none text-primary">
+                      {{ selectedRecallScoreText }}
+                    </span>
+                  </div>
+                  <div
+                    class="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"
+                  >
+                    <div
+                      class="h-full rounded-full bg-primary"
+                      :style="{ width: selectedRecallScorePercent }"
+                    />
+                  </div>
+                </div>
+              </section>
+
+              <section class="knowledge-recall-detail__panel">
+                <div class="mb-3 flex items-center gap-2 text-sm font-semibold">
+                  <LinkOutlined class="text-primary" />
+                  <span>{{ t('knowledge.recall.relatedFiles') }}</span>
+                </div>
+                <div v-if="detailSourceFiles.length" class="knowledge-recall-detail__files">
+                  <div
+                    v-for="(file, index) in detailSourceFiles"
+                    :key="file.id || file.name || file.file_name || `file-${index}`"
+                    class="rounded-md border border-(--color-border) bg-white p-3 dark:bg-slate-900"
+                  >
+                    <div class="flex min-w-0 items-start gap-2">
+                      <FileTextOutlined class="mt-0.5 shrink-0 text-primary" />
+                      <div class="min-w-0">
+                        <div class="wrap-break-word text-sm font-medium text-(--color-text-base)">
+                          {{ getSourceFileName(file) }}
+                        </div>
+                        <div class="mt-1 text-xs text-(--color-text-tertiary)">
+                          {{ getSourceFileMeta(file) }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <a-empty v-else :description="t('knowledge.recall.noRelatedFiles')" />
+              </section>
+            </aside>
+          </div>
+        </template>
+      </div>
+
+      <template #footer>
+        <a-button @click="handleCloseDetail">{{ t('common.close') }}</a-button>
+      </template>
+    </a-modal>
   </div>
 </template>
 
 <script setup lang="ts">
+import dayjs from 'dayjs'
 import { message } from 'ant-design-vue'
 import {
   ArrowLeftOutlined,
   FilterOutlined,
   CaretRightOutlined,
   UndoOutlined,
+  FileTextOutlined,
+  BarChartOutlined,
+  LinkOutlined,
 } from '@ant-design/icons-vue'
 import { useI18n } from 'vue-i18n'
-import { getCardTypes } from '@/api/knowledge'
+import { getCardTypes, getKnowledgeCardDetail } from '@/api/knowledge'
 import { recallKnowledgeCards } from '@/api/knowledgeRecall'
-import type { CardType, CardTypeOption } from '@/types/knowledge'
+import type { CardType, CardTypeOption, FileSource, KnowledgeCard } from '@/types/knowledge'
 import { getCardTypeConfig } from '@/types/knowledge'
-import type { KnowledgeRecallOwnerType, KnowledgeRecallResult } from '@/types/knowledgeRecall'
+import type {
+  KnowledgeRecallOwnerType,
+  KnowledgeRecallResult,
+  KnowledgeRecallSource,
+} from '@/types/knowledgeRecall'
+import { renderMarkdownSafe } from '@/utils/renderMarkdownSafe'
+import { formatFileSize } from '@/utils/formatFileSize'
 import {
   ALL_RECALL_CARD_TYPES_VALUE,
   resolveRecallCardTypeSelection,
@@ -248,6 +384,10 @@ const cardTypes = ref<CardTypeOption[]>([])
 const cardTypesLoading = ref(false)
 const loading = ref(false)
 const result = ref<KnowledgeRecallResult | null>(null)
+const detailOpen = ref(false)
+const detailLoading = ref(false)
+const selectedSource = ref<KnowledgeRecallSource | null>(null)
+const detailCard = ref<KnowledgeCard | null>(null)
 
 const availableCardTypes = computed(() => cardTypes.value.map((item) => item.code))
 const normalizedTopK = computed(() => Math.min(20, Math.max(1, Number(topK.value) || 5)))
@@ -265,6 +405,43 @@ const canReset = computed(
     result.value !== null
 )
 const sourceCount = computed(() => result.value?.count ?? result.value?.sources.length ?? 0)
+const hasFinalAnswer = computed(() => (result.value?.answer ?? '').trim() !== '')
+const finalAnswerHtml = computed(() => renderMarkdownSafe(result.value?.answer))
+const detailTitle = computed(() => detailCard.value?.title || selectedSource.value?.title || '-')
+const detailCardId = computed(() => detailCard.value?.id || selectedSource.value?.id || '-')
+const detailCardType = computed(
+  () => detailCard.value?.type || selectedSource.value?.card_type || 'rule'
+)
+const detailUpdatedAt = computed(() => {
+  const raw = detailCard.value?.updated_at || selectedSource.value?.updated_at
+  if (!raw) return '-'
+  const value = dayjs(raw)
+  return value.isValid() ? value.format('YYYY-MM-DD HH:mm:ss') : raw
+})
+const detailMarkdown = computed(() => {
+  return (
+    detailCard.value?.md_content ||
+    selectedSource.value?.md_content ||
+    selectedSource.value?.excerpt ||
+    ''
+  )
+})
+const hasDetailMarkdown = computed(() => detailMarkdown.value.trim() !== '')
+const detailMarkdownHtml = computed(() => renderMarkdownSafe(detailMarkdown.value))
+const selectedRecallScore = computed(() => {
+  const raw = selectedSource.value?.recall_score ?? selectedSource.value?.relevance_score
+  return typeof raw === 'number' && Number.isFinite(raw) ? raw : 0
+})
+const selectedRecallScoreText = computed(() => selectedRecallScore.value.toFixed(2))
+const selectedRecallScorePercent = computed(() => {
+  const value = Math.min(1, Math.max(0, selectedRecallScore.value))
+  return `${Math.round(value * 100)}%`
+})
+const detailSourceFiles = computed<FileSource[]>(() => {
+  const detailFiles = detailCard.value?.source_files ?? []
+  if (detailFiles.length > 0) return detailFiles
+  return selectedSource.value?.source_files ?? selectedSource.value?.sources ?? []
+})
 const queryTimeText = computed(() => {
   const value = result.value?.query_time_ms
   if (typeof value !== 'number' || !Number.isFinite(value)) return ''
@@ -392,9 +569,40 @@ async function handleRecall() {
   }
 }
 
+async function handleOpenSourceDetail(source: KnowledgeRecallSource) {
+  selectedSource.value = source
+  detailCard.value = null
+  detailOpen.value = true
+  detailLoading.value = true
+  try {
+    detailCard.value = await getKnowledgeCardDetail(props.ownerType, props.ownerId, source.id)
+  } catch {
+    message.error(t('knowledge.recall.detailLoadFailed'))
+  } finally {
+    detailLoading.value = false
+  }
+}
+
+function handleCloseDetail() {
+  detailOpen.value = false
+}
+
 function formatScore(score: number) {
   if (!Number.isFinite(score)) return '-'
   return score.toFixed(2)
+}
+
+function getSourceFileName(file: FileSource) {
+  return file.name || file.file_name || file.id || '-'
+}
+
+function getSourceFileMeta(file: FileSource) {
+  const parts: string[] = []
+  if (typeof file.file_size === 'number' && file.file_size >= 0) {
+    parts.push(formatFileSize(file.file_size))
+  }
+  if (file.page_hint) parts.push(file.page_hint)
+  return parts.length > 0 ? parts.join(' · ') : '-'
 }
 
 onMounted(fetchCardTypes)
@@ -437,6 +645,96 @@ onMounted(fetchCardTypes)
 
 .knowledge-recall-test :deep(.knowledge-recall-test__top-k-slider:hover .ant-slider-handle::after) {
   box-shadow: 0 0 0 2px var(--knowledge-recall-top-k-color);
+}
+
+.knowledge-recall-test__answer-body {
+  max-height: min(420px, calc(100vh - 360px));
+  overflow-y: auto;
+  overflow-wrap: break-word;
+  color: var(--color-text-base);
+  line-height: 1.7;
+}
+
+.knowledge-recall-test__answer-body :deep(p:last-child),
+.knowledge-recall-test__answer-body :deep(ul:last-child),
+.knowledge-recall-test__answer-body :deep(ol:last-child) {
+  margin-bottom: 0;
+}
+
+.knowledge-recall-test__answer-body :deep(pre) {
+  overflow: auto;
+}
+
+.knowledge-recall-test__sources-list {
+  max-height: min(520px, calc(100vh - 360px));
+  overflow-y: auto;
+  padding-right: 0.25rem;
+  scrollbar-gutter: stable;
+}
+
+.knowledge-recall-detail {
+  background: var(--color-bg-container);
+}
+
+.knowledge-recall-detail__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 288px;
+  max-height: min(680px, calc(100vh - 220px));
+  border-top: 1px solid var(--color-border);
+}
+
+.knowledge-recall-detail__content {
+  min-width: 0;
+  padding: 1.5rem 1.75rem;
+  overflow: hidden;
+}
+
+.knowledge-recall-detail__markdown {
+  max-height: min(620px, calc(100vh - 280px));
+  overflow-y: auto;
+  overflow-wrap: break-word;
+  color: var(--color-text-base);
+}
+
+.knowledge-recall-detail__markdown :deep(p:last-child),
+.knowledge-recall-detail__markdown :deep(ul:last-child),
+.knowledge-recall-detail__markdown :deep(ol:last-child) {
+  margin-bottom: 0;
+}
+
+.knowledge-recall-detail__markdown :deep(pre) {
+  overflow: auto;
+}
+
+.knowledge-recall-detail__aside {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1.5rem;
+  border-left: 1px solid var(--color-border);
+  background: var(--color-bg-base);
+  padding: 1.5rem;
+}
+
+.knowledge-recall-detail__files {
+  display: flex;
+  max-height: min(300px, calc(100vh - 520px));
+  flex-direction: column;
+  gap: 0.75rem;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+  scrollbar-gutter: stable;
+}
+
+@media (max-width: 900px) {
+  .knowledge-recall-detail__body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .knowledge-recall-detail__aside {
+    border-top: 1px solid var(--color-border);
+    border-left: 0;
+  }
 }
 
 /* loading 遮罩为 absolute，不占文档流；无结果时外层需 min-height 才能居中且不被压扁 */

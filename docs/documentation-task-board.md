@@ -31,6 +31,8 @@
 
 ## 近期同步记录
 
+- 知识卡回退确认弹窗改为复用现有 `a-modal` 结构，明确拆分 header/content/footer，并保留 warning icon、回退原因输入和确认请求中的按钮 loading。
+- 知识卡版本回退规则更新：仅允许从当前版本回退到上一版本，其他历史版本仅支持对比；前端请求体不再发送 `target_version`，`docs/API设计.md` §4.1.14 与 Python mock OpenAPI 快照同步为返回完整知识卡对象。
 - 上海市第一人民医院定制分支接入侧栏菜单裁剪：通过 `MenuConfig.hidden` 隐藏仪表盘、数字医生、知识库搜索、管理端分身列表和 API Token；不调整权限守卫、不改变原有一级/二级菜单层级。当前分支将 `/` 默认入口挂载为医院欢迎页，默认进入不展示仪表盘、不选中业务菜单，也不跳转到第一个可见菜单。
 - 上海市第一人民医院定制需求：补充 5.4.4「主分支合并策略」（机制可合 main、打标与品牌禁止合 main、PR 拆分与合并前检查清单）。
 - `DirectoryTree` 与 `PageTable` 暗色边框改为使用 `dark:border-(--color-border)`，与暗色主题变量保持一致。
@@ -40,17 +42,22 @@
 - 知识卡召回测试页调整为左侧问题、右侧参数布局，标题补充副标题提示；知识卡类型优先读取本地缓存，缺失时调用 `GET /knowledge/card-types`，并补齐“全部/多选”选中边界。
 - 知识卡召回测试入口改为前端路由跳转，隐藏菜单但保留 nav-tag，避免点击入口时出现整页加载跳转。
 - 知识卡召回测试页头部改为独立 header，修复标题展示；左右布局断点下调，全选按钮支持全选/全不选，Top-K 进度条使用 `#0ea5e9` 页面变量。
+- 知识卡召回最终回答按 Markdown 文本安全渲染，并限制回答区域最大高度，长内容在区域内滚动。
+- 知识卡召回列表限制最大高度，召回条目过多时在列表区域内滚动展示。
+- 知识卡召回列表新增详情弹窗：点击召回条目后加载知识卡详情，弹窗头部展示标题/类型/ID/更新时间，左侧安全渲染 Markdown 正文，右侧展示召回得分和可滚动的关联文件列表。
+- 知识卡召回测试页补齐入口组件名，使其与路由名匹配并命中顶层 `keep-alive` include；切换标签返回后保留测试问题、召回结果和详情弹窗状态。
 - 文件上传队列新增「一键移除」入口，移除类按钮保留默认按钮类型并使用 danger 状态提示。
 - 上传请求去重对 `FormData` 追加文件元信息，避免多个文件同路径并发上传被误判为重复提交。
 - 文件上传队列支持任意状态本地移除，仅更新弹窗内本地队列，不触发后端删除。
 - `PageTable` 自动高度计算默认不再额外扣除 100px 底部预留，表格滚动区与分页器之间不再出现大块空白；如个别页面需要底部预留，可通过 `tableConf.tableMarginBottom` 显式配置。
 - 自飞书 Wiki「API 设计」（`RjKPwTWUBivbaykfexbcBzaTnvb`）同步 §4.4 智能召回：§4.4.2 更名、§4.4.4 响应示例规范化、§4.4.5/§4.4.6 补 `count` 与字段表、章节顺序调整为 4.4.1–4.4.7；非 Agentic 响应仍无 `answer`（与 Swagger 一致）。
+- 知识卡召回测试、知识卡新增、知识卡编辑三个请求单独延长超时时间到 30 秒，避免沿用全局 10 秒默认值导致长耗时写入/召回提前中断。
 - 知识卡详情初次加载态改为弹窗正文区域居中展示，避免空内容容器下 loading 出现在左上角。
 - 知识卡上线交互收口：前端仅允许 `audit_status=approved` 的知识卡进入上线确认；待审核/已驳回统一提示“仅审核通过的知识卡可上线”，并移除知识卡 request 失败后的组件二次错误提示，避免同一次失败出现两条 toast。
 - 制定 Python mock 后端计划：在前端同级目录新建 FastAPI mock backend，按线上 Swagger 当前 67 个 path / 90 个 operation 做全量覆盖，不引入数据库，并以 API contract 测试作为验收门禁。
 - 落地 Python mock 后端联调入口：mock 后端位于工作区同级目录 `../mediverse-management-mock-backend`，默认监听 `127.0.0.1:8005`；API contract 测试支持 `API_TEST_USE_MOCK=true`，并新增 `skills`、`upload`、`knowledge-recall` 覆盖；默认账号为 `dev001-user` / `dev001-dept` / `dev001-org`，密码均为 `123456`。
 - 按余洋反馈对照线上 OpenAPI 更新 `docs/API设计.md`：§4.1.11 增 `note` 与 `status_action` 响应；§4.1.17 响应补 `audit_reject_reason`/`review_action`；§4.4.5/4.4.6 重写为 Agentic/非 Agentic 召回（`recall`/`search`）；清除全部历史调整为 §4.4.7。
-- `docs/API设计.md` §4.1.14 回滚接口补全 Request（`reason`）与 Response（`CardWithRollbackActionOut` + `rollback_action`）示例，与 Swagger 一致。
+- `docs/API设计.md` §4.1.14 回滚接口补全 Request（`reason`）与 Response 示例，与 Swagger 一致。
 - 按线上 OpenAPI 对 `docs/API设计.md` §四二次 diff：修正目录/搜索路径拼写，补 §4.1.5 `indexing_task_id`、§4.1.22/4.1.23/4.4.6，规范 §4.1.15–20 的 http 与 JSON 示例；§4.1.17/4.1.21 已与 Swagger 一致。
 - 执行知识库 API 合同对齐计划：接入非默认目录重命名/删除、文件批量移动、失败索引任务重试、知识库搜索 owner 隔离路径，并同步 MSW mock 后端真实接口路径、请求体和响应字段。
 - `docs/API设计.md` §4.1.21 按线上 Swagger 对齐「重试失败的下游索引任务」：路径 `{task_id}`、Path Parameters 表、无 Request body、`FileIndexingRetryOut` 响应示例与字段说明。

@@ -8,7 +8,10 @@ import type {
   KnowledgeCard,
   OwnerType,
 } from '@/types/knowledge'
-import { knowledgeCardVersionToNumeric } from '@/utils/knowledgeCardVersion'
+import {
+  resolveKnowledgeCardPreviousVersionKey,
+  resolveKnowledgeCardVersionKey,
+} from '@/utils/knowledgeCardVersion'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 
@@ -672,10 +675,8 @@ export const knowledgeHandlers = [
       const fromVersion = Number(url.searchParams.get('from_version'))
       const toVersion = Number(url.searchParams.get('to_version'))
       const versions = mockCardVersions[cardId as string] || []
-      const fromData = versions.find(
-        (v) => knowledgeCardVersionToNumeric(v.version) === fromVersion
-      )
-      const toData = versions.find((v) => knowledgeCardVersionToNumeric(v.version) === toVersion)
+      const fromData = versions.find((v) => resolveKnowledgeCardVersionKey(v) === fromVersion)
+      const toData = versions.find((v) => resolveKnowledgeCardVersionKey(v) === toVersion)
       const fromContent = fromData?.md_content ?? ''
       const toContent = toData?.md_content ?? ''
       const diff = []
@@ -764,30 +765,44 @@ export const knowledgeHandlers = [
     `${API_BASE}/knowledge/:ownerType/:ownerId/cards/:cardId/rollback`,
     async ({ params, request }) => {
       const { cardId } = params
-      const { target_version } = (await request.json()) as {
-        target_version: number
+      const { reason } = (await request.json()) as {
         reason?: string
       }
       const card = mutableCards.find((c) => c.id === cardId)
       const versions = mockCardVersions[cardId as string] || []
+      const currentVersion = resolveKnowledgeCardVersionKey(card)
+      const validVersionKeys = versions.flatMap((row) => {
+        const key = resolveKnowledgeCardVersionKey(row)
+        return key == null ? [] : [key]
+      })
+      const previousVersion = resolveKnowledgeCardPreviousVersionKey(
+        currentVersion,
+        validVersionKeys
+      )
       const versionData = versions.find(
-        (row) => knowledgeCardVersionToNumeric(row.version) === target_version
+        (row) => resolveKnowledgeCardVersionKey(row) === previousVersion
       )
 
       if (card && versionData) {
+        const nextVersion = (currentVersion ?? 0) + 1
         card.md_content = versionData.md_content ?? ''
-        card.version = versionData.version
+        card.current_version = nextVersion
+        card.version = `v${nextVersion}`
         card.updated_at = new Date().toISOString()
+        versions.unshift({
+          ...versionData,
+          version: card.version,
+          version_number: nextVersion,
+          summary: reason ? `回滚：${reason}` : `回滚到 ${versionData.version}`,
+          created_at: card.updated_at,
+        })
         return HttpResponse.json({
           code: 0,
           message: 'ok',
-          data: {
-            ...card,
-            rollback_action: { card_id: card.id, review_state: 'pending' },
-          },
+          data: card,
         })
       }
-      return HttpResponse.json({ code: 404, message: 'not found' })
+      return HttpResponse.json({ code: 400, message: '只能回退到上一版本' })
     }
   ),
 ]

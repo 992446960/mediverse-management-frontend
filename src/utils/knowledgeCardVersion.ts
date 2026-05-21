@@ -28,7 +28,7 @@ function explicitVersionToNumeric(value: number | string | null | undefined): nu
 }
 
 /**
- * 知识卡版本字符串 → 与接口 `from_version` / `to_version` / 回滚 `target_version` 一致的整型键。
+ * 知识卡版本字符串 → 与接口 `from_version` / `to_version` 一致的整型键。
  * 优先解析 semver `v1.2.3`，否则回退为字符串中首个数字。
  */
 export function knowledgeCardVersionToNumeric(version: string): number | null {
@@ -110,16 +110,27 @@ export function canCompareKnowledgeCardVersions(
   )
 }
 
+export function resolveKnowledgeCardPreviousVersionKey(
+  currentVersionKey: number | null | undefined,
+  validVersionKeys: number[]
+): number | null {
+  if (currentVersionKey == null || currentVersionKey <= 0) return null
+  return (
+    [...new Set(validVersionKeys)]
+      .filter((key) => key > 0 && key < currentVersionKey)
+      .sort((a, b) => b - a)[0] ?? null
+  )
+}
+
 export function canRollbackKnowledgeCardVersion(
   targetVersion: number,
   currentVersionKey: number | null | undefined,
-  validVersionKeys: number[],
-  comparedFromVersion?: number
+  validVersionKeys: number[]
 ): boolean {
   if (targetVersion <= 0 || !validVersionKeys.includes(targetVersion)) return false
-  if (currentVersionKey != null && targetVersion === currentVersionKey) return false
-  if (comparedFromVersion != null && comparedFromVersion === targetVersion) return false
-  return true
+  return (
+    targetVersion === resolveKnowledgeCardPreviousVersionKey(currentVersionKey, validVersionKeys)
+  )
 }
 
 export function findKnowledgeCardCompareTarget<T extends KnowledgeCardVersionRef>(
@@ -139,7 +150,7 @@ export function findKnowledgeCardCompareTarget<T extends KnowledgeCardVersionRef
       ? currentOption.value
       : options.find((option) => option.value !== targetKey)?.value
 
-  return fromKey == null ? null : { from: targetKey, to: fromKey }
+  return fromKey == null ? null : { from: fromKey, to: targetKey }
 }
 
 export function isKnowledgeCardDiffSelectionApplied(

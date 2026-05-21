@@ -25,6 +25,7 @@ import type { PaginatedData } from '@/types/api'
 import type { AxiosRequestConfig } from 'axios'
 
 const BASE_URL = '/knowledge'
+const KNOWLEDGE_CARD_WRITE_TIMEOUT = 30_000
 
 /** 后端 GET .../cards/:id/versions 单条（字段名可能与前端模型不一致） */
 interface KnowledgeCardVersionRaw {
@@ -315,7 +316,8 @@ export function saveKnowledgeCard(
 ): Promise<CreateKnowledgeCardResult> {
   return request.post<CreateKnowledgeCardResult>(
     `${BASE_URL}/${ownerType}/${ownerId}/cards`,
-    payload
+    payload,
+    { timeout: KNOWLEDGE_CARD_WRITE_TIMEOUT }
   )
 }
 
@@ -333,7 +335,9 @@ export function updateKnowledgeCard(
   >
 ) {
   return request
-    .put<KnowledgeCard>(`${BASE_URL}/${ownerType}/${ownerId}/cards/${cardId}`, payload)
+    .put<KnowledgeCard>(`${BASE_URL}/${ownerType}/${ownerId}/cards/${cardId}`, payload, {
+      timeout: KNOWLEDGE_CARD_WRITE_TIMEOUT,
+    })
     .then(normalizeKnowledgeCard)
 }
 
@@ -372,15 +376,11 @@ export function rollbackKnowledgeCard(
   ownerType: OwnerType,
   ownerId: string,
   cardId: string,
-  targetVersion: number,
   reason?: string
 ) {
-  const body: Record<string, unknown> = { target_version: targetVersion }
-  if (reason) body.reason = reason
+  const body: Record<string, unknown> = { reason: reason ?? '' }
   return request
-    .post<
-      KnowledgeCard & { rollback_action?: { card_id: string; review_state: string } }
-    >(`${BASE_URL}/${ownerType}/${ownerId}/cards/${cardId}/rollback`, body)
+    .post<KnowledgeCard>(`${BASE_URL}/${ownerType}/${ownerId}/cards/${cardId}/rollback`, body)
     .then(normalizeKnowledgeCard)
 }
 

@@ -6,6 +6,8 @@ import type {
 } from '@/types/knowledgeRecall'
 import { buildKnowledgeRecallPayload } from '@/utils/knowledgeRecall'
 
+const KNOWLEDGE_RECALL_TIMEOUT = 30_000
+
 export function recallKnowledgeCards(
   ownerType: KnowledgeRecallOwnerType,
   ownerId: string,
@@ -13,6 +15,7 @@ export function recallKnowledgeCards(
 ) {
   return request.post<KnowledgeRecallResult>(
     `/knowledge-recall/${ownerType}/${ownerId}/recall`,
-    buildKnowledgeRecallPayload(state)
+    buildKnowledgeRecallPayload(state),
+    { timeout: KNOWLEDGE_RECALL_TIMEOUT }
   )
 }
