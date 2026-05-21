@@ -120,6 +120,8 @@
             <VersionTimeline
               :versions="versions"
               :current-version-key="currentVersionKey"
+              :rollback-loading="rollbackLoading"
+              :rollback-success-key="rollbackSuccessKey"
               @compare="handleCompareFromTimeline"
               @rollback="handleRollback"
             />
@@ -133,6 +135,8 @@
               :versions="versions"
               :current-version-key="currentVersionKey"
               :loading="diffLoading"
+              :rollback-loading="rollbackLoading"
+              :rollback-success-key="rollbackSuccessKey"
               @change-versions="handleDiffVersionChange"
               @rollback-to="handleRollback"
             />
@@ -299,6 +303,8 @@ const diffResult = ref<VersionDiffSegment[]>([])
 const diffFrom = ref<number>(0)
 const diffTo = ref<number>(0)
 const diffLoading = ref(false)
+const rollbackLoading = ref(false)
+const rollbackSuccessKey = ref(0)
 const statusConfirmOpen = ref(false)
 const statusConfirmLoading = ref(false)
 const statusConfirmTargetStatus = ref<OnlineStatus>('offline')
@@ -476,13 +482,14 @@ async function handleDiffVersionChange(fromVersion: number, toVersion: number) {
 // ─── 回滚 & 上下线 ─────────────────────────────────────
 
 const handleRollback = async (version: string, targetVersion: number, reason?: string) => {
-  if (!props.cardId) return
+  if (!props.cardId || rollbackLoading.value) return
   if (
     !canRollbackKnowledgeCardVersion(targetVersion, currentVersionKey.value, validVersionKeys.value)
   ) {
     message.warning(t('knowledge.card.rollbackInvalidVersion'))
     return
   }
+  rollbackLoading.value = true
   try {
     const updated = await rollbackKnowledgeCard(
       props.ownerType,
@@ -495,9 +502,12 @@ const handleRollback = async (version: string, targetVersion: number, reason?: s
     diffResult.value = []
     diffFrom.value = 0
     diffTo.value = 0
+    rollbackSuccessKey.value += 1
     message.success(t('knowledge.card.rollbackSuccess', { version }))
   } catch (err) {
     console.error('Rollback failed:', err)
+  } finally {
+    rollbackLoading.value = false
   }
 }
 

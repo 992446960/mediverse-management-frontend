@@ -31,6 +31,7 @@
 
 ## 近期同步记录
 
+- 知识卡回退确认弹窗改为复用现有 `a-modal` 结构，明确拆分 header/content/footer，并保留 warning icon、回退原因输入和确认请求中的按钮 loading。
 - 知识卡版本回退规则更新：仅允许从当前版本回退到上一版本，其他历史版本仅支持对比；前端请求体不再发送 `target_version`，`docs/API设计.md` §4.1.14 与 Python mock OpenAPI 快照同步为返回完整知识卡对象。
 - `DirectoryTree` 与 `PageTable` 暗色边框改为使用 `dark:border-(--color-border)`，与暗色主题变量保持一致。
 - `DirectoryTree` 与 `PageTable` 暗色容器背景改为使用 `--color-bg-container`，避免继续固定到 `slate-900`。
