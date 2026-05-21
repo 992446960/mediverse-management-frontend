@@ -425,8 +425,6 @@ async function openSourceFilePreview(item: KnowledgeCard['source_files'][number]
     router.push({
       name: routeName,
       params: { id: file.id },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- 与 KnowledgeFiles 预览一致
-      state: { file } as any,
     })
   } finally {
     openingSourceFileId.value = null

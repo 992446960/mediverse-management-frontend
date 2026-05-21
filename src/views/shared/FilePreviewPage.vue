@@ -49,14 +49,6 @@ function getOwnerId(type: OwnerType): string {
   }
 }
 
-function getHistoryFile(
-  targetRoute: RouteLocationNormalizedLoaded | RouteLocationNormalized
-): FileListItem | undefined {
-  const fromHistory = (history.state as { file?: FileListItem })?.file
-  const fromRoute = (targetRoute as { state?: { file?: FileListItem } }).state?.file
-  return fromHistory ?? fromRoute
-}
-
 /**
  * 预览上下文只在进入/更新预览路由时刷新。
  * 离开到 /chat/session 等路由时，旧预览组件可能仍处于过渡/缓存生命周期；不能用全局 route.path 重新推断 owner。
@@ -73,7 +65,7 @@ function buildPreviewContext(
     ownerType,
     ownerId,
     fileId,
-    file: getHistoryFile(targetRoute) ?? stashed?.file,
+    file: stashed?.file,
   }
 }
 

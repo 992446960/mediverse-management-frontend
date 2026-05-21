@@ -640,11 +640,11 @@ watch(
 )
 
 // ----- 操作列行为 -----
-const PREVIEW_ROUTE_NAMES: Record<OwnerType, string> = {
-  personal: 'MyFilesPreview',
-  dept: 'DeptFilesPreview',
-  org: 'OrgFilesPreview',
-  avatar: 'AvatarFilesPreview',
+const PREVIEW_ROUTE_PATHS: Record<OwnerType, string> = {
+  personal: '/my/files/preview',
+  dept: '/dept/files/preview',
+  org: '/org/files/preview',
+  avatar: '/my/files/preview',
 }
 
 function handlePreview(record: FileListItem) {
@@ -652,10 +652,8 @@ function handlePreview(record: FileListItem) {
     message.warning(t('knowledge.previewNoUrlHint'))
     return
   }
-  const name = PREVIEW_ROUTE_NAMES[props.ownerType]
   stashKnowledgePreviewFile(record, { ownerType: props.ownerType, ownerId: props.ownerId })
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- FileListItem 需通过 state 传递，HistoryState 类型限制
-  router.push({ name, params: { id: record.id }, state: { file: record } as any })
+  router.push(`${PREVIEW_ROUTE_PATHS[props.ownerType]}/${encodeURIComponent(record.id)}`)
 }
 
 function handleDelete(record: FileListItem) {
