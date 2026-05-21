@@ -6,5 +6,9 @@
 import KnowledgeRecallTest from '@/views/shared/KnowledgeRecallTest.vue'
 import { useAuthStore } from '@/stores/auth'
 
+defineOptions({
+  name: 'MyKnowledgeRecallTest',
+})
+
 const authStore = useAuthStore()
 </script>
