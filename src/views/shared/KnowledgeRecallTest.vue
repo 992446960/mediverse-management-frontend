@@ -260,7 +260,9 @@
             >
               <!-- eslint-disable-next-line vue/no-v-html -- 召回详情返回的 md_content 为 Markdown，已通过 marked + DOMPurify 清洗 -->
               <div v-if="hasDetailMarkdown" v-html="detailMarkdownHtml" />
-              <a-empty v-else :description="t('knowledge.recall.noCardContent')" />
+              <div v-else class="knowledge-recall-detail__empty">
+                <a-empty :description="t('knowledge.recall.noCardContent')" />
+              </div>
             </div>
           </section>
 
@@ -312,7 +314,9 @@
                   </div>
                 </div>
               </div>
-              <a-empty v-else :description="t('knowledge.recall.noRelatedFiles')" />
+              <div v-else class="knowledge-recall-detail__files-empty">
+                <a-empty :description="t('knowledge.recall.noRelatedFiles')" />
+              </div>
             </section>
           </aside>
         </div>
@@ -651,6 +655,7 @@ onMounted(fetchCardTypes)
 
 .knowledge-recall-detail__content {
   min-width: 0;
+  padding: 1.5rem 1.75rem;
   overflow: hidden;
 }
 
@@ -671,6 +676,13 @@ onMounted(fetchCardTypes)
   overflow: auto;
 }
 
+.knowledge-recall-detail__empty {
+  display: flex;
+  min-height: min(620px, calc(100vh - 280px));
+  align-items: center;
+  justify-content: center;
+}
+
 .knowledge-recall-detail__aside {
   display: flex;
   min-width: 0;
@@ -689,6 +701,13 @@ onMounted(fetchCardTypes)
   overflow-y: auto;
   padding-right: 0.25rem;
   scrollbar-gutter: stable;
+}
+
+.knowledge-recall-detail__files-empty {
+  display: flex;
+  min-height: min(300px, calc(100vh - 520px));
+  align-items: center;
+  justify-content: center;
 }
 
 @media (max-width: 900px) {
