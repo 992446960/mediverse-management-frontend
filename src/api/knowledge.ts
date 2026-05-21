@@ -25,7 +25,7 @@ import type { PaginatedData } from '@/types/api'
 import type { AxiosRequestConfig } from 'axios'
 
 const BASE_URL = '/knowledge'
-const KNOWLEDGE_CARD_WRITE_TIMEOUT = 30_000
+const KNOWLEDGE_CARD_WRITE_TIMEOUT = 600_000
 
 /** 后端 GET .../cards/:id/versions 单条（字段名可能与前端模型不一致） */
 interface KnowledgeCardVersionRaw {
