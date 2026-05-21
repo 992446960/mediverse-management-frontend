@@ -47,7 +47,7 @@ export const menuConfig: MenuConfig[] = [
     children: [
       { key: 'my-files', label: 'menu.files', path: '/my/files' },
       { key: 'my-knowledge', label: 'menu.knowledgeCards', path: '/my/knowledge-cards' },
-      { key: 'my-avatar', label: 'menu.avatarConfig', path: '/my/avatar' },
+      { key: 'my-avatar', label: 'menu.avatarConfig', path: '/my/avatar', hidden: true },
     ],
   },
   {
@@ -59,7 +59,7 @@ export const menuConfig: MenuConfig[] = [
     children: [
       { key: 'dept-files', label: 'menu.files', path: '/dept/files' },
       { key: 'dept-knowledge', label: 'menu.knowledgeCards', path: '/dept/knowledge-cards' },
-      { key: 'dept-avatar', label: 'menu.avatarConfig', path: '/dept/avatar' },
+      { key: 'dept-avatar', label: 'menu.avatarConfig', path: '/dept/avatar', hidden: true },
     ],
   },
   {
@@ -71,7 +71,7 @@ export const menuConfig: MenuConfig[] = [
     children: [
       { key: 'org-files', label: 'menu.files', path: '/org/files' },
       { key: 'org-knowledge', label: 'menu.knowledgeCards', path: '/org/knowledge-cards' },
-      { key: 'org-avatar', label: 'menu.avatarConfig', path: '/org/avatar' },
+      { key: 'org-avatar', label: 'menu.avatarConfig', path: '/org/avatar', hidden: true },
     ],
   },
   {
@@ -121,7 +121,6 @@ export const menuConfig: MenuConfig[] = [
         path: '/admin/avatars',
         requiredRoles: ['sysadmin', 'org_admin', 'dept_admin'],
         icon: () => h(IdcardOutlined),
-        hidden: true,
       },
       {
         key: 'admin-token',
