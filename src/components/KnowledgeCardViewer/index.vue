@@ -488,7 +488,6 @@ const handleRollback = async (version: string, targetVersion: number, reason?: s
       props.ownerType,
       props.ownerId,
       props.cardId,
-      targetVersion,
       reason
     )
     card.value = updated

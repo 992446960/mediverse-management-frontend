@@ -7,6 +7,7 @@ import {
   isKnowledgeCardCurrentVersion,
   isKnowledgeCardDiffSelectionApplied,
   resolveKnowledgeCardCurrentVersionKey,
+  resolveKnowledgeCardPreviousVersionKey,
   resolveKnowledgeCardVersionKey,
 } from '../../src/utils/knowledgeCardVersion'
 
@@ -55,14 +56,18 @@ describe('knowledgeCardVersion action helpers', () => {
     expect(findKnowledgeCardCompareTarget(versions[2], versions, 99)).toEqual({ from: 3, to: 1 })
   })
 
-  it('blocks same-version compare and rollback to the current version', () => {
+  it('blocks same-version compare and rollback to non-previous versions', () => {
     expect(canCompareKnowledgeCardVersions(2, 2, [1, 2, 3])).toBe(false)
     expect(canRollbackKnowledgeCardVersion(3, 3, [1, 2, 3])).toBe(false)
+    expect(canRollbackKnowledgeCardVersion(1, 3, [1, 2, 3])).toBe(false)
   })
 
-  it('allows rollback only to a valid non-current target after a real comparison selection', () => {
-    expect(canRollbackKnowledgeCardVersion(1, 3, [1, 2, 3], 2)).toBe(true)
-    expect(canRollbackKnowledgeCardVersion(1, 3, [1, 2, 3], 1)).toBe(false)
+  it('allows rollback only to the previous version of the current card', () => {
+    expect(resolveKnowledgeCardPreviousVersionKey(3, [1, 2, 3])).toBe(2)
+    expect(canRollbackKnowledgeCardVersion(2, 3, [1, 2, 3])).toBe(true)
+    expect(
+      canRollbackKnowledgeCardVersion(2_000_000, 3_000_000, [1_000_000, 2_000_000, 3_000_000])
+    ).toBe(true)
   })
 
   it('marks an old diff as stale after selected versions change', () => {

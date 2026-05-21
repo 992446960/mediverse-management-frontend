@@ -376,15 +376,11 @@ export function rollbackKnowledgeCard(
   ownerType: OwnerType,
   ownerId: string,
   cardId: string,
-  targetVersion: number,
   reason?: string
 ) {
-  const body: Record<string, unknown> = { target_version: targetVersion }
-  if (reason) body.reason = reason
+  const body: Record<string, unknown> = { reason: reason ?? '' }
   return request
-    .post<
-      KnowledgeCard & { rollback_action?: { card_id: string; review_state: string } }
-    >(`${BASE_URL}/${ownerType}/${ownerId}/cards/${cardId}/rollback`, body)
+    .post<KnowledgeCard>(`${BASE_URL}/${ownerType}/${ownerId}/cards/${cardId}/rollback`, body)
     .then(normalizeKnowledgeCard)
 }
 

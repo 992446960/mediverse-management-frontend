@@ -366,13 +366,14 @@ export default {
       onlineBlockedByAudit: 'Only approved knowledge cards can go online',
       detailTitle: 'Knowledge Card Detail',
       fetchDetailFailed: 'Failed to fetch details',
-      rollbackSuccess: 'Successfully rolled back to version {version}',
+      rollbackSuccess: 'Successfully rolled back to previous version {version}',
       rollbackFailed: 'Rollback failed',
       rollbackConfirmTitle: 'Confirm Rollback',
-      rollbackConfirmContent: 'Are you sure to rollback content to version {version}?',
+      rollbackConfirmContent:
+        'Are you sure to roll back the current version to previous version {version}?',
       rollbackReasonPlaceholder: 'Enter rollback reason (optional)',
       rollbackInvalidVersion:
-        'Cannot resolve rollback target from version label. Please contact an administrator.',
+        'Only rollback from the current version to the previous version is supported.',
       currentVersion: 'Current',
       operator: 'Operator',
       tabContent: 'Content',

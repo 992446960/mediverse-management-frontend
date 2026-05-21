@@ -134,6 +134,7 @@ import {
   canCompareKnowledgeCardVersions,
   canRollbackKnowledgeCardVersion,
   isKnowledgeCardDiffSelectionApplied,
+  resolveKnowledgeCardPreviousVersionKey,
   resolveKnowledgeCardVersionKey,
 } from '@/utils/knowledgeCardVersion'
 import { marked } from 'marked'
@@ -194,15 +195,19 @@ const canCompare = computed(() => {
   return canCompareKnowledgeCardVersions(localFrom.value, localTo.value, validVersionKeys.value)
 })
 
+const rollbackTargetVersion = computed(() =>
+  resolveKnowledgeCardPreviousVersionKey(props.currentVersionKey, validVersionKeys.value)
+)
+
 const canRollbackToTarget = computed(() => {
+  const targetVersion = rollbackTargetVersion.value
   return (
     isAppliedSelection.value &&
-    canRollbackKnowledgeCardVersion(
-      localFrom.value,
-      props.currentVersionKey,
-      validVersionKeys.value,
-      localTo.value
-    )
+    targetVersion != null &&
+    [localFrom.value, localTo.value].includes(targetVersion) &&
+    props.currentVersionKey != null &&
+    [localFrom.value, localTo.value].includes(props.currentVersionKey) &&
+    canRollbackKnowledgeCardVersion(targetVersion, props.currentVersionKey, validVersionKeys.value)
   )
 })
 
@@ -223,7 +228,8 @@ const rollbackReason = ref('')
 
 function handleRollbackClick() {
   if (!canRollbackToTarget.value) return
-  const targetVersion = localFrom.value
+  const targetVersion = rollbackTargetVersion.value
+  if (targetVersion == null) return
   const row = props.versions.find((v) => resolveKnowledgeCardVersionKey(v) === targetVersion)
   const versionLabel = row?.version ?? `v${targetVersion}`
   rollbackReason.value = ''

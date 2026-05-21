@@ -51,8 +51,9 @@
 </template>
 
 <script setup lang="ts">
+import { h } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Modal, message } from 'ant-design-vue'
+import { Modal, Textarea as ATextarea, message } from 'ant-design-vue'
 import { HistoryOutlined, RollbackOutlined, SwapOutlined } from '@ant-design/icons-vue'
 import type { KnowledgeCardVersion } from '@/types/knowledge'
 import {
@@ -73,7 +74,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'compare', fromVersion: number, toVersion: number): void
-  (e: 'rollback', version: string, targetVersion: number): void
+  (e: 'rollback', version: string, targetVersion: number, reason?: string): void
 }>()
 
 const validVersionKeys = computed(() =>
@@ -101,6 +102,8 @@ function handleCompare(v: KnowledgeCardVersion) {
   if (target) emit('compare', target.from, target.to)
 }
 
+const rollbackReason = ref('')
+
 const handleRollback = (v: KnowledgeCardVersion) => {
   const targetVersion = resolveKnowledgeCardVersionKey(v)
   if (
@@ -110,13 +113,27 @@ const handleRollback = (v: KnowledgeCardVersion) => {
     message.warning(t('knowledge.card.rollbackInvalidVersion'))
     return
   }
+  rollbackReason.value = ''
   Modal.confirm({
     title: t('knowledge.card.rollbackConfirmTitle'),
-    content: t('knowledge.card.rollbackConfirmContent', { version: v.version }),
+    content: h('div', [
+      h('p', t('knowledge.card.rollbackConfirmContent', { version: v.version })),
+      h(ATextarea, {
+        value: rollbackReason.value,
+        'onUpdate:value': (val: string) => {
+          rollbackReason.value = val
+        },
+        placeholder: t('knowledge.card.rollbackReasonPlaceholder'),
+        maxlength: 2000,
+        showCount: true,
+        rows: 3,
+        style: 'margin-top: 8px',
+      }),
+    ]),
     okText: t('common.confirm'),
     cancelText: t('common.cancel'),
     onOk: () => {
-      emit('rollback', v.version, targetVersion)
+      emit('rollback', v.version, targetVersion, rollbackReason.value || undefined)
     },
   })
 }

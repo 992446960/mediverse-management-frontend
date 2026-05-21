@@ -31,6 +31,7 @@
 
 ## 近期同步记录
 
+- 知识卡版本回退规则更新：仅允许从当前版本回退到上一版本，其他历史版本仅支持对比；前端请求体不再发送 `target_version`，`docs/API设计.md` §4.1.14 与 Python mock OpenAPI 快照同步为返回完整知识卡对象。
 - `DirectoryTree` 与 `PageTable` 暗色边框改为使用 `dark:border-(--color-border)`，与暗色主题变量保持一致。
 - `DirectoryTree` 与 `PageTable` 暗色容器背景改为使用 `--color-bg-container`，避免继续固定到 `slate-900`。
 - 文件上传队列改为先计算文件内容 MD5，并以 MD5 作为队列唯一标识；加入队列前按 MD5 去重，避免同一文件重复进入上传队列。
@@ -52,7 +53,7 @@
 - 制定 Python mock 后端计划：在前端同级目录新建 FastAPI mock backend，按线上 Swagger 当前 67 个 path / 90 个 operation 做全量覆盖，不引入数据库，并以 API contract 测试作为验收门禁。
 - 落地 Python mock 后端联调入口：mock 后端位于工作区同级目录 `../mediverse-management-mock-backend`，默认监听 `127.0.0.1:8005`；API contract 测试支持 `API_TEST_USE_MOCK=true`，并新增 `skills`、`upload`、`knowledge-recall` 覆盖；默认账号为 `dev001-user` / `dev001-dept` / `dev001-org`，密码均为 `123456`。
 - 按余洋反馈对照线上 OpenAPI 更新 `docs/API设计.md`：§4.1.11 增 `note` 与 `status_action` 响应；§4.1.17 响应补 `audit_reject_reason`/`review_action`；§4.4.5/4.4.6 重写为 Agentic/非 Agentic 召回（`recall`/`search`）；清除全部历史调整为 §4.4.7。
-- `docs/API设计.md` §4.1.14 回滚接口补全 Request（`reason`）与 Response（`CardWithRollbackActionOut` + `rollback_action`）示例，与 Swagger 一致。
+- `docs/API设计.md` §4.1.14 回滚接口补全 Request（`reason`）与 Response 示例，与 Swagger 一致。
 - 按线上 OpenAPI 对 `docs/API设计.md` §四二次 diff：修正目录/搜索路径拼写，补 §4.1.5 `indexing_task_id`、§4.1.22/4.1.23/4.4.6，规范 §4.1.15–20 的 http 与 JSON 示例；§4.1.17/4.1.21 已与 Swagger 一致。
 - 执行知识库 API 合同对齐计划：接入非默认目录重命名/删除、文件批量移动、失败索引任务重试、知识库搜索 owner 隔离路径，并同步 MSW mock 后端真实接口路径、请求体和响应字段。
 - `docs/API设计.md` §4.1.21 按线上 Swagger 对齐「重试失败的下游索引任务」：路径 `{task_id}`、Path Parameters 表、无 Request body、`FileIndexingRetryOut` 响应示例与字段说明。
