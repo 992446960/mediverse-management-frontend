@@ -166,8 +166,12 @@
               <a-tag v-if="confidenceText">{{ confidenceText }}</a-tag>
             </div>
           </div>
-          <div class="whitespace-pre-wrap text-sm leading-6 text-(--color-text-base)">
-            {{ result.answer || t('knowledge.recall.noAnswer') }}
+          <div
+            class="knowledge-recall-test__answer-body markdown-body prose prose-sm max-w-none dark:prose-invert"
+          >
+            <!-- eslint-disable-next-line vue/no-v-html -- 召回 answer 为 Markdown 文本，已通过 marked + DOMPurify 清洗 -->
+            <div v-if="hasFinalAnswer" v-html="finalAnswerHtml" />
+            <span v-else>{{ t('knowledge.recall.noAnswer') }}</span>
           </div>
         </section>
 
@@ -225,6 +229,7 @@ import { recallKnowledgeCards } from '@/api/knowledgeRecall'
 import type { CardType, CardTypeOption } from '@/types/knowledge'
 import { getCardTypeConfig } from '@/types/knowledge'
 import type { KnowledgeRecallOwnerType, KnowledgeRecallResult } from '@/types/knowledgeRecall'
+import { renderMarkdownSafe } from '@/utils/renderMarkdownSafe'
 import {
   ALL_RECALL_CARD_TYPES_VALUE,
   resolveRecallCardTypeSelection,
@@ -265,6 +270,8 @@ const canReset = computed(
     result.value !== null
 )
 const sourceCount = computed(() => result.value?.count ?? result.value?.sources.length ?? 0)
+const hasFinalAnswer = computed(() => (result.value?.answer ?? '').trim() !== '')
+const finalAnswerHtml = computed(() => renderMarkdownSafe(result.value?.answer))
 const queryTimeText = computed(() => {
   const value = result.value?.query_time_ms
   if (typeof value !== 'number' || !Number.isFinite(value)) return ''
@@ -437,6 +444,24 @@ onMounted(fetchCardTypes)
 
 .knowledge-recall-test :deep(.knowledge-recall-test__top-k-slider:hover .ant-slider-handle::after) {
   box-shadow: 0 0 0 2px var(--knowledge-recall-top-k-color);
+}
+
+.knowledge-recall-test__answer-body {
+  max-height: min(420px, calc(100vh - 360px));
+  overflow-y: auto;
+  overflow-wrap: break-word;
+  color: var(--color-text-base);
+  line-height: 1.7;
+}
+
+.knowledge-recall-test__answer-body :deep(p:last-child),
+.knowledge-recall-test__answer-body :deep(ul:last-child),
+.knowledge-recall-test__answer-body :deep(ol:last-child) {
+  margin-bottom: 0;
+}
+
+.knowledge-recall-test__answer-body :deep(pre) {
+  overflow: auto;
 }
 
 /* loading 遮罩为 absolute，不占文档流；无结果时外层需 min-height 才能居中且不被压扁 */
