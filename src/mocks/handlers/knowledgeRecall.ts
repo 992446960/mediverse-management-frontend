@@ -4,25 +4,28 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 
 const recallSources = [
   {
-    id: 'recall-card-1',
-    card_type: 'rule',
-    title: '知识库权限管理规范',
-    excerpt: '知识库权限按个人、科室、机构三类 owner 隔离，并由对应角色维护。',
-    relevance_score: 0.96,
-  },
-  {
-    id: 'recall-card-2',
+    id: 'card_001',
     card_type: 'evidence',
-    title: '知识卡审核与上线流程',
-    excerpt: '知识卡审核通过后才允许上线；待审核与已驳回状态不进入正式召回范围。',
-    relevance_score: 0.88,
+    title: '高血压诊断标准',
+    excerpt: '非同日3次测量血压，收缩压≥140mmHg和/或舒张压≥90mmHg即可诊断。',
+    relevance_score: 0.96,
+    recall_score: 0.96,
   },
   {
-    id: 'recall-card-3',
-    card_type: 'pathway_clause',
-    title: '工作台知识卡使用说明',
-    excerpt: '用户在所属工作台中维护文件和知识卡，召回时默认限定当前工作台范围。',
+    id: 'card_002',
+    card_type: 'rule',
+    title: '降压药物选用原则',
+    excerpt: '初始治疗小剂量开始，优先选择长效制剂，高危患者可考虑联合用药。',
+    relevance_score: 0.88,
+    recall_score: 0.88,
+  },
+  {
+    id: 'card_004',
+    card_type: 'risk_point',
+    title: '住院患者跌倒风险评分',
+    excerpt: '高龄、步态不稳、近期使用镇静药物的住院患者需完成跌倒风险评分。',
     relevance_score: 0.79,
+    recall_score: 0.79,
   },
 ]
 

@@ -1,4 +1,4 @@
-import type { CardType, OwnerType } from '@/types/knowledge'
+import type { CardType, FileSource, OwnerType } from '@/types/knowledge'
 
 export interface KnowledgeRecallFormState {
   query: string
@@ -21,6 +21,11 @@ export interface KnowledgeRecallSource {
   title: string
   excerpt: string
   relevance_score: number
+  recall_score?: number
+  md_content?: string
+  updated_at?: string
+  source_files?: FileSource[]
+  sources?: FileSource[]
 }
 
 export interface KnowledgeRecallResult {
