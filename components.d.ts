@@ -124,6 +124,7 @@ declare module 'vue' {
     RatingDialog: typeof import('./src/components/RatingDialog/index.vue')['default']
     RelatedQuestions: typeof import('./src/components/SearchResultThread/RelatedQuestions.vue')['default']
     RightToolbar: typeof import('./src/components/RightToolbar/index.vue')['default']
+    RollbackConfirmModal: typeof import('./src/components/KnowledgeCardViewer/RollbackConfirmModal.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     ScopeCell: typeof import('./src/components/PageTable/ScopeCell.vue')['default']
