@@ -13,5 +13,6 @@ services:
     ports:
       - "8080:80"
     environment:
+      API_BASE_URL: /api/v1
       API_UPSTREAM: https://mediverse-management.huaxisy.com
       API_PROXY_HOST: mediverse-management.huaxisy.com

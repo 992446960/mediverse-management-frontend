@@ -31,6 +31,7 @@
 
 ## 近期同步记录
 
+- Docker 运行期 API 地址改为支持启动命令传入 `API_BASE_URL` 并写入 `/env.js`；未传时继续使用 `/api/v1` + Nginx 代理，部署文档同步补充直接指定后端地址的 `docker run -e API_BASE_URL=...` 示例。
 - 知识卡回退确认弹窗改为复用现有 `a-modal` 结构，明确拆分 header/content/footer，并保留 warning icon、回退原因输入和确认请求中的按钮 loading。
 - 知识卡版本回退规则更新：仅允许从当前版本回退到上一版本，其他历史版本仅支持对比；前端请求体不再发送 `target_version`，`docs/API设计.md` §4.1.14 与 Python mock OpenAPI 快照同步为返回完整知识卡对象。
 - 上海市第一人民医院定制分支接入侧栏菜单裁剪：通过 `MenuConfig.hidden` 隐藏仪表盘、数字医生、知识库搜索、管理端分身列表和 API Token；不调整权限守卫、不改变原有一级/二级菜单层级。当前分支将 `/` 默认入口挂载为医院欢迎页，默认进入不展示仪表盘、不选中业务菜单，也不跳转到第一个可见菜单。

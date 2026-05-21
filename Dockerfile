@@ -47,12 +47,17 @@ RUN rm /etc/nginx/conf.d/default.conf
 
 # 复制 nginx 配置模板（需要注入环境变量）
 COPY nginx.conf /etc/nginx/templates/default.conf.template
+COPY docker/40-write-env-js.sh /docker-entrypoint.d/40-write-env-js.sh
+RUN chmod +x /docker-entrypoint.d/40-write-env-js.sh
 
 # 从第一阶段（builder）复制构建产物到 Nginx 的静态文件目录
 # --from=builder 表示从 builder 阶段取文件，而不是从本地
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# 默认后台API地址（运行时可通过-e 覆盖）；API_PROXY_HOST 必须与上游Host/SNI一致，否则无法代理
+# API_BASE_URL 可在容器启动时通过 -e 覆盖，直接指定浏览器请求的后端地址
+ENV API_BASE_URL=
+
+# 默认后台API代理地址（运行时可通过-e 覆盖）；API_PROXY_HOST 必须与上游Host/SNI一致，否则无法代理
 ENV API_UPSTREAM=https://mediverse-management.huaxisy.com
 ENV API_PROXY_HOST=mediverse-management.huaxisy.com
 

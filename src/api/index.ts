@@ -8,6 +8,7 @@ import { message } from 'ant-design-vue'
 import { getToken, setToken, getRefreshToken, clearAuth } from '@/utils/auth'
 import { checkRepeatSubmit } from '@/utils/requestDedup'
 import { getHttpErrorMessage } from '@/config/errorCodes'
+import { buildApiUrl, getApiBaseUrl } from '@/config/apiBaseUrl'
 import type { ApiResponse } from '@/types'
 import type { RefreshTokenResponse } from '@/types/auth'
 
@@ -16,7 +17,7 @@ export interface RequestConfig extends AxiosRequestConfig {
   successCodes?: number[]
 }
 
-const baseURL = import.meta.env.VITE_API_BASE_URL
+const baseURL = getApiBaseUrl()
 const useMockFetch = import.meta.env.VITE_ENABLE_MOCK === 'true'
 
 /** 使用 fetch 的 axios 适配器，便于 MSW 拦截（MSW 仅拦截 fetch，不拦截 XHR） */
@@ -173,7 +174,7 @@ api.interceptors.response.use(
 
         // 调用刷新 Token 接口 (使用独立的 axios 实例避免死循环)
         const { data } = await axios.post<ApiResponse<RefreshTokenResponse>>(
-          `${import.meta.env.VITE_API_BASE_URL}/auth/refresh`,
+          buildApiUrl('/auth/refresh'),
           { refresh_token: refreshToken }
         )
 

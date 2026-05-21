@@ -1,4 +1,5 @@
 import { request } from '@/api/index'
+import { buildApiUrl } from '@/config/apiBaseUrl'
 import { getToken } from '@/utils/auth'
 import type { Skill, SkillExecuteRequest } from '@/types/skill'
 
@@ -17,8 +18,7 @@ export async function executeSkillRaw(
   skillCode: string,
   payload: SkillExecuteRequest
 ): Promise<Response> {
-  const baseURL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
-  const url = `${baseURL}/skills/${skillCode}/execute`
+  const url = buildApiUrl(`/skills/${skillCode}/execute`)
 
   const token = getToken()
   const headers: Record<string, string> = {

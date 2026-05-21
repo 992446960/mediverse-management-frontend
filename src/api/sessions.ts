@@ -1,4 +1,5 @@
 import { request } from '@/api/index'
+import { buildApiUrl } from '@/config/apiBaseUrl'
 import { getToken } from '@/utils/auth'
 import type {
   Session,
@@ -117,8 +118,7 @@ export async function sendMessageRaw(
   sessionId: string,
   payload: SendMessageStreamPayload
 ): Promise<Response> {
-  const baseURL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
-  const url = `${baseURL}/chat/sessions/${sessionId}/messages`
+  const url = buildApiUrl(`/chat/sessions/${sessionId}/messages`)
 
   const token = getToken()
   const headers: Record<string, string> = {

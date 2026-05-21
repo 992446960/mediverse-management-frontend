@@ -47,6 +47,7 @@ uvicorn app.main:app --host 127.0.0.1 --port 8005
 
 | 变量                    | 说明                                  |
 | ----------------------- | ------------------------------------- |
+| `API_BASE_URL`          | Docker 运行期 API 基础地址，写入 `/env.js` |
 | `VITE_API_BASE_URL`     | 前端 API 基础路径，开发默认 `/api/v1` |
 | `VITE_FILE_BASE_URL`    | 上传接口返回相对路径时的文件基础 URL  |
 | `VITE_APP_TITLE_SUFFIX` | 浏览器标题后缀                        |
@@ -121,6 +122,19 @@ pnpm docker:build
 ```
 
 `scripts/docker-build.sh` 中的 `REMOTE_HOST="YOUR_REMOTE_HOST"` 是占位值。配置真实服务器前，脚本会主动报错，避免上传到错误目标。
+
+部署时优先通过启动命令传入后端地址：
+
+```bash
+docker run -d \
+  --name mediverse-management-frontend \
+  --restart unless-stopped \
+  -p 80:80 \
+  -e API_BASE_URL=http://backend-host:8005/api/v1 \
+  mediverse-management-frontend:latest
+```
+
+未传 `API_BASE_URL` 时，前端使用同源 `/api/v1`，由 Nginx 按 `API_UPSTREAM` / `API_PROXY_HOST` 反向代理。
 
 ## 7. 提交前检查
 

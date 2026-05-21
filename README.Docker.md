@@ -8,7 +8,8 @@
 | --- | --- |
 | `Dockerfile` | 多阶段构建：`node:22-alpine` 编译前端，`nginx:stable-alpine` 运行静态产物 |
 | `compose.yaml` | 本地构建和预览生产镜像，服务名为 `frontend` |
-| `nginx.conf` | Nginx 模板，托管静态资源并反向代理 `/api/` |
+| `nginx.conf` | Nginx 模板，托管静态资源、禁用 `/env.js` 缓存并反向代理 `/api/` |
+| `docker/40-write-env-js.sh` | 容器启动时生成 `/usr/share/nginx/html/env.js`，写入运行期 API 地址 |
 | `scripts/docker-pre.sh` | 执行 `docker compose up --build`，用于本地生产镜像预览 |
 | `scripts/docker-build.sh` | 构建镜像、导出 tar、上传到服务器 |
 | `docker-dist/` | 本地导出的镜像 tar 目录，不纳入 Git |
@@ -19,11 +20,14 @@
 
 | 变量 | 阶段 | 默认值 | 说明 |
 | --- | --- | --- | --- |
-| `VITE_API_BASE_URL` | 构建期 | `/api/v1` | 写入前端静态产物，决定浏览器请求 API 的基础路径 |
+| `API_BASE_URL` | 运行期 | 空 | 写入 `/env.js`，优先决定浏览器请求 API 的基础路径 |
+| `VITE_API_BASE_URL` | 构建期 | `/api/v1` | 构建期兜底值；未传 `API_BASE_URL` 时使用 |
 | `API_UPSTREAM` | 运行期 | `https://mediverse-management.huaxisy.com` | Nginx `/api/` 反向代理的上游完整 URL |
 | `API_PROXY_HOST` | 运行期 | `mediverse-management.huaxisy.com` | 传给上游的 `Host` 和 TLS SNI，必须与 `API_UPSTREAM` 的域名一致 |
 
-`VITE_API_BASE_URL` 改变后必须重新构建镜像。`API_UPSTREAM` 和 `API_PROXY_HOST` 可以通过 `docker run -e` 在容器运行时覆盖。
+优先通过启动命令传入 `API_BASE_URL` 指定后端完整地址，例如 `http://backend-host:8005/api/v1`。该方式不需要重建镜像，但后端必须允许前端页面所在域名跨域访问。
+
+不传 `API_BASE_URL` 时，前端使用构建期 `VITE_API_BASE_URL`，默认请求同源 `/api/v1`，再由 Nginx 根据 `API_UPSTREAM` / `API_PROXY_HOST` 反向代理到后端。`VITE_API_BASE_URL` 改变后必须重新构建镜像。
 
 ## 3. 本地生产镜像预览
 
@@ -105,7 +109,20 @@ docker stop mediverse-management-frontend || true
 docker rm mediverse-management-frontend || true
 ```
 
-使用默认 API 上游运行：
+通过启动命令指定后端地址运行：
+
+```bash
+docker run -d \
+  --name mediverse-management-frontend \
+  --restart unless-stopped \
+  -p 80:80 \
+  -e API_BASE_URL=http://backend-host:8005/api/v1 \
+  mediverse-management-frontend:latest
+```
+
+`API_BASE_URL` 必须填写后端接口基础地址，并包含 `/api/v1` 前缀。
+
+不传 `API_BASE_URL` 时，使用同源 `/api/v1` + Nginx 反向代理：
 
 ```bash
 docker run -d \
@@ -115,7 +132,7 @@ docker run -d \
   mediverse-management-frontend:latest
 ```
 
-覆盖 API 上游运行：
+覆盖 Nginx 代理上游运行：
 
 ```bash
 docker run -d \
@@ -147,6 +164,12 @@ docker logs --tail=100 mediverse-management-frontend
 
 ```bash
 curl -I http://127.0.0.1/
+```
+
+验证运行期配置：
+
+```bash
+curl http://127.0.0.1/env.js
 ```
 
 验证静态资源和 history fallback：
@@ -187,7 +210,9 @@ curl -I http://127.0.0.1/api/v1/auth/me
 | 现象 | 处理 |
 | --- | --- |
 | `scripts/docker-build.sh` 提示 `YOUR_REMOTE_HOST` | 先把脚本中的占位主机改为实际目标，或改用手动 `scp` |
+| API 请求地址不符合预期 | 先检查 `curl http://127.0.0.1/env.js` 中的 `API_BASE_URL` |
+| 直接传 `API_BASE_URL` 后浏览器跨域失败 | 后端需要允许前端页面所在域名跨域，或改用同源 `/api/v1` + Nginx 代理 |
 | API 代理返回 4xx/5xx | 确认 `API_UPSTREAM` 和 `API_PROXY_HOST` 域名一致 |
-| 修改 `VITE_API_BASE_URL` 后未生效 | 该变量是构建期变量，必须重新构建镜像 |
+| 修改 `VITE_API_BASE_URL` 后未生效 | 该变量只是构建期兜底值，必须重新构建镜像 |
 | 上传文件失败 | 检查 `nginx.conf` 中 `client_max_body_size 50m` 和后端上传限制 |
 | Apple Silicon 构建较慢 | `compose.yaml` 固定 `platform: linux/amd64`，本机会走模拟构建 |

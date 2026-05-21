@@ -42,7 +42,7 @@ DEV_PROXY_TARGET=http://127.0.0.1:8005
 
 ## Docker
 
-Docker 打包、上传、服务器部署、API 上游覆盖、更新和回滚见 `README.Docker.md`。
+Docker 打包、上传、服务器部署、运行期后端地址传入、API 上游覆盖、更新和回滚见 `README.Docker.md`。
 
 本地预览生产镜像：
 
@@ -54,6 +54,17 @@ docker compose up --build
 
 ```bash
 docker compose down
+```
+
+服务器部署时通过启动命令传入后端接口地址：
+
+```bash
+docker run -d \
+  --name mediverse-management-frontend \
+  --restart unless-stopped \
+  -p 80:80 \
+  -e API_BASE_URL=http://backend-host:8005/api/v1 \
+  mediverse-management-frontend:latest
 ```
 
 ## 开发原则

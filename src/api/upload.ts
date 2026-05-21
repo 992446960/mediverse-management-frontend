@@ -1,4 +1,5 @@
 import { request } from '@/api/index'
+import { getApiBaseUrl } from '@/config/apiBaseUrl'
 
 interface UploadAvatarResponse {
   url: string
@@ -9,7 +10,7 @@ interface UploadAvatarResponse {
 /**
  * 将接口返回的相对路径 url（如 /files/xxx.jpg）拼接为完整地址，用于 img 回显等。
  * - 已是 http/https 网络地址：直接返回
- * - 相对路径：优先 VITE_FILE_BASE_URL，否则用 VITE_API_BASE_URL 的 origin，再回退到 window.location.origin
+ * - 相对路径：优先 VITE_FILE_BASE_URL，否则用 API 基础地址的 origin，再回退到 window.location.origin
  */
 export function toAbsoluteFileUrl(path: string): string {
   if (!path) return path
@@ -18,7 +19,7 @@ export function toAbsoluteFileUrl(path: string): string {
   const fileBase = import.meta.env.VITE_FILE_BASE_URL
   if (fileBase) return fileBase.replace(/\/$/, '') + path
   try {
-    const apiBase = import.meta.env.VITE_API_BASE_URL
+    const apiBase = getApiBaseUrl()
     if (apiBase?.startsWith('http')) return new URL(apiBase).origin + path
   } catch {
     // ignore
