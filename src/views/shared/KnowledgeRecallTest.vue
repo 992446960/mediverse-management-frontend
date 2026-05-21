@@ -191,7 +191,7 @@
             v-if="result.sources.length === 0"
             :description="t('knowledge.recall.noSources')"
           />
-          <div v-else class="space-y-3">
+          <div v-else class="knowledge-recall-test__sources-list space-y-3">
             <article
               v-for="source in result.sources"
               :key="source.id"
@@ -462,6 +462,13 @@ onMounted(fetchCardTypes)
 
 .knowledge-recall-test__answer-body :deep(pre) {
   overflow: auto;
+}
+
+.knowledge-recall-test__sources-list {
+  max-height: min(520px, calc(100vh - 360px));
+  overflow-y: auto;
+  padding-right: 0.25rem;
+  scrollbar-gutter: stable;
 }
 
 /* loading 遮罩为 absolute，不占文档流；无结果时外层需 min-height 才能居中且不被压扁 */
