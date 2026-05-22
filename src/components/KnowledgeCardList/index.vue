@@ -24,8 +24,12 @@ import type {
 import {
   ONLINE_STATUS_CONFIG,
   AUDIT_STATUS_CONFIG,
+  canOperateKnowledgeCard,
   canPublishKnowledgeCard,
+  getAuditStatusConfig,
   getCardTypeConfig,
+  getCardTypeOptionLabel,
+  getOnlineStatusConfig,
 } from '@/types/knowledge'
 import KnowledgeCardEditor from '../KnowledgeCardEditor/index.vue'
 import KnowledgeCardViewer from '../KnowledgeCardViewer/index.vue'
@@ -54,6 +58,8 @@ const props = defineProps<{
   ownerType: OwnerType
   ownerId: string
 }>()
+
+type ToggleOnlineStatus = Extract<OnlineStatus, 'online' | 'offline'>
 
 defineEmits<{
   (e: 'success'): void
@@ -85,11 +91,19 @@ const viewingCardId = ref<string | null>(null)
 const statusConfirmOpen = ref(false)
 const statusConfirmLoading = ref(false)
 const statusConfirmCard = ref<KnowledgeCard | null>(null)
-const statusConfirmTargetStatus = ref<OnlineStatus>('offline')
+const statusConfirmTargetStatus = ref<ToggleOnlineStatus>('offline')
 const auditModalOpen = ref(false)
 const auditLoading = ref(false)
 const auditCard = ref<KnowledgeCard | null>(null)
 const auditAction = ref<'approved' | 'rejected'>('approved')
+
+const translateKnowledgeConfig = (key: string) => t(key)
+const getLocalizedCardTypeConfig = (type: string) =>
+  getCardTypeConfig(type, translateKnowledgeConfig)
+const getLocalizedOnlineStatusConfig = (status: string) =>
+  getOnlineStatusConfig(status, translateKnowledgeConfig)
+const getLocalizedAuditStatusConfig = (status: AuditStatus) =>
+  getAuditStatusConfig(status, translateKnowledgeConfig)
 
 const headConf = computed<PageHeadConfig>(() => ({
   title: t('knowledge.card.title'),
@@ -103,7 +117,10 @@ const headConf = computed<PageHeadConfig>(() => ({
   ],
   tabsOptions: [
     { label: t('common.all'), value: 'all' },
-    ...cardTypes.value.map((ct) => ({ label: ct.name, value: ct.code })),
+    ...cardTypes.value.map((ct) => ({
+      label: getCardTypeOptionLabel(ct, translateKnowledgeConfig),
+      value: ct.code,
+    })),
   ],
   defaultTab: activeTab.value,
   tabChangeHandle: (val) => {
@@ -143,8 +160,8 @@ const filterConf = computed<PageFilterConfig>(() => ({
       type: 'select',
       ph: t('common.all'),
       col: 6,
-      options: Object.entries(ONLINE_STATUS_CONFIG).map(([value, cfg]) => ({
-        label: cfg.label,
+      options: Object.keys(ONLINE_STATUS_CONFIG).map((value) => ({
+        label: getLocalizedOnlineStatusConfig(value).label,
         value,
       })),
       clearable: true,
@@ -155,8 +172,8 @@ const filterConf = computed<PageFilterConfig>(() => ({
       type: 'select',
       ph: t('common.all'),
       col: 6,
-      options: Object.entries(AUDIT_STATUS_CONFIG).map(([value, cfg]) => ({
-        label: cfg.label,
+      options: (Object.keys(AUDIT_STATUS_CONFIG) as AuditStatus[]).map((value) => ({
+        label: getLocalizedAuditStatusConfig(value).label,
         value,
       })),
       clearable: true,
@@ -206,18 +223,20 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
   {
     label: t('knowledge.card.columnTitle'),
     prop: 'title',
-    width: 250,
+    width: 180,
+    resizable: true,
     type: 'slot',
     slotName: 'title',
   },
   {
     label: t('knowledge.card.columnType'),
     prop: 'type',
-    width: 100,
+    width: 200,
+    resizable: true,
     type: 'scope',
     scopeType: '_tag',
-    tagType: (row) => getCardTypeConfig(row.type as string).color,
-    tagText: (row) => getCardTypeConfig(row.type as string).label,
+    tagType: (row) => getLocalizedCardTypeConfig(row.type as string).color,
+    tagText: (row) => getLocalizedCardTypeConfig(row.type as string).label,
   },
   {
     label: t('knowledge.card.columnStatus'),
@@ -225,8 +244,8 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
     width: 120,
     type: 'scope',
     scopeType: '_tag',
-    tagType: (row) => (row.online_status === 'online' ? 'success' : 'default'),
-    tagText: (row) => ONLINE_STATUS_CONFIG[row.online_status as OnlineStatus].label,
+    tagType: (row) => getLocalizedOnlineStatusConfig(String(row.online_status)).color,
+    tagText: (row) => getLocalizedOnlineStatusConfig(String(row.online_status)).label,
   },
   {
     label: t('knowledge.card.columnAuditStatus'),
@@ -234,8 +253,8 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
     width: 120,
     type: 'scope',
     scopeType: '_tag',
-    tagType: (row) => AUDIT_STATUS_CONFIG[row.audit_status as AuditStatus].color,
-    tagText: (row) => AUDIT_STATUS_CONFIG[row.audit_status as AuditStatus].label,
+    tagType: (row) => getLocalizedAuditStatusConfig(row.audit_status as AuditStatus).color,
+    tagText: (row) => getLocalizedAuditStatusConfig(row.audit_status as AuditStatus).label,
   },
   {
     label: t('knowledge.card.columnReferenceCount'),
@@ -258,11 +277,13 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
       {
         text: t('common.detail'),
         icon: EyeOutlined,
+        btnDisabled: (row) => !canOperateKnowledgeCard(row.online_status as OnlineStatus),
         handle: (row) => handleView(row as KnowledgeCard),
       },
       {
         text: t('common.edit'),
         icon: EditOutlined,
+        btnDisabled: (row) => !canOperateKnowledgeCard(row.online_status as OnlineStatus),
         handle: (row) => handleEdit(row as KnowledgeCard),
       },
       {
@@ -271,17 +292,20 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
           row.online_status === 'online' ? t('knowledge.card.offline') : t('knowledge.card.online'),
         dynamicIcon: (row) =>
           row.online_status === 'online' ? CloudDownloadOutlined : CloudUploadOutlined,
+        btnDisabled: (row) => !canOperateKnowledgeCard(row.online_status as OnlineStatus),
         handle: (row) => handleStatusToggle(row as KnowledgeCard),
       },
       {
         text: t('common.more'),
         type: 'popover',
+        btnDisabled: (row) => !canOperateKnowledgeCard(row.online_status as OnlineStatus),
         moreList: [
           {
             text: t('knowledge.card.auditApprove'),
             icon: CheckOutlined,
             color: 'success',
             btnIsShow: (row) => row.audit_status === 'pending',
+            btnDisabled: (row) => !canOperateKnowledgeCard(row.online_status as OnlineStatus),
             handle: (row) => handleAuditAction(row as KnowledgeCard, 'approved'),
           },
           {
@@ -289,6 +313,7 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
             icon: CloseOutlined,
             color: 'danger',
             btnIsShow: (row) => row.audit_status === 'pending',
+            btnDisabled: (row) => !canOperateKnowledgeCard(row.online_status as OnlineStatus),
             handle: (row) => handleAuditAction(row as KnowledgeCard, 'rejected'),
           },
           {
@@ -297,6 +322,7 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
             color: 'danger',
             type: 'popconfirm',
             popconfirmTitle: t('knowledge.card.confirmDelete'),
+            btnDisabled: (row) => !canOperateKnowledgeCard(row.online_status as OnlineStatus),
             handle: (row) => handleDelete(row as KnowledgeCard),
           },
         ],
@@ -306,7 +332,7 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
 ])
 
 function toOnlineStatus(v: unknown): OnlineStatus | undefined {
-  return v === 'online' || v === 'offline' ? v : undefined
+  return v === 'online' || v === 'offline' || v === 'creating' || v === 'updating' ? v : undefined
 }
 
 function toAuditStatus(v: unknown): AuditStatus | undefined {
@@ -348,6 +374,10 @@ const fetchCardTypes = async () => {
 }
 
 const handleDelete = async (record: KnowledgeCard) => {
+  if (!canOperateKnowledgeCard(record.online_status)) {
+    message.warning(t('knowledge.card.creatingBlocked'))
+    return
+  }
   try {
     await deleteKnowledgeCard(props.ownerType, props.ownerId, record.id)
     message.success(t('knowledge.card.deleteSuccess'))
@@ -374,6 +404,10 @@ const handleCreate = () => {
 }
 
 const handleEdit = (record: KnowledgeCard) => {
+  if (!canOperateKnowledgeCard(record.online_status)) {
+    message.warning(t('knowledge.card.creatingBlocked'))
+    return
+  }
   editingCard.value = record
   editorOpen.value = true
 }
@@ -384,6 +418,10 @@ const handleEditFromViewer = (record: KnowledgeCard) => {
 }
 
 const handleView = (record: KnowledgeCard) => {
+  if (!canOperateKnowledgeCard(record.online_status)) {
+    message.warning(t('knowledge.card.creatingBlocked'))
+    return
+  }
   viewingCardId.value = record.id
   viewerOpen.value = true
 }
@@ -399,7 +437,11 @@ const handleViewerStatusChanged = (payload: { id: string; online_status: OnlineS
   patchTableRowOnlineStatus(payload.id, payload.online_status)
 }
 
-const doStatusToggle = async (record: KnowledgeCard, newStatus: OnlineStatus, note?: string) => {
+const doStatusToggle = async (
+  record: KnowledgeCard,
+  newStatus: ToggleOnlineStatus,
+  note?: string
+) => {
   try {
     await toggleKnowledgeCardStatus(props.ownerType, props.ownerId, record.id, newStatus, note)
     message.success(
@@ -416,6 +458,10 @@ const doStatusToggle = async (record: KnowledgeCard, newStatus: OnlineStatus, no
 }
 
 const handleStatusToggle = (record: KnowledgeCard) => {
+  if (!canOperateKnowledgeCard(record.online_status)) {
+    message.warning(t('knowledge.card.creatingBlocked'))
+    return
+  }
   const newStatus = record.online_status === 'online' ? 'offline' : 'online'
   if (newStatus === 'online' && !canPublishKnowledgeCard(record.audit_status)) {
     message.warning(t('knowledge.card.onlineBlockedByAudit'))
@@ -458,6 +504,10 @@ const handleViewerAuditChanged = (payload: { id: string; audit_status: AuditStat
 }
 
 const handleAuditAction = (record: KnowledgeCard, action: 'approved' | 'rejected') => {
+  if (!canOperateKnowledgeCard(record.online_status)) {
+    message.warning(t('knowledge.card.creatingBlocked'))
+    return
+  }
   auditCard.value = record
   auditAction.value = action
   auditModalOpen.value = true

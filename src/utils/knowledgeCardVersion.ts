@@ -133,6 +133,18 @@ export function canRollbackKnowledgeCardVersion(
   )
 }
 
+export function canOperateKnowledgeCardVersionRollback(
+  targetVersion: number,
+  currentVersionKey: number | null | undefined,
+  validVersionKeys: number[],
+  operationDisabled: boolean
+): boolean {
+  return (
+    !operationDisabled &&
+    canRollbackKnowledgeCardVersion(targetVersion, currentVersionKey, validVersionKeys)
+  )
+}
+
 export function findKnowledgeCardCompareTarget<T extends KnowledgeCardVersionRef>(
   targetVersion: T,
   versions: T[],

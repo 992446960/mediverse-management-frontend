@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   buildKnowledgeCardVersionOptions,
   canCompareKnowledgeCardVersions,
+  canOperateKnowledgeCardVersionRollback,
   canRollbackKnowledgeCardVersion,
   findKnowledgeCardCompareTarget,
   isKnowledgeCardCurrentVersion,
@@ -68,6 +69,11 @@ describe('knowledgeCardVersion action helpers', () => {
     expect(
       canRollbackKnowledgeCardVersion(2_000_000, 3_000_000, [1_000_000, 2_000_000, 3_000_000])
     ).toBe(true)
+  })
+
+  it('blocks rollback when the card is not operable', () => {
+    expect(canOperateKnowledgeCardVersionRollback(2, 3, [1, 2, 3], true)).toBe(false)
+    expect(canOperateKnowledgeCardVersionRollback(2, 3, [1, 2, 3], false)).toBe(true)
   })
 
   it('marks an old diff as stale after selected versions change', () => {

@@ -24,33 +24,48 @@
           <div class="flex flex-col gap-2">
             <h2 class="text-xl font-bold m-0">{{ card.title }}</h2>
             <a-space>
-              <a-tag :color="getCardTypeConfig(card.type).color">{{
-                getCardTypeConfig(card.type).label
+              <a-tag :color="getLocalizedCardTypeConfig(card.type).color">{{
+                getLocalizedCardTypeConfig(card.type).label
               }}</a-tag>
-              <a-tag :color="ONLINE_STATUS_CONFIG[card.online_status].color">{{
-                ONLINE_STATUS_CONFIG[card.online_status].label
+              <a-tag :color="getLocalizedOnlineStatusConfig(card.online_status).color">{{
+                getLocalizedOnlineStatusConfig(card.online_status).label
               }}</a-tag>
-              <a-tag :color="AUDIT_STATUS_CONFIG[card.audit_status].color">{{
-                AUDIT_STATUS_CONFIG[card.audit_status].label
+              <a-tag :color="getLocalizedAuditStatusConfig(card.audit_status).color">{{
+                getLocalizedAuditStatusConfig(card.audit_status).label
               }}</a-tag>
             </a-space>
           </div>
           <div v-if="!readonlyPreview" class="flex flex-wrap items-center justify-end gap-2">
-            <a-button type="default" @click="handleEditFromContent">
+            <a-button
+              type="default"
+              :disabled="isCardOperationDisabled"
+              @click="handleEditFromContent"
+            >
               <template #icon>
                 <EditOutlined />
               </template>
               {{ t('common.edit') }}
             </a-button>
             <a-tooltip
-              v-if="card.online_status === 'offline' && !canPublishKnowledgeCard(card.audit_status)"
-              :title="t('knowledge.card.onlineBlockedByAudit')"
+              v-if="
+                isCardOperationDisabled ||
+                (card.online_status === 'offline' && !canPublishKnowledgeCard(card.audit_status))
+              "
+              :title="
+                isCardOperationDisabled
+                  ? t('knowledge.card.creatingBlocked')
+                  : t('knowledge.card.onlineBlockedByAudit')
+              "
             >
               <a-button type="primary" disabled>
                 <template #icon>
                   <CloudUploadOutlined />
                 </template>
-                {{ t('knowledge.card.online') }}
+                {{
+                  isCardOperationDisabled
+                    ? getLocalizedOnlineStatusConfig(card.online_status).label
+                    : t('knowledge.card.online')
+                }}
               </a-button>
             </a-tooltip>
             <a-button
@@ -74,7 +89,7 @@
               :cancel-text="t('common.cancel')"
               @confirm="handleDelete"
             >
-              <a-button danger>
+              <a-button danger :disabled="isCardOperationDisabled">
                 <template #icon>
                   <DeleteOutlined />
                 </template>
@@ -86,6 +101,7 @@
               <a-button
                 type="primary"
                 :loading="auditLoading"
+                :disabled="isCardOperationDisabled"
                 class="!bg-green-600 !border-green-600 hover:!bg-green-500"
                 @click="handleAuditAction('approved')"
               >
@@ -94,7 +110,12 @@
                 </template>
                 {{ t('knowledge.card.auditApprove') }}
               </a-button>
-              <a-button danger :loading="auditLoading" @click="handleAuditAction('rejected')">
+              <a-button
+                danger
+                :loading="auditLoading"
+                :disabled="isCardOperationDisabled"
+                @click="handleAuditAction('rejected')"
+              >
                 <template #icon>
                   <CloseOutlined />
                 </template>
@@ -122,6 +143,7 @@
               :current-version-key="currentVersionKey"
               :rollback-loading="rollbackLoading"
               :rollback-success-key="rollbackSuccessKey"
+              :operation-disabled="isCardOperationDisabled"
               @compare="handleCompareFromTimeline"
               @rollback="handleRollback"
             />
@@ -137,6 +159,7 @@
               :loading="diffLoading"
               :rollback-loading="rollbackLoading"
               :rollback-success-key="rollbackSuccessKey"
+              :operation-disabled="isCardOperationDisabled"
               @change-versions="handleDiffVersionChange"
               @rollback-to="handleRollback"
             />
@@ -226,10 +249,11 @@ import type {
 } from '@/types/knowledge'
 import type { VersionDiffSegment } from '@/types/knowledge'
 import {
-  AUDIT_STATUS_CONFIG,
-  ONLINE_STATUS_CONFIG,
+  canOperateKnowledgeCard,
   canPublishKnowledgeCard,
+  getAuditStatusConfig,
   getCardTypeConfig,
+  getOnlineStatusConfig,
 } from '@/types/knowledge'
 import { getFileOriginalUrl } from '@/types/knowledge'
 import { stashKnowledgePreviewFile } from '@/utils/knowledgePreviewStash'
@@ -281,6 +305,8 @@ const props = withDefaults(
   }
 )
 
+type ToggleOnlineStatus = Extract<OnlineStatus, 'online' | 'offline'>
+
 const emit = defineEmits<{
   (e: 'update:open', value: boolean): void
   /** 上下线成功后通知父级就地更新列表行，不请求列表接口 */
@@ -307,7 +333,7 @@ const rollbackLoading = ref(false)
 const rollbackSuccessKey = ref(0)
 const statusConfirmOpen = ref(false)
 const statusConfirmLoading = ref(false)
-const statusConfirmTargetStatus = ref<OnlineStatus>('offline')
+const statusConfirmTargetStatus = ref<ToggleOnlineStatus>('offline')
 const auditModalOpen = ref(false)
 const auditLoading = ref(false)
 const auditAction = ref<'approved' | 'rejected'>('approved')
@@ -317,6 +343,16 @@ const currentVersionKey = computed(() =>
 const validVersionKeys = computed(() =>
   buildKnowledgeCardVersionOptions(versions.value).map((option) => option.value)
 )
+const isCardOperationDisabled = computed(
+  () => !!card.value && !canOperateKnowledgeCard(card.value.online_status)
+)
+const translateKnowledgeConfig = (key: string) => t(key)
+const getLocalizedCardTypeConfig = (type: string) =>
+  getCardTypeConfig(type, translateKnowledgeConfig)
+const getLocalizedOnlineStatusConfig = (status: string) =>
+  getOnlineStatusConfig(status, translateKnowledgeConfig)
+const getLocalizedAuditStatusConfig = (status: AuditStatus) =>
+  getAuditStatusConfig(status, translateKnowledgeConfig)
 
 function inferFileExtension(name: string | undefined): string {
   if (!name) return ''
@@ -393,6 +429,10 @@ function onDetailOpenChange(val: boolean) {
 
 function handleEditFromContent() {
   if (!card.value) return
+  if (!canOperateKnowledgeCard(card.value.online_status)) {
+    message.warning(t('knowledge.card.creatingBlocked'))
+    return
+  }
   emit('edit', card.value)
   emit('update:open', false)
 }
@@ -481,6 +521,10 @@ async function handleDiffVersionChange(fromVersion: number, toVersion: number) {
 
 const handleRollback = async (version: string, targetVersion: number, reason?: string) => {
   if (!props.cardId || rollbackLoading.value) return
+  if (!card.value || !canOperateKnowledgeCard(card.value.online_status)) {
+    message.warning(t('knowledge.card.creatingBlocked'))
+    return
+  }
   if (
     !canRollbackKnowledgeCardVersion(targetVersion, currentVersionKey.value, validVersionKeys.value)
   ) {
@@ -511,6 +555,10 @@ const handleRollback = async (version: string, targetVersion: number, reason?: s
 
 const handleStatusToggle = async () => {
   if (!card.value) return
+  if (!canOperateKnowledgeCard(card.value.online_status)) {
+    message.warning(t('knowledge.card.creatingBlocked'))
+    return
+  }
   const newStatus = card.value.online_status === 'online' ? 'offline' : 'online'
 
   if (newStatus === 'online' && !canPublishKnowledgeCard(card.value.audit_status)) {
@@ -551,6 +599,11 @@ const handleStatusConfirm = async (note?: string) => {
 }
 
 const handleAuditAction = (action: 'approved' | 'rejected') => {
+  if (!card.value) return
+  if (!canOperateKnowledgeCard(card.value.online_status)) {
+    message.warning(t('knowledge.card.creatingBlocked'))
+    return
+  }
   auditAction.value = action
   auditModalOpen.value = true
 }
@@ -579,6 +632,10 @@ const handleAuditConfirm = async (reason?: string) => {
 
 const handleDelete = async () => {
   if (!card.value) return
+  if (!canOperateKnowledgeCard(card.value.online_status)) {
+    message.warning(t('knowledge.card.creatingBlocked'))
+    return
+  }
   const cardId = card.value.id
   try {
     await deleteKnowledgeCard(props.ownerType, props.ownerId, cardId)
