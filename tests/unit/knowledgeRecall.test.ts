@@ -24,13 +24,13 @@ describe('knowledge recall payload', () => {
       buildKnowledgeRecallPayload({
         query: '如何进行知识库权限管理？',
         topK: 8,
-        cardTypes: ['rule', 'evidence'],
+        cardTypes: ['rule', 'disease_overview'],
       })
     ).toEqual({
       query: '如何进行知识库权限管理？',
       top_k: 8,
       metadata: {
-        card_type: ['rule', 'evidence'],
+        card_type: ['rule', 'disease_overview'],
       },
     })
   })
@@ -40,8 +40,8 @@ describe('knowledge recall payload', () => {
       buildKnowledgeRecallPayload({
         query: '如何进行知识库权限管理？',
         topK: 5,
-        cardTypes: ['rule', 'evidence'],
-        availableCardTypes: ['rule', 'evidence'],
+        cardTypes: ['rule', 'disease_overview'],
+        availableCardTypes: ['rule', 'disease_overview'],
       })
     ).toEqual({
       query: '如何进行知识库权限管理？',
@@ -51,7 +51,7 @@ describe('knowledge recall payload', () => {
 })
 
 describe('knowledge recall card type selection', () => {
-  const allTypes = ['rule', 'evidence', 'scale']
+  const allTypes = ['rule', 'disease_overview', 'scale']
 
   it('selects all concrete types when all option is selected', () => {
     expect(
@@ -85,7 +85,7 @@ describe('knowledge recall card type selection', () => {
     expect(
       resolveRecallCardTypeSelection({
         current: allTypes,
-        clicked: 'evidence',
+        clicked: 'disease_overview',
         availableCardTypes: allTypes,
         allSelected: true,
       })
@@ -98,7 +98,7 @@ describe('knowledge recall card type selection', () => {
   it('keeps all option unselected when concrete types are selected manually', () => {
     expect(
       resolveRecallCardTypeSelection({
-        current: ['rule', 'evidence'],
+        current: ['rule', 'disease_overview'],
         clicked: 'scale',
         availableCardTypes: allTypes,
         allSelected: false,

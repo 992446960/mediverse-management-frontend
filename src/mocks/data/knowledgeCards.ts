@@ -4,7 +4,7 @@ export const mockKnowledgeCards: KnowledgeCard[] = [
   {
     id: 'card_001',
     title: '高血压诊断标准',
-    type: 'evidence',
+    type: 'disease_overview',
     json_content: JSON.stringify(
       {
         title: '高血压诊断标准',
@@ -69,7 +69,7 @@ export const mockKnowledgeCards: KnowledgeCard[] = [
   {
     id: 'card_003',
     title: '顽固性高血压处理经验',
-    type: 'experience',
+    type: 'scale',
     json_content: JSON.stringify(
       {
         title: '顽固性高血压处理经验',

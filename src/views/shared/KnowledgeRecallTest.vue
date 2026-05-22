@@ -205,8 +205,8 @@
               <div class="mb-2 flex flex-wrap items-center gap-2">
                 <a-tag color="blue">{{ formatScore(source.relevance_score) }}</a-tag>
                 <span class="font-medium text-(--color-text-base)">{{ source.title }}</span>
-                <a-tag :color="getCardTypeConfig(source.card_type).color">
-                  {{ getCardTypeConfig(source.card_type).label }}
+                <a-tag :color="getLocalizedCardTypeConfig(source.card_type).color">
+                  {{ getLocalizedCardTypeConfig(source.card_type).label }}
                 </a-tag>
               </div>
               <p class="m-0 text-sm leading-6 text-(--color-text-secondary)">
@@ -241,8 +241,8 @@
               <div
                 class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-normal text-(--color-text-tertiary)"
               >
-                <a-tag :color="getCardTypeConfig(detailCardType).color" class="m-0">
-                  {{ getCardTypeConfig(detailCardType).label }}
+                <a-tag :color="getLocalizedCardTypeConfig(detailCardType).color" class="m-0">
+                  {{ getLocalizedCardTypeConfig(detailCardType).label }}
                 </a-tag>
                 <span>ID: {{ detailCardId }}</span>
                 <span>{{ t('common.updatedAt') }}: {{ detailUpdatedAt }}</span>
@@ -367,6 +367,7 @@ const props = defineProps<{
 
 const { t } = useI18n()
 const router = useRouter()
+const getLocalizedCardTypeConfig = (type: string) => getCardTypeConfig(type, (key) => t(key))
 
 const query = ref('')
 const topK = ref(5)

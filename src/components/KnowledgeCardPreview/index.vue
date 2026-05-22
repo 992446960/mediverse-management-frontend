@@ -58,17 +58,16 @@ const props = withDefaults(
 
 /** 类型配置：颜色 + label，未知类型自动 fallback */
 const normalizedType = computed(() => props.type.trim())
-const typeConfig = computed(() => getCardTypeConfig(normalizedType.value))
+const typeConfig = computed(() => getCardTypeConfig(normalizedType.value, (key) => t(key)))
 const showTypeTag = computed(() => normalizedType.value !== '')
 
 const HOVER_BORDER_COLOR: Record<string, string> = {
-  evidence: 'var(--color-primary)',
   rule: 'var(--color-success)',
-  experience: 'var(--color-warning)',
   scale: '#722ed1',
   risk_point: '#ff4d4f',
   pathway_clause: '#13c2c2',
   melody_element: '#2f54eb',
+  disease_overview: 'var(--color-primary)',
 }
 
 const containerStyle = computed(() => ({
