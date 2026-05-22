@@ -4,7 +4,7 @@ export type OwnerType = 'personal' | 'dept' | 'org' | 'avatar'
 export type FileStatus = 'uploading' | 'parsing' | 'extracting' | 'indexing' | 'done' | 'failed'
 /** 知识卡类型：由后端 GET /knowledge/card-types 动态下发，使用 string 保持扩展性 */
 export type CardType = string
-export type OnlineStatus = 'online' | 'offline'
+export type OnlineStatus = 'online' | 'offline' | 'creating' | 'updating'
 export type AuditStatus = 'pending' | 'approved' | 'rejected'
 
 /** GET /api/v1/knowledge/card-types 返回的单条 */
@@ -52,9 +52,15 @@ export interface FileIndexingRetryResult {
   file_id: string
 }
 
-/** POST /knowledge/{owner_type}/{owner_id}/cards 返回的 data */
-export interface CreateKnowledgeCardResult {
+/** POST/PUT /knowledge/{owner_type}/{owner_id}/cards 异步写操作返回的 data */
+export interface KnowledgeCardWriteTaskResult {
+  task_id: string
   card_id: string
+  audit_status: AuditStatus
+  message: string
+  online_status: OnlineStatus
+  title: string
+  type: CardType
 }
 
 /** 目录树节点 */
@@ -224,26 +230,67 @@ export const FILE_STATUS_CONFIG: Record<FileStatus, { color: string; label: stri
 
 /** 知识卡类型配置（兜底/颜色映射；后端可动态扩展，未在此 Map 中的类型走 fallback） */
 export const CARD_TYPE_CONFIG: Record<string, { color: string; label: string }> = {
-  evidence: { color: 'blue', label: '循证卡' },
   rule: { color: 'orange', label: '规则卡' },
-  experience: { color: 'green', label: '经验卡' },
   scale: { color: 'purple', label: '量表卡' },
   risk_point: { color: 'red', label: '风险控制点卡' },
   pathway_clause: { color: 'cyan', label: '路径条款卡' },
   melody_element: { color: 'geekblue', label: '乐谱元素卡' },
+  disease_overview: { color: 'blue', label: '疾病概览卡' },
+}
+
+type TranslateFn = (key: string) => string
+
+const CARD_TYPE_LABEL_KEYS: Record<string, string> = {
+  rule: 'knowledge.card.typeRule',
+  scale: 'knowledge.card.typeScale',
+  risk_point: 'knowledge.card.typeRiskPoint',
+  pathway_clause: 'knowledge.card.typePathwayClause',
+  melody_element: 'knowledge.card.typeMelodyElement',
+  disease_overview: 'knowledge.card.typeDiseaseOverview',
 }
 
 /**
  * 安全获取知识卡类型配置；未知类型返回 fallback（灰色 + code 原文）。
  */
-export function getCardTypeConfig(type: string): { color: string; label: string } {
-  return CARD_TYPE_CONFIG[type] ?? { color: 'default', label: type }
+export function getCardTypeConfig(type: string, t?: TranslateFn): { color: string; label: string } {
+  const config = CARD_TYPE_CONFIG[type] ?? { color: 'default', label: type }
+  const labelKey = CARD_TYPE_LABEL_KEYS[type]
+  return {
+    ...config,
+    label: labelKey && t ? t(labelKey) : config.label,
+  }
+}
+
+export function getCardTypeOptionLabel(option: CardTypeOption, t?: TranslateFn): string {
+  const config = getCardTypeConfig(option.code, t)
+  return config.label === option.code ? option.name || option.code : config.label
 }
 
 /** 知识卡在线状态配置 */
 export const ONLINE_STATUS_CONFIG: Record<OnlineStatus, { color: string; label: string }> = {
   online: { color: 'success', label: '已上线' },
   offline: { color: 'default', label: '已下线' },
+  creating: { color: 'processing', label: '创建中' },
+  updating: { color: 'processing', label: '更新中' },
+}
+
+const ONLINE_STATUS_LABEL_KEYS: Record<OnlineStatus, string> = {
+  online: 'knowledge.card.onlineStatusOnline',
+  offline: 'knowledge.card.onlineStatusOffline',
+  creating: 'knowledge.card.onlineStatusCreating',
+  updating: 'knowledge.card.onlineStatusUpdating',
+}
+
+export function getOnlineStatusConfig(
+  status: string,
+  t?: TranslateFn
+): { color: string; label: string } {
+  const config = ONLINE_STATUS_CONFIG[status as OnlineStatus] ?? { color: 'default', label: status }
+  const labelKey = ONLINE_STATUS_LABEL_KEYS[status as OnlineStatus]
+  return {
+    ...config,
+    label: labelKey && t ? t(labelKey) : config.label,
+  }
 }
 
 /** 知识卡审核状态配置 */
@@ -253,8 +300,29 @@ export const AUDIT_STATUS_CONFIG: Record<AuditStatus, { color: string; label: st
   rejected: { color: 'error', label: '已驳回' },
 }
 
+const AUDIT_STATUS_LABEL_KEYS: Record<AuditStatus, string> = {
+  pending: 'knowledge.card.auditPending',
+  approved: 'knowledge.card.auditApproved',
+  rejected: 'knowledge.card.auditRejected',
+}
+
+export function getAuditStatusConfig(
+  status: AuditStatus,
+  t?: TranslateFn
+): { color: string; label: string } {
+  const config = AUDIT_STATUS_CONFIG[status]
+  return {
+    ...config,
+    label: t ? t(AUDIT_STATUS_LABEL_KEYS[status]) : config.label,
+  }
+}
+
 export function canPublishKnowledgeCard(auditStatus: AuditStatus): boolean {
   return auditStatus === 'approved'
+}
+
+export function canOperateKnowledgeCard(onlineStatus: OnlineStatus): boolean {
+  return onlineStatus !== 'creating' && onlineStatus !== 'updating'
 }
 
 /** 创建/更新知识卡请求负载 */

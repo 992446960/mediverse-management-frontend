@@ -64,7 +64,7 @@ import { HistoryOutlined, RollbackOutlined, SwapOutlined } from '@ant-design/ico
 import type { KnowledgeCardVersion } from '@/types/knowledge'
 import {
   buildKnowledgeCardVersionOptions,
-  canRollbackKnowledgeCardVersion,
+  canOperateKnowledgeCardVersionRollback,
   findKnowledgeCardCompareTarget,
   isKnowledgeCardCurrentVersion,
   resolveKnowledgeCardVersionKey,
@@ -79,6 +79,7 @@ const props = defineProps<{
   currentVersionKey: number | null
   rollbackLoading: boolean
   rollbackSuccessKey: number
+  operationDisabled: boolean
 }>()
 
 const emit = defineEmits<{
@@ -102,7 +103,12 @@ function canRollbackVersion(v: KnowledgeCardVersion) {
   const targetVersion = resolveKnowledgeCardVersionKey(v)
   return (
     targetVersion != null &&
-    canRollbackKnowledgeCardVersion(targetVersion, props.currentVersionKey, validVersionKeys.value)
+    canOperateKnowledgeCardVersionRollback(
+      targetVersion,
+      props.currentVersionKey,
+      validVersionKeys.value,
+      props.operationDisabled
+    )
   )
 }
 
@@ -127,7 +133,12 @@ const handleRollback = (v: KnowledgeCardVersion) => {
   const targetVersion = resolveKnowledgeCardVersionKey(v)
   if (
     targetVersion == null ||
-    !canRollbackKnowledgeCardVersion(targetVersion, props.currentVersionKey, validVersionKeys.value)
+    !canOperateKnowledgeCardVersionRollback(
+      targetVersion,
+      props.currentVersionKey,
+      validVersionKeys.value,
+      props.operationDisabled
+    )
   ) {
     message.warning(t('knowledge.card.rollbackInvalidVersion'))
     return

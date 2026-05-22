@@ -5,7 +5,7 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 const recallSources = [
   {
     id: 'card_001',
-    card_type: 'evidence',
+    card_type: 'disease_overview',
     title: '高血压诊断标准',
     excerpt: '非同日3次测量血压，收缩压≥140mmHg和/或舒张压≥90mmHg即可诊断。',
     relevance_score: 0.96,

@@ -86,8 +86,24 @@ const router = useRouter()
 const activeTab = ref<string | number>(
   props.headConf.defaultTab ?? props.headConf.tabsOptions?.[0]?.value ?? ''
 )
-const internalTabsOptions = ref<Array<{ label: string; value: string | number }>>(
-  props.headConf.tabsOptions ?? []
+const internalTabsOptions = ref<Array<{ label: string; value: string | number }>>([])
+
+watch(
+  () => props.headConf.tabsOptions,
+  (tabsOptions) => {
+    internalTabsOptions.value = tabsOptions ?? []
+    if (!internalTabsOptions.value.some((tab) => tab.value === activeTab.value)) {
+      activeTab.value = props.headConf.defaultTab ?? internalTabsOptions.value[0]?.value ?? ''
+    }
+  },
+  { immediate: true }
+)
+
+watch(
+  () => props.headConf.defaultTab,
+  (defaultTab) => {
+    if (defaultTab != null) activeTab.value = defaultTab
+  }
 )
 
 const filteredBtns = computed<PageHeadBtn[]>(() => {

@@ -137,7 +137,7 @@ import type { VersionDiffSegment, KnowledgeCardVersion } from '@/types/knowledge
 import {
   buildKnowledgeCardVersionOptions,
   canCompareKnowledgeCardVersions,
-  canRollbackKnowledgeCardVersion,
+  canOperateKnowledgeCardVersionRollback,
   isKnowledgeCardDiffSelectionApplied,
   resolveKnowledgeCardPreviousVersionKey,
   resolveKnowledgeCardVersionKey,
@@ -157,6 +157,7 @@ const props = defineProps<{
   loading: boolean
   rollbackLoading: boolean
   rollbackSuccessKey: number
+  operationDisabled: boolean
 }>()
 
 const emit = defineEmits<{
@@ -215,7 +216,12 @@ const canRollbackToTarget = computed(() => {
     [localFrom.value, localTo.value].includes(targetVersion) &&
     props.currentVersionKey != null &&
     [localFrom.value, localTo.value].includes(props.currentVersionKey) &&
-    canRollbackKnowledgeCardVersion(targetVersion, props.currentVersionKey, validVersionKeys.value)
+    canOperateKnowledgeCardVersionRollback(
+      targetVersion,
+      props.currentVersionKey,
+      validVersionKeys.value,
+      props.operationDisabled
+    )
   )
 })
 

@@ -32,6 +32,7 @@
           v-else-if="btn.type === 'popover' && btn.moreList?.length"
           v-model:open="moreOpen"
           trigger="click"
+          :disabled="btn.btnDisabled?.(record)"
         >
           <template #overlay>
             <a-menu class="page-table-more-menu">
@@ -62,6 +63,7 @@
             size="small"
             :danger="getBtnDanger(btn, record)"
             :style="getBtnColorStyle(btn, record)"
+            :disabled="btn.btnDisabled?.(record)"
             class="page-table-more-trigger"
             @click.stop
           >
@@ -116,6 +118,7 @@ function hasPermission(btn: PageTableOperationBtn): boolean {
 }
 
 function onMoreItemClick(m: PageTableOperationBtn, record: Record<string, any>, index: number) {
+  if (m.btnDisabled?.(record)) return
   moreOpen.value = false
   m.handle?.(record, index)
 }

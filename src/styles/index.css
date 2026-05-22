@@ -108,7 +108,7 @@ body {
 }
 
 /**
- * Tag 预设 color="blue"：与 KnowledgeCardPreview `.knowledge-card-preview__type-tag--evidence` 同色
+ * Tag 预设 color="blue"：与 KnowledgeCardPreview `disease_overview` 类型同色
  * 使用项目 CSS 变量；!important 用于覆盖 Ant Design 预设色的内联样式
  */
 .ant-tag.ant-tag-blue,

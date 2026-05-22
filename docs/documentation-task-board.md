@@ -31,6 +31,9 @@
 
 ## 近期同步记录
 
+- 知识库首页搜索框增加独立最大宽度与 `min-width: 0` 收口，避免宽屏下输入框跟随推荐内容容器过长或撑出页面。
+- 本次知识卡异步写入功能审核整改：`creating` / `updating` 禁用范围补齐到详情版本历史与 diff 回滚入口，并在回滚 handler 增加状态防护；编辑弹窗 Card Type 下拉改为复用本地化枚举文案，避免英文环境继续显示后端中文 `name`；补充知识卡类型 option 文案与回滚可操作性单元测试。
+- 知识卡新增/编辑写操作改为异步任务响应：前端不再把 PUT 响应归一化为完整知识卡，并支持新建 `online_status=creating`、编辑 `online_status=updating` 的列表/详情展示；处理中知识卡禁用详情、编辑、上下线、审核、删除等所有操作；知识卡筛选表单的“上线状态”文案改为“状态”；新增/编辑提交成功提示改为等待创建/等待更新；知识卡类型、上线状态、审核状态标签改为按当前语言渲染，卡类型枚举同步为 `rule` / `scale` / `risk_point` / `pathway_clause` / `melody_element` / `disease_overview`；语言切换时同步刷新 `PageHead` tabs 与标签页右键菜单，知识卡类型 tab 不再直出后端中文 `name`；知识卡列表 Title 列支持拖拽调整宽度，Type 列默认宽度加宽；`docs/API设计.md` §4.1.9/§4.1.10/§4.1.15 同步任务响应字段与类型枚举。
 - Docker 运行期 API 地址改为支持启动命令传入 `API_BASE_URL` 并写入 `/env.js`；未传时继续使用 `/api/v1` + Nginx 代理，部署文档同步补充直接指定后端地址的 `docker run -e API_BASE_URL=...` 示例。
 - 知识卡回退确认弹窗改为复用现有 `a-modal` 结构，明确拆分 header/content/footer，并保留 warning icon、回退原因输入和确认请求中的按钮 loading。
 - 知识卡版本回退规则更新：仅允许从当前版本回退到上一版本，其他历史版本仅支持对比；前端请求体不再发送 `target_version`，`docs/API设计.md` §4.1.14 与 Python mock OpenAPI 快照同步为返回完整知识卡对象。

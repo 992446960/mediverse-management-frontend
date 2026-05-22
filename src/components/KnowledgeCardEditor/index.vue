@@ -32,7 +32,7 @@
           >
             <a-select v-model:value="formState.type" :disabled="isEditMode">
               <a-select-option v-for="ct in props.cardTypes" :key="ct.code" :value="ct.code">
-                {{ ct.name }}
+                {{ getLocalizedCardTypeOptionLabel(ct) }}
               </a-select-option>
             </a-select>
           </a-form-item>
@@ -108,6 +108,7 @@ import { useI18n } from 'vue-i18n'
 import { message } from 'ant-design-vue'
 import { PlusOutlined } from '@ant-design/icons-vue'
 import type { KnowledgeCard, CardType, OwnerType, CardTypeOption } from '@/types/knowledge'
+import { getCardTypeOptionLabel } from '@/types/knowledge'
 import { getKnowledgeCardDetail, saveKnowledgeCard, updateKnowledgeCard } from '@/api/knowledge'
 import MarkdownEditor from './MarkdownEditor.vue'
 import { useFileRemoteSearch } from '@/composables/useFileRemoteSearch'
@@ -137,6 +138,9 @@ const inputTagValue = ref('')
 const inputTagVisible = ref(false)
 
 const isEditMode = computed(() => !!props.card?.id)
+const translateKnowledgeConfig = (key: string) => t(key)
+const getLocalizedCardTypeOptionLabel = (option: CardTypeOption) =>
+  getCardTypeOptionLabel(option, translateKnowledgeConfig)
 
 const {
   options: editorSourceFileOptions,

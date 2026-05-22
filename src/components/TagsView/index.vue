@@ -36,12 +36,14 @@
         class="tags-view-context-menu"
         :style="{ left: contextMenu.x + 'px', top: contextMenu.y + 'px' }"
       >
-        <li @click="refreshSelectedTag">刷新页面</li>
-        <li v-if="!selectedTag?.affix" @click="closeTag(selectedTag!)">关闭当前</li>
-        <li @click="closeOtherTags">关闭其他</li>
-        <li v-if="!isFirstView" @click="closeLeftTags">关闭左侧</li>
-        <li v-if="!isLastView" @click="closeRightTags">关闭右侧</li>
-        <li @click="closeAllTags">全部关闭</li>
+        <li @click="refreshSelectedTag">{{ t('tagsView.refresh') }}</li>
+        <li v-if="!selectedTag?.affix" @click="closeTag(selectedTag!)">
+          {{ t('tagsView.closeCurrent') }}
+        </li>
+        <li @click="closeOtherTags">{{ t('tagsView.closeOthers') }}</li>
+        <li v-if="!isFirstView" @click="closeLeftTags">{{ t('tagsView.closeLeft') }}</li>
+        <li v-if="!isLastView" @click="closeRightTags">{{ t('tagsView.closeRight') }}</li>
+        <li @click="closeAllTags">{{ t('tagsView.closeAll') }}</li>
       </ul>
     </Teleport>
   </div>
