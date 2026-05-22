@@ -11,7 +11,7 @@
       </div>
 
       <!-- Search Box -->
-      <div class="relative">
+      <div class="kb-search-box relative mx-auto w-full max-w-3xl">
         <a-input-search
           v-model:value="searchQuery"
           :placeholder="t('knowledgeSearch.searchPlaceholder')"
@@ -545,6 +545,15 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.kb-search-box,
+.kb-search-input {
+  min-width: 0;
+}
+
+.kb-search-input {
+  width: 100%;
+}
+
 .kb-search-input :deep(.ant-input-wrapper) {
   display: flex;
   align-items: stretch;
