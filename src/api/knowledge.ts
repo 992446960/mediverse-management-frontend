@@ -19,7 +19,7 @@ import type {
   BatchMoveFilesPayload,
   BatchMoveFilesResult,
   FileIndexingRetryResult,
-  CreateKnowledgeCardResult,
+  KnowledgeCardWriteTaskResult,
 } from '@/types/knowledge'
 import type { PaginatedData } from '@/types/api'
 import type { AxiosRequestConfig } from 'axios'
@@ -313,8 +313,8 @@ export function saveKnowledgeCard(
   ownerType: OwnerType,
   ownerId: string,
   payload: KnowledgeCardPayload
-): Promise<CreateKnowledgeCardResult> {
-  return request.post<CreateKnowledgeCardResult>(
+): Promise<KnowledgeCardWriteTaskResult> {
+  return request.post<KnowledgeCardWriteTaskResult>(
     `${BASE_URL}/${ownerType}/${ownerId}/cards`,
     payload,
     { timeout: KNOWLEDGE_CARD_WRITE_TIMEOUT }
@@ -333,12 +333,14 @@ export function updateKnowledgeCard(
       change_summary?: string
     }
   >
-) {
-  return request
-    .put<KnowledgeCard>(`${BASE_URL}/${ownerType}/${ownerId}/cards/${cardId}`, payload, {
+): Promise<KnowledgeCardWriteTaskResult> {
+  return request.put<KnowledgeCardWriteTaskResult>(
+    `${BASE_URL}/${ownerType}/${ownerId}/cards/${cardId}`,
+    payload,
+    {
       timeout: KNOWLEDGE_CARD_WRITE_TIMEOUT,
-    })
-    .then(normalizeKnowledgeCard)
+    }
+  )
 }
 
 /**

@@ -36,7 +36,7 @@ const mockFileCards: Record<string, FileCard[]> = {
   file_001: [
     {
       id: 'card_001',
-      type: 'evidence',
+      type: 'disease_overview',
       title: '高血压诊断标准',
       tags: ['高血压', '诊断'],
       online_status: 'online',
@@ -58,7 +58,7 @@ const mockFileCards: Record<string, FileCard[]> = {
     },
     {
       id: 'card_003',
-      type: 'experience',
+      type: 'scale',
       title: '顽固性高血压处理经验',
       tags: ['临床经验'],
       online_status: 'online',
@@ -514,6 +514,7 @@ export const knowledgeHandlers = [
         { name: '风险控制点卡', code: 'risk_point' },
         { name: '路径条款卡', code: 'pathway_clause' },
         { name: '乐谱元素卡', code: 'melody_element' },
+        { name: '疾病概览卡', code: 'disease_overview' },
       ],
     })
   }),
@@ -590,8 +591,8 @@ export const knowledgeHandlers = [
       json_content: '',
       type: payload.type,
       tags: payload.tags || [],
-      online_status: 'offline',
-      audit_status: 'approved',
+      online_status: 'creating',
+      audit_status: 'pending',
       audit_reject_reason: '',
       reference_count: 0,
       source_files: Array.isArray(payload.source_file_ids)
@@ -606,7 +607,19 @@ export const knowledgeHandlers = [
       version: 'v1.0.0',
     }
     mutableCards.unshift(newCard)
-    return HttpResponse.json({ code: 0, message: 'ok', data: { card_id: newCard.id } })
+    return HttpResponse.json({
+      code: 0,
+      message: 'ok',
+      data: {
+        task_id: `task_${newCard.id}`,
+        card_id: newCard.id,
+        audit_status: newCard.audit_status,
+        message: '任务已提交，请通过 task_id 查询进度',
+        online_status: newCard.online_status,
+        title: newCard.title,
+        type: newCard.type,
+      },
+    })
   }),
 
   // 更新知识卡
@@ -622,10 +635,24 @@ export const knowledgeHandlers = [
         const majorVersion = parseInt(versionParts[0]?.slice(1) || '1')
         Object.assign(card, {
           ...payload,
+          online_status: 'updating',
+          audit_status: 'pending',
           updated_at: new Date().toISOString(),
           version: `v${majorVersion + 1}.0.0`,
         })
-        return HttpResponse.json({ code: 0, message: 'ok', data: card })
+        return HttpResponse.json({
+          code: 0,
+          message: 'ok',
+          data: {
+            task_id: `task_${card.id}`,
+            card_id: card.id,
+            audit_status: card.audit_status,
+            message: '任务已提交，请通过 task_id 查询进度',
+            online_status: card.online_status,
+            title: card.title,
+            type: card.type,
+          },
+        })
       }
       return HttpResponse.json({ code: 404, message: 'not found' })
     }

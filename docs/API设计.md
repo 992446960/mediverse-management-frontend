@@ -1574,7 +1574,7 @@ data: {"type":"error","code":50002,"message":"AI 服务暂时不可用，请稍�
         "id": "13f3d07a-e0ab-4bd6-ba09-94ab18f02170",
         "owner_type": "dept",
         "owner_id": "4851d166-47b5-4211-901b-81a4303924d9",
-        "type": "evidence",
+        "type": "disease_overview",
         "title": "神经内科",
         "json_content": "",
         "md_content": "",
@@ -1832,8 +1832,8 @@ GET /api/v1/knowledge/{owner_type}/{owner_id}/cards
 
 | 参数 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
-| type | string | ❌ | evidence / rule / experience |
-| online_status | string | ❌ | online / offline |
+| type | string | ❌ | rule / scale / risk_point / pathway_clause / melody_element / disease_overview |
+| online_status | string | ❌ | online / offline / creating / updating |
 | audit_status | string | ❌ | pending / approved / rejected |
 | source_file_id | string | ❌ | 按来源文件过滤（返回包含该文件为来源之一的知识卡） |
 | tag | string | ❌ | 按标签过滤 |
@@ -1970,7 +1970,13 @@ POST /api/v1/knowledge/{owner_type}/{owner_id}/cards
 "code": 0,
 "message": "ok",
 "data": {
-"card_id": "b07b2afe-244e-4c86-8b41-f751e4f85058"
+"task_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+"card_id": "b07b2afe-244e-4c86-8b41-f751e4f85058",
+"audit_status": "pending",
+"message": "任务已提交，请通过 task_id 查询进度",
+"online_status": "creating",
+"title": "string",
+"type": "string"
 }
 }
 ```
@@ -2011,18 +2017,17 @@ PUT /api/v1/knowledge/{owner_type}/{owner_id}/cards/{id}
 
 ```json
 {
-"detail": [
-{
-"loc": [
-"string",
-0
-],
-"msg": "string",
-"type": "string",
-"input": "string",
-"ctx": {}
+"code": 0,
+"message": "ok",
+"data": {
+"task_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+"card_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+"audit_status": "pending",
+"message": "任务已提交，请通过 task_id 查询进度",
+"online_status": "updating",
+"title": "string",
+"type": "string"
 }
-]
 }
 ```
 
@@ -2242,7 +2247,8 @@ GET /api/v1/knowledge/card-types
 { "name": "量表卡", "code": "scale" },
 { "name": "风险控制点卡", "code": "risk_point" },
 { "name": "路径条款卡", "code": "pathway_clause" },
-{ "name": "乐谱元素卡", "code": "melody_element" }
+{ "name": "乐谱元素卡", "code": "melody_element" },
+{ "name": "疾病概览卡", "code": "disease_overview" }
 ]
 }
 ```
@@ -2599,7 +2605,7 @@ POST /api/v1/knowledge-qa/{owner_type}/{owner_id}/search
 "index": 2,
 "card_id": "uuid",
 "card_title": "高血压诊疗指南摘要",
-"card_type": "evidence",
+"card_type": "disease_overview",
 "relevance_score": 0.85,
 "content_preview": "2023年指南推荐..."
 }
@@ -3055,7 +3061,7 @@ POST /api/v1/knowledge-recall/{owner_type}/{owner_id}/recall
   "query": "高血压患者可以服用哪些降压药？",
   "top_k": 5,
   "metadata": {
-    "card_type": ["rule", "evidence"],
+    "card_type": ["rule", "disease_overview"],
     "input_data": {}
   }
 }
