@@ -374,11 +374,22 @@ function scrollTop(value?: number) {
   if (el) el.scrollTop = value ?? 0
 }
 
+function getTableHeaderHeight() {
+  const el =
+    tableContainerRef.value?.querySelector('.ant-table-header') ??
+    tableContainerRef.value?.querySelector('.ant-table-thead')
+  return el?.getBoundingClientRect().height ?? 0
+}
+
 function setTableHeight() {
   const el = tableContainerRef.value
   if (!el) return
   const h = el.getBoundingClientRect().height
-  measuredScrollY.value = getPageTableScrollY(h, props.tableConf?.tableMarginBottom)
+  measuredScrollY.value = getPageTableScrollY(
+    h,
+    props.tableConf?.tableMarginBottom,
+    getTableHeaderHeight()
+  )
 }
 
 onMounted(() => {
@@ -389,7 +400,11 @@ onMounted(() => {
     const entry = entries[0]
     if (!entry) return
     const { height } = entry.contentRect
-    const nextY = getPageTableScrollY(height, props.tableConf?.tableMarginBottom)
+    const nextY = getPageTableScrollY(
+      height,
+      props.tableConf?.tableMarginBottom,
+      getTableHeaderHeight()
+    )
     if (!hasAppliedObserverScrollY) {
       measuredScrollY.value = nextY
       hasAppliedObserverScrollY = true
