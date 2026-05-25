@@ -42,21 +42,47 @@
       </a-radio-group>
     </div>
 
-    <a-spin :spinning="loading">
-      <a-empty
-        v-if="!loading && displayedDiff.length === 0"
-        :description="t('knowledge.card.diffNoData')"
-      />
+    <div v-if="loading" class="version-diff-view__loading">
+      <a-spin />
+    </div>
 
-      <!-- 单栏 unified：所有 segment 按顺序渲染在一个块中 -->
-      <div
-        v-else-if="viewMode === 'unified'"
-        class="markdown-body p-4 bg-gray-50 rounded-lg overflow-auto max-h-[calc(100vh-320px)]"
-      >
-        <div class="text-xs text-gray-400 mb-2 font-medium">
-          {{ fromVersionLabel }} vs {{ toVersionLabel }}
-        </div>
-        <template v-for="(seg, i) in displayedDiff" :key="'u-' + i">
+    <a-empty v-else-if="displayedDiff.length === 0" :description="t('knowledge.card.diffNoData')" />
+
+    <!-- 单栏 unified：所有 segment 按顺序渲染在一个块中 -->
+    <div
+      v-else-if="viewMode === 'unified'"
+      class="markdown-body p-4 bg-gray-50 rounded-lg overflow-auto max-h-[calc(100vh-320px)]"
+    >
+      <div class="text-xs text-gray-400 mb-2 font-medium">
+        {{ fromVersionLabel }} vs {{ toVersionLabel }}
+      </div>
+      <template v-for="(seg, i) in displayedDiff" :key="'u-' + i">
+        <!-- eslint-disable-next-line vue/no-v-html -- marked + DOMPurify -->
+        <span
+          v-if="seg.type === 'equal'"
+          class="diff-equal"
+          v-html="renderSegment(seg.md_content)"
+        ></span>
+        <!-- eslint-disable-next-line vue/no-v-html -- marked + DOMPurify -->
+        <span
+          v-else-if="seg.type === 'delete'"
+          class="diff-delete"
+          v-html="renderSegment(seg.md_content)"
+        ></span>
+        <!-- eslint-disable-next-line vue/no-v-html -- marked + DOMPurify -->
+        <span
+          v-else-if="seg.type === 'insert'"
+          class="diff-insert"
+          v-html="renderSegment(seg.md_content)"
+        ></span>
+      </template>
+    </div>
+
+    <!-- 左右分栏：左=from（旧版本），右=to（新版本） -->
+    <div v-else class="diff-split grid grid-cols-2 gap-4">
+      <div class="markdown-body p-4 bg-gray-50 rounded-lg overflow-auto max-h-[calc(100vh-320px)]">
+        <div class="text-xs text-gray-400 mb-2 font-medium">{{ fromVersionLabel }}</div>
+        <template v-for="(seg, i) in displayedDiff" :key="'l-' + i">
           <!-- eslint-disable-next-line vue/no-v-html -- marked + DOMPurify -->
           <span
             v-if="seg.type === 'equal'"
@@ -69,6 +95,17 @@
             class="diff-delete"
             v-html="renderSegment(seg.md_content)"
           ></span>
+        </template>
+      </div>
+      <div class="markdown-body p-4 bg-gray-50 rounded-lg overflow-auto max-h-[calc(100vh-320px)]">
+        <div class="text-xs text-gray-400 mb-2 font-medium">{{ toVersionLabel }}</div>
+        <template v-for="(seg, i) in displayedDiff" :key="'r-' + i">
+          <!-- eslint-disable-next-line vue/no-v-html -- marked + DOMPurify -->
+          <span
+            v-if="seg.type === 'equal'"
+            class="diff-equal"
+            v-html="renderSegment(seg.md_content)"
+          ></span>
           <!-- eslint-disable-next-line vue/no-v-html -- marked + DOMPurify -->
           <span
             v-else-if="seg.type === 'insert'"
@@ -77,49 +114,7 @@
           ></span>
         </template>
       </div>
-
-      <!-- 左右分栏：左=from（旧版本），右=to（新版本） -->
-      <div v-else class="diff-split grid grid-cols-2 gap-4">
-        <div
-          class="markdown-body p-4 bg-gray-50 rounded-lg overflow-auto max-h-[calc(100vh-320px)]"
-        >
-          <div class="text-xs text-gray-400 mb-2 font-medium">{{ fromVersionLabel }}</div>
-          <template v-for="(seg, i) in displayedDiff" :key="'l-' + i">
-            <!-- eslint-disable-next-line vue/no-v-html -- marked + DOMPurify -->
-            <span
-              v-if="seg.type === 'equal'"
-              class="diff-equal"
-              v-html="renderSegment(seg.md_content)"
-            ></span>
-            <!-- eslint-disable-next-line vue/no-v-html -- marked + DOMPurify -->
-            <span
-              v-else-if="seg.type === 'delete'"
-              class="diff-delete"
-              v-html="renderSegment(seg.md_content)"
-            ></span>
-          </template>
-        </div>
-        <div
-          class="markdown-body p-4 bg-gray-50 rounded-lg overflow-auto max-h-[calc(100vh-320px)]"
-        >
-          <div class="text-xs text-gray-400 mb-2 font-medium">{{ toVersionLabel }}</div>
-          <template v-for="(seg, i) in displayedDiff" :key="'r-' + i">
-            <!-- eslint-disable-next-line vue/no-v-html -- marked + DOMPurify -->
-            <span
-              v-if="seg.type === 'equal'"
-              class="diff-equal"
-              v-html="renderSegment(seg.md_content)"
-            ></span>
-            <!-- eslint-disable-next-line vue/no-v-html -- marked + DOMPurify -->
-            <span
-              v-else-if="seg.type === 'insert'"
-              class="diff-insert"
-              v-html="renderSegment(seg.md_content)"
-            ></span>
-          </template>
-        </div>
-      </div>
-    </a-spin>
+    </div>
 
     <RollbackConfirmModal
       v-model:open="rollbackConfirmOpen"
@@ -273,6 +268,13 @@ function renderSegment(content: string): string {
 </script>
 
 <style scoped>
+.version-diff-view__loading {
+  display: flex;
+  min-height: min(360px, calc(100vh - 320px));
+  align-items: center;
+  justify-content: center;
+}
+
 .diff-equal {
   display: inline;
 }

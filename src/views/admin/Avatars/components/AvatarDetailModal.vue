@@ -7,7 +7,10 @@
     :destroy-on-close="true"
     @cancel="emit('update:open', false)"
   >
-    <a-spin :spinning="loading">
+    <div v-if="loading && !detail" class="avatar-detail-loading">
+      <a-spin />
+    </div>
+    <template v-else>
       <template v-if="detail">
         <div class="flex items-start gap-4 mb-4">
           <div v-if="detail.avatar_url" class="shrink-0">
@@ -86,7 +89,7 @@
           <a-empty v-else :description="t('common.noData')" />
         </div>
       </template>
-    </a-spin>
+    </template>
   </a-modal>
 </template>
 
@@ -165,6 +168,13 @@ watch(
 </script>
 
 <style scoped>
+.avatar-detail-loading {
+  display: flex;
+  min-height: min(360px, calc(100vh - 220px));
+  align-items: center;
+  justify-content: center;
+}
+
 .avatar-detail-desc :deep(.ant-descriptions-item-label) {
   width: 120px;
 }
