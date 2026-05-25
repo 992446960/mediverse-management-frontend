@@ -31,6 +31,7 @@
 
 ## 近期同步记录
 
+- `tsconfig.app.json` 的 `ignoreDeprecations` 调整为当前 TypeScript 5.9 可接受的 `"5.0"`，避免 `vue-tsc -b` 因 TS5103 中断。
 - `PageTable` 自适应滚动高度改为扣除 Ant Design 表头实际高度，保留取消默认 100px 底部预留的行为，同时避免表格内容滚动区压到分页器。
 - 知识库首页搜索框增加独立最大宽度与 `min-width: 0` 收口，避免宽屏下输入框跟随推荐内容容器过长或撑出页面。
 - 本次知识卡异步写入功能审核整改：`creating` / `updating` 禁用范围补齐到详情版本历史与 diff 回滚入口，并在回滚 handler 增加状态防护；编辑弹窗 Card Type 下拉改为复用本地化枚举文案，避免英文环境继续显示后端中文 `name`；补充知识卡类型 option 文案与回滚可操作性单元测试。
