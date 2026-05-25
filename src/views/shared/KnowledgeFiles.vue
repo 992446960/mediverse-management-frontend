@@ -450,8 +450,8 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
     label: t('knowledge.fileName'),
     prop: 'file_name',
     width: 200,
+    resizable: true,
     showOverflowTooltip: true,
-    fixed: 'left',
   },
   { label: t('knowledge.fileType'), prop: 'file_type', width: 100 },
   {
