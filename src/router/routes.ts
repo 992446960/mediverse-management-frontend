@@ -34,7 +34,7 @@ import type { RouteRecordRaw } from 'vue-router'
  * {
  *   path: '/redirect/:path(.*)',
  *   name: 'Redirect',
- *   component: () => import('@/views/shared/Redirect.vue'),
+ *   component: () => import('@/views/shared/redirect/index.vue'),
  *   meta: { layout: 'MainLayout', title: '', hidden: true },
  * }
  *
@@ -42,7 +42,7 @@ import type { RouteRecordRaw } from 'vue-router'
  * {
  *   path: '/login',
  *   name: 'Login',
- *   component: () => import('@/views/auth/Login.vue'),
+ *   component: () => import('@/views/auth/login/index.vue'),
  *   meta: { layout: 'FullscreenLayout', title: 'menu.login', hidden: true },
  * }
  *
@@ -50,7 +50,7 @@ import type { RouteRecordRaw } from 'vue-router'
  * {
  *   path: '/',
  *   name: 'Dashboard',
- *   component: () => import('@/views/Dashboard.vue'),
+ *   component: () => import('@/views/dashboard/index.vue'),
  *   meta: {
  *     layout: 'MainLayout',
  *     title: 'menu.dashboard',
@@ -73,13 +73,13 @@ import type { RouteRecordRaw } from 'vue-router'
  *     {
  *       path: 'list',
  *       name: 'ExampleList',
- *       component: () => import('@/views/example/List.vue'),
+ *       component: () => import('@/views/example/list/index.vue'),
  *       meta: { title: 'menu.exampleList' },
  *     },
  *     {
  *       path: 'detail/:id',
  *       name: 'ExampleDetail',
- *       component: () => import('@/views/example/Detail.vue'),
+ *       component: () => import('@/views/example/detail/index.vue'),
  *       meta: { title: 'menu.exampleDetail', hidden: true },
  *     },
  *   ],
@@ -88,7 +88,7 @@ import type { RouteRecordRaw } from 'vue-router'
  * // 5) 布局壳子路由（父 component 为 Layout，默认子路由 path: ''）
  * {
  *   path: '/nested',
- *   component: () => import('@/views/example/NestedLayout.vue'),
+ *   component: () => import('@/views/example/nested/index.vue'),
  *   meta: {
  *     layout: 'MainLayout',
  *     title: 'menu.nested',
@@ -98,13 +98,13 @@ import type { RouteRecordRaw } from 'vue-router'
  *     {
  *       path: '',
  *       name: 'NestedHome',
- *       component: () => import('@/views/example/NestedHome.vue'),
+ *       component: () => import('@/views/example/nested/home/index.vue'),
  *       meta: { title: 'menu.nested', noCache: true },
  *     },
  *     {
  *       path: 'sub/:sid',
  *       name: 'NestedSub',
- *       component: () => import('@/views/example/NestedSub.vue'),
+ *       component: () => import('@/views/example/nested/sub/index.vue'),
  *       meta: { title: 'menu.nestedSub' },
  *     },
  *   ],
@@ -114,13 +114,13 @@ import type { RouteRecordRaw } from 'vue-router'
  * {
  *   path: '/403',
  *   name: 'Forbidden',
- *   component: () => import('@/views/error/403.vue'),
+ *   component: () => import('@/views/error/forbidden/index.vue'),
  *   meta: { layout: 'FullscreenLayout', title: '403 Forbidden', hidden: true },
  * }
  * {
  *   path: '/:pathMatch(.*)*',
  *   name: 'NotFound',
- *   component: () => import('@/views/error/404.vue'),
+ *   component: () => import('@/views/error/not-found/index.vue'),
  *   meta: { layout: 'FullscreenLayout', title: '404 Not Found', hidden: true },
  * }
  * ```

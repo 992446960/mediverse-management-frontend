@@ -18,21 +18,38 @@
 | `src/stores/` | Pinia setup store |
 | `src/router/` | 路由定义、权限守卫、标题处理 |
 | `src/config/` | 菜单、主题、错误码等配置 |
-| `src/components/` | 通用组件和业务组件 |
-| `src/composables/` | 可复用组合式逻辑 |
+| `src/components/` | 跨页面复用的通用组件，或已明确被多个页面复用的业务组件 |
+| `src/composables/` | 跨模块可复用组合式逻辑 |
 | `src/types/` | 跨模块 TypeScript 类型 |
 | `src/mocks/` | MSW mock handlers 和数据 |
-| `src/views/` | 页面级组件，按业务域分目录 |
+| `src/views/` | 页面级组件，按业务域和页面分目录 |
 | `tests/api-contract/` | 真实后端 API 合规性测试 |
 
 ## 3. Vue 与组件
 
 - 页面和组件使用 Composition API 与 `<script setup>`。
-- 组件名使用 PascalCase 目录或清晰业务名，入口组件优先使用 `index.vue`。
+- 组件名使用 PascalCase 目录或清晰业务名，入口组件使用 `index.vue`。
 - Props 使用 TypeScript 类型定义；复杂事件 payload 必须有明确类型。
 - 表单提交、保存、删除、上传等写操作必须有 loading 或禁用态，防止重复提交。
 - 长文本必须处理溢出；表格、flex 容器和卡片内文本要避免撑爆布局。
 - 组件只负责自身展示和交互，跨页面状态放到 store 或 composable。
+
+### 3.1 页面目录和组件边界
+
+- 新增页面必须使用 `src/views/<domain>/<page>/index.vue`，不要继续新增 `src/views/<domain>/<Page>.vue` 或 `src/views/<Page>.vue`。
+- 页面路由必须指向页面目录入口，例如 `@/views/admin/users/index.vue`。
+- 页面私有组件放在页面目录下的 `components/`，例如 `src/views/admin/users/components/UserForm.vue`。
+- 页面私有 composable、类型、常量分别放在页面目录下的 `composables/`、`types.ts`、`constants.ts`；只有跨页面复用后才上移到 `src/composables/`、`src/types/` 或 `src/config/`。
+- `src/components/` 禁止放置只服务单个页面的组件；组件至少被两个页面复用，或属于 `PageTable`、`PageFilter`、`DirectoryTree` 这类明确的基础/业务复用组件，才允许放入公共组件目录。
+- 触碰存量 `src/views/<domain>/<Page>.vue` 或 `src/views/<Page>.vue` 做非微小改动时，应优先迁移到页面目录结构；无法迁移时必须在交付说明中写明原因。
+
+### 3.2 单文件复杂度控制
+
+- 页面 `index.vue` 只负责页面编排、数据装配和少量事件转发，不承载多个大型表格、弹窗、表单和详情区的完整实现。
+- 单个 Vue 文件超过 300 行，或同时包含列表、筛选、表单、弹窗、详情、上传、预览等三个以上职责时，必须拆分组件或 composable。
+- 纯展示区域优先拆为局部组件；状态、请求、筛选、分页、表单提交等逻辑优先拆为 composable。
+- 拆分后的页面私有模块默认留在页面目录内，确认跨页面复用后再上移到公共目录。
+- Composition API 代码按业务关注点组织，相关 state、computed、watch 和 handler 放在一起，避免按 ref/computed/function 类型分散堆放。
 
 ## 4. API 层
 
