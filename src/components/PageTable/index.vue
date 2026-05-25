@@ -115,7 +115,7 @@ import type { Key } from 'ant-design-vue/es/table/interface'
 import type { ColumnsType } from 'ant-design-vue/es/table'
 import { ReloadOutlined, SettingOutlined } from '@ant-design/icons-vue'
 import ColumnsEditor from './ColumnsEditor.vue'
-import { getPageTableScrollConfig, getPageTableScrollY } from './height'
+import { getPageTableScrollConfig, getPageTableScrollX, getPageTableScrollY } from './height'
 import OperationCell from './OperationCell.vue'
 import ScopeCell from './ScopeCell.vue'
 import type { PageTableConfig, PageTableColumnConfig } from './types'
@@ -303,6 +303,7 @@ const scrollConfig = computed(() => {
     tableHeight: props.tableConf?.tableHeight,
     measuredScrollY: measuredScrollY.value || DEFAULT_SCROLL_Y,
     rowCount: props.tableData?.length ?? 0,
+    scrollX: getPageTableScrollX(effectiveColumns.value),
   })
 })
 

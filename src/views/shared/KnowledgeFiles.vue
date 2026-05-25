@@ -449,7 +449,7 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
   {
     label: t('knowledge.fileName'),
     prop: 'file_name',
-    width: 200,
+    width: 80,
     resizable: true,
     showOverflowTooltip: true,
   },

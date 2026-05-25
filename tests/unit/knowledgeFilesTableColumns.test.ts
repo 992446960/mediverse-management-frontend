@@ -19,6 +19,7 @@ describe('knowledge files table columns', () => {
   it('keeps file name column resizable without left fixing', () => {
     const column = getFileNameColumnSource()
 
+    expect(column).toContain('width: 80')
     expect(column).toContain('resizable: true')
     expect(column).not.toContain("fixed: 'left'")
   })
