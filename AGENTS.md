@@ -35,6 +35,10 @@
 - 登录态 token 由 `src/utils/auth.ts` 管理，用户信息由 `src/stores/auth.ts` 管理。
 - Docker 打包和部署以 `README.Docker.md` 为唯一权威文档。
 
+# Git 提交
+
+- 提交后必须先检测当前跟踪远端是否可连接；远端通畅时默认 push，远端不通时停止 push 并汇报原因。
+
 # 验证要求
 
 - 文档变更必须运行 `pnpm check:docs`。
