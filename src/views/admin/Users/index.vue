@@ -594,7 +594,7 @@ onBeforeUnmount(() => {
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .users-page {
   max-height: var(--ant-layout-content-insert-height);
 }

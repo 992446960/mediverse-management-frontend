@@ -648,7 +648,7 @@ const handleDelete = async () => {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .knowledge-card-detail-loading {
   display: flex;
   min-height: min(520px, calc(100vh - 180px));

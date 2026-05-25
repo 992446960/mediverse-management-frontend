@@ -710,7 +710,7 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 :deep(.text-primary),
 :deep(.ant-menu-item .text-primary),
 :deep(.ant-menu-item .anticon.text-primary) {

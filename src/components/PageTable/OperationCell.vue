@@ -148,7 +148,7 @@ function getBtnColorStyle(
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .page-table-more-trigger {
   display: inline-flex;
   align-items: center;

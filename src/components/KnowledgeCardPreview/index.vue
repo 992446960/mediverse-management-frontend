@@ -78,7 +78,7 @@ const containerStyle = computed(() => ({
 const fullTitle = computed(() => `${props.titlePrefix ?? ''}${props.title}`)
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .knowledge-card-preview {
   padding: 1.25rem;
   background: var(--color-bg-container);

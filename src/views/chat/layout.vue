@@ -73,7 +73,7 @@ onMounted(() => {
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .chat-layout {
   max-height: var(--ant-layout-content-insert-height);
 }

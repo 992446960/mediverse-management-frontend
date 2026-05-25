@@ -25,7 +25,7 @@ defineProps<{
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .source-citation {
   font-size: 12px;
 }

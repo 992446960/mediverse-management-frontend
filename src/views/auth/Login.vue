@@ -144,7 +144,7 @@ const handleLogin = async () => {
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 /* ── Container ── */
 .login-container {
   position: relative;

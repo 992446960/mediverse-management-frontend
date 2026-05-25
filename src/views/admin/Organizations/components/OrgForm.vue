@@ -221,7 +221,7 @@ async function handleOk() {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 /* 与分身 StepInfo 表单项 label / 上传卡片一致 */
 .org-form-logo-label {
   font-size: 14px;

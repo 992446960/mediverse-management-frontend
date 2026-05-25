@@ -171,7 +171,7 @@ function applyColumns() {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .columns-editor__fixed-btn {
   min-width: 56px;
   border-radius: 0;

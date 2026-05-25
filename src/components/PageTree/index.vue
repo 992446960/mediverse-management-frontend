@@ -383,7 +383,7 @@ function onNodeClick(node: TableTreeNode, level: TableTreeClickPayload['level'])
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .page-tree-shell {
   position: relative;
   display: flex;

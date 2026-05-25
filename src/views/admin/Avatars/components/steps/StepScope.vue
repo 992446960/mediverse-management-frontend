@@ -211,7 +211,7 @@ defineExpose({
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .step-scope-label {
   display: block;
   font-size: 14px;

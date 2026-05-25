@@ -93,7 +93,7 @@ function thumbSrc(kind: string): string {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .associated-files__clip {
   font-size: 16px;
   color: var(--color-primary);

@@ -252,7 +252,7 @@ watch(
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .chat-window {
   height: 100%;
   background: var(--color-bg-container);

@@ -228,7 +228,7 @@ watch(
 )
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 /* ===== 容器：sticky 置于本层（ScrollPane 内 overflow:hidden 会阻止子级 sticky 相对视口生效） ===== */
 .tags-view-container {
   position: sticky;

@@ -59,7 +59,7 @@ function handleCopy() {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .json-content-pane__body {
   display: flex;
   flex-direction: column;

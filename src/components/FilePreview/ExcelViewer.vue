@@ -65,7 +65,7 @@ function onError(err: unknown) {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .excel-viewer :deep(.vue-office-excel) {
   min-height: 100%;
 }

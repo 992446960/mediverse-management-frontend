@@ -65,7 +65,7 @@ function onError(err: unknown) {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .pptx-viewer :deep(.vue-office-pptx) {
   min-height: 100%;
 }

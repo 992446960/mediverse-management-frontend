@@ -72,7 +72,7 @@ const copyContent = async () => {
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .markdown-body :deep(pre) {
   background-color: #f6f8fa;
   padding: 16px;

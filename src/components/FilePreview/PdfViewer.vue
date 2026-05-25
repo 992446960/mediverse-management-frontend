@@ -450,7 +450,7 @@ function rerenderLayout() {
 defineExpose({ rerenderLayout })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .pdf-viewer__scroll :deep(.vue-office-pdf) {
   height: 100%;
   min-height: 0;

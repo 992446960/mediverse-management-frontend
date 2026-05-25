@@ -40,7 +40,7 @@ const showDetails = () => {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .kb-citation-index {
   color: var(--color-primary);
   background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);

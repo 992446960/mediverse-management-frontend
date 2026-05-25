@@ -832,7 +832,7 @@ function getSourceFileMeta(file: FileSource) {
 onMounted(fetchCardTypes)
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .knowledge-recall-test {
   --knowledge-recall-top-k-color: #0ea5e9;
 }

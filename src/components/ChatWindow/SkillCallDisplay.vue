@@ -181,7 +181,7 @@ function jsonForRow(call: ToolCall): { argsLine: string; resultLine: string } {
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .skill-call-display__label {
   letter-spacing: 0.02em;
 }

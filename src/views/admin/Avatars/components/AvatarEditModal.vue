@@ -399,7 +399,7 @@ async function onSubmit() {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .edit-avatar-alert-wrap {
   margin-bottom: 1rem;
 }

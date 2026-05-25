@@ -142,7 +142,7 @@ watch(() => props.ownerId, fetchStats)
 onMounted(fetchStats)
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 @reference "../../styles/index.css";
 
 .stats-card {

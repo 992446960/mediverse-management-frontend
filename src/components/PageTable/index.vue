@@ -412,7 +412,7 @@ defineExpose({
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .page-table :deep(.ant-table-thead > tr > th) {
   font-weight: 600;
   font-size: 13px;

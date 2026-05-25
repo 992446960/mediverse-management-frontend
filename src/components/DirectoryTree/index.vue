@@ -415,7 +415,7 @@ async function handleDeleteDirectory(node: DirectoryTreeNode) {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .directory-tree-shell {
   position: relative;
   display: flex;

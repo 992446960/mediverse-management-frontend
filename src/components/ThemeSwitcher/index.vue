@@ -86,7 +86,7 @@ const toggleTheme = () => {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .theme-switcher-btn {
   display: flex;
   align-items: center;

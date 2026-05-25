@@ -167,7 +167,7 @@ watch(
 )
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .avatar-detail-loading {
   display: flex;
   min-height: min(360px, calc(100vh - 220px));

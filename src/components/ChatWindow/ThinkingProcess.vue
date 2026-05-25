@@ -177,7 +177,7 @@ const hasToolCallsBlock = computed(
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .thinking-process {
   --tp-border: var(--color-border);
   --tp-success: var(--color-success);

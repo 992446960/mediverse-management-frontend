@@ -20,7 +20,7 @@ onErrorCaptured((err: Error) => {
   <slot v-else />
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .error-boundary {
   padding: 1rem;
   text-align: center;

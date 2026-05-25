@@ -187,7 +187,7 @@ const confirmRows = computed(() => {
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .step-confirm {
   font-size: 14px;
   line-height: 1.5;

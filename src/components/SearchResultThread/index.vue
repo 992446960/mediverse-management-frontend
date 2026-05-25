@@ -304,7 +304,7 @@ watch(
 )
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .kb-user-bubble {
   background: var(--color-primary);
   color: var(--color-text-inverse);

@@ -148,7 +148,7 @@ async function handleDownload() {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .universal-file-preview {
   background-color: var(--color-bg-container);
 }

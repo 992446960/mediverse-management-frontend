@@ -86,7 +86,7 @@ function handleConfirm() {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .knowledge-card-rollback-modal__header {
   display: flex;
   align-items: center;

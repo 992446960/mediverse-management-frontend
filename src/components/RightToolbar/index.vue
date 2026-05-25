@@ -57,7 +57,7 @@ defineEmits<{
 }>()
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .right-toolbar {
   display: flex;
   align-items: center;
