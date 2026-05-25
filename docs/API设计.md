@@ -1951,7 +1951,8 @@ POST /api/v1/knowledge/{owner_type}/{owner_id}/cards
 {
 "type": "string",
 "title": "",
-"md_content": "string",必填
+"json_content": "string", // 非必填（手动创建不传）
+"md_content": "string", // 必填
 "tags": [
 "string"
 ],
@@ -1971,10 +1972,10 @@ POST /api/v1/knowledge/{owner_type}/{owner_id}/cards
 "message": "ok",
 "data": {
 "task_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-"card_id": "b07b2afe-244e-4c86-8b41-f751e4f85058",
+"card_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
 "audit_status": "pending",
 "message": "任务已提交，请通过 task_id 查询进度",
-"online_status": "creating",
+"online_status": "string",//新增知识卡online_status字段为creating表示正在创建
 "title": "string",
 "type": "string"
 }
@@ -2024,7 +2025,7 @@ PUT /api/v1/knowledge/{owner_type}/{owner_id}/cards/{id}
 "card_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
 "audit_status": "pending",
 "message": "任务已提交，请通过 task_id 查询进度",
-"online_status": "updating",
+"online_status": "string",//新增知识卡online_status字段为updating表示正在更新
 "title": "string",
 "type": "string"
 }
@@ -2929,6 +2930,8 @@ GET /api/v1/knowledge-recall/sessions/{session_id}
 "card_title": "string", // 知识卡title
 "card_type": "string", // 知识卡类型
 "card_preview_content": "string", // 知识卡预内容
+"json_content": "string",
+"md_content": "string",
 "source_files": [
 {
 "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",

@@ -31,6 +31,9 @@
 
 ## 近期同步记录
 
+- 知识卡召回测试页新增召回历史弹窗：列表对接 §4.4.1，选中记录后调用 §4.4.2 并通过统一 ViewModel 回填现有召回测试结果区；点击召回知识卡详情直接使用 `retrieved_sources[].md_content/json_content`。
+- 按飞书 Wiki「API设计」最新评论 `7643737490725161956` 仅对比 §4.4.2 召回记录详情查询，补齐 `retrieved_sources[]` 中的 `json_content` / `md_content` 返回字段。
+- 按飞书 Wiki「API设计」评论 `7642609880704240604` 同步 `docs/API设计.md`：§4.1.9 创建知识卡 Request 补 `json_content` 非必填说明，§4.1.9/§4.1.10 Response 将 `online_status` 标注为任务状态占位并注明 `creating` / `updating` 含义。
 - `DirectoryTree` 支持通过配置开启拖拽调整宽度与一键收起，文件管理页启用该能力；默认进入页面仍展示目录筛选条件，收起态保留明显的「目录」展开入口。
 - `PageTree` 支持通过配置开启拖拽调整宽度与一键收起，科室管理和用户管理页启用该能力，收起态保留明显展开入口。
 - `PageTable` 列配置弹窗改名为“列表设置”，并从单一显示勾选改为表格式配置行；每列可配置显示、列宽拖拽和固定位置，selection 列补齐“选择”名称，operation 列默认右固定。
