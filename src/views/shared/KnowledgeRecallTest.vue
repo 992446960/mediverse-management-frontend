@@ -23,6 +23,12 @@
           </div>
         </div>
         <div class="flex items-center gap-2">
+          <a-button :loading="historyLoading" @click="openHistoryModal">
+            <template #icon>
+              <HistoryOutlined />
+            </template>
+            {{ t('knowledge.recall.historyEntry') }}
+          </a-button>
           <a-button :disabled="loading || !canReset" @click="handleReset">
             <template #icon>
               <UndoOutlined />
@@ -203,10 +209,10 @@
               @keydown.enter.prevent="handleOpenSourceDetail(source)"
             >
               <div class="mb-2 flex flex-wrap items-center gap-2">
-                <a-tag color="blue">{{ formatScore(source.relevance_score) }}</a-tag>
+                <a-tag color="blue">{{ formatScore(source.score) }}</a-tag>
                 <span class="font-medium text-(--color-text-base)">{{ source.title }}</span>
-                <a-tag :color="getLocalizedCardTypeConfig(source.card_type).color">
-                  {{ getLocalizedCardTypeConfig(source.card_type).label }}
+                <a-tag :color="getLocalizedCardTypeConfig(source.cardType).color">
+                  {{ getLocalizedCardTypeConfig(source.cardType).label }}
                 </a-tag>
               </div>
               <p class="m-0 text-sm leading-6 text-(--color-text-secondary)">
@@ -217,6 +223,63 @@
         </section>
       </div>
     </div>
+
+    <a-modal
+      v-model:open="historyOpen"
+      width="min(960px, calc(100vw - 48px))"
+      centered
+      destroy-on-close
+      :title="t('knowledge.recall.historyTitle')"
+    >
+      <div class="space-y-4">
+        <div class="flex flex-wrap items-end gap-3">
+          <a-form-item class="mb-0" :label="t('knowledge.recall.cardTypeLabel')">
+            <a-select
+              v-model:value="historyFilters.card_type"
+              allow-clear
+              class="w-48"
+              :placeholder="t('knowledge.recall.allTypes')"
+              :options="historyCardTypeOptions"
+            />
+          </a-form-item>
+          <a-form-item class="mb-0" :label="t('knowledge.recall.statusLabel')">
+            <a-select
+              v-model:value="historyFilters.recall_status"
+              allow-clear
+              class="w-40"
+              :placeholder="t('common.all')"
+              :options="historyStatusOptions"
+            />
+          </a-form-item>
+          <a-button type="primary" :loading="historyLoading" @click="handleHistorySearch">
+            {{ t('common.search') }}
+          </a-button>
+        </div>
+
+        <a-table
+          row-key="id"
+          size="middle"
+          :columns="historyColumns"
+          :data-source="historyRows"
+          :loading="historyLoading || historyDetailLoading"
+          :pagination="historyPagination"
+          :scroll="{ x: 980 }"
+          @change="handleHistoryTableChange"
+        >
+          <template #bodyCell="{ column, record }">
+            <template v-if="column.key === 'action'">
+              <a-button type="link" size="small" @click="handleSelectHistory(record)">
+                {{ t('common.detail') }}
+              </a-button>
+            </template>
+          </template>
+        </a-table>
+      </div>
+
+      <template #footer>
+        <a-button @click="historyOpen = false">{{ t('common.close') }}</a-button>
+      </template>
+    </a-modal>
 
     <a-modal
       v-model:open="detailOpen"
@@ -290,6 +353,17 @@
               </div>
             </section>
 
+            <section v-if="detailJsonContent" class="knowledge-recall-detail__panel">
+              <div class="mb-3 flex items-center gap-2 text-sm font-semibold">
+                <FileTextOutlined class="text-primary" />
+                <span>{{ t('knowledge.card.jsonPane') }}</span>
+              </div>
+              <pre
+                class="max-h-48 overflow-auto rounded-md border border-(--color-border) bg-white p-3 text-xs dark:bg-slate-900"
+                >{{ detailJsonContent }}</pre
+              >
+            </section>
+
             <section class="knowledge-recall-detail__panel">
               <div class="mb-3 flex items-center gap-2 text-sm font-semibold">
                 <LinkOutlined class="text-primary" />
@@ -332,6 +406,8 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
 import { message } from 'ant-design-vue'
+import type { TablePaginationConfig } from 'ant-design-vue'
+import type { ColumnsType } from 'ant-design-vue/es/table'
 import {
   ArrowLeftOutlined,
   FilterOutlined,
@@ -340,21 +416,30 @@ import {
   FileTextOutlined,
   BarChartOutlined,
   LinkOutlined,
+  HistoryOutlined,
 } from '@ant-design/icons-vue'
 import { useI18n } from 'vue-i18n'
 import { getCardTypes } from '@/api/knowledge'
-import { recallKnowledgeCards } from '@/api/knowledgeRecall'
+import {
+  getKnowledgeRecallHistory,
+  getKnowledgeRecallSessionDetail,
+  recallKnowledgeCards,
+} from '@/api/knowledgeRecall'
 import type { CardType, CardTypeOption, FileSource } from '@/types/knowledge'
-import { getCardTypeConfig } from '@/types/knowledge'
+import { getCardTypeConfig, getCardTypeOptionLabel } from '@/types/knowledge'
 import type {
+  KnowledgeRecallHistoryParams,
   KnowledgeRecallOwnerType,
-  KnowledgeRecallResult,
-  KnowledgeRecallSource,
+  KnowledgeRecallSessionItem,
+  KnowledgeRecallViewModel,
+  KnowledgeRecallViewSource,
 } from '@/types/knowledgeRecall'
 import { renderMarkdownSafe } from '@/utils/renderMarkdownSafe'
 import { formatFileSize } from '@/utils/formatFileSize'
 import {
   ALL_RECALL_CARD_TYPES_VALUE,
+  normalizeKnowledgeRecallResult,
+  normalizeKnowledgeRecallSessionDetail,
   resolveRecallCardTypeSelection,
 } from '@/utils/knowledgeRecall'
 
@@ -376,9 +461,17 @@ const selectedCardTypes = ref<CardType[]>([])
 const cardTypes = ref<CardTypeOption[]>([])
 const cardTypesLoading = ref(false)
 const loading = ref(false)
-const result = ref<KnowledgeRecallResult | null>(null)
+const result = ref<KnowledgeRecallViewModel | null>(null)
 const detailOpen = ref(false)
-const selectedSource = ref<KnowledgeRecallSource | null>(null)
+const selectedSource = ref<KnowledgeRecallViewSource | null>(null)
+const historyOpen = ref(false)
+const historyLoading = ref(false)
+const historyDetailLoading = ref(false)
+const historyRows = ref<KnowledgeRecallSessionItem[]>([])
+const historyTotal = ref(0)
+const historyPage = ref(1)
+const historyPageSize = ref(10)
+const historyFilters = ref<KnowledgeRecallHistoryParams>({})
 
 const availableCardTypes = computed(() => cardTypes.value.map((item) => item.code))
 const normalizedTopK = computed(() => Math.min(20, Math.max(1, Number(topK.value) || 5)))
@@ -399,19 +492,20 @@ const sourceCount = computed(() => result.value?.count ?? result.value?.sources.
 const hasFinalAnswer = computed(() => (result.value?.answer ?? '').trim() !== '')
 const finalAnswerHtml = computed(() => renderMarkdownSafe(result.value?.answer))
 const detailTitle = computed(() => selectedSource.value?.title || '-')
-const detailCardId = computed(() => selectedSource.value?.id || '-')
-const detailCardType = computed(() => selectedSource.value?.card_type || 'rule')
+const detailCardId = computed(() => selectedSource.value?.cardId || '-')
+const detailCardType = computed(() => selectedSource.value?.cardType || 'rule')
 const detailUpdatedAt = computed(() => {
-  const raw = selectedSource.value?.updated_at
+  const raw = selectedSource.value?.updatedAt
   if (!raw) return '-'
   const value = dayjs(raw)
   return value.isValid() ? value.format('YYYY-MM-DD HH:mm:ss') : raw
 })
-const detailMarkdown = computed(() => selectedSource.value?.md_content ?? '')
+const detailMarkdown = computed(() => selectedSource.value?.mdContent ?? '')
+const detailJsonContent = computed(() => selectedSource.value?.jsonContent ?? '')
 const hasDetailMarkdown = computed(() => detailMarkdown.value.trim() !== '')
 const detailMarkdownHtml = computed(() => renderMarkdownSafe(detailMarkdown.value))
 const selectedRecallScore = computed(() => {
-  const raw = selectedSource.value?.recall_score ?? selectedSource.value?.relevance_score
+  const raw = selectedSource.value?.score
   return typeof raw === 'number' && Number.isFinite(raw) ? raw : 0
 })
 const selectedRecallScoreText = computed(() => selectedRecallScore.value.toFixed(2))
@@ -419,11 +513,9 @@ const selectedRecallScorePercent = computed(() => {
   const value = Math.min(1, Math.max(0, selectedRecallScore.value))
   return `${Math.round(value * 100)}%`
 })
-const detailSourceFiles = computed<FileSource[]>(() => {
-  return selectedSource.value?.source_files ?? selectedSource.value?.sources ?? []
-})
+const detailSourceFiles = computed<FileSource[]>(() => selectedSource.value?.sourceFiles ?? [])
 const queryTimeText = computed(() => {
-  const value = result.value?.query_time_ms
+  const value = result.value?.queryTimeMs
   if (typeof value !== 'number' || !Number.isFinite(value)) return ''
   return t('knowledge.recall.queryTime', { time: `${Math.round(value)}ms` })
 })
@@ -432,6 +524,55 @@ const confidenceText = computed(() => {
   if (typeof value !== 'number' || !Number.isFinite(value)) return ''
   return t('knowledge.recall.confidence', { value: `${Math.round(value * 100)}%` })
 })
+const historyPagination = computed<TablePaginationConfig>(() => ({
+  current: historyPage.value,
+  pageSize: historyPageSize.value,
+  total: historyTotal.value,
+  showSizeChanger: true,
+}))
+const historyStatusOptions = computed(() => [
+  { label: t('knowledge.recall.statusSuccess'), value: 'success' },
+  { label: t('knowledge.recall.statusFailed'), value: 'failed' },
+  { label: t('knowledge.recall.statusTimeout'), value: 'timeout' },
+  { label: t('knowledge.recall.statusError'), value: 'error' },
+])
+const historyCardTypeOptions = computed(() =>
+  cardTypes.value.map((item) => ({
+    label: getCardTypeOptionLabel(item, (key) => t(key)),
+    value: item.code,
+  }))
+)
+const historyColumns = computed<ColumnsType<KnowledgeRecallSessionItem>>(() => [
+  {
+    title: t('knowledge.recall.queryColumn'),
+    dataIndex: 'query',
+    key: 'query',
+    ellipsis: true,
+    width: 220,
+  },
+  {
+    title: t('knowledge.recall.cardTypeLabel'),
+    dataIndex: 'card_type',
+    key: 'card_type',
+    width: 140,
+  },
+  { title: 'Top-K', dataIndex: 'topk', key: 'topk', width: 90 },
+  {
+    title: t('knowledge.recall.cardCount'),
+    dataIndex: 'card_count',
+    key: 'card_count',
+    width: 110,
+  },
+  {
+    title: t('knowledge.recall.statusLabel'),
+    dataIndex: 'recall_status',
+    key: 'recall_status',
+    width: 120,
+  },
+  { title: t('knowledge.recall.latency'), dataIndex: 'latency', key: 'latency', width: 100 },
+  { title: t('common.createdAt'), dataIndex: 'created_at', key: 'created_at', width: 180 },
+  { title: t('common.actions'), key: 'action', width: 90, fixed: 'right' },
+])
 
 async function fetchCardTypes() {
   const cachedCardTypes = readCachedCardTypes()
@@ -536,11 +677,15 @@ async function handleRecall() {
   loading.value = true
   result.value = null
   try {
-    result.value = await recallKnowledgeCards(props.ownerType, props.ownerId, {
+    const data = await recallKnowledgeCards(props.ownerType, props.ownerId, {
       query: text,
       topK: normalizedTopK.value,
       cardTypes: selectedCardTypes.value,
       availableCardTypes: availableCardTypes.value,
+    })
+    result.value = normalizeKnowledgeRecallResult(data, {
+      topK: normalizedTopK.value,
+      cardTypes: selectedCardTypes.value,
     })
   } catch {
     result.value = null
@@ -549,7 +694,62 @@ async function handleRecall() {
   }
 }
 
-function handleOpenSourceDetail(source: KnowledgeRecallSource) {
+async function fetchHistory() {
+  if (!props.ownerId) return
+  historyLoading.value = true
+  try {
+    const data = await getKnowledgeRecallHistory(props.ownerType, props.ownerId, {
+      ...historyFilters.value,
+      page: historyPage.value,
+      page_size: historyPageSize.value,
+    })
+    historyRows.value = data.items
+    historyTotal.value = data.total
+  } finally {
+    historyLoading.value = false
+  }
+}
+
+function openHistoryModal() {
+  historyOpen.value = true
+  fetchHistory()
+}
+
+function handleHistorySearch() {
+  historyPage.value = 1
+  fetchHistory()
+}
+
+function handleHistoryTableChange(pager: TablePaginationConfig) {
+  historyPage.value = pager.current ?? 1
+  historyPageSize.value = pager.pageSize ?? 10
+  fetchHistory()
+}
+
+async function handleSelectHistory(row: KnowledgeRecallSessionItem) {
+  historyDetailLoading.value = true
+  try {
+    const detail = await getKnowledgeRecallSessionDetail(row.id)
+    const view = normalizeKnowledgeRecallSessionDetail(detail)
+    result.value = view
+    query.value = view.query
+    topK.value = view.topK ?? 5
+    if (view.cardType) {
+      selectedAllCardTypes.value = false
+      selectedCardTypes.value = [view.cardType]
+    } else {
+      selectedAllCardTypes.value = true
+      selectedCardTypes.value = [...availableCardTypes.value]
+    }
+    selectedSource.value = null
+    detailOpen.value = false
+    historyOpen.value = false
+  } finally {
+    historyDetailLoading.value = false
+  }
+}
+
+function handleOpenSourceDetail(source: KnowledgeRecallViewSource) {
   selectedSource.value = source
   detailOpen.value = true
 }
@@ -558,8 +758,8 @@ function handleCloseDetail() {
   detailOpen.value = false
 }
 
-function formatScore(score: number) {
-  if (!Number.isFinite(score)) return '-'
+function formatScore(score: number | null) {
+  if (typeof score !== 'number' || !Number.isFinite(score)) return '-'
   return score.toFixed(2)
 }
 
