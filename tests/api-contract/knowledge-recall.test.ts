@@ -66,6 +66,11 @@ describe('Knowledge Recall 模块', () => {
       'get_session_detail_api_v1_knowledge_recall_sessions__session_id__get',
       detail.data
     )
+    const sources = (detail.data as any).data.retrieved_sources ?? []
+    if (sources.length > 0) {
+      expect('md_content' in sources[0]).toBe(true)
+      expect('json_content' in sources[0]).toBe(true)
+    }
 
     const deleted = await authedDelete(`/knowledge-recall/sessions/${sessionId}`)
     expect(deleted.status).toBe(200)

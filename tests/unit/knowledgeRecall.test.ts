@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import {
   ALL_RECALL_CARD_TYPES_VALUE,
   buildKnowledgeRecallPayload,
+  normalizeKnowledgeRecallResult,
+  normalizeKnowledgeRecallSessionDetail,
   resolveRecallCardTypeSelection,
 } from '../../src/utils/knowledgeRecall'
 
@@ -107,5 +109,135 @@ describe('knowledge recall card type selection', () => {
       allSelected: false,
       cardTypes: allTypes,
     })
+  })
+})
+
+describe('knowledge recall view model', () => {
+  it('normalizes agentic recall result', () => {
+    const view = normalizeKnowledgeRecallResult(
+      {
+        query: '高血压如何诊断？',
+        answer: '最终答案',
+        confidence: 0.8,
+        query_time_ms: 123,
+        count: 1,
+        sources: [
+          {
+            id: 'card-1',
+            card_type: 'rule',
+            title: '诊断标准',
+            excerpt: '摘要',
+            relevance_score: 0.91,
+            md_content: '## 正文',
+            json_content: '{"a":1}',
+            sources: [],
+          },
+        ],
+      },
+      { topK: 5, cardTypes: ['rule'] }
+    )
+
+    expect(view).toMatchObject({
+      query: '高血压如何诊断？',
+      answer: '最终答案',
+      cardType: 'rule',
+      topK: 5,
+      count: 1,
+      queryTimeMs: 123,
+      confidence: 0.8,
+      sources: [
+        {
+          id: 'card-1',
+          cardId: 'card-1',
+          title: '诊断标准',
+          excerpt: '摘要',
+          score: 0.91,
+          mdContent: '## 正文',
+          jsonContent: '{"a":1}',
+        },
+      ],
+    })
+  })
+
+  it('normalizes session detail with retrieved source content', () => {
+    const view = normalizeKnowledgeRecallSessionDetail({
+      id: 'session-1',
+      owner_type: 'org',
+      owner_id: 'owner-1',
+      query: '高血压如何诊断？',
+      card_type: 'rule',
+      topk: 8,
+      final_answer: '历史答案',
+      card_count: 1,
+      latency: 456,
+      recall_status: 'success',
+      created_at: '2026-05-25T10:00:00Z',
+      updated_at: '2026-05-25T10:00:00Z',
+      retrieved_sources: [
+        {
+          card_id: 'card-1',
+          card_title: '诊断标准',
+          card_type: 'rule',
+          card_preview_content: '历史摘要',
+          recall_score: 0.88,
+          md_content: '## 历史正文',
+          json_content: '{"b":2}',
+          source_files: [],
+        },
+      ],
+      citations: [],
+      downstream: { http_status: 200, latency_ms: 456 },
+      latency_ms: 456,
+    })
+
+    expect(view).toMatchObject({
+      sessionId: 'session-1',
+      query: '高血压如何诊断？',
+      answer: '历史答案',
+      cardType: 'rule',
+      topK: 8,
+      count: 1,
+      status: 'success',
+      queryTimeMs: 456,
+      sources: [
+        {
+          id: 'card-1',
+          cardId: 'card-1',
+          title: '诊断标准',
+          excerpt: '历史摘要',
+          score: 0.88,
+          mdContent: '## 历史正文',
+          jsonContent: '{"b":2}',
+        },
+      ],
+    })
+  })
+
+  it('keeps a source displayable when card_id is null', () => {
+    const view = normalizeKnowledgeRecallSessionDetail({
+      id: 'session-1',
+      owner_type: 'org',
+      owner_id: 'owner-1',
+      query: '问题',
+      card_count: 1,
+      recall_status: 'success',
+      created_at: '2026-05-25T10:00:00Z',
+      updated_at: '2026-05-25T10:00:00Z',
+      retrieved_sources: [
+        {
+          card_id: null,
+          card_title: '无 ID 卡片',
+          card_preview_content: '摘要',
+          md_content: '正文',
+        },
+      ],
+    })
+
+    expect(view.sources[0]).toMatchObject({
+      cardId: null,
+      title: '无 ID 卡片',
+      mdContent: '正文',
+    })
+    expect(view.sources[0].id).toBe('session-1-source-0')
   })
 })
