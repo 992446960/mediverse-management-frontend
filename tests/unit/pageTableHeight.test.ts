@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { getPageTableScrollY } from '../../src/components/PageTable/height'
+import {
+  getPageTableScrollConfig,
+  getPageTableScrollY,
+} from '../../src/components/PageTable/height'
 
 describe('page table height calculation', () => {
   it('does not reserve extra bottom space by default', () => {
@@ -16,5 +19,29 @@ describe('page table height calculation', () => {
 
   it('keeps a minimum scroll height', () => {
     expect(getPageTableScrollY(80, 16)).toBe(100)
+  })
+})
+
+describe('page table scroll config', () => {
+  it('keeps horizontal scroll when vertical scroll is unnecessary', () => {
+    expect(getPageTableScrollConfig({ measuredScrollY: 360, rowCount: 1 })).toEqual({
+      x: 'max-content',
+    })
+  })
+
+  it('enables vertical scroll when row count can overflow visible body', () => {
+    expect(getPageTableScrollConfig({ measuredScrollY: 360, rowCount: 8 })).toEqual({
+      x: 'max-content',
+      y: 360,
+    })
+  })
+
+  it('keeps explicit table height authoritative', () => {
+    expect(
+      getPageTableScrollConfig({ tableHeight: 240, measuredScrollY: 360, rowCount: 1 })
+    ).toEqual({
+      x: 'max-content',
+      y: 240,
+    })
   })
 })

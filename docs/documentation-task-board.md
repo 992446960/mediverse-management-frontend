@@ -31,6 +31,7 @@
 
 ## 近期同步记录
 
+- `PageTable` 滚动配置改为始终保留横向 `scroll.x`，仅在数据行数可能溢出时启用纵向 `scroll.y`，避免空数据/少数据时出现右侧滚动条占位线。
 - 分身详情弹窗和知识卡版本对比加载态改为保留弹窗正文高度并居中展示，补充静态单测覆盖 modal loading 布局契约。
 - `tsconfig.app.json` 的 `ignoreDeprecations` 调整为当前 TypeScript 5.9 可接受的 `"5.0"`，避免 `vue-tsc -b` 因 TS5103 中断。
 - `PageTable` 自适应滚动高度改为扣除 Ant Design 表头实际高度，保留取消默认 100px 底部预留的行为，同时避免表格内容滚动区压到分页器。
