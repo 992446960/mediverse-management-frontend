@@ -1,17 +1,62 @@
 <template>
   <div class="knowledge-files-shared flex flex-1 overflow-hidden">
-    <aside class="w-80 pr-4 flex flex-col shrink-0">
-      <DirectoryTree
-        :title="t('knowledge.directory')"
-        :tree-data="treeData"
-        :selected-key="selectedDirId"
-        :loading="treeLoading"
-        :fetch-data="loadTree"
-        @node-click="onTreeSelect"
-        @create-dir="handleCreateDir"
-        @rename-dir="handleRenameDir"
-        @delete-dir="handleDeleteDir"
-      />
+    <aside
+      class="knowledge-files__directory-shell"
+      :class="{
+        'is-collapsed': directoryCollapsed,
+        'is-resizing': isDirectoryResizing,
+      }"
+      :style="directoryPanelStyle"
+    >
+      <div v-if="!directoryCollapsed" class="knowledge-files__directory-expanded">
+        <DirectoryTree
+          :title="t('knowledge.directory')"
+          :tree-data="treeData"
+          :selected-key="selectedDirId"
+          :loading="treeLoading"
+          :fetch-data="loadTree"
+          @node-click="onTreeSelect"
+          @create-dir="handleCreateDir"
+          @rename-dir="handleRenameDir"
+          @delete-dir="handleDeleteDir"
+        />
+        <button
+          type="button"
+          class="knowledge-files__directory-resize-handle"
+          title="可拖拽调整宽度，双击恢复默认宽度"
+          aria-label="拖拽调整目录宽度"
+          @pointerdown="startDirectoryResize"
+          @dblclick="resetDirectoryPanelWidth"
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+        <a-tooltip title="收起目录">
+          <button
+            type="button"
+            class="knowledge-files__directory-collapse-btn"
+            aria-label="收起目录"
+            @click="collapseDirectoryPanel"
+          >
+            <CaretLeftOutlined />
+          </button>
+        </a-tooltip>
+      </div>
+      <a-tooltip v-else title="点击展开目录" placement="right">
+        <button
+          type="button"
+          class="knowledge-files__directory-collapsed"
+          aria-label="展开目录"
+          @click="expandDirectoryPanel"
+        >
+          <FolderOpenOutlined class="knowledge-files__directory-collapsed-icon" />
+          <span class="knowledge-files__directory-collapsed-text">目录</span>
+          <span class="knowledge-files__directory-collapsed-action">
+            <RightOutlined />
+          </span>
+        </button>
+      </a-tooltip>
     </aside>
 
     <section class="flex-1 flex flex-col min-h-0 min-w-0 pl-0">
@@ -115,6 +160,9 @@ import {
   DownloadOutlined,
   UploadOutlined,
   SwapOutlined,
+  CaretLeftOutlined,
+  FolderOpenOutlined,
+  RightOutlined,
 } from '@ant-design/icons-vue'
 import { DirectoryTree } from '@/components/DirectoryTree'
 import FileUploader from '@/components/FileUploader/index.vue'
@@ -165,10 +213,69 @@ const tableData = ref<FileListItem[]>([])
 const loading = ref(false)
 const total = ref(0)
 
-// ----- 左侧目录树（保持不变） -----
+// ----- 左侧目录树 -----
+const DIRECTORY_PANEL_DEFAULT_WIDTH = 280
+const DIRECTORY_PANEL_MIN_WIDTH = 220
+const DIRECTORY_PANEL_MAX_WIDTH = 420
+const DIRECTORY_PANEL_COLLAPSED_WIDTH = 48
+
 const treeLoading = ref(false)
 const treeData = ref<DirectoryNode[]>([])
 const selectedDirId = ref('__all__')
+const directoryCollapsed = ref(false)
+const directoryPanelWidth = ref(DIRECTORY_PANEL_DEFAULT_WIDTH)
+const isDirectoryResizing = ref(false)
+let directoryResizeStartX = 0
+let directoryResizeStartWidth = DIRECTORY_PANEL_DEFAULT_WIDTH
+
+const directoryPanelStyle = computed(() => ({
+  width: `${
+    directoryCollapsed.value ? DIRECTORY_PANEL_COLLAPSED_WIDTH : directoryPanelWidth.value
+  }px`,
+}))
+
+function clampDirectoryPanelWidth(width: number): number {
+  return Math.min(DIRECTORY_PANEL_MAX_WIDTH, Math.max(DIRECTORY_PANEL_MIN_WIDTH, width))
+}
+
+function onDirectoryResizeMove(event: PointerEvent) {
+  if (!isDirectoryResizing.value) return
+  const deltaX = event.clientX - directoryResizeStartX
+  directoryPanelWidth.value = clampDirectoryPanelWidth(directoryResizeStartWidth + deltaX)
+}
+
+function stopDirectoryResize() {
+  window.removeEventListener('pointermove', onDirectoryResizeMove)
+  window.removeEventListener('pointerup', stopDirectoryResize)
+  isDirectoryResizing.value = false
+  document.body.style.cursor = ''
+  document.body.style.userSelect = ''
+}
+
+function startDirectoryResize(event: PointerEvent) {
+  if (directoryCollapsed.value) return
+  event.preventDefault()
+  directoryResizeStartX = event.clientX
+  directoryResizeStartWidth = directoryPanelWidth.value
+  isDirectoryResizing.value = true
+  document.body.style.cursor = 'col-resize'
+  document.body.style.userSelect = 'none'
+  window.addEventListener('pointermove', onDirectoryResizeMove)
+  window.addEventListener('pointerup', stopDirectoryResize)
+}
+
+function resetDirectoryPanelWidth() {
+  directoryPanelWidth.value = DIRECTORY_PANEL_DEFAULT_WIDTH
+}
+
+function collapseDirectoryPanel() {
+  stopDirectoryResize()
+  directoryCollapsed.value = true
+}
+
+function expandDirectoryPanel() {
+  directoryCollapsed.value = false
+}
 
 async function loadTree() {
   treeLoading.value = true
@@ -322,6 +429,7 @@ function handleBeforeUnload(e: BeforeUnloadEvent) {
 
 onBeforeUnmount(() => {
   window.removeEventListener('beforeunload', handleBeforeUnload)
+  stopDirectoryResize()
 })
 
 watch(
@@ -704,6 +812,147 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.knowledge-files__directory-shell {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+  min-width: 0;
+  padding-right: 16px;
+  transition: width 0.18s ease;
+}
+
+.knowledge-files__directory-shell.is-resizing {
+  transition: none;
+}
+
+.knowledge-files__directory-expanded {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-width: 0;
+}
+
+.knowledge-files__directory-expanded :deep(.directory-tree) {
+  width: 100%;
+}
+
+.knowledge-files__directory-resize-handle {
+  position: absolute;
+  top: 0;
+  right: -2px;
+  z-index: 3;
+  display: flex;
+  width: 16px;
+  height: 100%;
+  cursor: col-resize;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border: 0;
+  background: transparent;
+  color: #94a3b8;
+  transition:
+    color 0.16s ease,
+    background-color 0.16s ease;
+}
+
+.knowledge-files__directory-resize-handle:hover,
+.knowledge-files__directory-shell.is-resizing .knowledge-files__directory-resize-handle {
+  background: linear-gradient(90deg, transparent, rgb(14 165 233 / 0.08), transparent);
+  color: var(--color-primary);
+}
+
+.knowledge-files__directory-resize-handle span {
+  width: 3px;
+  height: 3px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.knowledge-files__directory-collapse-btn {
+  position: absolute;
+  top: 50%;
+  right: -12px;
+  z-index: 4;
+  display: flex;
+  width: 24px;
+  height: 44px;
+  transform: translateY(-50%);
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(14 165 233 / 0.28);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--color-primary);
+  box-shadow: 0 8px 20px rgb(15 23 42 / 0.08);
+  transition:
+    border-color 0.16s ease,
+    background-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.knowledge-files__directory-collapse-btn:hover {
+  border-color: rgb(14 165 233 / 0.55);
+  background: #f0f9ff;
+  box-shadow: 0 10px 24px rgb(14 165 233 / 0.16);
+}
+
+.knowledge-files__directory-collapsed {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 220px;
+  cursor: pointer;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  border: 1px solid rgb(14 165 233 / 0.35);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgb(240 249 255 / 0.96), #fff 38%), #fff;
+  color: var(--color-primary);
+  box-shadow: 0 8px 24px rgb(15 23 42 / 0.06);
+  padding: 18px 0;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
+}
+
+.knowledge-files__directory-collapsed:hover {
+  border-color: rgb(14 165 233 / 0.7);
+  box-shadow: 0 12px 28px rgb(14 165 233 / 0.14);
+}
+
+.knowledge-files__directory-collapsed-icon {
+  font-size: 19px;
+}
+
+.knowledge-files__directory-collapsed-text {
+  writing-mode: vertical-rl;
+  letter-spacing: 0;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.knowledge-files__directory-collapsed-action {
+  position: absolute;
+  top: 50%;
+  right: -13px;
+  display: flex;
+  width: 26px;
+  height: 42px;
+  transform: translateY(-50%);
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(14 165 233 / 0.35);
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 8px 20px rgb(15 23 42 / 0.1);
+}
+
 :deep(.text-primary),
 :deep(.ant-menu-item .text-primary),
 :deep(.ant-menu-item .anticon.text-primary) {
