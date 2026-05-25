@@ -6,6 +6,7 @@ import type {
   KnowledgeRecallViewModel,
 } from '@/types/knowledgeRecall'
 import type { CardType } from '@/types/knowledge'
+import dayjs from 'dayjs'
 
 export const ALL_RECALL_CARD_TYPES_VALUE = '__all__'
 
@@ -104,6 +105,42 @@ function resolveSingleCardType(types: CardType[]): CardType | '' {
   return types.length === 1 ? (types[0] ?? '') : ''
 }
 
+function isJsonObjectText(value: string) {
+  const text = value.trim()
+  if (!text || (!text.startsWith('{') && !text.startsWith('['))) return false
+
+  try {
+    JSON.parse(text)
+    return true
+  } catch {
+    return false
+  }
+}
+
+function normalizeDisplayMarkdown(
+  markdown: string | null | undefined,
+  fallback: string | null | undefined
+) {
+  const value = markdown?.trim() ?? ''
+  if (value && !isJsonObjectText(value)) return value
+  return fallback?.trim() ?? ''
+}
+
+export function formatRecallHistoryLatency(value: number | null | undefined) {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return '-'
+
+  const milliseconds = value * 1000
+  if (milliseconds < 1000) return `${Math.round(milliseconds)} ms`
+  return `${value.toFixed(2)} s`
+}
+
+export function formatRecallHistoryCreatedAt(value: string | null | undefined) {
+  if (!value) return '-'
+
+  const parsed = dayjs(value)
+  return parsed.isValid() ? parsed.format('YYYY-MM-DD HH:mm') : '-'
+}
+
 export function normalizeKnowledgeRecallResult(
   result: KnowledgeRecallResult,
   context: NormalizeRecallResultContext
@@ -123,7 +160,7 @@ export function normalizeKnowledgeRecallResult(
       cardType: source.card_type || '',
       excerpt: source.excerpt || '',
       score: source.recall_score ?? source.relevance_score ?? null,
-      mdContent: source.md_content ?? '',
+      mdContent: normalizeDisplayMarkdown(source.md_content, source.excerpt),
       jsonContent: source.json_content ?? '',
       sourceFiles: source.source_files ?? source.sources ?? [],
       tags: [],
@@ -166,7 +203,7 @@ export function normalizeKnowledgeRecallSessionDetail(
         cardType: source.card_type || '',
         excerpt: source.card_preview_content || '',
         score: source.recall_score ?? null,
-        mdContent: source.md_content ?? '',
+        mdContent: normalizeDisplayMarkdown(source.md_content, source.card_preview_content),
         jsonContent: source.json_content ?? '',
         sourceFiles: source.source_files ?? [],
         tags: source.tags ?? [],

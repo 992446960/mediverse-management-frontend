@@ -75,7 +75,7 @@ const recallHistorySessions = [
     topk: 5,
     final_answer: '历史记录显示，本次召回命中了高血压诊断标准等知识卡。',
     card_count: 2,
-    latency: 420,
+    latency: 0.42,
     token: 1024,
     error: null,
     recall_status: 'success',

@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import {
   ALL_RECALL_CARD_TYPES_VALUE,
   buildKnowledgeRecallPayload,
+  formatRecallHistoryCreatedAt,
+  formatRecallHistoryLatency,
   normalizeKnowledgeRecallResult,
   normalizeKnowledgeRecallSessionDetail,
   resolveRecallCardTypeSelection,
@@ -239,5 +241,69 @@ describe('knowledge recall view model', () => {
       mdContent: '正文',
     })
     expect(view.sources[0].id).toBe('session-1-source-0')
+  })
+
+  it('falls back to preview content when session source markdown is empty', () => {
+    const view = normalizeKnowledgeRecallSessionDetail({
+      id: 'session-1',
+      owner_type: 'org',
+      owner_id: 'owner-1',
+      query: '问题',
+      card_count: 1,
+      recall_status: 'success',
+      created_at: '2026-05-25T10:00:00Z',
+      updated_at: '2026-05-25T10:00:00Z',
+      retrieved_sources: [
+        {
+          card_id: 'card-1',
+          card_title: '无 Markdown 卡片',
+          card_preview_content: '预览正文',
+          md_content: null,
+          json_content: '{"title":"不展示为正文"}',
+        },
+      ],
+    })
+
+    expect(view.sources[0].mdContent).toBe('预览正文')
+  })
+
+  it('does not use json-like markdown as session source display content', () => {
+    const view = normalizeKnowledgeRecallSessionDetail({
+      id: 'session-1',
+      owner_type: 'org',
+      owner_id: 'owner-1',
+      query: '问题',
+      card_count: 1,
+      recall_status: 'success',
+      created_at: '2026-05-25T10:00:00Z',
+      updated_at: '2026-05-25T10:00:00Z',
+      retrieved_sources: [
+        {
+          card_id: 'card-1',
+          card_title: '异常 Markdown 卡片',
+          card_preview_content: '预览正文',
+          md_content: '{"title":"这是 JSON"}',
+        },
+      ],
+    })
+
+    expect(view.sources[0].mdContent).toBe('预览正文')
+  })
+})
+
+describe('knowledge recall history formatters', () => {
+  it('formats history latency with safe units', () => {
+    expect(formatRecallHistoryLatency(14.481)).toBe('14.48 s')
+    expect(formatRecallHistoryLatency(0.006)).toBe('6 ms')
+    expect(formatRecallHistoryLatency(0)).toBe('0 ms')
+    expect(formatRecallHistoryLatency(null)).toBe('-')
+    expect(formatRecallHistoryLatency(Number.NaN)).toBe('-')
+    expect(formatRecallHistoryLatency(-1)).toBe('-')
+  })
+
+  it('formats history created time and handles invalid values', () => {
+    expect(formatRecallHistoryCreatedAt('2026-05-25T08:47:41')).toBe('2026-05-25 08:47')
+    expect(formatRecallHistoryCreatedAt(null)).toBe('-')
+    expect(formatRecallHistoryCreatedAt('invalid')).toBe('-')
   })
 })

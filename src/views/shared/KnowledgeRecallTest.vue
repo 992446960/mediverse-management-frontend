@@ -226,54 +226,28 @@
 
     <a-modal
       v-model:open="historyOpen"
-      width="min(960px, calc(100vw - 48px))"
+      width="min(1080px, calc(100vw - 48px))"
       centered
       destroy-on-close
       :title="t('knowledge.recall.historyTitle')"
     >
       <div class="space-y-4">
-        <div class="flex flex-wrap items-end gap-3">
-          <a-form-item class="mb-0" :label="t('knowledge.recall.cardTypeLabel')">
-            <a-select
-              v-model:value="historyFilters.card_type"
-              allow-clear
-              class="w-48"
-              :placeholder="t('knowledge.recall.allTypes')"
-              :options="historyCardTypeOptions"
-            />
-          </a-form-item>
-          <a-form-item class="mb-0" :label="t('knowledge.recall.statusLabel')">
-            <a-select
-              v-model:value="historyFilters.recall_status"
-              allow-clear
-              class="w-40"
-              :placeholder="t('common.all')"
-              :options="historyStatusOptions"
-            />
-          </a-form-item>
-          <a-button type="primary" :loading="historyLoading" @click="handleHistorySearch">
-            {{ t('common.search') }}
-          </a-button>
-        </div>
+        <PageFilter
+          ref="historyFilterRef"
+          class="knowledge-recall-history__filter"
+          :filter-conf="historyFilterConf"
+          :enable-layout-row-collapse="false"
+          @fetch-table-data="handleHistorySearch"
+        />
 
-        <a-table
-          row-key="id"
-          size="middle"
-          :columns="historyColumns"
-          :data-source="historyRows"
-          :loading="historyLoading || historyDetailLoading"
-          :pagination="historyPagination"
-          :scroll="{ x: 980 }"
-          @change="handleHistoryTableChange"
-        >
-          <template #bodyCell="{ column, record }">
-            <template v-if="column.key === 'action'">
-              <a-button type="link" size="small" @click="handleSelectHistory(record)">
-                {{ t('common.detail') }}
-              </a-button>
-            </template>
-          </template>
-        </a-table>
+        <PageTable
+          ref="historyTableRef"
+          class="knowledge-recall-history__table"
+          :table-conf="historyTableConf"
+          :table-columns="historyTableColumns"
+          :table-data="historyRows"
+          @fetch-table-data="fetchHistory"
+        />
       </div>
 
       <template #footer>
@@ -353,17 +327,6 @@
               </div>
             </section>
 
-            <section v-if="detailJsonContent" class="knowledge-recall-detail__panel">
-              <div class="mb-3 flex items-center gap-2 text-sm font-semibold">
-                <FileTextOutlined class="text-primary" />
-                <span>{{ t('knowledge.card.jsonPane') }}</span>
-              </div>
-              <pre
-                class="max-h-48 overflow-auto rounded-md border border-(--color-border) bg-white p-3 text-xs dark:bg-slate-900"
-                >{{ detailJsonContent }}</pre
-              >
-            </section>
-
             <section class="knowledge-recall-detail__panel">
               <div class="mb-3 flex items-center gap-2 text-sm font-semibold">
                 <LinkOutlined class="text-primary" />
@@ -406,8 +369,6 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
 import { message } from 'ant-design-vue'
-import type { TablePaginationConfig } from 'ant-design-vue'
-import type { ColumnsType } from 'ant-design-vue/es/table'
 import {
   ArrowLeftOutlined,
   FilterOutlined,
@@ -417,8 +378,13 @@ import {
   BarChartOutlined,
   LinkOutlined,
   HistoryOutlined,
+  SearchOutlined,
 } from '@ant-design/icons-vue'
 import { useI18n } from 'vue-i18n'
+import PageFilter from '@/components/PageFilter/index.vue'
+import type { PageFilterConfig } from '@/components/PageFilter/types'
+import PageTable from '@/components/PageTable/index.vue'
+import type { PageTableColumnConfig, PageTableConfig } from '@/components/PageTable/types'
 import { getCardTypes } from '@/api/knowledge'
 import {
   getKnowledgeRecallHistory,
@@ -428,7 +394,6 @@ import {
 import type { CardType, CardTypeOption, FileSource } from '@/types/knowledge'
 import { getCardTypeConfig, getCardTypeOptionLabel } from '@/types/knowledge'
 import type {
-  KnowledgeRecallHistoryParams,
   KnowledgeRecallOwnerType,
   KnowledgeRecallSessionItem,
   KnowledgeRecallViewModel,
@@ -438,10 +403,13 @@ import { renderMarkdownSafe } from '@/utils/renderMarkdownSafe'
 import { formatFileSize } from '@/utils/formatFileSize'
 import {
   ALL_RECALL_CARD_TYPES_VALUE,
+  formatRecallHistoryCreatedAt,
+  formatRecallHistoryLatency,
   normalizeKnowledgeRecallResult,
   normalizeKnowledgeRecallSessionDetail,
   resolveRecallCardTypeSelection,
 } from '@/utils/knowledgeRecall'
+import 'github-markdown-css/github-markdown-light.css'
 
 const CARD_TYPES_CACHE_KEY = 'knowledge-recall-card-types'
 
@@ -469,9 +437,8 @@ const historyLoading = ref(false)
 const historyDetailLoading = ref(false)
 const historyRows = ref<KnowledgeRecallSessionItem[]>([])
 const historyTotal = ref(0)
-const historyPage = ref(1)
-const historyPageSize = ref(10)
-const historyFilters = ref<KnowledgeRecallHistoryParams>({})
+const historyFilterRef = ref<InstanceType<typeof PageFilter> | null>(null)
+const historyTableRef = ref<InstanceType<typeof PageTable> | null>(null)
 
 const availableCardTypes = computed(() => cardTypes.value.map((item) => item.code))
 const normalizedTopK = computed(() => Math.min(20, Math.max(1, Number(topK.value) || 5)))
@@ -501,7 +468,6 @@ const detailUpdatedAt = computed(() => {
   return value.isValid() ? value.format('YYYY-MM-DD HH:mm:ss') : raw
 })
 const detailMarkdown = computed(() => selectedSource.value?.mdContent ?? '')
-const detailJsonContent = computed(() => selectedSource.value?.jsonContent ?? '')
 const hasDetailMarkdown = computed(() => detailMarkdown.value.trim() !== '')
 const detailMarkdownHtml = computed(() => renderMarkdownSafe(detailMarkdown.value))
 const selectedRecallScore = computed(() => {
@@ -524,12 +490,6 @@ const confidenceText = computed(() => {
   if (typeof value !== 'number' || !Number.isFinite(value)) return ''
   return t('knowledge.recall.confidence', { value: `${Math.round(value * 100)}%` })
 })
-const historyPagination = computed<TablePaginationConfig>(() => ({
-  current: historyPage.value,
-  pageSize: historyPageSize.value,
-  total: historyTotal.value,
-  showSizeChanger: true,
-}))
 const historyStatusOptions = computed(() => [
   { label: t('knowledge.recall.statusSuccess'), value: 'success' },
   { label: t('knowledge.recall.statusFailed'), value: 'failed' },
@@ -542,36 +502,102 @@ const historyCardTypeOptions = computed(() =>
     value: item.code,
   }))
 )
-const historyColumns = computed<ColumnsType<KnowledgeRecallSessionItem>>(() => [
+const historyFilterConf = computed<PageFilterConfig>(() => ({
+  filterForm: [
+    {
+      key: 'card_type',
+      label: t('knowledge.recall.cardTypeLabel'),
+      type: 'select',
+      ph: t('knowledge.recall.allTypes'),
+      col: 7,
+      options: historyCardTypeOptions.value,
+      clearable: true,
+    },
+    {
+      key: 'recall_status',
+      label: t('knowledge.recall.statusLabel'),
+      type: 'select',
+      ph: t('common.all'),
+      col: 5,
+      options: historyStatusOptions.value,
+      clearable: true,
+    },
+  ],
+  btns: [
+    {
+      text: t('common.search'),
+      type: 'primary',
+      icon: SearchOutlined,
+      handle: handleHistorySearch,
+    },
+  ],
+  btnsCol: 4,
+}))
+const historyTableConf = computed<PageTableConfig>(() => ({
+  isLoading: historyLoading.value || historyDetailLoading.value,
+  total: historyTotal.value,
+  rowKey: 'id',
+  hideTableBar: true,
+  paginationSizes: [10, 20, 50],
+  tableHeight: 560,
+  tableMinHeight: '360px',
+}))
+const historyTableColumns = computed<PageTableColumnConfig[]>(() => [
   {
-    title: t('knowledge.recall.queryColumn'),
-    dataIndex: 'query',
-    key: 'query',
-    ellipsis: true,
-    width: 220,
+    label: t('knowledge.recall.queryColumn'),
+    prop: 'query',
+    showOverflowTooltip: true,
+    resizable: true,
+    width: 260,
   },
   {
-    title: t('knowledge.recall.cardTypeLabel'),
-    dataIndex: 'card_type',
-    key: 'card_type',
-    width: 140,
+    label: t('knowledge.recall.cardTypeLabel'),
+    prop: 'card_type',
+    formatter: (row) => formatHistoryCardType(row.card_type as CardType | null | undefined),
+    resizable: true,
+    width: 150,
   },
-  { title: 'Top-K', dataIndex: 'topk', key: 'topk', width: 90 },
+  { label: 'Top-K', prop: 'topk', width: 90, align: 'center' },
   {
-    title: t('knowledge.recall.cardCount'),
-    dataIndex: 'card_count',
-    key: 'card_count',
+    label: t('knowledge.recall.cardCount'),
+    prop: 'card_count',
+    align: 'center',
+    width: 100,
+  },
+  {
+    label: t('knowledge.recall.statusLabel'),
+    prop: 'recall_status',
+    type: 'scope',
+    scopeType: '_tag',
+    tagType: (row) => getHistoryStatusColor(row.recall_status as string | null | undefined),
+    tagText: (row) => formatHistoryStatus(row.recall_status as string | null | undefined),
     width: 110,
   },
   {
-    title: t('knowledge.recall.statusLabel'),
-    dataIndex: 'recall_status',
-    key: 'recall_status',
-    width: 120,
+    label: t('knowledge.recall.latency'),
+    prop: 'latency',
+    formatter: (row) => formatRecallHistoryLatency(row.latency as number | null | undefined),
+    width: 110,
   },
-  { title: t('knowledge.recall.latency'), dataIndex: 'latency', key: 'latency', width: 100 },
-  { title: t('common.createdAt'), dataIndex: 'created_at', key: 'created_at', width: 180 },
-  { title: t('common.actions'), key: 'action', width: 90, fixed: 'right' },
+  {
+    label: t('common.createdAt'),
+    prop: 'created_at',
+    formatter: (row) => formatRecallHistoryCreatedAt(row.created_at as string | null | undefined),
+    width: 150,
+  },
+  {
+    label: t('common.actions'),
+    type: 'operation',
+    width: 90,
+    fixed: false,
+    btns: [
+      {
+        text: t('common.detail'),
+        btnDisabled: (row) => !canViewHistoryDetail(row),
+        handle: (row) => handleSelectHistory(row as unknown as KnowledgeRecallSessionItem),
+      },
+    ],
+  },
 ])
 
 async function fetchCardTypes() {
@@ -698,10 +724,14 @@ async function fetchHistory() {
   if (!props.ownerId) return
   historyLoading.value = true
   try {
+    const filterParams = historyFilterRef.value?.filteParams ?? {}
+    const page = Number(historyTableRef.value?.currentPage ?? 1)
+    const pageSize = Number(historyTableRef.value?.pageSize ?? 10)
     const data = await getKnowledgeRecallHistory(props.ownerType, props.ownerId, {
-      ...historyFilters.value,
-      page: historyPage.value,
-      page_size: historyPageSize.value,
+      card_type: filterParams.card_type as CardType | undefined,
+      recall_status: filterParams.recall_status as string | undefined,
+      page,
+      page_size: pageSize,
     })
     historyRows.value = data.items
     historyTotal.value = data.total
@@ -716,13 +746,7 @@ function openHistoryModal() {
 }
 
 function handleHistorySearch() {
-  historyPage.value = 1
-  fetchHistory()
-}
-
-function handleHistoryTableChange(pager: TablePaginationConfig) {
-  historyPage.value = pager.current ?? 1
-  historyPageSize.value = pager.pageSize ?? 10
+  historyTableRef.value?.resetCurPage()
   fetchHistory()
 }
 
@@ -756,6 +780,35 @@ function handleOpenSourceDetail(source: KnowledgeRecallViewSource) {
 
 function handleCloseDetail() {
   detailOpen.value = false
+}
+
+function formatHistoryCardType(type: CardType | null | undefined) {
+  if (!type) return '-'
+  return getLocalizedCardTypeConfig(type).label
+}
+
+function formatHistoryStatus(status: string | null | undefined) {
+  const labels: Record<string, string> = {
+    success: t('knowledge.recall.statusSuccess'),
+    failed: t('knowledge.recall.statusFailed'),
+    timeout: t('knowledge.recall.statusTimeout'),
+    error: t('knowledge.recall.statusError'),
+  }
+  return status ? (labels[status] ?? status) : '-'
+}
+
+function getHistoryStatusColor(status: string | null | undefined) {
+  const colors: Record<string, string> = {
+    success: 'success',
+    failed: 'error',
+    timeout: 'warning',
+    error: 'error',
+  }
+  return status ? (colors[status] ?? 'default') : 'default'
+}
+
+function canViewHistoryDetail(row: Record<string, unknown>) {
+  return row.recall_status === 'success'
 }
 
 function formatScore(score: number | null) {
@@ -843,6 +896,14 @@ onMounted(fetchCardTypes)
   scrollbar-gutter: stable;
 }
 
+.knowledge-recall-history__filter {
+  margin-top: 0;
+}
+
+.knowledge-recall-history__table {
+  padding: 0;
+}
+
 .knowledge-recall-detail {
   background: var(--color-bg-container);
 }
@@ -864,7 +925,20 @@ onMounted(fetchCardTypes)
   max-height: min(620px, calc(100vh - 280px));
   overflow-y: auto;
   overflow-wrap: break-word;
+  background: transparent;
   color: var(--color-text-base);
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.knowledge-recall-detail__markdown :deep(h1),
+.knowledge-recall-detail__markdown :deep(h2),
+.knowledge-recall-detail__markdown :deep(h3) {
+  color: var(--color-text-base);
+}
+
+.knowledge-recall-detail__markdown :deep(h1:first-child) {
+  margin-top: 0;
 }
 
 .knowledge-recall-detail__markdown :deep(p:last-child),
