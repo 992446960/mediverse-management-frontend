@@ -19,8 +19,16 @@ describe('knowledge files table columns', () => {
   it('keeps file name column resizable without left fixing', () => {
     const column = getFileNameColumnSource()
 
-    expect(column).toContain('width: 80')
+    expect(column).toContain('width: 200')
     expect(column).toContain('resizable: true')
     expect(column).not.toContain("fixed: 'left'")
+  })
+
+  it('names selection column and fixes operation column by default', () => {
+    expect(source).toContain("label: t('common.selectionColumn')")
+    expect(source).toContain("type: 'selection'")
+    expect(source).toContain('configurable: { resizable: false }')
+    expect(source).toContain("label: t('common.actions')")
+    expect(source).toContain("fixed: 'right'")
   })
 })

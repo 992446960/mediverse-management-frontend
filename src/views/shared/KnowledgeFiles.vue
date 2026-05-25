@@ -442,9 +442,11 @@ function formatFileSize(bytes: number): string {
 
 const tableColumns = computed<PageTableColumnConfig[]>(() => [
   {
+    label: t('common.selectionColumn'),
     type: 'selection',
     width: 60,
     fixed: 'left',
+    configurable: { resizable: false },
   },
   {
     label: t('knowledge.fileName'),
@@ -489,6 +491,7 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
     label: t('common.actions'),
     type: 'operation',
     width: 300,
+    fixed: 'right',
     btns: [
       {
         text: t('knowledge.preview'),
