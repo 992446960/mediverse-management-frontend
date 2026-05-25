@@ -443,13 +443,13 @@ function formatFileSize(bytes: number): string {
 const tableColumns = computed<PageTableColumnConfig[]>(() => [
   {
     type: 'selection',
-    width: 40,
+    width: 60,
     fixed: 'left',
   },
   {
     label: t('knowledge.fileName'),
     prop: 'file_name',
-    width: 80,
+    width: 200,
     resizable: true,
     showOverflowTooltip: true,
   },
