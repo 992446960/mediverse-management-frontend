@@ -10,6 +10,10 @@ describe('page table height calculation', () => {
     expect(getPageTableScrollY(420, 16)).toBe(404)
   })
 
+  it('reserves table header height for antd scroll body', () => {
+    expect(getPageTableScrollY(420, 0, 52)).toBe(368)
+  })
+
   it('keeps a minimum scroll height', () => {
     expect(getPageTableScrollY(80, 16)).toBe(100)
   })
