@@ -1,7 +1,7 @@
 <template>
   <div
-    ref="rootRef"
     class="excel-viewer flex h-full min-h-0 flex-col overflow-hidden bg-white dark:bg-slate-900"
+    :style="excelViewerStyle"
   >
     <template v-if="fileUrl">
       <div
@@ -9,7 +9,7 @@
       >
         <a-segmented v-model:value="excelScale" :options="excelScaleOptions" size="small" />
       </div>
-      <div class="min-h-0 flex-1 overflow-hidden">
+      <div ref="excelHostRef" class="min-h-0 flex-1 overflow-hidden">
         <vue-office-excel
           :key="excelRenderKey"
           :src="fileUrl"
@@ -47,7 +47,7 @@ const emit = defineEmits<{
   error: [err: unknown]
 }>()
 
-const rootRef = ref<HTMLElement | null>(null)
+const excelHostRef = ref<HTMLElement | null>(null)
 const containerWidth = ref(0)
 const containerHeight = ref(0)
 const excelRenderVersion = ref(0)
@@ -61,8 +61,13 @@ const excelScaleOptions = [
   { label: '150%', value: 1.5 },
 ]
 
-const measuredWidth = computed(() => props.viewportSize?.width || containerWidth.value)
-const measuredHeight = computed(() => props.viewportSize?.height || containerHeight.value)
+const measuredWidth = computed(() => containerWidth.value || props.viewportSize?.width || 0)
+const measuredHeight = computed(() => containerHeight.value || props.viewportSize?.height || 0)
+
+const excelViewerStyle = computed(() => ({
+  width: props.viewportSize?.width ? `${props.viewportSize.width}px` : '100%',
+  height: props.viewportSize?.height ? `${props.viewportSize.height}px` : '100%',
+}))
 
 const excelSizeStyle = computed(() => ({
   width: measuredWidth.value ? `${measuredWidth.value}px` : '100%',
@@ -118,15 +123,15 @@ watch(
 )
 
 onMounted(() => {
-  const root = rootRef.value
-  if (!root || typeof ResizeObserver === 'undefined') return
+  const host = excelHostRef.value
+  if (!host || typeof ResizeObserver === 'undefined') return
 
   resizeObserver = new ResizeObserver((entries) => {
     const entry = entries[0]
     if (!entry) return
     handleResize(entry.contentRect)
   })
-  resizeObserver.observe(root)
+  resizeObserver.observe(host)
 })
 
 onBeforeUnmount(() => {

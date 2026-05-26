@@ -14,7 +14,7 @@ const universalFilePreviewSource = readFileSync(
 
 describe('ExcelViewer resize recovery', () => {
   it('remounts the vue-office excel renderer after container resize', () => {
-    expect(excelViewerSource).toContain('ref="rootRef"')
+    expect(excelViewerSource).toContain('ref="excelHostRef"')
     expect(excelViewerSource).toContain(':key="excelRenderKey"')
     expect(excelViewerSource).toContain('new ResizeObserver')
   })
@@ -35,9 +35,22 @@ describe('ExcelViewer resize recovery', () => {
     expect(excelViewerSource).toContain('excelSizeStyle')
   })
 
+  it('measures the spreadsheet host below the zoom toolbar', () => {
+    expect(excelViewerSource).toContain('ref="excelHostRef"')
+    expect(excelViewerSource).toContain('const host = excelHostRef.value')
+    expect(excelViewerSource).toContain('resizeObserver.observe(host)')
+    expect(excelViewerSource).not.toContain('resizeObserver.observe(root)')
+  })
+
   it('accepts viewport dimensions measured by the preview body', () => {
     expect(excelViewerSource).toContain('viewportSize?:')
     expect(excelViewerSource).toContain('props.viewportSize?.width')
+    expect(excelViewerSource).toContain('props.viewportSize?.height')
+  })
+
+  it('applies the measured preview body size to the excel viewer root', () => {
+    expect(excelViewerSource).toContain(':style="excelViewerStyle"')
+    expect(excelViewerSource).toContain('const excelViewerStyle = computed')
     expect(excelViewerSource).toContain('props.viewportSize?.height')
   })
 
