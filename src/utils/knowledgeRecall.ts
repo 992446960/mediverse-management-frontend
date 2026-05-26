@@ -212,7 +212,6 @@ export function normalizeKnowledgeRecallSessionDetail(
     error: detail.error,
     token: detail.token,
     queryTimeMs: detail.latency_ms ?? detail.latency ?? null,
-    confidence: detail.confidence ?? undefined,
     createdAt: detail.created_at,
     updatedAt: detail.updated_at,
     sources: sources.map((source, index) => {

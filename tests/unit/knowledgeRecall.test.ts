@@ -204,7 +204,6 @@ describe('knowledge recall view model', () => {
       count: 1,
       status: 'success',
       queryTimeMs: 456,
-      confidence: 0.73,
       sources: [
         {
           id: 'card-1',
@@ -218,6 +217,7 @@ describe('knowledge recall view model', () => {
         },
       ],
     })
+    expect(view.confidence).toBeUndefined()
   })
 
   it('keeps a source displayable when card_id is null', () => {

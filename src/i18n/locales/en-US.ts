@@ -475,7 +475,6 @@ export default {
       sourceCount: '{count} retrieved',
       queryTime: 'Latency: {time}',
       confidence: 'Confidence: {value}',
-      confidenceLabel: 'Confidence',
       noAnswer: 'No final answer',
       noSources: 'No retrieved knowledge cards',
       viewCardDetail: 'View knowledge card detail',

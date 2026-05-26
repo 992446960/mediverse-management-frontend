@@ -466,7 +466,6 @@ export default {
       sourceCount: '共召回 {count} 条',
       queryTime: '耗时：{time}',
       confidence: '置信度：{value}',
-      confidenceLabel: '置信度',
       noAnswer: '暂无最终回答',
       noSources: '暂无召回知识卡',
       viewCardDetail: '查看知识卡详情',
