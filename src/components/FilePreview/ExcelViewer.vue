@@ -64,6 +64,7 @@ const excelRenderKey = computed(() => `${props.fileUrl}:${excelRenderVersion.val
 let resizeObserver: ResizeObserver | null = null
 let resizeTimer: ReturnType<typeof window.setTimeout> | null = null
 let lastResizeSize = ''
+let rerenderInFlight = false
 
 function clearResizeTimer() {
   if (resizeTimer == null) return
@@ -77,11 +78,17 @@ function getSizeKey(rect: Pick<DOMRectReadOnly, 'width' | 'height'>) {
 
 function scheduleExcelRerender(rect: Pick<DOMRectReadOnly, 'width' | 'height'>) {
   if (rect.width <= 0 || rect.height <= 0) return
+  if (rerenderInFlight) return
   const nextSize = getSizeKey(rect)
+  if (!lastResizeSize) {
+    lastResizeSize = nextSize
+    return
+  }
   if (nextSize === lastResizeSize) return
   lastResizeSize = nextSize
   clearResizeTimer()
   resizeTimer = window.setTimeout(() => {
+    rerenderInFlight = true
     excelRenderVersion.value += 1
     resizeTimer = null
   }, 180)
@@ -91,7 +98,6 @@ onMounted(() => {
   const root = resizeRootRef.value
   if (!root || typeof ResizeObserver === 'undefined') return
 
-  lastResizeSize = getSizeKey(root.getBoundingClientRect())
   resizeObserver = new ResizeObserver((entries) => {
     const entry = entries[0]
     if (!entry) return
@@ -107,6 +113,12 @@ onBeforeUnmount(() => {
 })
 
 function onRendered() {
+  if (rerenderInFlight) {
+    lastResizeSize = ''
+    nextTick(() => {
+      rerenderInFlight = false
+    })
+  }
   emit('rendered')
 }
 
