@@ -117,7 +117,7 @@ docker compose down
 打包并上传：
 
 ```bash
-mkdir -p docker-dist
+mkdir -p docker-list
 pnpm docker:build
 ```
 

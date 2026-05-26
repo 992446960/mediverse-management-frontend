@@ -12,7 +12,7 @@
 | `docker/40-write-env-js.sh` | 容器启动时生成 `/usr/share/nginx/html/env.js`，写入运行期 API 地址 |
 | `scripts/docker-pre.sh` | 执行 `docker compose up --build`，用于本地生产镜像预览 |
 | `scripts/docker-build.sh` | 构建镜像、导出 tar、上传到服务器 |
-| `docker-dist/` | 本地导出的镜像 tar 目录，不纳入 Git |
+| `docker-list/` | 本地导出的镜像 tar 目录，不纳入 Git |
 
 构建阶段使用 `pnpm@10.28.2`，执行 `pnpm install --frozen-lockfile` 和 `pnpm build`。运行阶段只包含 Nginx 和 `dist/` 静态文件。
 
@@ -67,7 +67,7 @@ chmod +x scripts/docker-pre.sh
 首次执行前创建输出目录：
 
 ```bash
-mkdir -p docker-dist
+mkdir -p docker-list
 chmod +x scripts/docker-build.sh
 ```
 
@@ -82,13 +82,13 @@ pnpm docker:build
 脚本会执行：
 
 1. `docker compose build`
-2. `docker save mediverse-management-frontend:latest -o ./docker-dist/mediverse-frontend-YYYYMMDD.tar`
+2. `docker save mediverse-management-frontend:latest -o ./docker-list/mediverse-frontend-YYYYMMDD.tar`
 3. `scp` 上传到 `root@<REMOTE_HOST>:/root/docker-images/`
 
 如果不使用脚本，可手动上传：
 
 ```bash
-scp ./docker-dist/mediverse-frontend-YYYYMMDD.tar root@<host>:/root/docker-images/
+scp ./docker-list/mediverse-frontend-YYYYMMDD.tar root@<host>:/root/docker-images/
 ```
 
 ## 5. 服务器部署

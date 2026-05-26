@@ -6,7 +6,7 @@
 set -euo pipefail
 
 IMAGE_TAG="mediverse-management-frontend:latest"
-TAR_PATH="./docker-dist/mediverse-frontend-$(date +%Y%m%d).tar"
+TAR_PATH="./docker-list/mediverse-frontend-$(date +%Y%m%d).tar"
 REMOTE_USER="root"
 # 占位符：请手动改为实际 SCP 目标主机
 REMOTE_HOST="YOUR_REMOTE_HOST"
@@ -16,6 +16,7 @@ if [[ "$REMOTE_HOST" == "YOUR_REMOTE_HOST" ]]; then
 fi
 REMOTE_DIR="/root/docker-images" # 服务器上存放 tar 的目录，需已存在或先 mkdir
 
+mkdir -p "$(dirname "$TAR_PATH")"
 docker compose build
 docker save "$IMAGE_TAG" -o "$TAR_PATH"
 echo "saved: $TAR_PATH"
