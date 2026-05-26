@@ -21,9 +21,10 @@
           {{ t('knowledge.previewExcelSheetHint') }}
         </span>
       </div>
-      <div class="min-h-0 flex-1 overflow-auto p-4">
+      <div ref="resizeRootRef" class="min-h-0 flex-1 overflow-auto p-4">
         <div :style="wrapperStyle">
           <vue-office-excel
+            :key="excelRenderKey"
             :src="fileUrl"
             class="min-h-full"
             @rendered="onRendered"
@@ -44,7 +45,7 @@ import { usePreviewTransformZoom } from '@/composables/usePreviewTransformZoom'
 
 const { t } = useI18n()
 
-defineProps<{
+const props = defineProps<{
   fileUrl: string
 }>()
 
@@ -55,6 +56,55 @@ const emit = defineEmits<{
 
 const { scalePercent, canZoomIn, canZoomOut, zoomIn, zoomOut, zoomReset, wrapperStyle } =
   usePreviewTransformZoom()
+
+const resizeRootRef = ref<HTMLElement | null>(null)
+const excelRenderVersion = ref(0)
+const excelRenderKey = computed(() => `${props.fileUrl}:${excelRenderVersion.value}`)
+
+let resizeObserver: ResizeObserver | null = null
+let resizeTimer: ReturnType<typeof window.setTimeout> | null = null
+let lastResizeSize = ''
+
+function clearResizeTimer() {
+  if (resizeTimer == null) return
+  window.clearTimeout(resizeTimer)
+  resizeTimer = null
+}
+
+function getSizeKey(rect: Pick<DOMRectReadOnly, 'width' | 'height'>) {
+  return `${Math.round(rect.width)}x${Math.round(rect.height)}`
+}
+
+function scheduleExcelRerender(rect: Pick<DOMRectReadOnly, 'width' | 'height'>) {
+  if (rect.width <= 0 || rect.height <= 0) return
+  const nextSize = getSizeKey(rect)
+  if (nextSize === lastResizeSize) return
+  lastResizeSize = nextSize
+  clearResizeTimer()
+  resizeTimer = window.setTimeout(() => {
+    excelRenderVersion.value += 1
+    resizeTimer = null
+  }, 180)
+}
+
+onMounted(() => {
+  const root = resizeRootRef.value
+  if (!root || typeof ResizeObserver === 'undefined') return
+
+  lastResizeSize = getSizeKey(root.getBoundingClientRect())
+  resizeObserver = new ResizeObserver((entries) => {
+    const entry = entries[0]
+    if (!entry) return
+    scheduleExcelRerender(entry.contentRect)
+  })
+  resizeObserver.observe(root)
+})
+
+onBeforeUnmount(() => {
+  clearResizeTimer()
+  resizeObserver?.disconnect()
+  resizeObserver = null
+})
 
 function onRendered() {
   emit('rendered')
