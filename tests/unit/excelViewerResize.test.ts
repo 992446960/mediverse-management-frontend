@@ -7,9 +7,14 @@ const excelViewerSource = readFileSync(
   'utf-8'
 )
 
+const universalFilePreviewSource = readFileSync(
+  fileURLToPath(new URL('../../src/components/UniversalFilePreview/index.vue', import.meta.url)),
+  'utf-8'
+)
+
 describe('ExcelViewer resize recovery', () => {
   it('remounts the vue-office excel renderer after container resize', () => {
-    expect(excelViewerSource).toContain('ref="resizeRootRef"')
+    expect(excelViewerSource).toContain('ref="rootRef"')
     expect(excelViewerSource).toContain(':key="excelRenderKey"')
     expect(excelViewerSource).toContain('new ResizeObserver')
   })
@@ -24,8 +29,30 @@ describe('ExcelViewer resize recovery', () => {
     expect(excelViewerSource).toContain('if (rerenderInFlight) return')
   })
 
-  it('sets baseline from first ResizeObserver callback instead of getBoundingClientRect', () => {
-    expect(excelViewerSource).not.toContain('getBoundingClientRect')
-    expect(excelViewerSource).toContain('if (!lastResizeSize)')
+  it('sets explicit pixel dimensions from ResizeObserver', () => {
+    expect(excelViewerSource).toContain('containerWidth')
+    expect(excelViewerSource).toContain('containerHeight')
+    expect(excelViewerSource).toContain('excelSizeStyle')
+  })
+
+  it('accepts viewport dimensions measured by the preview body', () => {
+    expect(excelViewerSource).toContain('viewportSize?:')
+    expect(excelViewerSource).toContain('props.viewportSize?.width')
+    expect(excelViewerSource).toContain('props.viewportSize?.height')
+  })
+
+  it('remounts after the first measured size reaches the excel renderer', () => {
+    expect(excelViewerSource).toContain('queueExcelRerender()')
+    expect(excelViewerSource).not.toContain(
+      'if (!lastResizeSize) {\\n    lastResizeSize = nextSize\\n    return\\n  }'
+    )
+  })
+})
+
+describe('UniversalFilePreview excel viewport', () => {
+  it('passes measured preview body dimensions to the excel viewer', () => {
+    expect(universalFilePreviewSource).toContain('ref="previewBodyRef"')
+    expect(universalFilePreviewSource).toContain(':viewport-size="previewBodySize"')
+    expect(universalFilePreviewSource).toContain('new ResizeObserver')
   })
 })
