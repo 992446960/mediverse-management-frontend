@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import KnowledgeRecallTest from '@/views/shared/KnowledgeRecallTest.vue'
+import KnowledgeRecallTest from '@/views/shared/knowledge-recall-test/index.vue'
 import { useAuthStore } from '@/stores/auth'
 
 defineOptions({

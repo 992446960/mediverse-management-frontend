@@ -210,7 +210,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'knowledge-cards/recall-test',
         name: 'MyKnowledgeRecallTest',
-        component: () => import('@/views/my/KnowledgeRecallTest.vue'),
+        component: () => import('@/views/my/knowledge-recall-test/index.vue'),
         meta: {
           title: 'knowledge.recall.title',
           hidden: true,
@@ -269,7 +269,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'knowledge-cards/recall-test',
         name: 'DeptKnowledgeRecallTest',
-        component: () => import('@/views/dept/KnowledgeRecallTest.vue'),
+        component: () => import('@/views/dept/knowledge-recall-test/index.vue'),
         meta: {
           title: 'knowledge.recall.title',
           hidden: true,
@@ -327,7 +327,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'knowledge-cards/recall-test',
         name: 'OrgKnowledgeRecallTest',
-        component: () => import('@/views/org/KnowledgeRecallTest.vue'),
+        component: () => import('@/views/org/knowledge-recall-test/index.vue'),
         meta: {
           title: 'knowledge.recall.title',
           hidden: true,
