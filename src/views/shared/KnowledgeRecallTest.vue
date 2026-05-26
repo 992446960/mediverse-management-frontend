@@ -422,9 +422,8 @@ import {
   getKnowledgeRecallSessionDetail,
   recallKnowledgeCards,
 } from '@/api/knowledgeRecall'
-import { getFileListItemById } from '@/api/knowledge'
-import type { CardType, CardTypeOption, FileListItem, FileSource } from '@/types/knowledge'
-import { getCardTypeConfig, getCardTypeOptionLabel, getFileOriginalUrl } from '@/types/knowledge'
+import type { CardType, CardTypeOption, FileSource } from '@/types/knowledge'
+import { getCardTypeConfig, getCardTypeOptionLabel } from '@/types/knowledge'
 import type {
   KnowledgeRecallOwnerType,
   KnowledgeRecallSessionItem,
@@ -434,7 +433,6 @@ import type {
 import { renderMarkdownSafe } from '@/utils/renderMarkdownSafe'
 import { formatFileSize } from '@/utils/formatFileSize'
 import { openFilePreview } from '@/utils/fileType'
-import { stashKnowledgePreviewFile } from '@/utils/knowledgePreviewStash'
 import {
   ALL_RECALL_CARD_TYPES_VALUE,
   formatRecallHistoryCreatedAt,
@@ -455,12 +453,6 @@ const props = defineProps<{
 const { t } = useI18n()
 const router = useRouter()
 const getLocalizedCardTypeConfig = (type: string) => getCardTypeConfig(type, (key) => t(key))
-
-const PREVIEW_ROUTE_NAMES: Record<KnowledgeRecallOwnerType, string> = {
-  personal: 'MyFilesPreview',
-  dept: 'DeptFilesPreview',
-  org: 'OrgFilesPreview',
-}
 
 const query = ref('')
 const topK = ref(5)
@@ -875,28 +867,6 @@ function getSourceFilePreviewUrl(file: FileSource) {
   return file.parsed_file_url || file.storage_url || ''
 }
 
-function buildFallbackFileListItem(file: FileSource): FileListItem {
-  return {
-    id: file.id || getSourceFilePreviewUrl(file) || getSourceFileName(file),
-    file_name: getSourceFileName(file),
-    file_type: file.file_type ?? '',
-    file_size: file.file_size ?? 0,
-    dir_id: '',
-    dir_name: '',
-    status: 'done',
-    storage_url: file.storage_url ?? null,
-    parsed_file_url: file.parsed_file_url ?? null,
-    error_msg: null,
-    auto_category_suggestion: null,
-    auto_category_name: null,
-    knowledge_card_count: 0,
-    created_by: '',
-    created_by_name: '',
-    created_at: '',
-    updated_at: '',
-  }
-}
-
 function openSourceFileByUrl(file: FileSource) {
   const url = getSourceFilePreviewUrl(file)
   if (!url) return false
@@ -904,39 +874,14 @@ function openSourceFileByUrl(file: FileSource) {
   return true
 }
 
-async function handleOpenSourceFile(file: FileSource, index: number) {
+function handleOpenSourceFile(file: FileSource, index: number) {
   const key = getSourceFileKey(file, index)
   if (openingSourceFileKey.value === key) return
 
   openingSourceFileKey.value = key
   try {
-    if (file.id) {
-      const routeName = PREVIEW_ROUTE_NAMES[props.ownerType]
-      if (routeName) {
-        let fileItem: FileListItem | null = null
-        try {
-          fileItem = await getFileListItemById(props.ownerType, props.ownerId, file.id)
-        } catch {
-          fileItem = null
-        }
-        const previewFile = fileItem ?? buildFallbackFileListItem(file)
-        if (getFileOriginalUrl(previewFile) || previewFile.parsed_file_url) {
-          stashKnowledgePreviewFile(previewFile, {
-            ownerType: props.ownerType,
-            ownerId: props.ownerId,
-          })
-          handleCloseDetail()
-          router.push({
-            name: routeName,
-            params: { id: previewFile.id },
-          })
-          return
-        }
-      }
-    }
-
     if (openSourceFileByUrl(file)) return
-    message.warning(file.id ? t('knowledge.previewNoUrlHint') : t('knowledge.missingFileId'))
+    message.warning(t('knowledge.previewNoUrlHint'))
   } finally {
     openingSourceFileKey.value = null
   }
