@@ -47,6 +47,14 @@ describe('ExcelViewer resize recovery', () => {
       'if (!lastResizeSize) {\\n    lastResizeSize = nextSize\\n    return\\n  }'
     )
   })
+
+  it('uses data-level zoom instead of css transform scaling', () => {
+    expect(excelViewerSource).toContain('scaleExcelWorkbookData')
+    expect(excelViewerSource).toContain('excelScale')
+    expect(excelViewerSource).toContain(':options="excelOptions"')
+    expect(excelViewerSource).toContain('125%')
+    expect(excelViewerSource).not.toContain('transform: `scale')
+  })
 })
 
 describe('UniversalFilePreview excel viewport', () => {
