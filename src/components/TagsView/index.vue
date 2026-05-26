@@ -54,6 +54,7 @@ import { useI18n } from 'vue-i18n'
 import {
   CHAT_HOME_TAG_PATH,
   CHAT_SESSION_TAG_PATH,
+  getCanonicalTagPathForRoute,
   useTagsViewStore,
   type TagView,
 } from '@/stores/tagsView'
@@ -99,7 +100,7 @@ function isActive(tag: TagView) {
   if (tag.path === CHAT_SESSION_TAG_PATH) {
     return /^\/chat\/session\/[^/]+$/.test(route.path)
   }
-  return tag.path === route.path
+  return tag.path === getCanonicalTagPathForRoute(route)
 }
 
 function scrollTargetEl(): HTMLElement | undefined {
