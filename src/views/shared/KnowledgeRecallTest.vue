@@ -589,7 +589,7 @@ const historyTableColumns = computed<PageTableColumnConfig[]>(() => [
     label: t('common.actions'),
     type: 'operation',
     width: 90,
-    fixed: false,
+    fixed: 'right',
     btns: [
       {
         text: t('common.detail'),
