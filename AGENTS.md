@@ -40,7 +40,9 @@
 
 # Git 提交
 
-- 提交后必须先检测当前跟踪远端是否可连接；远端通畅时默认 push，远端不通时停止 push 并汇报原因。
+- 每个工作点完成后，必须先按 `docs/development-guide.md` 完成自审、验证和评估；通过后再提交并 push 当前工作点。
+- 提交前必须检测当前跟踪远端是否可连接；远端通畅时默认 push，远端不通时停止提交和 push 并汇报原因。
+- commit message 禁止携带第三方创作者、`Co-authored-by`、`Generated-by` 或代写署名信息。
 
 # 验证要求
 
