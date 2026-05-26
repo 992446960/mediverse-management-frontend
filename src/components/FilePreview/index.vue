@@ -242,21 +242,9 @@ const headConf = computed<PageHeadConfig>(() => {
     ? `${currentFile.value.file_name}${subtitle ? ` · ${subtitle}` : ''}`
     : t('knowledge.filePreview')
 
-  const tabsOptions = showPdfTabs.value
-    ? [
-        { label: t('knowledge.parsedView'), value: 'parsed' },
-        { label: t('knowledge.rawView'), value: 'original' },
-      ]
-    : undefined
-
   return {
     backLeft: true,
     title,
-    defaultTab: 'parsed',
-    tabsOptions,
-    tabChangeHandle: (key: string | number) => {
-      activeView.value = key as 'parsed' | 'original'
-    },
   }
 })
 
