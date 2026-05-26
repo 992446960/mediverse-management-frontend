@@ -150,6 +150,13 @@ export function formatRecallHistoryCreatedAt(value: string | null | undefined) {
   return parsed.isValid() ? parsed.format('YYYY-MM-DD HH:mm') : '-'
 }
 
+export function formatRecallConfidence(value: number | null | undefined) {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return '-'
+
+  const percent = value <= 1 ? value * 100 : value
+  return `${Math.round(percent)}%`
+}
+
 export function normalizeKnowledgeRecallResult(
   result: KnowledgeRecallResult,
   context: NormalizeRecallResultContext
@@ -205,6 +212,7 @@ export function normalizeKnowledgeRecallSessionDetail(
     error: detail.error,
     token: detail.token,
     queryTimeMs: detail.latency_ms ?? detail.latency ?? null,
+    confidence: detail.confidence ?? undefined,
     createdAt: detail.created_at,
     updatedAt: detail.updated_at,
     sources: sources.map((source, index) => {

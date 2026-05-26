@@ -4,6 +4,7 @@ import {
   buildKnowledgeRecallPayload,
   formatRecallHistoryCreatedAt,
   formatRecallHistoryLatency,
+  formatRecallConfidence,
   normalizeKnowledgeRecallResult,
   normalizeKnowledgeRecallSessionDetail,
   resolveRecallCardTypeSelection,
@@ -172,6 +173,7 @@ describe('knowledge recall view model', () => {
       topk: 8,
       final_answer: '历史答案',
       card_count: 1,
+      confidence: 0.73,
       latency: 456,
       recall_status: 'success',
       created_at: '2026-05-25T10:00:00Z',
@@ -202,6 +204,7 @@ describe('knowledge recall view model', () => {
       count: 1,
       status: 'success',
       queryTimeMs: 456,
+      confidence: 0.73,
       sources: [
         {
           id: 'card-1',
@@ -297,6 +300,15 @@ describe('knowledge recall view model', () => {
 })
 
 describe('knowledge recall history formatters', () => {
+  it('formats recall confidence with safe percent display', () => {
+    expect(formatRecallConfidence(0.86)).toBe('86%')
+    expect(formatRecallConfidence(86)).toBe('86%')
+    expect(formatRecallConfidence(0)).toBe('0%')
+    expect(formatRecallConfidence(null)).toBe('-')
+    expect(formatRecallConfidence(Number.NaN)).toBe('-')
+    expect(formatRecallConfidence(-1)).toBe('-')
+  })
+
   it('formats history latency with safe units', () => {
     expect(formatRecallHistoryLatency(14.481)).toBe('14.48 s')
     expect(formatRecallHistoryLatency(0.006)).toBe('6 ms')

@@ -59,6 +59,7 @@ export interface KnowledgeRecallSessionItem {
   topk?: number | null
   final_answer?: string | null
   card_count: number
+  confidence?: number | null
   latency?: number | null
   token?: number | null
   error?: string | null
