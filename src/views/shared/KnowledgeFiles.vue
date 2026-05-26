@@ -1,12 +1,19 @@
 <template>
   <div class="knowledge-files-shared flex flex-1 overflow-hidden">
-    <aside class="w-80 pr-4 flex flex-col shrink-0">
+    <aside class="pr-4 flex flex-col shrink-0">
       <DirectoryTree
         :title="t('knowledge.directory')"
         :tree-data="treeData"
         :selected-key="selectedDirId"
         :loading="treeLoading"
         :fetch-data="loadTree"
+        :resizable="true"
+        :collapsible="true"
+        :default-width="280"
+        :min-width="220"
+        :max-width="420"
+        :collapsed-width="48"
+        collapsed-label="目录"
         @node-click="onTreeSelect"
         @create-dir="handleCreateDir"
         @rename-dir="handleRenameDir"
@@ -165,7 +172,7 @@ const tableData = ref<FileListItem[]>([])
 const loading = ref(false)
 const total = ref(0)
 
-// ----- 左侧目录树（保持不变） -----
+// ----- 左侧目录树 -----
 const treeLoading = ref(false)
 const treeData = ref<DirectoryNode[]>([])
 const selectedDirId = ref('__all__')
@@ -442,16 +449,18 @@ function formatFileSize(bytes: number): string {
 
 const tableColumns = computed<PageTableColumnConfig[]>(() => [
   {
+    label: t('common.selectionColumn'),
     type: 'selection',
-    width: 40,
+    width: 60,
     fixed: 'left',
+    configurable: { resizable: false },
   },
   {
     label: t('knowledge.fileName'),
     prop: 'file_name',
     width: 200,
+    resizable: true,
     showOverflowTooltip: true,
-    fixed: 'left',
   },
   { label: t('knowledge.fileType'), prop: 'file_type', width: 100 },
   {
@@ -489,6 +498,7 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
     label: t('common.actions'),
     type: 'operation',
     width: 300,
+    fixed: 'right',
     btns: [
       {
         text: t('knowledge.preview'),
@@ -700,7 +710,7 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 :deep(.text-primary),
 :deep(.ant-menu-item .text-primary),
 :deep(.ant-menu-item .anticon.text-primary) {

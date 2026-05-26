@@ -209,7 +209,7 @@ onMounted(() => {
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .avatar-selector__footer {
   background: var(--color-bg-container);
 }

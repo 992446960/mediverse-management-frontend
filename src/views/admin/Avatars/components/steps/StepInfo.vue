@@ -398,7 +398,7 @@ defineExpose({
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .step-info-label {
   font-size: 14px;
   font-weight: 500;

@@ -13,7 +13,7 @@
       </a-button>
     </header>
 
-    <div class="min-h-0 flex-1 overflow-hidden p-4">
+    <div ref="previewBodyRef" class="min-h-0 flex-1 overflow-hidden p-4">
       <a-spin :spinning="contentLoading" class="block h-full min-h-[400px] w-full">
         <div class="flex h-full min-h-[400px] flex-col overflow-hidden">
           <PdfViewer
@@ -31,6 +31,7 @@
           <ExcelViewer
             v-else-if="category === 'xlsx'"
             :file-url="fileUrl"
+            :viewport-size="previewBodySize"
             @rendered="onOfficeReady"
             @error="onOfficeReady"
           />
@@ -120,6 +121,35 @@ const category = computed<FileCategory>(() => getFileCategory(props.fileUrl, pro
 const textFileType = computed(() => getTextViewerFileType(props.fileName, props.fileUrl))
 
 const contentLoading = ref(true)
+const previewBodyRef = ref<HTMLElement | null>(null)
+const previewBodySize = ref({ width: 0, height: 0 })
+
+let previewBodyResizeObserver: ResizeObserver | null = null
+
+function updatePreviewBodySize(rect: Pick<DOMRectReadOnly, 'width' | 'height'>) {
+  const width = Math.round(rect.width)
+  const height = Math.round(rect.height)
+  if (width <= 0 || height <= 0) return
+  if (previewBodySize.value.width === width && previewBodySize.value.height === height) return
+  previewBodySize.value = { width, height }
+}
+
+onMounted(() => {
+  const body = previewBodyRef.value
+  if (!body || typeof ResizeObserver === 'undefined') return
+
+  previewBodyResizeObserver = new ResizeObserver((entries) => {
+    const entry = entries[0]
+    if (!entry) return
+    updatePreviewBodySize(entry.contentRect)
+  })
+  previewBodyResizeObserver.observe(body)
+})
+
+onBeforeUnmount(() => {
+  previewBodyResizeObserver?.disconnect()
+  previewBodyResizeObserver = null
+})
 
 watch(
   () => [props.fileUrl, props.fileName] as const,
@@ -148,7 +178,7 @@ async function handleDownload() {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .universal-file-preview {
   background-color: var(--color-bg-container);
 }

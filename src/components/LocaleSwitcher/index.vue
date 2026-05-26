@@ -52,7 +52,7 @@ const handleLocaleChange = ({ key }: { key: string }) => {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .locale-switcher-wrapper {
   display: inline-flex;
   align-items: center;

@@ -23,6 +23,8 @@
 - `src/stores/` 使用 Pinia setup store，登录态在 `src/stores/auth.ts`。
 - `src/router/` 维护路由和权限守卫，权限字段使用 `meta.requiredRoles`。
 - `src/config/menu.ts` 维护侧边栏菜单，与路由权限保持一致。
+- `src/views/` 维护页面入口；新增页面必须使用 `src/views/<domain>/<page>/index.vue`，页面私有组件放在同目录 `components/`。
+- `src/components/` 只放跨页面复用的通用组件或明确复用的业务组件；禁止放置单页面专属组件。
 - `src/mocks/` 维护 MSW 本地 mock，开启方式见 `.env.development`。
 - `tests/api-contract/` 维护真实 API 合规性测试。
 - `docs/` 存放开发规范、开发文档、任务看板和需求文档。
@@ -31,6 +33,7 @@
 
 - 必须遵守 `docs/development-guide.md`，规范必须以当前项目真实代码为准。
 - Vue 文件使用 Composition API 与 `<script setup>`；组件和 composable 必须保持职责单一。
+- 新增或重构页面时必须先按页面目录、局部组件、局部 composable 拆分职责，禁止把大段页面逻辑继续堆进单个 `.vue` 文件。
 - API 返回按 `{ code, message, data }` 处理；成功码默认 `code === 0`。
 - 登录态 token 由 `src/utils/auth.ts` 管理，用户信息由 `src/stores/auth.ts` 管理。
 - Docker 打包和部署以 `README.Docker.md` 为唯一权威文档。

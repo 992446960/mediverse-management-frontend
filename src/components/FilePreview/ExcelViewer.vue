@@ -1,35 +1,23 @@
 <template>
-  <div class="excel-viewer flex h-full min-h-0 flex-col overflow-hidden bg-white dark:bg-slate-900">
+  <div
+    class="excel-viewer flex h-full min-h-0 flex-col overflow-hidden bg-white dark:bg-slate-900"
+    :style="excelViewerStyle"
+  >
     <template v-if="fileUrl">
       <div
         class="flex flex-wrap items-center gap-2 border-b border-slate-200 bg-slate-50/90 px-3 py-2 dark:border-slate-700 dark:bg-slate-800/90"
       >
-        <a-button-group size="small">
-          <a-button :disabled="!canZoomOut" @click="zoomOut">
-            <template #icon><MinusOutlined /></template>
-          </a-button>
-          <a-button :disabled="!canZoomIn" @click="zoomIn">
-            <template #icon><PlusOutlined /></template>
-          </a-button>
-          <a-button @click="zoomReset">{{ t('knowledge.previewZoomReset') }}</a-button>
-        </a-button-group>
-        <span class="min-w-16 text-xs tabular-nums text-slate-600 dark:text-slate-300">
-          {{ scalePercent }}%
-        </span>
-        <a-divider type="vertical" class="m-0! h-4" />
-        <span class="max-w-[min(24rem,70vw)] text-xs text-slate-500 dark:text-slate-400">
-          {{ t('knowledge.previewExcelSheetHint') }}
-        </span>
+        <a-segmented v-model:value="excelScale" :options="excelScaleOptions" size="small" />
       </div>
-      <div class="min-h-0 flex-1 overflow-auto p-4">
-        <div :style="wrapperStyle">
-          <vue-office-excel
-            :src="fileUrl"
-            class="min-h-full"
-            @rendered="onRendered"
-            @error="onError"
-          />
-        </div>
+      <div ref="excelHostRef" class="min-h-0 flex-1 overflow-hidden">
+        <vue-office-excel
+          :key="excelRenderKey"
+          :src="fileUrl"
+          :options="excelOptions"
+          :style="excelSizeStyle"
+          @rendered="onRendered"
+          @error="onError"
+        />
       </div>
     </template>
     <a-empty v-else class="py-12" :description="t('knowledge.noPreviewUrl')" />
@@ -38,14 +26,20 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { MinusOutlined, PlusOutlined } from '@ant-design/icons-vue'
 import VueOfficeExcel from '@vue-office/excel'
-import { usePreviewTransformZoom } from '@/composables/usePreviewTransformZoom'
+import { scaleExcelWorkbookData } from './excelPreviewScale'
+import '@vue-office/excel/lib/index.css'
 
 const { t } = useI18n()
 
-defineProps<{
+type ViewportSize = {
+  width: number
+  height: number
+}
+
+const props = defineProps<{
   fileUrl: string
+  viewportSize?: ViewportSize
 }>()
 
 const emit = defineEmits<{
@@ -53,10 +47,106 @@ const emit = defineEmits<{
   error: [err: unknown]
 }>()
 
-const { scalePercent, canZoomIn, canZoomOut, zoomIn, zoomOut, zoomReset, wrapperStyle } =
-  usePreviewTransformZoom()
+const excelHostRef = ref<HTMLElement | null>(null)
+const containerWidth = ref(0)
+const containerHeight = ref(0)
+const excelRenderVersion = ref(0)
+const excelScale = ref(1.25)
+const excelRenderKey = computed(
+  () => `${props.fileUrl}:${excelRenderVersion.value}:${excelScale.value}`
+)
+const excelScaleOptions = [
+  { label: '100%', value: 1 },
+  { label: '125%', value: 1.25 },
+  { label: '150%', value: 1.5 },
+]
+
+const measuredWidth = computed(() => containerWidth.value || props.viewportSize?.width || 0)
+const measuredHeight = computed(() => containerHeight.value || props.viewportSize?.height || 0)
+
+const excelViewerStyle = computed(() => ({
+  width: props.viewportSize?.width ? `${props.viewportSize.width}px` : '100%',
+  height: props.viewportSize?.height ? `${props.viewportSize.height}px` : '100%',
+}))
+
+const excelSizeStyle = computed(() => ({
+  width: measuredWidth.value ? `${measuredWidth.value}px` : '100%',
+  height: measuredHeight.value ? `${measuredHeight.value}px` : '100%',
+}))
+
+const excelOptions = computed(() => ({
+  transformData: (workbookData: Record<string, any>[]) =>
+    scaleExcelWorkbookData(workbookData, excelScale.value),
+}))
+
+let resizeObserver: ResizeObserver | null = null
+let resizeTimer: ReturnType<typeof window.setTimeout> | null = null
+let lastResizeSize = ''
+let rerenderInFlight = false
+
+function clearResizeTimer() {
+  if (resizeTimer == null) return
+  window.clearTimeout(resizeTimer)
+  resizeTimer = null
+}
+
+function getSizeKey(w: number, h: number) {
+  if (w <= 0 || h <= 0) return ''
+  return `${Math.round(w)}x${Math.round(h)}`
+}
+
+function queueExcelRerender() {
+  if (rerenderInFlight) return
+  clearResizeTimer()
+  resizeTimer = window.setTimeout(() => {
+    rerenderInFlight = true
+    excelRenderVersion.value += 1
+    resizeTimer = null
+  }, 180)
+}
+
+function handleResize(rect: Pick<DOMRectReadOnly, 'width' | 'height'>) {
+  if (rect.width <= 0 || rect.height <= 0) return
+
+  containerWidth.value = Math.round(rect.width)
+  containerHeight.value = Math.round(rect.height)
+}
+
+watch(
+  () => getSizeKey(measuredWidth.value, measuredHeight.value),
+  (nextSize) => {
+    if (!nextSize || rerenderInFlight || nextSize === lastResizeSize) return
+    lastResizeSize = nextSize
+    queueExcelRerender()
+  },
+  { flush: 'post' }
+)
+
+onMounted(() => {
+  const host = excelHostRef.value
+  if (!host || typeof ResizeObserver === 'undefined') return
+
+  resizeObserver = new ResizeObserver((entries) => {
+    const entry = entries[0]
+    if (!entry) return
+    handleResize(entry.contentRect)
+  })
+  resizeObserver.observe(host)
+})
+
+onBeforeUnmount(() => {
+  clearResizeTimer()
+  resizeObserver?.disconnect()
+  resizeObserver = null
+})
 
 function onRendered() {
+  if (rerenderInFlight) {
+    lastResizeSize = ''
+    nextTick(() => {
+      rerenderInFlight = false
+    })
+  }
   emit('rendered')
 }
 
@@ -65,8 +155,8 @@ function onError(err: unknown) {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .excel-viewer :deep(.vue-office-excel) {
-  min-height: 100%;
+  overflow: hidden;
 }
 </style>

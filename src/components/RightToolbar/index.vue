@@ -11,7 +11,7 @@
         <template #icon><ReloadOutlined /></template>
       </a-button>
     </a-tooltip>
-    <a-tooltip title="列设置">
+    <a-tooltip title="列表设置">
       <a-popover trigger="click" placement="bottomRight">
         <a-button type="text">
           <template #icon><SettingOutlined /></template>
@@ -57,7 +57,7 @@ defineEmits<{
 }>()
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .right-toolbar {
   display: flex;
   align-items: center;

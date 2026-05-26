@@ -544,7 +544,7 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .kb-search-box,
 .kb-search-input {
   min-width: 0;

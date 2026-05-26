@@ -31,8 +31,18 @@ const CHAT_LEAF_ROUTE_NAMES = ['ChatHome', 'ChatSession'] as const
 /** 与 views/chat/layout.vue 中 defineOptions name 一致，供顶层 keep-alive include */
 const CHAT_LAYOUT_CACHE_NAME = 'ChatLayout'
 
+const PREVIEW_TAG_PATHS: Partial<Record<string, string>> = {
+  MyFilesPreview: '/my/files/preview',
+  DeptFilesPreview: '/dept/files/preview',
+  OrgFilesPreview: '/org/files/preview',
+  AvatarFilesPreview: '/my/files/preview',
+}
+
 /** 当前路由对应的 Tag 去重 path：首页与会话各一条 */
 export function getCanonicalTagPathForRoute(route: RouteLocationNormalized): string {
+  const routeName = typeof route.name === 'string' ? route.name : ''
+  const previewPath = PREVIEW_TAG_PATHS[routeName]
+  if (previewPath) return previewPath
   const p = route.path
   if (p === CHAT_HOME_TAG_PATH) return CHAT_HOME_TAG_PATH
   if (/^\/chat\/session\/[^/]+$/.test(p)) return CHAT_SESSION_TAG_PATH
@@ -51,6 +61,16 @@ function classifyChatTagForDedupe(v: TagView): 'home' | 'session' | null {
   const pathOnly = v.fullPath.split(/[?#]/)[0] ?? v.fullPath
   if (pathOnly === '/chat' || v.name === 'ChatHome') return 'home'
   if (v.path === CHAT_HOME_TAG_PATH && !isSessionFullPath(v.fullPath)) return 'home'
+  return null
+}
+
+function getPreviewTagPathForDedupe(v: TagView): string | null {
+  const byName = PREVIEW_TAG_PATHS[v.name]
+  if (byName) return byName
+  const pathOnly = v.fullPath.split(/[?#]/)[0] ?? v.fullPath
+  if (/^\/my\/files\/preview\/[^/]+$/.test(pathOnly)) return '/my/files/preview'
+  if (/^\/dept\/files\/preview\/[^/]+$/.test(pathOnly)) return '/dept/files/preview'
+  if (/^\/org\/files\/preview\/[^/]+$/.test(pathOnly)) return '/org/files/preview'
   return null
 }
 
@@ -114,6 +134,29 @@ export const useTagsViewStore = defineStore(
       visitedViews.value = out
     }
 
+    /** 从 sessionStorage 恢复或新开预览时：每个工作台只保留最近一次文件预览标签 */
+    function dedupePreviewVisitedViews() {
+      const out: TagView[] = []
+      for (const view of visitedViews.value) {
+        const previewPath = getPreviewTagPathForDedupe(view)
+        if (!previewPath) {
+          out.push(view)
+          continue
+        }
+
+        const nextView = { ...view, path: previewPath }
+        const existingIndex = out.findIndex(
+          (item) => getPreviewTagPathForDedupe(item) === previewPath
+        )
+        if (existingIndex >= 0) {
+          out[existingIndex] = nextView
+        } else {
+          out.push(nextView)
+        }
+      }
+      visitedViews.value = out
+    }
+
     /** 数字医生为嵌套路由：外层 layout 须参与 keep-alive，与 ChatSession 等 leaf 并存 */
     function syncChatLayoutInCache() {
       const hasChat = visitedViews.value.some(
@@ -134,6 +177,7 @@ export const useTagsViewStore = defineStore(
     /** 刷新页面后根据已持久化的 visitedViews 重建 cachedViews */
     function restoreCachedViews() {
       dedupeChatVisitedViews()
+      dedupePreviewVisitedViews()
       cachedViews.value = visitedViews.value
         .filter((v) => v.name && !v.meta?.noCache)
         .map((v) => v.name)
@@ -143,6 +187,7 @@ export const useTagsViewStore = defineStore(
     function addVisitedView(route: RouteLocationNormalized) {
       if (route.meta.hidden && !route.meta.showInTagsView) return
       const tagPath = getCanonicalTagPathForRoute(route)
+      dedupePreviewVisitedViews()
       const index = visitedViews.value.findIndex((v) => v.path === tagPath)
       if (index >= 0) {
         const prev = visitedViews.value[index]

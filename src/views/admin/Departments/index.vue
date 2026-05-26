@@ -1,6 +1,6 @@
 <template>
   <div class="departments-page flex flex-1 overflow-hidden">
-    <aside class="w-80 pr-4 flex flex-col shrink-0">
+    <aside class="pr-4 flex flex-col shrink-0">
       <PageTree
         :title="t('dept.allOrgs')"
         :search-placeholder="t('dept.searchOrg')"
@@ -10,6 +10,13 @@
         :empty-text="t('common.noData')"
         :fetch-data="loadTree"
         :refresh-title="t('common.refresh')"
+        :resizable="true"
+        :collapsible="true"
+        :default-width="280"
+        :min-width="220"
+        :max-width="420"
+        :collapsed-width="48"
+        collapsed-label="机构"
         @node-click="onTreeSelect"
       />
     </aside>
@@ -351,7 +358,7 @@ function handleDelete(record: Department) {
 onMounted(loadTree)
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .departments-page {
   max-height: var(--ant-layout-content-insert-height);
 }

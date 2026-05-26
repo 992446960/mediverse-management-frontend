@@ -62,7 +62,7 @@ onMounted(async () => {
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 :deep(.ant-spin-container) {
   height: 100%;
 }

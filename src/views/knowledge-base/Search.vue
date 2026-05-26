@@ -184,7 +184,7 @@ watch(
 )
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 /* 去掉 link 按钮默认内边距，避免与标题区不对齐 */
 .kb-search-back-btn.ant-btn {
   padding-left: 0 !important;

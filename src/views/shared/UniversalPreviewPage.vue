@@ -52,7 +52,7 @@ const emptyDescription = computed(() => {
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .universal-preview-page {
   align-self: stretch;
   height: 100vh;

@@ -110,7 +110,7 @@ function expand() {
 defineExpose({ expand })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .item-active {
   background-color: rgb(14 165 233 / 0.05);
   color: #0ea5e9;

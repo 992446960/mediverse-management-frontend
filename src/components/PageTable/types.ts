@@ -56,7 +56,18 @@ export interface PageTableColumnConfig {
   sortable?: boolean
   /** 列是否可调整宽度 */
   resizable?: boolean
-  /** 列设置中是否锁定 */
+  /** 列默认固定状态 */
+  _defaultFixed?: boolean | 'left' | 'right'
+  /** 列默认是否可调整宽度 */
+  _defaultResizable?: boolean
+  /** 列表设置中各配置项是否可改 */
+  configurable?: {
+    visible?: boolean
+    resizable?: boolean
+    fixed?: boolean
+    order?: boolean
+  }
+  /** 列表设置中是否锁定 */
   lock?: boolean
   /** 多选保留（仅 selection 生效） */
   reserveSelection?: boolean
@@ -70,7 +81,7 @@ export interface PageTableColumnConfig {
   slotName?: string
   /** 操作列按钮配置 */
   btns?: PageTableOperationBtn[]
-  /** 列是否可见（列设置功能使用） */
+  /** 列是否可见（列表设置功能使用） */
   _visible?: boolean
   /** 列默认可见状态 */
   _defaultVisible?: boolean

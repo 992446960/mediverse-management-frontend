@@ -56,7 +56,7 @@ function goLater() {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 /* ── Container ── */
 .change-pwd-page {
   position: relative;

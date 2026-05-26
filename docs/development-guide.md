@@ -18,21 +18,41 @@
 | `src/stores/` | Pinia setup store |
 | `src/router/` | 路由定义、权限守卫、标题处理 |
 | `src/config/` | 菜单、主题、错误码等配置 |
-| `src/components/` | 通用组件和业务组件 |
-| `src/composables/` | 可复用组合式逻辑 |
+| `src/components/` | 跨页面复用的通用组件，或已明确被多个页面复用的业务组件 |
+| `src/composables/` | 跨模块可复用组合式逻辑 |
 | `src/types/` | 跨模块 TypeScript 类型 |
 | `src/mocks/` | MSW mock handlers 和数据 |
-| `src/views/` | 页面级组件，按业务域分目录 |
+| `src/views/` | 页面级组件，按业务域和页面分目录 |
 | `tests/api-contract/` | 真实后端 API 合规性测试 |
 
 ## 3. Vue 与组件
 
 - 页面和组件使用 Composition API 与 `<script setup>`。
-- 组件名使用 PascalCase 目录或清晰业务名，入口组件优先使用 `index.vue`。
+- 组件名使用 PascalCase 目录或清晰业务名，入口组件使用 `index.vue`。
 - Props 使用 TypeScript 类型定义；复杂事件 payload 必须有明确类型。
 - 表单提交、保存、删除、上传等写操作必须有 loading 或禁用态，防止重复提交。
 - 长文本必须处理溢出；表格、flex 容器和卡片内文本要避免撑爆布局。
 - 组件只负责自身展示和交互，跨页面状态放到 store 或 composable。
+
+### 3.1 页面目录和组件边界
+
+- 新增页面必须使用 `src/views/<domain>/<page>/index.vue`，不要继续新增 `src/views/<domain>/<Page>.vue` 或 `src/views/<Page>.vue`。
+- 页面路由必须指向页面目录入口，例如 `@/views/admin/users/index.vue`。
+- `src/views/shared/` 下的跨域共享页面同样遵循目录结构，例如 `src/views/shared/knowledge-files/index.vue`。
+- `layout.vue` 是路由布局壳，不属于页面，保留在域目录下即可（如 `src/views/chat/layout.vue`），无需迁移到子目录。
+- 页面私有组件放在页面目录下的 `components/`，例如 `src/views/admin/users/components/UserForm.vue`。
+- 页面私有 composable、类型、常量分别放在页面目录下的 `composables/`、`types.ts`、`constants.ts`；只有跨页面复用后才上移到 `src/composables/`、`src/types/` 或 `src/config/`。命名示例：`useUserList.ts`、`useFileFilter.ts`、`useRecallHistory.ts`。
+- `src/components/` 禁止放置只服务单个页面的组件；组件至少被两个页面复用，或属于 `PageTable`、`PageFilter`、`DirectoryTree` 这类明确的基础/业务复用组件，才允许放入公共组件目录。公共组件内部拆分出的子组件（如 `ChatWindow/MessageList.vue`）不受此限制，只要它们服务于一个确实跨页面复用的组件族。
+- 触碰存量 `src/views/<domain>/<Page>.vue` 或 `src/views/<Page>.vue` 做非微小改动时，应优先迁移到页面目录结构；无法迁移时必须在交付说明中写明原因。存量迁移不设硬性截止日期，以渐进方式在日常开发中完成。
+
+### 3.2 单文件复杂度控制
+
+- 页面 `index.vue` 只负责页面编排、数据装配和少量事件转发，不承载多个大型表格、弹窗、表单和详情区的完整实现。
+- 单个 Vue 文件超过 500 行（template + script + style 合计），或同时包含三个以上独立交互区域时，必须拆分组件或 composable。独立交互区域的判定标准：移除该区域后，剩余代码仍能独立运转，例如弹窗、详情面板、上传区、预览区各自独立，而筛选栏与列表通常紧耦合算一个区域。
+- 纯展示区域优先拆为局部组件；状态、请求、筛选、分页、表单提交等逻辑优先拆为 composable。
+- 拆分后的页面私有模块默认留在页面目录内，确认跨页面复用后再上移到公共目录。
+- Composition API 代码按业务关注点组织，相关 state、computed、watch 和 handler 放在一起，避免按 ref/computed/function 类型分散堆放。
+- 存量超限文件不要求立即拆分，在下次做非微小功能改动时顺带重构。
 
 ## 4. API 层
 
@@ -68,6 +88,7 @@
 ## 8. 样式
 
 - 全局样式入口为 `src/styles/index.css`，变量在 `src/styles/variables.css`。
+- Vue 文件的 `<style>` 块必须使用 `lang="scss"`，统一写为 `<style scoped lang="scss">`。
 - 页面布局以 Tailwind 工具类为主，Ant Design Vue 深层样式使用 `:deep(.ant-*)`。
 - 不要把一次性页面样式抽成全局样式；跨页面复用后再沉淀为组件或变量。
 - PC 页面需要兼容窄屏浏览器访问，表格和复杂区域要允许横向滚动或自适应换行。

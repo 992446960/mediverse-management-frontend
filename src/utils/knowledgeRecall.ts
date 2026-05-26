@@ -1,5 +1,12 @@
-import type { KnowledgeRecallFormState, KnowledgeRecallRequest } from '@/types/knowledgeRecall'
+import type {
+  KnowledgeRecallFormState,
+  KnowledgeRecallRequest,
+  KnowledgeRecallResult,
+  KnowledgeRecallSessionDetail,
+  KnowledgeRecallViewModel,
+} from '@/types/knowledgeRecall'
 import type { CardType } from '@/types/knowledge'
+import dayjs from 'dayjs'
 
 export const ALL_RECALL_CARD_TYPES_VALUE = '__all__'
 
@@ -87,4 +94,154 @@ export function buildKnowledgeRecallPayload(
   }
 
   return payload
+}
+
+interface NormalizeRecallResultContext {
+  topK: number
+  cardTypes: CardType[]
+}
+
+function resolveSingleCardType(types: CardType[]): CardType | '' {
+  return types.length === 1 ? (types[0] ?? '') : ''
+}
+
+function isJsonObjectText(value: string) {
+  const text = value.trim()
+  if (!text || (!text.startsWith('{') && !text.startsWith('['))) return false
+
+  try {
+    JSON.parse(text)
+    return true
+  } catch {
+    return false
+  }
+}
+
+function normalizeDisplayMarkdown(
+  markdown: string | null | undefined,
+  fallback: string | null | undefined
+) {
+  const value = markdown?.trim() ?? ''
+  if (value && !isJsonObjectText(value)) {
+    return {
+      content: value,
+      usedFallback: false,
+    }
+  }
+
+  return {
+    content: fallback?.trim() ?? '',
+    usedFallback: true,
+  }
+}
+
+export function formatRecallHistoryLatency(value: number | null | undefined) {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return '-'
+
+  const milliseconds = value * 1000
+  if (milliseconds < 1000) return `${Math.round(milliseconds)} ms`
+  return `${value.toFixed(2)} s`
+}
+
+export function formatRecallHistoryCreatedAt(value: string | null | undefined) {
+  if (!value) return '-'
+
+  const parsed = dayjs(value)
+  return parsed.isValid() ? parsed.format('YYYY-MM-DD HH:mm') : '-'
+}
+
+export function formatRecallConfidence(value: number | null | undefined) {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return '-'
+
+  const percent = value <= 1 ? value * 100 : value
+  return `${Math.round(percent)}%`
+}
+
+export function normalizeKnowledgeRecallResult(
+  result: KnowledgeRecallResult,
+  context: NormalizeRecallResultContext
+): KnowledgeRecallViewModel {
+  return {
+    query: result.query,
+    answer: result.answer ?? '',
+    cardType: resolveSingleCardType(context.cardTypes),
+    topK: context.topK,
+    count: result.count ?? result.sources.length,
+    queryTimeMs: result.query_time_ms,
+    confidence: result.confidence,
+    sources: result.sources.map((source) => {
+      const displayMarkdown = normalizeDisplayMarkdown(source.md_content, source.excerpt)
+      return {
+        id: source.id,
+        cardId: source.id || null,
+        title: source.title || '-',
+        cardType: source.card_type || '',
+        excerpt: source.excerpt || '',
+        score: source.recall_score ?? source.relevance_score ?? null,
+        mdContent: displayMarkdown.content,
+        previewContentFallback: displayMarkdown.usedFallback,
+        jsonContent: source.json_content ?? '',
+        sourceFiles: source.source_files ?? source.sources ?? [],
+        tags: [],
+        onlineStatus: null,
+        auditStatus: null,
+        auditRejectReason: null,
+        referenceCount: null,
+        createdAt: source.created_at ?? null,
+        updatedAt: source.updated_at ?? null,
+      }
+    }),
+    citations: [],
+    downstream: null,
+  }
+}
+
+export function normalizeKnowledgeRecallSessionDetail(
+  detail: KnowledgeRecallSessionDetail
+): KnowledgeRecallViewModel {
+  const sources = detail.retrieved_sources ?? []
+
+  return {
+    sessionId: detail.id,
+    query: detail.query,
+    answer: detail.final_answer ?? '',
+    cardType: detail.card_type ?? '',
+    topK: detail.topk ?? null,
+    count: detail.card_count ?? sources.length,
+    status: detail.recall_status,
+    error: detail.error,
+    token: detail.token,
+    queryTimeMs: detail.latency_ms ?? detail.latency ?? null,
+    confidence: detail.confidence ?? undefined,
+    createdAt: detail.created_at,
+    updatedAt: detail.updated_at,
+    sources: sources.map((source, index) => {
+      const cardId = source.card_id ?? null
+      const displayMarkdown = normalizeDisplayMarkdown(
+        source.md_content,
+        source.card_preview_content
+      )
+      return {
+        id: cardId ?? `${detail.id}-source-${index}`,
+        cardId,
+        title: source.card_title || '-',
+        cardType: source.card_type || '',
+        excerpt: source.card_preview_content || '',
+        score: source.recall_score ?? null,
+        mdContent: displayMarkdown.content,
+        previewContentFallback: displayMarkdown.usedFallback,
+        jsonContent: source.json_content ?? '',
+        sourceFiles: source.source_files ?? [],
+        tags: source.tags ?? [],
+        onlineStatus: source.online_status ?? null,
+        auditStatus: source.audit_status ?? null,
+        auditRejectReason: source.audit_reject_reason ?? null,
+        referenceCount: source.reference_count ?? null,
+        createdAt: source.created_at ?? null,
+        updatedAt: source.updated_at ?? null,
+      }
+    }),
+    citations: detail.citations ?? [],
+    downstream: detail.downstream ?? null,
+  }
 }

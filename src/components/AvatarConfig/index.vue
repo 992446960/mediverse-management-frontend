@@ -390,7 +390,7 @@ watch(
 onMounted(fetchConfig)
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 @reference "../../styles/index.css";
 
 .config-section {

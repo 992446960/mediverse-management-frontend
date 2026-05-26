@@ -99,7 +99,7 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .kb-sidebar {
   width: 260px;
   min-width: 260px;

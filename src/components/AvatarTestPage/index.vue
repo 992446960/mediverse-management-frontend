@@ -27,7 +27,7 @@ defineProps<{
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .avatar-test-page__header {
   border-bottom: 1px solid var(--color-border-secondary);
   background-color: var(--color-bg-container);

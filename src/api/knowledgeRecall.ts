@@ -1,8 +1,11 @@
 import { request } from '@/api'
 import type {
   KnowledgeRecallFormState,
+  KnowledgeRecallHistoryParams,
+  KnowledgeRecallHistoryResponse,
   KnowledgeRecallOwnerType,
   KnowledgeRecallResult,
+  KnowledgeRecallSessionDetail,
 } from '@/types/knowledgeRecall'
 import { buildKnowledgeRecallPayload } from '@/utils/knowledgeRecall'
 
@@ -18,4 +21,19 @@ export function recallKnowledgeCards(
     buildKnowledgeRecallPayload(state),
     { timeout: KNOWLEDGE_RECALL_TIMEOUT }
   )
+}
+
+export function getKnowledgeRecallHistory(
+  ownerType: KnowledgeRecallOwnerType,
+  ownerId: string,
+  params: KnowledgeRecallHistoryParams
+) {
+  return request.get<KnowledgeRecallHistoryResponse>(
+    `/knowledge-recall/${ownerType}/${ownerId}/history`,
+    { params }
+  )
+}
+
+export function getKnowledgeRecallSessionDetail(sessionId: string) {
+  return request.get<KnowledgeRecallSessionDetail>(`/knowledge-recall/sessions/${sessionId}`)
 }

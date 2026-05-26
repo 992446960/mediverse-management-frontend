@@ -140,7 +140,7 @@ function onReset() {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .table-filter {
   background-color: var(--color-bg-container);
   padding-bottom: calc(var(--spacing-xl) + 24px);

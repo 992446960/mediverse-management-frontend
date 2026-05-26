@@ -267,7 +267,7 @@ function renderSegment(content: string): string {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .version-diff-view__loading {
   display: flex;
   min-height: min(360px, calc(100vh - 320px));

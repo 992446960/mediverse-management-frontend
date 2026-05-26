@@ -164,7 +164,7 @@ async function handleRenameSubmit(title: string) {
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .session-sidebar {
   transition: all 0.3s ease;
   background: var(--color-bg-container);

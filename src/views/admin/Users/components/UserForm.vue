@@ -460,7 +460,7 @@ async function handleOk() {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .user-form-roles-wrap {
   display: flex;
   flex-wrap: wrap;

@@ -20,7 +20,7 @@ defineProps<{
 defineEmits(['select'])
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .kb-related-question {
   color: var(--color-text-secondary);
   background-color: var(--color-bg-layout);

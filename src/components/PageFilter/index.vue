@@ -26,6 +26,7 @@
               :mode="field.multiple ? 'multiple' : undefined"
               :allow-clear="field.clearable ?? true"
               :show-search="field.filterable"
+              class="w-full"
               @change="onChangeFilter"
             />
 

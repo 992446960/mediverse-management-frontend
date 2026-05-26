@@ -27,7 +27,7 @@ const rootClass = computed(() => {
   <div :class="rootClass" v-html="html" />
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .citation-preview-html--card :deep(p:last-child),
 .citation-preview-html--skill :deep(p:last-child) {
   margin-bottom: 0;

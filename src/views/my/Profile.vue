@@ -528,7 +528,7 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .profile-page {
   width: 100%;
   min-width: 680px;

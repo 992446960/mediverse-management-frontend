@@ -40,7 +40,7 @@ function scrollToTarget(targetEl: HTMLElement) {
 defineExpose({ scrollToTarget })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .scroll-container {
   white-space: nowrap;
   position: relative;

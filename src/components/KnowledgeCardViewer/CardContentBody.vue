@@ -76,7 +76,7 @@ const renderedContent = computed(() => {
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .markdown-content-pane__body {
   display: flex;
   flex-direction: column;

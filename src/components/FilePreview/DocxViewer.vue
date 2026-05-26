@@ -83,7 +83,7 @@ function onError(err: unknown) {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .docx-viewer :deep(.vue-office-docx) {
   min-height: 100%;
 }

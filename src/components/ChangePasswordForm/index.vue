@@ -164,7 +164,7 @@ defineExpose({
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .change-pwd-form__skip {
   text-align: center;
   margin-top: var(--spacing-lg);

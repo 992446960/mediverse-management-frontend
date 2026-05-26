@@ -242,21 +242,9 @@ const headConf = computed<PageHeadConfig>(() => {
     ? `${currentFile.value.file_name}${subtitle ? ` · ${subtitle}` : ''}`
     : t('knowledge.filePreview')
 
-  const tabsOptions = showPdfTabs.value
-    ? [
-        { label: t('knowledge.parsedView'), value: 'parsed' },
-        { label: t('knowledge.rawView'), value: 'original' },
-      ]
-    : undefined
-
   return {
     backLeft: true,
     title,
-    defaultTab: 'parsed',
-    tabsOptions,
-    tabChangeHandle: (key: string | number) => {
-      activeView.value = key as 'parsed' | 'original'
-    },
   }
 })
 
@@ -305,7 +293,7 @@ watch(
 )
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 /* P1/P2: Tab 选中态与未选中态区分明显，cursor、focus-visible、transition */
 .file-preview__tabs :deep(.ant-tabs-tab) {
   cursor: pointer;

@@ -100,7 +100,7 @@
       />
     </div>
 
-    <!-- 列设置弹窗 -->
+    <!-- 列表设置弹窗 -->
     <ColumnsEditor
       v-model:open="columnsEditorVisible"
       :columns="effectiveColumns"
@@ -114,8 +114,9 @@ import { useI18n } from 'vue-i18n'
 import type { Key } from 'ant-design-vue/es/table/interface'
 import type { ColumnsType } from 'ant-design-vue/es/table'
 import { ReloadOutlined, SettingOutlined } from '@ant-design/icons-vue'
+import { createColumnSettingsState, syncColumnSettingsState } from './columnSettings'
 import ColumnsEditor from './ColumnsEditor.vue'
-import { getPageTableScrollY } from './height'
+import { getPageTableScrollConfig, getPageTableScrollX, getPageTableScrollY } from './height'
 import OperationCell from './OperationCell.vue'
 import ScopeCell from './ScopeCell.vue'
 import type { PageTableConfig, PageTableColumnConfig } from './types'
@@ -153,7 +154,7 @@ let resizeObserver: ResizeObserver | null = null
 let scrollResizeDebounceTimer: ReturnType<typeof setTimeout> | null = null
 let hasAppliedObserverScrollY = false
 
-/** 内部维护的列配置（含 _visible/_index），用于列设置与表格渲染 */
+/** 内部维护的列配置（含 _visible/_index），用于列表设置与表格渲染 */
 const effectiveColumns = ref<PageTableColumnConfig[]>([])
 
 /** 与 antd Table resizeColumn 回调中的列对齐：用 dataIndex/key 写回 effectiveColumns（避免当次渲染的临时 column 对象被丢弃导致宽度回弹） */
@@ -188,44 +189,14 @@ function normalizeColumnWidth(
   return n
 }
 
-function getColKey(c: PageTableColumnConfig): string {
-  return String(c._id ?? c.prop ?? '')
-}
-
 watch(
   () => props.tableColumns,
   (cols) => {
     if (!cols?.length) return
     if (effectiveColumns.value.length === 0) {
-      effectiveColumns.value = cols.map((c, i) => ({
-        ...c,
-        _index: c._defaultIndex ?? i,
-        _defaultIndex: c._defaultIndex ?? i,
-        _visible: c._defaultVisible ?? true,
-        _defaultVisible: c._defaultVisible ?? true,
-      }))
+      effectiveColumns.value = createColumnSettingsState(cols)
     } else {
-      const colMap = new Map(cols.map((c) => [getColKey(c), c]))
-      effectiveColumns.value = effectiveColumns.value.map((eff) => {
-        const next = colMap.get(getColKey(eff))
-        if (!next) return eff
-        return {
-          ...eff,
-          label: next.label,
-          btns: next.btns,
-          formatter: next.formatter,
-          tagType: next.tagType,
-          tagText: next.tagText,
-          scopeType: next.scopeType,
-          slotName: next.slotName,
-          linkFn: next.linkFn,
-          linkDisabled: next.linkDisabled,
-          switchFn: next.switchFn,
-          imageWidth: next.imageWidth,
-          imageHeight: next.imageHeight,
-          max: next.max,
-        }
-      })
+      effectiveColumns.value = syncColumnSettingsState(effectiveColumns.value, cols)
     }
   },
   { immediate: true }
@@ -245,7 +216,7 @@ const antdvColumns = computed<ColumnsType>(() => {
     key: c._id ?? c.prop ?? `page-table-col-${colIdx}`,
     prop: c.prop,
     width: normalizeColumnWidth(c.width, c.resizable),
-    fixed: c.fixed,
+    fixed: c.fixed === false ? undefined : c.fixed,
     align: c.align,
     resizable: c.resizable,
     ellipsis: c.showOverflowTooltip,
@@ -272,7 +243,7 @@ const selectionCol = computed(() => effectiveColumns.value?.find((c) => c.type =
 
 const rowSelectionConfig = computed(() => {
   const col = selectionCol.value
-  if (!col) return undefined
+  if (!col || col._visible === false) return undefined
   return {
     selectedRowKeys: selectedRowKeys.value,
     preserveSelectedRowKeys: col.reserveSelection,
@@ -299,10 +270,12 @@ const paginationConfig = computed(() => {
 })
 
 const scrollConfig = computed(() => {
-  const h = props.tableConf?.tableHeight
-  if (h != null && h !== '') return { y: h }
-  if (measuredScrollY.value > 0) return { y: measuredScrollY.value }
-  return { y: DEFAULT_SCROLL_Y }
+  return getPageTableScrollConfig({
+    tableHeight: props.tableConf?.tableHeight,
+    measuredScrollY: measuredScrollY.value || DEFAULT_SCROLL_Y,
+    rowCount: props.tableData?.length ?? 0,
+    scrollX: getPageTableScrollX(effectiveColumns.value),
+  })
 })
 
 function getColExt(column: Record<string, any>): PageTableColumnConfig {
@@ -439,7 +412,7 @@ defineExpose({
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .page-table :deep(.ant-table-thead > tr > th) {
   font-weight: 600;
   font-size: 13px;

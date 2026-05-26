@@ -248,11 +248,11 @@ async function onSubmit() {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 /* 弹窗宽度：小屏 90vw，最大 640px；Modal 挂载在 body，需用 :deep 或全局 */
 </style>
 
-<style>
+<style lang="scss">
 .avatar-wizard-modal.ant-modal-wrap .ant-modal {
   width: 90vw;
   max-width: 672px;

@@ -74,4 +74,52 @@ describe('tags view hidden route behavior', () => {
       },
     ])
   })
+
+  it('reuses the existing preview tag when opening another file preview in the same workspace', async () => {
+    const { getCanonicalTagPathForRoute, useTagsViewStore } =
+      await import('../../src/stores/tagsView')
+    const store = useTagsViewStore()
+
+    store.addView(
+      route({
+        fullPath: '/dept/files/preview/file-a',
+        path: '/dept/files/preview/file-a',
+        name: 'DeptFilesPreview',
+        meta: {
+          hidden: true,
+          showInTagsView: true,
+          title: 'knowledge.preview',
+        },
+      })
+    )
+    store.addView(
+      route({
+        fullPath: '/dept/files/preview/file-b',
+        path: '/dept/files/preview/file-b',
+        name: 'DeptFilesPreview',
+        meta: {
+          hidden: true,
+          showInTagsView: true,
+          title: 'knowledge.preview',
+        },
+      })
+    )
+
+    expect(store.visitedViews).toHaveLength(1)
+    expect(store.visitedViews[0]).toMatchObject({
+      fullPath: '/dept/files/preview/file-b',
+      path: '/dept/files/preview',
+      name: 'DeptFilesPreview',
+      title: 'knowledge.preview',
+    })
+    expect(
+      getCanonicalTagPathForRoute(
+        route({
+          fullPath: '/dept/files/preview/file-b',
+          path: '/dept/files/preview/file-b',
+          name: 'DeptFilesPreview',
+        })
+      )
+    ).toBe('/dept/files/preview')
+  })
 })
