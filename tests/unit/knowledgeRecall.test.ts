@@ -155,6 +155,7 @@ describe('knowledge recall view model', () => {
           excerpt: '摘要',
           score: 0.91,
           mdContent: '## 正文',
+          previewContentFallback: false,
           jsonContent: '{"a":1}',
         },
       ],
@@ -209,6 +210,7 @@ describe('knowledge recall view model', () => {
           excerpt: '历史摘要',
           score: 0.88,
           mdContent: '## 历史正文',
+          previewContentFallback: false,
           jsonContent: '{"b":2}',
         },
       ],
@@ -239,6 +241,7 @@ describe('knowledge recall view model', () => {
       cardId: null,
       title: '无 ID 卡片',
       mdContent: '正文',
+      previewContentFallback: false,
     })
     expect(view.sources[0].id).toBe('session-1-source-0')
   })
@@ -265,6 +268,7 @@ describe('knowledge recall view model', () => {
     })
 
     expect(view.sources[0].mdContent).toBe('预览正文')
+    expect(view.sources[0].previewContentFallback).toBe(true)
   })
 
   it('does not use json-like markdown as session source display content', () => {
@@ -288,6 +292,7 @@ describe('knowledge recall view model', () => {
     })
 
     expect(view.sources[0].mdContent).toBe('预览正文')
+    expect(view.sources[0].previewContentFallback).toBe(true)
   })
 })
 

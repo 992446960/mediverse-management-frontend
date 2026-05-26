@@ -129,6 +129,7 @@ export interface KnowledgeRecallViewSource {
   excerpt: string
   score: number | null
   mdContent: string
+  previewContentFallback: boolean
   jsonContent: string
   sourceFiles: FileSource[]
   tags: string[]

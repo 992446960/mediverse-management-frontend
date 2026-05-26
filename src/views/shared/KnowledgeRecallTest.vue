@@ -23,7 +23,7 @@
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <a-button :loading="historyLoading" @click="openHistoryModal">
+          <a-button :loading="historyLoading" :disabled="loading" @click="openHistoryModal">
             <template #icon>
               <HistoryOutlined />
             </template>
@@ -48,7 +48,8 @@
     <div class="knowledge-recall-test__form-grid mb-4">
       <section class="app-container min-w-0 p-5">
         <div class="mb-3 flex items-center justify-between gap-3">
-          <h2 class="m-0 text-base font-semibold text-(--color-text-base)">
+          <h2 class="m-0 flex items-center gap-2 text-base font-semibold text-(--color-text-base)">
+            <QuestionCircleOutlined class="text-primary" />
             {{ t('knowledge.recall.queryLabel') }}
           </h2>
           <span class="text-xs text-(--color-text-tertiary)"> {{ query.length }} / 2000 </span>
@@ -164,7 +165,10 @@
           class="rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900"
         >
           <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <h2 class="m-0 text-base font-semibold text-(--color-text-base)">
+            <h2
+              class="m-0 flex items-center gap-2 text-base font-semibold text-(--color-text-base)"
+            >
+              <MessageOutlined class="text-primary" />
               {{ t('knowledge.recall.finalAnswer') }}
             </h2>
             <div class="flex flex-wrap gap-2 text-xs text-(--color-text-tertiary)">
@@ -185,7 +189,10 @@
           class="rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900"
         >
           <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <h2 class="m-0 text-base font-semibold text-(--color-text-base)">
+            <h2
+              class="m-0 flex items-center gap-2 text-base font-semibold text-(--color-text-base)"
+            >
+              <FileTextOutlined class="text-primary" />
               {{ t('knowledge.recall.retrievedSources') }}
             </h2>
             <span class="text-sm text-(--color-text-secondary)">
@@ -210,7 +217,12 @@
             >
               <div class="mb-2 flex flex-wrap items-center gap-2">
                 <a-tag color="blue">{{ formatScore(source.score) }}</a-tag>
-                <span class="font-medium text-(--color-text-base)">{{ source.title }}</span>
+                <span
+                  class="inline-flex min-w-0 items-center gap-1.5 font-medium text-(--color-text-base)"
+                >
+                  <FileTextOutlined class="shrink-0 text-primary" />
+                  <span class="truncate">{{ source.title }}</span>
+                </span>
                 <a-tag :color="getLocalizedCardTypeConfig(source.cardType).color">
                   {{ getLocalizedCardTypeConfig(source.cardType).label }}
                 </a-tag>
@@ -295,6 +307,13 @@
             <div
               class="knowledge-recall-detail__markdown markdown-body prose prose-sm max-w-none dark:prose-invert"
             >
+              <a-alert
+                v-if="detailUsesPreviewContent"
+                class="mb-4"
+                type="info"
+                show-icon
+                :message="t('knowledge.recall.previewContentFallbackHint')"
+              />
               <!-- eslint-disable-next-line vue/no-v-html -- 召回详情返回的 md_content 为 Markdown，已通过 marked + DOMPurify 清洗 -->
               <div v-if="hasDetailMarkdown" v-html="detailMarkdownHtml" />
               <div v-else class="knowledge-recall-detail__empty">
@@ -389,6 +408,8 @@ import {
   LinkOutlined,
   HistoryOutlined,
   SearchOutlined,
+  QuestionCircleOutlined,
+  MessageOutlined,
 } from '@ant-design/icons-vue'
 import { useI18n } from 'vue-i18n'
 import PageFilter from '@/components/PageFilter/index.vue'
@@ -490,6 +511,9 @@ const detailUpdatedAt = computed(() => {
 const detailMarkdown = computed(() => selectedSource.value?.mdContent ?? '')
 const hasDetailMarkdown = computed(() => detailMarkdown.value.trim() !== '')
 const detailMarkdownHtml = computed(() => renderMarkdownSafe(detailMarkdown.value))
+const detailUsesPreviewContent = computed(
+  () => selectedSource.value?.previewContentFallback === true
+)
 const selectedRecallScore = computed(() => {
   const raw = selectedSource.value?.score
   return typeof raw === 'number' && Number.isFinite(raw) ? raw : 0
@@ -761,6 +785,7 @@ async function fetchHistory() {
 }
 
 function openHistoryModal() {
+  if (loading.value) return
   historyOpen.value = true
   fetchHistory()
 }

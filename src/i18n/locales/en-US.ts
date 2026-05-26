@@ -479,6 +479,8 @@ export default {
       noSources: 'No retrieved knowledge cards',
       viewCardDetail: 'View knowledge card detail',
       noCardContent: 'No knowledge card content',
+      previewContentFallbackHint:
+        'This knowledge card has no Markdown content. The recall preview is shown instead.',
       recallPerformance: 'Recall Performance',
       recallScore: 'Recall Score',
       relatedFiles: 'Related Files',

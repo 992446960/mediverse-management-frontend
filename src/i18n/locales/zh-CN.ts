@@ -470,6 +470,7 @@ export default {
       noSources: '暂无召回知识卡',
       viewCardDetail: '查看知识卡详情',
       noCardContent: '暂无知识卡正文',
+      previewContentFallbackHint: '该知识卡暂无 Markdown 正文，当前展示的是召回预览内容。',
       recallPerformance: '召回表现',
       recallScore: '召回得分',
       relatedFiles: '关联文件',

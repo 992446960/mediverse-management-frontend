@@ -122,8 +122,17 @@ function normalizeDisplayMarkdown(
   fallback: string | null | undefined
 ) {
   const value = markdown?.trim() ?? ''
-  if (value && !isJsonObjectText(value)) return value
-  return fallback?.trim() ?? ''
+  if (value && !isJsonObjectText(value)) {
+    return {
+      content: value,
+      usedFallback: false,
+    }
+  }
+
+  return {
+    content: fallback?.trim() ?? '',
+    usedFallback: true,
+  }
 }
 
 export function formatRecallHistoryLatency(value: number | null | undefined) {
@@ -153,24 +162,28 @@ export function normalizeKnowledgeRecallResult(
     count: result.count ?? result.sources.length,
     queryTimeMs: result.query_time_ms,
     confidence: result.confidence,
-    sources: result.sources.map((source) => ({
-      id: source.id,
-      cardId: source.id || null,
-      title: source.title || '-',
-      cardType: source.card_type || '',
-      excerpt: source.excerpt || '',
-      score: source.recall_score ?? source.relevance_score ?? null,
-      mdContent: normalizeDisplayMarkdown(source.md_content, source.excerpt),
-      jsonContent: source.json_content ?? '',
-      sourceFiles: source.source_files ?? source.sources ?? [],
-      tags: [],
-      onlineStatus: null,
-      auditStatus: null,
-      auditRejectReason: null,
-      referenceCount: null,
-      createdAt: source.created_at ?? null,
-      updatedAt: source.updated_at ?? null,
-    })),
+    sources: result.sources.map((source) => {
+      const displayMarkdown = normalizeDisplayMarkdown(source.md_content, source.excerpt)
+      return {
+        id: source.id,
+        cardId: source.id || null,
+        title: source.title || '-',
+        cardType: source.card_type || '',
+        excerpt: source.excerpt || '',
+        score: source.recall_score ?? source.relevance_score ?? null,
+        mdContent: displayMarkdown.content,
+        previewContentFallback: displayMarkdown.usedFallback,
+        jsonContent: source.json_content ?? '',
+        sourceFiles: source.source_files ?? source.sources ?? [],
+        tags: [],
+        onlineStatus: null,
+        auditStatus: null,
+        auditRejectReason: null,
+        referenceCount: null,
+        createdAt: source.created_at ?? null,
+        updatedAt: source.updated_at ?? null,
+      }
+    }),
     citations: [],
     downstream: null,
   }
@@ -196,6 +209,10 @@ export function normalizeKnowledgeRecallSessionDetail(
     updatedAt: detail.updated_at,
     sources: sources.map((source, index) => {
       const cardId = source.card_id ?? null
+      const displayMarkdown = normalizeDisplayMarkdown(
+        source.md_content,
+        source.card_preview_content
+      )
       return {
         id: cardId ?? `${detail.id}-source-${index}`,
         cardId,
@@ -203,7 +220,8 @@ export function normalizeKnowledgeRecallSessionDetail(
         cardType: source.card_type || '',
         excerpt: source.card_preview_content || '',
         score: source.recall_score ?? null,
-        mdContent: normalizeDisplayMarkdown(source.md_content, source.card_preview_content),
+        mdContent: displayMarkdown.content,
+        previewContentFallback: displayMarkdown.usedFallback,
         jsonContent: source.json_content ?? '',
         sourceFiles: source.source_files ?? [],
         tags: source.tags ?? [],
