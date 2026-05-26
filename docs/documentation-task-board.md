@@ -32,6 +32,7 @@
 ## 近期同步记录
 
 - 开发规范补齐页面目录和组件边界：新增页面必须使用 `src/views/<domain>/<page>/index.vue`，页面私有组件/composable 留在页面目录内，`src/components/` 仅承载跨页面复用组件，并明确单文件复杂度拆分阈值。
+- 召回知识卡详情中的关联文件支持点击查看文件详情：优先按文件 ID 进入当前工作台文件预览页，缺少列表记录时使用详情返回的文件 URL 兜底打开通用预览。
 - 召回历史弹窗复用 `PageFilter` 和 `PageTable` 组件，并优化表格展示：状态展示本地化枚举，耗时按秒/毫秒安全格式化，创建时间格式化到分钟；操作列右侧固定且仅成功记录可查看详情；召回知识卡详情补齐 Markdown 预览样式。
 - 知识卡召回详情弹窗移除右侧 JSON 展示；历史详情中 `md_content` 为空或异常为 JSON 时改用 `card_preview_content` 作为正文兜底，避免原始 JSON 占据 Markdown 内容区。
 - 知识卡召回测试页新增召回历史弹窗：列表对接 §4.4.1，选中记录后调用 §4.4.2 并通过统一 ViewModel 回填现有召回测试结果区；点击召回知识卡详情直接使用 `retrieved_sources[].md_content/json_content`。

@@ -333,10 +333,20 @@
                 <span>{{ t('knowledge.recall.relatedFiles') }}</span>
               </div>
               <div v-if="detailSourceFiles.length" class="knowledge-recall-detail__files">
-                <div
+                <button
                   v-for="(file, index) in detailSourceFiles"
                   :key="file.id || file.name || file.file_name || `file-${index}`"
-                  class="rounded-md border border-(--color-border) bg-white p-3 dark:bg-slate-900"
+                  type="button"
+                  class="knowledge-recall-detail__file-card"
+                  :class="{
+                    'knowledge-recall-detail__file-card--loading':
+                      openingSourceFileKey === getSourceFileKey(file, index),
+                  }"
+                  :title="t('knowledge.openFilePreview')"
+                  :aria-label="t('knowledge.openFilePreview')"
+                  @click="handleOpenSourceFile(file, index)"
+                  @keydown.enter.prevent="handleOpenSourceFile(file, index)"
+                  @keydown.space.prevent="handleOpenSourceFile(file, index)"
                 >
                   <div class="flex min-w-0 items-start gap-2">
                     <FileTextOutlined class="mt-0.5 shrink-0 text-primary" />
@@ -349,7 +359,7 @@
                       </div>
                     </div>
                   </div>
-                </div>
+                </button>
               </div>
               <div v-else class="knowledge-recall-detail__files-empty">
                 <a-empty :description="t('knowledge.recall.noRelatedFiles')" />
@@ -391,8 +401,9 @@ import {
   getKnowledgeRecallSessionDetail,
   recallKnowledgeCards,
 } from '@/api/knowledgeRecall'
-import type { CardType, CardTypeOption, FileSource } from '@/types/knowledge'
-import { getCardTypeConfig, getCardTypeOptionLabel } from '@/types/knowledge'
+import { getFileListItemById } from '@/api/knowledge'
+import type { CardType, CardTypeOption, FileListItem, FileSource } from '@/types/knowledge'
+import { getCardTypeConfig, getCardTypeOptionLabel, getFileOriginalUrl } from '@/types/knowledge'
 import type {
   KnowledgeRecallOwnerType,
   KnowledgeRecallSessionItem,
@@ -401,6 +412,8 @@ import type {
 } from '@/types/knowledgeRecall'
 import { renderMarkdownSafe } from '@/utils/renderMarkdownSafe'
 import { formatFileSize } from '@/utils/formatFileSize'
+import { openFilePreview } from '@/utils/fileType'
+import { stashKnowledgePreviewFile } from '@/utils/knowledgePreviewStash'
 import {
   ALL_RECALL_CARD_TYPES_VALUE,
   formatRecallHistoryCreatedAt,
@@ -422,6 +435,12 @@ const { t } = useI18n()
 const router = useRouter()
 const getLocalizedCardTypeConfig = (type: string) => getCardTypeConfig(type, (key) => t(key))
 
+const PREVIEW_ROUTE_NAMES: Record<KnowledgeRecallOwnerType, string> = {
+  personal: 'MyFilesPreview',
+  dept: 'DeptFilesPreview',
+  org: 'OrgFilesPreview',
+}
+
 const query = ref('')
 const topK = ref(5)
 const selectedAllCardTypes = ref(true)
@@ -435,6 +454,7 @@ const selectedSource = ref<KnowledgeRecallViewSource | null>(null)
 const historyOpen = ref(false)
 const historyLoading = ref(false)
 const historyDetailLoading = ref(false)
+const openingSourceFileKey = ref<string | null>(null)
 const historyRows = ref<KnowledgeRecallSessionItem[]>([])
 const historyTotal = ref(0)
 const historyFilterRef = ref<InstanceType<typeof PageFilter> | null>(null)
@@ -820,6 +840,83 @@ function getSourceFileName(file: FileSource) {
   return file.name || file.file_name || file.id || '-'
 }
 
+function getSourceFileKey(file: FileSource, index: number) {
+  return (
+    file.id || file.storage_url || file.parsed_file_url || file.name || file.file_name || `${index}`
+  )
+}
+
+function getSourceFilePreviewUrl(file: FileSource) {
+  return file.parsed_file_url || file.storage_url || ''
+}
+
+function buildFallbackFileListItem(file: FileSource): FileListItem {
+  return {
+    id: file.id || getSourceFilePreviewUrl(file) || getSourceFileName(file),
+    file_name: getSourceFileName(file),
+    file_type: file.file_type ?? '',
+    file_size: file.file_size ?? 0,
+    dir_id: '',
+    dir_name: '',
+    status: 'done',
+    storage_url: file.storage_url ?? null,
+    parsed_file_url: file.parsed_file_url ?? null,
+    error_msg: null,
+    auto_category_suggestion: null,
+    auto_category_name: null,
+    knowledge_card_count: 0,
+    created_by: '',
+    created_by_name: '',
+    created_at: '',
+    updated_at: '',
+  }
+}
+
+function openSourceFileByUrl(file: FileSource) {
+  const url = getSourceFilePreviewUrl(file)
+  if (!url) return false
+  openFilePreview(url, getSourceFileName(file))
+  return true
+}
+
+async function handleOpenSourceFile(file: FileSource, index: number) {
+  const key = getSourceFileKey(file, index)
+  if (openingSourceFileKey.value === key) return
+
+  openingSourceFileKey.value = key
+  try {
+    if (file.id) {
+      const routeName = PREVIEW_ROUTE_NAMES[props.ownerType]
+      if (routeName) {
+        let fileItem: FileListItem | null = null
+        try {
+          fileItem = await getFileListItemById(props.ownerType, props.ownerId, file.id)
+        } catch {
+          fileItem = null
+        }
+        const previewFile = fileItem ?? buildFallbackFileListItem(file)
+        if (getFileOriginalUrl(previewFile) || previewFile.parsed_file_url) {
+          stashKnowledgePreviewFile(previewFile, {
+            ownerType: props.ownerType,
+            ownerId: props.ownerId,
+          })
+          handleCloseDetail()
+          router.push({
+            name: routeName,
+            params: { id: previewFile.id },
+          })
+          return
+        }
+      }
+    }
+
+    if (openSourceFileByUrl(file)) return
+    message.warning(file.id ? t('knowledge.previewNoUrlHint') : t('knowledge.missingFileId'))
+  } finally {
+    openingSourceFileKey.value = null
+  }
+}
+
 function getSourceFileMeta(file: FileSource) {
   const parts: string[] = []
   if (typeof file.file_size === 'number' && file.file_size >= 0) {
@@ -976,6 +1073,36 @@ onMounted(fetchCardTypes)
   overflow-y: auto;
   padding-right: 0.25rem;
   scrollbar-gutter: stable;
+}
+
+.knowledge-recall-detail__file-card {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 0.375rem;
+  background: #fff;
+  padding: 0.75rem;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.knowledge-recall-detail__file-card:hover,
+.knowledge-recall-detail__file-card:focus-visible {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgb(14 165 233 / 12%);
+  outline: 0;
+}
+
+.knowledge-recall-detail__file-card--loading {
+  cursor: progress;
+  opacity: 0.72;
+}
+
+.dark .knowledge-recall-detail__file-card {
+  background: rgb(15 23 42);
 }
 
 .knowledge-recall-detail__files-empty {
