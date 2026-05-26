@@ -18,4 +18,14 @@ describe('ExcelViewer resize recovery', () => {
     expect(excelViewerSource).toContain('onBeforeUnmount')
     expect(excelViewerSource).toContain('resizeObserver?.disconnect()')
   })
+
+  it('suppresses resize events during re-render to prevent loop', () => {
+    expect(excelViewerSource).toContain('rerenderInFlight')
+    expect(excelViewerSource).toContain('if (rerenderInFlight) return')
+  })
+
+  it('sets baseline from first ResizeObserver callback instead of getBoundingClientRect', () => {
+    expect(excelViewerSource).not.toContain('getBoundingClientRect')
+    expect(excelViewerSource).toContain('if (!lastResizeSize)')
+  })
 })
