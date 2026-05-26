@@ -23,7 +23,7 @@
               {{ title }}
             </h2>
             <button
-              v-if="fetchData"
+              v-if="canRefresh"
               type="button"
               class="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
               :title="refreshTitle"
@@ -240,6 +240,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 /** 根节点样式：固定高度以让内部 overflow 滚动生效，避免 flex-1 导致滚动失效 */
 const tableTreeStyle = computed(() => ({ height: props.maxHeight }))
+const canRefresh = computed(() => typeof props.fetchData === 'function')
 const collapsed = ref(false)
 const resizing = ref(false)
 const panelWidth = ref(clampWidth(props.defaultWidth))

@@ -47,7 +47,6 @@ import type {
   KnowledgeRecallViewModel,
 } from '@/types/knowledgeRecall'
 import {
-  formatRecallConfidence,
   formatRecallHistoryCreatedAt,
   formatRecallHistoryLatency,
   normalizeKnowledgeRecallSessionDetail,
@@ -160,12 +159,6 @@ const historyTableColumns = computed<PageTableColumnConfig[]>(() => [
     scopeType: '_tag',
     tagType: (row) => getHistoryStatusColor(row.recall_status as string | null | undefined),
     tagText: (row) => formatHistoryStatus(row.recall_status as string | null | undefined),
-    width: 110,
-  },
-  {
-    label: t('knowledge.recall.confidenceLabel'),
-    prop: 'confidence',
-    formatter: (row) => formatRecallConfidence(row.confidence as number | null | undefined),
     width: 110,
   },
   {
