@@ -741,7 +741,6 @@ export default {
     usernamePlaceholder: 'Please enter username',
     passwordPlaceholder: 'Please enter password',
     loginButton: 'Log in',
-    subtitle: 'Digital Twin Management Platform',
     footer: '© 2026 Mediverse Management · Healthcare Digital Platform',
     toggleThemeAria: 'Toggle light/dark mode',
     changePasswordTitle: 'Change Password',
