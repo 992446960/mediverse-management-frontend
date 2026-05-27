@@ -74,7 +74,7 @@ export default {
     maxValue: '最大值',
   },
   app: {
-    brandName: '医数智台',
+    brandName: 'Mediverse Management',
   },
   tagsView: {
     refresh: '刷新页面',
@@ -724,7 +724,7 @@ export default {
     passwordPlaceholder: '请输入密码',
     loginButton: '登 录',
     subtitle: '数字分身管理平台',
-    footer: '© 2026 医数智台 · 医疗数字化平台',
+    footer: '© 2026 Mediverse Management · 医疗数字化平台',
     toggleThemeAria: '切换明暗模式',
     changePasswordTitle: '修改密码',
     changePasswordSubtitle: '为了您的账号安全，请修改初始密码',

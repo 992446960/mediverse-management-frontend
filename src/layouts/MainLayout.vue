@@ -10,9 +10,20 @@
         borderRight: '1px solid var(--color-bg-sidebar-border)',
       }"
     >
-      <div class="logo">
-        <img class="logo__img" :src="logoUrl" alt="" width="28" height="28" />
-        <span v-if="!collapsed" class="logo__text">{{ t('app.brandName') }}</span>
+      <div class="logo" :class="{ 'logo--collapsed': collapsed }">
+        <div class="logo__inner">
+          <img class="logo__img" :src="logoUrl" :alt="brandName" width="28" height="28" />
+          <div v-if="!collapsed" class="logo__text-wrap">
+            <a-tooltip
+              placement="right"
+              :mouse-enter-delay="0.2"
+              :get-popup-container="getTooltipContainer"
+            >
+              <template #title>{{ brandName }}</template>
+              <div class="logo__text" :title="brandName">{{ brandName }}</div>
+            </a-tooltip>
+          </div>
+        </div>
       </div>
       <a-menu
         v-model:selected-keys="selectedKeys"
@@ -125,6 +136,11 @@ const themeStore = useThemeStore()
 const { checkRoles } = usePermission()
 
 const user = computed(() => authStore.user)
+const brandName = computed(() => t('app.brandName'))
+
+function getTooltipContainer(triggerNode: HTMLElement) {
+  return triggerNode?.ownerDocument?.body ?? document.body
+}
 
 const breadcrumbItems = computed(() => buildBreadcrumbItems(currentRoute, menuConfig))
 
@@ -221,7 +237,7 @@ watch(
 )
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .main-layout {
   min-width: 1000px;
   height: 100%;
@@ -239,30 +255,68 @@ watch(
 }
 
 .logo {
-  min-height: 32px;
-  margin: 16px;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  margin: 16px 0 0;
+  padding: 0 12px 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  overflow: hidden;
   color: var(--color-primary);
   font-weight: 700;
-  font-size: 18px;
+  font-size: 16px;
   letter-spacing: 0.5px;
   border-bottom: 1px solid var(--color-border-secondary);
-  padding-bottom: 16px;
+}
+
+.logo--collapsed {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.logo__inner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: max-content;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .logo__img {
-  flex-shrink: 0;
+  flex: 0 0 28px;
   width: 28px;
   height: 28px;
+  min-width: 28px;
+  min-height: 28px;
   object-fit: contain;
   display: block;
 }
 
+.logo__text-wrap {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.logo__text-wrap :deep(.ant-tooltip-disabled-compatible-wrapper) {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
 .logo__text {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
+  cursor: default;
+  line-height: 28px;
 }
 
 .header {

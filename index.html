@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="referrer" content="no-referrer" />
-    <title>医数智台</title>
+    <title>Mediverse Management</title>
     <style>
       html, body, #app {
         height: 100%;
@@ -125,10 +125,15 @@
         position: relative;
         z-index: 10;
         margin-top: 8px;
+        max-width: min(320px, calc(100vw - 48px));
+        overflow: hidden;
+        text-align: center;
+        text-overflow: ellipsis;
+        white-space: nowrap;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         font-size: 11px;
         color: rgba(255, 255, 255, 0.3);
-        letter-spacing: 3px;
+        letter-spacing: 1.6px;
         text-transform: uppercase;
       }
 
@@ -190,7 +195,7 @@
 
         <!-- Text -->
         <div class="load-title">正在加载系统资源，请耐心等待</div>
-        <div class="load-sub">医数智台</div>
+        <div class="load-sub">Mediverse Management</div>
       </div>
     </div>
     <script type="module" src="/src/main.ts"></script>

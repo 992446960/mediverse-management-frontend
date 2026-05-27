@@ -74,7 +74,7 @@ export default {
     maxValue: 'Max',
   },
   app: {
-    brandName: 'Mediverse',
+    brandName: 'Mediverse Management',
   },
   tagsView: {
     refresh: 'Refresh',
@@ -742,7 +742,7 @@ export default {
     passwordPlaceholder: 'Please enter password',
     loginButton: 'Log in',
     subtitle: 'Digital Twin Management Platform',
-    footer: '© 2026 Mediverse · Healthcare Digital Platform',
+    footer: '© 2026 Mediverse Management · Healthcare Digital Platform',
     toggleThemeAria: 'Toggle light/dark mode',
     changePasswordTitle: 'Change Password',
     changePasswordSubtitle: 'For your account security, please change your initial password',
