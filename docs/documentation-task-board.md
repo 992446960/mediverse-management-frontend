@@ -4,20 +4,20 @@
 
 ## 文档资产
 
-| 文档                                                                      | 事实来源                                                          | 状态   | 维护要求                                        |
-| ------------------------------------------------------------------------- | ----------------------------------------------------------------- | ------ | ----------------------------------------------- |
-| `README.md`                                                               | `package.json`、`vite.config.ts`、`README.Docker.md`、`docs/`     | 已补全 | 项目定位、命令和文档索引变化时更新              |
-| `AGENTS.md`                                                               | `project-init`、当前仓库结构、验证命令                            | 已补全 | Agent 操作边界、命令或文档索引变化时更新        |
-| `CLAUDE.md`                                                               | `project-init`、项目红线规则                                      | 已补全 | 核心红线变化时更新，保持 20 行以内              |
-| `docs/development-guide.md`                                               | `wang-convention`、`src/`、`tests/`                               | 已补全 | 编码规范、架构约束或模块边界变化时更新          |
-| `docs/frontend-development.md`                                            | `package.json`、`.env.*`、`vite.config.ts`、Docker 配置           | 已补全 | 启动、联调、验证、环境变量变化时更新            |
-| `README.Docker.md`                                                        | `Dockerfile`、`compose.yaml`、`nginx.conf`、`scripts/docker-*.sh` | 已补全 | Docker 打包、部署、变量、回滚流程变化时更新     |
-| `docs/API设计.docx`                                                       | Management、Ecosys、KnowledgeBase API 详细设计                    | 已存在 | 接口设计、字段约定或错误码变化时更新            |
-| `docs/API设计.md`                                                         | `docs/API设计.docx` 的 Markdown 副本                              | 已存在 | 自 docx 导出或随 docx 同步更新，便于检索与 diff |
-| `docs/markdown-test-sample.md`                                            | Markdown 预览、解析和样式测试文本                                 | 已新增 | Markdown 渲染测试场景变化时更新                 |
-| `docs/requirements/shanghai-first-hospital-customization-requirements.md` | 定制需求和 `docs/requirements/assets/`                            | 已存在 | 需求范围、素材或验收标准变化时更新              |
-| `tests/api-contract/API_CONTRACT_TEST_REPORT.md`                          | `tests/api-contract/`、真实 API 测试结果                          | 已存在 | API 合规测试覆盖或结果变化时更新                |
-| `docs/superpowers/plans/2026-05-20-python-mock-backend-openapi.md`        | 线上 Swagger、Python mock 后端实现计划                            | 已新增 | mock 后端接口范围、路径或验证命令变化时更新     |
+| 文档                                                                      | 事实来源                                                          | 状态   | 维护要求                                         |
+| ------------------------------------------------------------------------- | ----------------------------------------------------------------- | ------ | ------------------------------------------------ |
+| `README.md`                                                               | `package.json`、`vite.config.ts`、`README.Docker.md`、`docs/`     | 已补全 | 项目定位、命令和文档索引变化时更新               |
+| `AGENTS.md`                                                               | `project-init`、当前仓库结构、验证命令                            | 已补全 | Agent 操作边界、命令或文档索引变化时更新         |
+| `CLAUDE.md`                                                               | `project-init`、项目红线规则                                      | 已补全 | 核心红线变化时更新，保持 20 行以内               |
+| `docs/development-guide.md`                                               | `wang-convention`、`src/`、`tests/`                               | 已补全 | 编码规范、架构约束或模块边界变化时更新           |
+| `docs/frontend-development.md`                                            | `package.json`、`.env.*`、`vite.config.ts`、Docker 配置           | 已补全 | 启动、联调、验证、环境变量变化时更新             |
+| `README.Docker.md`                                                        | `Dockerfile`、`compose.yaml`、`nginx.conf`、`scripts/docker-*.sh` | 已补全 | Docker 打包、部署、变量、回滚流程变化时更新      |
+| `docs/API设计.docx`                                                       | Management、Ecosys、KnowledgeBase API 详细设计                    | 已存在 | 接口设计、字段约定或错误码变化时更新             |
+| `docs/API设计.md`                                                         | 飞书 Wiki「API设计」、线上 Swagger/OpenAPI、`docs/API设计.docx`   | 已存在 | 随飞书/Swagger 接口合同同步更新，便于检索与 diff |
+| `docs/markdown-test-sample.md`                                            | Markdown 预览、解析和样式测试文本                                 | 已新增 | Markdown 渲染测试场景变化时更新                  |
+| `docs/requirements/shanghai-first-hospital-customization-requirements.md` | 定制需求和 `docs/requirements/assets/`                            | 已存在 | 需求范围、素材或验收标准变化时更新               |
+| `tests/api-contract/API_CONTRACT_TEST_REPORT.md`                          | `tests/api-contract/`、真实 API 测试结果                          | 已存在 | API 合规测试覆盖或结果变化时更新                 |
+| `docs/superpowers/plans/2026-05-20-python-mock-backend-openapi.md`        | 线上 Swagger、Python mock 后端实现计划                            | 已新增 | mock 后端接口范围、路径或验证命令变化时更新      |
 
 ## 检查任务
 
@@ -31,6 +31,10 @@
 
 ## 近期同步记录
 
+- 分身配置新增高级能力配置区块：个人/科室/机构配置页、后台新增/编辑/详情支持工具、技能、推理引擎、模型配置，前端接入 `GET /tools`、`GET /engines`、`GET /models` 并同步 MSW mock、单元测试与 Chrome 验收清单。
+- 科室工作台分身配置 Chrome 验收确认高级配置区块、工具/技能选择器可用；当前线上 `PUT /api/v1/my/avatar` 对当前登录科室管理员返回 `分身不存在`，`PUT /api/v1/avatars/{id}` 返回 `doctor_id ... 不存在`，保存回显需后端修复 specialist 分身更新合同。
+- 二次对比飞书 Wiki「API设计」目录更新：确认 `3.2.3` / `3.2.4` / `3.2.5` 上次未落地，补齐 `GET /api/v1/tools`、`GET /api/v1/engines`、`GET /api/v1/models`；同步整理 §2.1.4-§2.1.9 分身配置、编辑、统计接口字段，修复旧的破损 JSON/表格占位。
+- 自飞书 Wiki「API设计」（`RjKPwTWUBivbaykfexbcBzaTnvb`，docx token `D53xdwU3aoPGDnxAQLicIHEjn1d`）同步本地 `docs/API设计.md`：补充分身列表/创建/详情接口中的 `user_id`、`tools`、`skills`、`algorithm`、`model` 与 `doctor_id` 示例；§4.4.2 召回详情补 `confidence`；§4.4.5/§4.4.6 按飞书示例更新召回响应中的 `count`、空 `answer` 和知识卡正文/关联文件字段。
 - 默认品牌统一为 `Mediverse Management`：中英文 `app.brandName`、浏览器初始标题、首屏加载页和 README 项目描述同步改名；主布局侧栏品牌区沿用 SH1 长文案方案，保持侧栏宽度不变并用单行省略和 tooltip 展示完整名称。
 - 召回历史隐藏 `confidence` 展示：历史列表不展示置信度列，选中历史详情回填时不带出置信度；实时召回结果仍按接口返回展示置信度。
 - 知识卡召回测试页迁移到 `src/views/shared/knowledge-recall-test/index.vue` 页面目录结构，结果展示、历史弹窗、详情弹窗拆为页面私有组件，卡片类型选择逻辑下沉为页面私有 composable，个人/科室/机构入口同步改为 `knowledge-recall-test/index.vue`。
