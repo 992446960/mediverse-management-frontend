@@ -31,6 +31,7 @@
 
 ## 近期同步记录
 
+- 默认品牌统一为 `Mediverse Management`：中英文 `app.brandName`、浏览器初始标题、首屏加载页和 README 项目描述同步改名；主布局侧栏品牌区沿用 SH1 长文案方案，保持侧栏宽度不变并用单行省略和 tooltip 展示完整名称。
 - 召回历史隐藏 `confidence` 展示：历史列表不展示置信度列，选中历史详情回填时不带出置信度；实时召回结果仍按接口返回展示置信度。
 - 知识卡召回测试页迁移到 `src/views/shared/knowledge-recall-test/index.vue` 页面目录结构，结果展示、历史弹窗、详情弹窗拆为页面私有组件，卡片类型选择逻辑下沉为页面私有 composable，个人/科室/机构入口同步改为 `knowledge-recall-test/index.vue`。
 - 开发规范补齐页面目录和组件边界：新增页面必须使用 `src/views/<domain>/<page>/index.vue`，页面私有组件/composable 留在页面目录内，`src/components/` 仅承载跨页面复用组件，并明确单文件复杂度拆分阈值。

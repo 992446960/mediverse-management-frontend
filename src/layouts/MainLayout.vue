@@ -243,7 +243,7 @@ watch(
 )
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .main-layout {
   min-width: 1000px;
   height: 100%;
@@ -273,6 +273,7 @@ watch(
   overflow: hidden;
   color: var(--color-primary);
   font-weight: 700;
+  font-size: 16px;
   font-size: 16px;
   letter-spacing: 0.5px;
   border-bottom: 1px solid var(--color-border-secondary);

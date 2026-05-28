@@ -89,7 +89,6 @@ const handleLogin = async () => {
           <img class="brand-icon__img" :src="logoUrl" alt="" width="40" height="40" />
         </div>
         <h2 class="title">{{ t('app.brandName') }}</h2>
-        <p class="subtitle">{{ t('auth.subtitle') }}</p>
       </div>
 
       <a-form :model="formState" name="login" class="login-form" @finish="handleLogin">
