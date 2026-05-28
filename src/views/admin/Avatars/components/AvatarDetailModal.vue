@@ -70,6 +70,36 @@
 
         <div class="mt-6">
           <div class="text-sm font-medium text-(--color-text-base) dark:text-gray-100 mb-2">
+            {{ t('avatar.advanced.title') }}
+          </div>
+          <a-descriptions bordered :column="2" size="small" class="avatar-detail-desc">
+            <a-descriptions-item :label="t('avatar.advanced.tools')" :span="2">
+              <template v-if="advancedSummary.tools.length">
+                <a-tag v-for="tool in advancedSummary.tools" :key="tool" class="mb-1">
+                  {{ tool }}
+                </a-tag>
+              </template>
+              <span v-else>—</span>
+            </a-descriptions-item>
+            <a-descriptions-item :label="t('avatar.advanced.skills')" :span="2">
+              <template v-if="advancedSummary.skills.length">
+                <a-tag v-for="skill in advancedSummary.skills" :key="skill" class="mb-1">
+                  {{ skill }}
+                </a-tag>
+              </template>
+              <span v-else>—</span>
+            </a-descriptions-item>
+            <a-descriptions-item :label="t('avatar.advanced.engine')">
+              {{ advancedSummary.algorithm }}
+            </a-descriptions-item>
+            <a-descriptions-item :label="t('avatar.advanced.model')">
+              {{ advancedSummary.model }}
+            </a-descriptions-item>
+          </a-descriptions>
+        </div>
+
+        <div class="mt-6">
+          <div class="text-sm font-medium text-(--color-text-base) dark:text-gray-100 mb-2">
             {{ t('avatar.knowledgeGrants') }}
           </div>
           <a-table
@@ -96,13 +126,17 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
+import { getEngines, getModels, getTools } from '@/api/advancedConfig'
 import { getAvatarDetail } from '@/api/avatars'
+import { getSkills } from '@/api/skills'
 import {
   AVATAR_TYPE_LABEL_KEYS,
   AVATAR_TYPE_TAG_COLORS,
   type AvatarDetail,
   type AvatarStyle,
 } from '@/types/avatar'
+import type { EngineItem, ModelGroup, SkillItem, ToolGroup } from '@/types/advancedConfig'
+import { normalizeSkillOptions, resolveAdvancedConfigSummary } from '@/utils/avatarAdvancedConfig'
 
 const props = defineProps<{
   open: boolean
@@ -116,6 +150,11 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const loading = ref(false)
 const detail = ref<AvatarDetail | null>(null)
+const advancedLoaded = ref(false)
+const toolGroups = ref<ToolGroup[]>([])
+const skillOptions = ref<SkillItem[]>([])
+const engineOptions = ref<EngineItem[]>([])
+const modelGroups = ref<ModelGroup[]>([])
 
 const STYLE_I18N: Record<AvatarStyle, string> = {
   formal: 'avatar.wizard.styleFormal',
@@ -126,6 +165,15 @@ const STYLE_I18N: Record<AvatarStyle, string> = {
 }
 
 const grantRows = computed(() => detail.value?.knowledge_grants ?? [])
+const advancedSummary = computed(() =>
+  resolveAdvancedConfigSummary(detail.value ?? {}, {
+    tools: toolGroups.value,
+    skills: skillOptions.value,
+    engines: engineOptions.value,
+    modelGroups: modelGroups.value,
+    emptyText: '—',
+  })
+)
 
 const grantColumns = computed(() => [
   { title: t('avatar.grantScope'), key: 'scope_name', dataIndex: 'scope_name' },
@@ -152,10 +200,26 @@ async function loadDetail(id: string) {
   loading.value = true
   detail.value = null
   try {
-    detail.value = await getAvatarDetail(id)
+    const [res] = await Promise.all([getAvatarDetail(id), loadAdvancedOptions()])
+    detail.value = res
   } finally {
     loading.value = false
   }
+}
+
+async function loadAdvancedOptions() {
+  if (advancedLoaded.value) return
+  const [tools, skills, engines, models] = await Promise.all([
+    getTools(),
+    getSkills(),
+    getEngines(),
+    getModels(),
+  ])
+  toolGroups.value = tools
+  skillOptions.value = normalizeSkillOptions(skills)
+  engineOptions.value = engines
+  modelGroups.value = models
+  advancedLoaded.value = true
 }
 
 watch(

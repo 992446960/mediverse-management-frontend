@@ -20,7 +20,9 @@
       :id="contentId"
       class="avatar-wizard-content pb-0"
       role="region"
-      :aria-label="t('avatar.wizard.stepProgress', { current: currentStep + 1, total: 4 })"
+      :aria-label="
+        t('avatar.wizard.stepProgress', { current: currentStep + 1, total: steps.length })
+      "
     >
       <!-- 自定义步骤条：已完成=勾选圆，当前=主色数字圆，未到=灰色圆；连接线已过段为主色 -->
       <div class="avatar-wizard-steps flex items-center justify-between mb-8">
@@ -65,7 +67,7 @@
           class="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1"
           aria-live="polite"
         >
-          {{ t('avatar.wizard.stepProgress', { current: currentStep + 1, total: 4 }) }}
+          {{ t('avatar.wizard.stepProgress', { current: currentStep + 1, total: steps.length }) }}
         </p>
         <p v-if="currentStep === 1" class="text-sm text-gray-600 dark:text-gray-400">
           {{ t('avatar.wizard.scopeHint') }}
@@ -76,7 +78,8 @@
         <StepType v-if="currentStep === 0" v-model="form" />
         <StepScope v-if="currentStep === 1" ref="stepScopeRef" v-model="form" />
         <StepInfo v-if="currentStep === 2" ref="stepInfoRef" v-model="form" />
-        <StepConfirm v-if="currentStep === 3" :model-value="form" />
+        <StepAdvanced v-if="currentStep === 3" v-model="form" />
+        <StepConfirm v-if="currentStep === lastStepIndex" :model-value="form" />
       </div>
     </div>
 
@@ -91,7 +94,7 @@
         {{ currentStep > 0 ? t('common.prev') : t('common.cancel') }}
       </a-button>
       <a-button
-        v-if="currentStep < 3"
+        v-if="currentStep < lastStepIndex"
         type="primary"
         class="avatar-wizard-btn cursor-pointer transition-colors duration-200 bg-[#0ea5e9] hover:bg-sky-600! border-0"
         :loading="loading"
@@ -100,7 +103,7 @@
         {{ t('common.confirm') }}
       </a-button>
       <a-button
-        v-if="currentStep === 3"
+        v-if="currentStep === lastStepIndex"
         type="primary"
         class="avatar-wizard-btn min-h-[44px] min-w-[100px] cursor-pointer transition-colors duration-200 bg-[#0ea5e9] hover:bg-sky-600! border-0"
         :loading="submitLoading"
@@ -120,9 +123,11 @@ import { createAvatar } from '@/api/avatars'
 import StepType from './steps/StepType.vue'
 import StepScope from './steps/StepScope.vue'
 import StepInfo from './steps/StepInfo.vue'
+import StepAdvanced from './steps/StepAdvanced.vue'
 import StepConfirm from './steps/StepConfirm.vue'
 import { useAvatarCreatePermission } from '@/composables/useAvatarCreatePermission'
 import type { AvatarWizardForm } from '@/types/avatar'
+import { buildAvatarCreatePayload } from '@/utils/avatarAdvancedConfig'
 
 const { t } = useI18n()
 const { defaultTypeForRole } = useAvatarCreatePermission()
@@ -131,6 +136,7 @@ const steps = [
   { key: 'type', titleKey: 'avatar.wizard.selectType' },
   { key: 'scope', titleKey: 'avatar.wizard.bindScope' },
   { key: 'info', titleKey: 'avatar.wizard.basicInfo' },
+  { key: 'advanced', titleKey: 'avatar.advanced.title' },
   { key: 'confirm', titleKey: 'avatar.wizard.confirm' },
 ]
 
@@ -140,6 +146,10 @@ function getDefaultForm(): AvatarWizardForm {
     name: '',
     tags: [],
     style: 'formal',
+    tools: [],
+    skills: [],
+    algorithm: null,
+    model: null,
   }
 }
 
@@ -163,6 +173,7 @@ const stepInfoRef = ref<InstanceType<typeof StepInfo> | null>(null)
 
 const titleId = 'avatar-wizard-title'
 const contentId = 'avatar-wizard-description'
+const lastStepIndex = computed(() => steps.length - 1)
 
 function onCancel() {
   if (currentStep.value > 0) {
@@ -223,20 +234,7 @@ function onNext() {
 async function onSubmit() {
   submitLoading.value = true
   try {
-    const payload = {
-      type: form.value.type,
-      org_id: form.value.org_id,
-      dept_id: form.value.dept_id,
-      user_id: form.value.user_id,
-      name: form.value.name.trim(),
-      avatar_url: form.value.avatar_url?.trim() || undefined,
-      bio: form.value.bio?.trim() || undefined,
-      tags: form.value.tags?.length ? form.value.tags : undefined,
-      greeting: form.value.greeting?.trim() || undefined,
-      style: form.value.style,
-      style_custom: form.value.style === 'custom' ? form.value.style_custom?.trim() : undefined,
-    }
-    await createAvatar(payload)
+    await createAvatar(buildAvatarCreatePayload(form.value))
     message.success(t('avatar.wizard.createSuccess'))
     emit('update:open', false)
     emit('success')

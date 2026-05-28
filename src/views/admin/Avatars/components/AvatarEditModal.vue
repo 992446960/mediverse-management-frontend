@@ -188,6 +188,22 @@
             allow-clear
           />
         </a-form-item>
+
+        <AdvancedConfigFields
+          :selected-tools="form.tools"
+          :selected-skills="form.skills"
+          :selected-algorithm="form.algorithm"
+          :selected-model="form.model"
+          :tools="toolGroups"
+          :skills="skillOptions"
+          :engines="engineOptions"
+          :model-groups="modelGroups"
+          :loading="advancedLoading"
+          @update:selected-tools="form.tools = $event"
+          @update:selected-skills="form.skills = $event"
+          @update:selected-algorithm="form.algorithm = $event"
+          @update:selected-model="form.model = $event"
+        />
       </a-form>
     </template>
   </a-modal>
@@ -198,9 +214,25 @@ import { message } from 'ant-design-vue'
 import type { FormInstance } from 'ant-design-vue'
 import { PlusOutlined, CloseOutlined } from '@ant-design/icons-vue'
 import { useI18n } from 'vue-i18n'
+import AdvancedConfigFields from '@/components/AvatarConfig/AdvancedConfigFields.vue'
+import { getEngines, getModels, getTools } from '@/api/advancedConfig'
 import { getAvatarDetail, updateAvatar } from '@/api/avatars'
+import { getSkills } from '@/api/skills'
 import { uploadAvatar } from '@/api/upload'
+import type {
+  AvatarModelConfig,
+  EngineItem,
+  ModelGroup,
+  SkillItem,
+  ToolGroup,
+} from '@/types/advancedConfig'
 import type { Avatar, AvatarStyle, UpdateAvatarParams } from '@/types/avatar'
+import {
+  getDefaultEngineName,
+  getEnabledNames,
+  normalizeSkillOptions,
+  resolveModelSelection,
+} from '@/utils/avatarAdvancedConfig'
 
 const AVATAR_ACCEPT = 'image/jpeg,image/png,image/gif,image/webp'
 
@@ -224,6 +256,12 @@ const avatar = ref<Avatar | null>(null)
 const formRef = ref<FormInstance>()
 const avatarFileRef = ref<HTMLInputElement | null>(null)
 const avatarUploading = ref(false)
+const advancedLoading = ref(false)
+const advancedLoaded = ref(false)
+const toolGroups = ref<ToolGroup[]>([])
+const skillOptions = ref<SkillItem[]>([])
+const engineOptions = ref<EngineItem[]>([])
+const modelGroups = ref<ModelGroup[]>([])
 const tagPopoverOpen = ref(false)
 const tagInputValue = ref('')
 const tagInputRef = ref<{ focus: () => void } | null>(null)
@@ -237,6 +275,10 @@ interface EditFormState {
   greeting: string
   style: AvatarStyle
   style_custom: string
+  tools: string[]
+  skills: string[]
+  algorithm: string | null
+  model: AvatarModelConfig | null
 }
 
 const form = ref<EditFormState>({
@@ -247,6 +289,10 @@ const form = ref<EditFormState>({
   greeting: '',
   style: 'formal',
   style_custom: '',
+  tools: [],
+  skills: [],
+  algorithm: null,
+  model: null,
 })
 
 function formatScope(record: Avatar): string {
@@ -318,6 +364,38 @@ function fillFromAvatar(a: Avatar) {
     greeting: a.greeting ?? '',
     style: a.style ?? 'formal',
     style_custom: a.style_custom ?? '',
+    tools: getEnabledNames(a.tools),
+    skills: getEnabledNames(a.skills),
+    algorithm: a.algorithm ?? getEnabledNames(a.algorithms)[0] ?? null,
+    model: a.model ?? null,
+  }
+}
+
+async function loadAdvancedOptions() {
+  if (advancedLoaded.value) return
+  advancedLoading.value = true
+  try {
+    const [tools, skills, engines, models] = await Promise.all([
+      getTools(),
+      getSkills(),
+      getEngines(),
+      getModels(),
+    ])
+    toolGroups.value = tools
+    skillOptions.value = normalizeSkillOptions(skills)
+    engineOptions.value = engines
+    modelGroups.value = models
+    advancedLoaded.value = true
+  } finally {
+    advancedLoading.value = false
+  }
+}
+
+function applyAdvancedDefaults() {
+  form.value = {
+    ...form.value,
+    algorithm: getDefaultEngineName(form.value.algorithm, engineOptions.value),
+    model: resolveModelSelection(form.value.model, modelGroups.value),
   }
 }
 
@@ -331,13 +409,21 @@ async function loadDetail(id: string) {
   }
 }
 
+async function loadOpenData() {
+  await Promise.all([
+    props.avatarId ? loadDetail(props.avatarId) : Promise.resolve(),
+    loadAdvancedOptions(),
+  ])
+  applyAdvancedDefaults()
+}
+
 watch(
   () => props.open,
   (val) => {
     if (!val) return
     avatar.value = null
     formRef.value?.clearValidate?.()
-    if (props.avatarId) loadDetail(props.avatarId)
+    loadOpenData()
   }
 )
 
@@ -375,6 +461,10 @@ function toUpdatePayload(v: EditFormState): UpdateAvatarParams {
     style: v.style,
     style_custom:
       v.style === 'custom' ? (v.style_custom.trim() ? v.style_custom.trim() : null) : null,
+    tools: v.tools,
+    skills: v.skills,
+    algorithm: v.algorithm,
+    model: v.model,
   }
 }
 

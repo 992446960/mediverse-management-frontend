@@ -55,6 +55,7 @@ import { getDepartments } from '@/api/departments'
 import { getUsers } from '@/api/users'
 import type { AvatarWizardForm, AvatarType, AvatarStyle } from '@/types/avatar'
 import { AVATAR_TYPE_LABEL_KEYS } from '@/types/avatar'
+import { resolveAdvancedConfigSummary } from '@/utils/avatarAdvancedConfig'
 
 /** 确认预览中标签可用的 a-tag 颜色，按索引循环分配 */
 const TAG_COLORS = ['pink', 'red', 'orange', 'green', 'cyan', 'blue', 'purple'] as const
@@ -121,6 +122,15 @@ watch(
 /** 确认预览行配置：类型、机构、科室、分身名称、头像预览、简介、标签、开场白、沟通风格 */
 const confirmRows = computed(() => {
   const form = props.modelValue
+  const advancedSummary = resolveAdvancedConfigSummary(
+    {
+      tools: form.tools.map((name) => ({ name, enabled: true })),
+      skills: form.skills.map((name) => ({ name, enabled: true })),
+      algorithm: form.algorithm,
+      model: form.model,
+    },
+    { emptyText: '—' }
+  )
   const rows: { key: string; label: string; value: string; visible: boolean }[] = [
     {
       key: 'type',
@@ -180,6 +190,30 @@ const confirmRows = computed(() => {
       key: 'style',
       label: t('avatar.style'),
       value: t(getStyleLabelKey(form.style)),
+      visible: true,
+    },
+    {
+      key: 'tools',
+      label: t('avatar.advanced.tools'),
+      value: advancedSummary.tools.join('、') || '—',
+      visible: true,
+    },
+    {
+      key: 'skills',
+      label: t('avatar.advanced.skills'),
+      value: advancedSummary.skills.join('、') || '—',
+      visible: true,
+    },
+    {
+      key: 'algorithm',
+      label: t('avatar.advanced.engine'),
+      value: advancedSummary.algorithm,
+      visible: true,
+    },
+    {
+      key: 'model',
+      label: t('avatar.advanced.model'),
+      value: advancedSummary.model,
       visible: true,
     },
   ]
