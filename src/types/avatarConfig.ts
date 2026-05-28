@@ -1,4 +1,5 @@
 import type { OwnerType } from '@/constants/avatar'
+import type { AvatarModelConfig, AvatarAdvancedEnabledItem } from './advancedConfig'
 import type { AvatarStyle } from './avatar'
 
 export interface AvatarConfig {
@@ -12,6 +13,11 @@ export interface AvatarConfig {
   style: AvatarStyle
   style_custom: string | null
   tags: string[]
+  tools: AvatarAdvancedEnabledItem[]
+  skills: AvatarAdvancedEnabledItem[]
+  algorithms: AvatarAdvancedEnabledItem[]
+  algorithm: string | null
+  model: AvatarModelConfig | null
 }
 
 export interface UpdateAvatarConfigParams {
@@ -22,6 +28,10 @@ export interface UpdateAvatarConfigParams {
   style?: AvatarStyle
   style_custom?: string | null
   tags?: string[]
+  tools?: string[]
+  skills?: string[]
+  algorithm?: string | null
+  model?: AvatarModelConfig | null
 }
 
 /** 知识库索引进度（后端 knowledge_progress） */

@@ -1,5 +1,5 @@
 import { request } from '@/api/index'
-import type { AvatarConfig } from '@/types/avatarConfig'
+import type { AvatarConfig, UpdateAvatarConfigParams } from '@/types/avatarConfig'
 import type { OwnerType } from '@/constants/avatar'
 
 /**
@@ -10,4 +10,9 @@ import type { OwnerType } from '@/constants/avatar'
  */
 export function getAvatarConfig(ownerType: OwnerType, ownerId: string) {
   return request.get<AvatarConfig>(`/my/avatar/${ownerType}/${ownerId}`)
+}
+
+/** 更新当前工作台分身配置 */
+export function updateMyAvatarConfig(data: UpdateAvatarConfigParams) {
+  return request.put<AvatarConfig>('/my/avatar', data)
 }

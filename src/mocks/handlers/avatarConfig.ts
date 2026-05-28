@@ -1,8 +1,9 @@
 import { http, HttpResponse, delay } from 'msw'
 import type { AvatarConfig } from '@/types/avatarConfig'
+import type { UpdateAvatarConfigParams } from '@/types/avatarConfig'
 
 /** 与 `mocks/data/avatars` 中条目 id 一致，便于 PUT /avatars/:id 联调 */
-const mockAvatarConfig: AvatarConfig = {
+let mockAvatarConfig: AvatarConfig = {
   id: 'avatar_expert_001',
   owner_type: 'personal',
   owner_id: 'u_doctor_001',
@@ -13,6 +14,24 @@ const mockAvatarConfig: AvatarConfig = {
   style: 'formal',
   style_custom: null,
   tags: ['内科', '高血压', '糖尿病', '慢性病'],
+  tools: [
+    { name: 'web_fetch', enabled: true },
+    { name: 'calculator', enabled: true },
+    { name: 'literature-reader', enabled: false },
+  ],
+  skills: [
+    { name: 'knowledge-retrieval', enabled: true },
+    { name: 'document-parsing', enabled: false },
+  ],
+  algorithms: [
+    { name: 'standard', enabled: true },
+    { name: 'deep-reasoning', enabled: false },
+  ],
+  algorithm: 'standard',
+  model: {
+    provider: 'openai',
+    model_id: 'gpt-4-turbo',
+  },
 }
 
 /** 与线上接口一致：snake_case + Token 为后端已格式化字符串 */
@@ -49,6 +68,32 @@ export const avatarConfigHandlers = [
         owner_id,
         name,
       },
+    })
+  }),
+
+  http.put('/api/v1/my/avatar', async ({ request }) => {
+    await delay(200)
+    const body = (await request.json()) as UpdateAvatarConfigParams
+    mockAvatarConfig = {
+      ...mockAvatarConfig,
+      ...body,
+      tools: body.tools
+        ? body.tools.map((name) => ({ name, enabled: true }))
+        : mockAvatarConfig.tools,
+      skills: body.skills
+        ? body.skills.map((name) => ({ name, enabled: true }))
+        : mockAvatarConfig.skills,
+      algorithms:
+        typeof body.algorithm === 'string' && body.algorithm
+          ? [{ name: body.algorithm, enabled: true }]
+          : mockAvatarConfig.algorithms,
+      algorithm: body.algorithm ?? mockAvatarConfig.algorithm,
+      model: body.model ?? mockAvatarConfig.model,
+    }
+    return HttpResponse.json({
+      code: 0,
+      message: 'ok',
+      data: mockAvatarConfig,
     })
   }),
 

@@ -186,6 +186,22 @@
           </div>
         </div>
 
+        <AdvancedConfigFields
+          :selected-tools="formData.tools"
+          :selected-skills="formData.skills"
+          :selected-algorithm="formData.algorithm"
+          :selected-model="formData.model"
+          :tools="toolGroups"
+          :skills="skillOptions"
+          :engines="engineOptions"
+          :model-groups="modelGroups"
+          :loading="advancedLoading"
+          @update:selected-tools="formData.tools = $event"
+          @update:selected-skills="formData.skills = $event"
+          @update:selected-algorithm="formData.algorithm = $event"
+          @update:selected-model="formData.model = $event"
+        />
+
         <!-- 操作按钮 -->
         <div class="flex justify-end gap-3 pt-4">
           <a-button @click="emit('cancel')">{{ t('common.cancel') }}</a-button>
@@ -202,18 +218,34 @@
 import { useI18n } from 'vue-i18n'
 import { PlusOutlined, CloseOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
+import AdvancedConfigFields from './AdvancedConfigFields.vue'
 import type { OwnerType } from '@/constants/avatar'
 import type { UpdateAvatarConfigParams } from '@/types/avatarConfig'
 import type { AvatarStyle, UpdateAvatarParams } from '@/types/avatar'
-import { getAvatarConfig } from '@/api/avatarConfig'
+import type {
+  AvatarModelConfig,
+  EngineItem,
+  ModelGroup,
+  SkillItem,
+  ToolGroup,
+} from '@/types/advancedConfig'
+import { getEngines, getModels, getTools } from '@/api/advancedConfig'
+import { getAvatarConfig, updateMyAvatarConfig } from '@/api/avatarConfig'
 import { getAvatarDetail, updateAvatar } from '@/api/avatars'
+import { getSkills } from '@/api/skills'
 import { uploadAvatar } from '@/api/upload'
+import {
+  getDefaultEngineName,
+  getEnabledNames,
+  normalizeSkillOptions,
+  resolveModelSelection,
+} from '@/utils/avatarAdvancedConfig'
 
 const props = defineProps<{
   ownerType: OwnerType
   ownerId?: string
   readonly?: boolean
-  /** 已知分身 ID 时走 GET /avatars/:id；否则 GET /my/avatar/...（保存统一 PUT /avatars/:id） */
+  /** 已知分身 ID 时走后台分身接口；否则走当前工作台分身配置接口 */
   avatarId?: string
 }>()
 
@@ -230,10 +262,24 @@ const fileInputRef = ref<HTMLInputElement>()
 const tagPopoverVisible = ref(false)
 const newTag = ref('')
 const avatarUploading = ref(false)
+const advancedLoading = ref(false)
+const advancedLoaded = ref(false)
+const toolGroups = ref<ToolGroup[]>([])
+const skillOptions = ref<SkillItem[]>([])
+const engineOptions = ref<EngineItem[]>([])
+const modelGroups = ref<ModelGroup[]>([])
 
 const AVATAR_ACCEPT = 'image/jpeg,image/png,image/gif,image/webp'
 
-const formData = reactive<UpdateAvatarConfigParams & { tags: string[] }>({
+interface AvatarConfigFormData extends UpdateAvatarConfigParams {
+  tags: string[]
+  tools: string[]
+  skills: string[]
+  algorithm: string | null
+  model: AvatarModelConfig | null
+}
+
+const formData = reactive<AvatarConfigFormData>({
   name: '',
   avatar_url: '',
   bio: '',
@@ -241,6 +287,10 @@ const formData = reactive<UpdateAvatarConfigParams & { tags: string[] }>({
   style: 'formal',
   style_custom: null,
   tags: [],
+  tools: [],
+  skills: [],
+  algorithm: null,
+  model: null,
 })
 
 const styleOptions: { value: AvatarStyle; labelKey: string }[] = [
@@ -262,6 +312,11 @@ function assignFormFromDetail(res: {
   style: AvatarStyle
   style_custom?: string | null
   tags?: string[]
+  tools?: Array<{ name: string; enabled: boolean }>
+  skills?: Array<{ name: string; enabled: boolean }>
+  algorithms?: Array<{ name: string; enabled: boolean }>
+  algorithm?: string | null
+  model?: UpdateAvatarConfigParams['model']
 }) {
   Object.assign(formData, {
     name: res.name,
@@ -271,23 +326,60 @@ function assignFormFromDetail(res: {
     style: res.style,
     style_custom: res.style_custom ?? null,
     tags: res.tags || [],
+    tools: getEnabledNames(res.tools),
+    skills: getEnabledNames(res.skills),
+    algorithm: res.algorithm ?? getEnabledNames(res.algorithms)[0] ?? null,
+    model: res.model ?? null,
   })
 }
 
+async function loadAdvancedOptions() {
+  if (advancedLoaded.value) return
+  advancedLoading.value = true
+  try {
+    const [tools, skills, engines, models] = await Promise.all([
+      getTools(),
+      getSkills(),
+      getEngines(),
+      getModels(),
+    ])
+    toolGroups.value = tools
+    skillOptions.value = normalizeSkillOptions(skills)
+    engineOptions.value = engines
+    modelGroups.value = models
+    advancedLoaded.value = true
+  } catch (err) {
+    console.error('Failed to fetch advanced avatar config options:', err)
+  } finally {
+    advancedLoading.value = false
+  }
+}
+
+function applyAdvancedDefaults() {
+  formData.algorithm = getDefaultEngineName(formData.algorithm, engineOptions.value)
+  formData.model = resolveModelSelection(formData.model, modelGroups.value)
+}
+
 const fetchConfig = async () => {
-  if (!props.ownerId) return
+  const explicitId = props.avatarId?.trim()
+  if (!props.ownerId && !explicitId) return
   loading.value = true
   try {
-    const explicitId = props.avatarId?.trim()
-    if (explicitId) {
-      const res = await getAvatarDetail(explicitId)
-      assignFormFromDetail(res)
-      effectiveAvatarId.value = explicitId
-    } else {
-      const res = await getAvatarConfig(props.ownerType, props.ownerId)
-      assignFormFromDetail(res)
-      effectiveAvatarId.value = res.id?.trim() || null
-    }
+    await Promise.all([
+      (async () => {
+        if (explicitId) {
+          const res = await getAvatarDetail(explicitId)
+          assignFormFromDetail(res)
+          effectiveAvatarId.value = explicitId
+        } else if (props.ownerId) {
+          const res = await getAvatarConfig(props.ownerType, props.ownerId)
+          assignFormFromDetail(res)
+          effectiveAvatarId.value = res.id?.trim() || null
+        }
+      })(),
+      loadAdvancedOptions(),
+    ])
+    applyAdvancedDefaults()
   } catch (err) {
     console.error('Failed to fetch avatar config:', err)
   } finally {
@@ -304,6 +396,10 @@ const UPDATE_ALLOWED_KEYS = [
   'style',
   'style_custom',
   'avatar_url',
+  'tools',
+  'skills',
+  'algorithm',
+  'model',
 ] as const
 
 const handleSave = async () => {
@@ -317,12 +413,17 @@ const handleSave = async () => {
         return [k, v]
       })
     ) as UpdateAvatarParams
-    const id = effectiveAvatarId.value?.trim()
-    if (!id) {
-      message.error(t('avatar.configSaveMissingAvatarId'))
-      return
+    const explicitId = props.avatarId?.trim()
+    if (explicitId) {
+      const id = effectiveAvatarId.value?.trim()
+      if (!id) {
+        message.error(t('avatar.configSaveMissingAvatarId'))
+        return
+      }
+      await updateAvatar(id, payload)
+    } else {
+      await updateMyAvatarConfig(payload)
     }
-    await updateAvatar(id, payload)
     message.success(t('common.success'))
     emit('saved')
   } catch (err) {

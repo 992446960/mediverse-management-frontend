@@ -1,10 +1,13 @@
 import type { CardType } from './knowledge'
 
 export interface Skill {
-  skill_code: string
-  title: string
+  /** 线上 Swagger 示例字段，下游配置技能编码 */
+  name?: string
+  /** 旧 mock / 局部实现字段，执行接口路径仍使用同一编码 */
+  skill_code?: string
+  title?: string
   description?: string
-  args_schema: {
+  args_schema?: {
     type?: string
     properties?: Record<string, { type: string; description?: string; items?: { type: string } }>
     required?: string[]
