@@ -33,6 +33,7 @@
 
 ## 近期同步记录
 
+- 完成分身与用户 UI 统一计划落地：新增 `SectionTitle`、`ReadonlyDescription`、`AvatarUploadPanel`、`IdentitySummary`、`WizardStepper` 共享组件；统一分身详情/编辑/新增向导、科室工作台分身配置、个人资料、用户详情/新增/编辑样式；Chrome 验收覆盖 `/admin/avatars`、`/dept/avatar`、`/my/profile`、`/admin/users`，并通过 `pnpm exec vitest run tests/unit/avatarAdvancedConfig.test.ts tests/unit/uiSharedComponents.test.ts` 与 `pnpm verify`。
 - 制定分身与用户管理 UI 统一设计规格和实施计划：覆盖分身详情、新增分身 5 阶段、编辑分身、科室工作台分身配置、个人资料、用户详情、用户编辑、用户新增；设计图资产已落到 `docs/superpowers/specs/assets/2026-05-29-avatar-user-ui/`，计划明确共享组件、页面改造、单测、`pnpm verify` 与 Chrome 验收范围。
 - 分身配置新增高级能力配置区块：个人/科室/机构配置页、后台新增/编辑/详情支持工具、技能、推理引擎、模型配置，前端接入 `GET /tools`、`GET /engines`、`GET /models` 并同步 MSW mock、单元测试与 Chrome 验收清单。
 - 科室工作台分身配置 Chrome 验收确认高级配置区块、工具/技能选择器可用；当前线上 `PUT /api/v1/my/avatar` 对当前登录科室管理员返回 `分身不存在`，`PUT /api/v1/avatars/{id}` 返回 `doctor_id ... 不存在`，保存回显需后端修复 specialist 分身更新合同。
