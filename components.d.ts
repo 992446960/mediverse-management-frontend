@@ -151,5 +151,6 @@ declare module 'vue' {
     UniversalFilePreview: typeof import('./src/components/UniversalFilePreview/index.vue')['default']
     VersionDiffView: typeof import('./src/components/KnowledgeCardViewer/VersionDiffView.vue')['default']
     VersionTimeline: typeof import('./src/components/KnowledgeCardViewer/VersionTimeline.vue')['default']
+    WizardStepper: typeof import('./src/components/WizardStepper/index.vue')['default']
   }
 }

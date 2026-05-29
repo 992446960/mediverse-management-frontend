@@ -24,43 +24,14 @@
         t('avatar.wizard.stepProgress', { current: currentStep + 1, total: steps.length })
       "
     >
-      <!-- 自定义步骤条：已完成=勾选圆，当前=主色数字圆，未到=灰色圆；连接线已过段为主色 -->
-      <div class="avatar-wizard-steps flex items-center justify-between mb-8">
-        <template v-for="(step, i) in steps" :key="step.key">
-          <div class="flex items-center shrink-0">
-            <div
-              class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors duration-200"
-              :class="
-                i < currentStep
-                  ? 'bg-blue-50 dark:bg-blue-900/30 border border-[#0ea5e9]/30 text-[#0ea5e9]'
-                  : i === currentStep
-                    ? 'bg-[#0ea5e9] text-white'
-                    : 'bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-400 dark:text-gray-400'
-              "
-            >
-              <CheckOutlined v-if="i < currentStep" class="text-lg" />
-              <span v-else class="text-sm font-semibold">{{ i + 1 }}</span>
-            </div>
-            <span
-              class="ml-2 text-sm whitespace-nowrap"
-              :class="
-                i < currentStep
-                  ? 'font-medium text-gray-700 dark:text-gray-300'
-                  : i === currentStep
-                    ? 'font-semibold text-gray-900 dark:text-gray-100'
-                    : 'text-gray-500 dark:text-gray-400'
-              "
-            >
-              {{ t(step.titleKey) }}
-            </span>
-          </div>
-          <div
-            v-if="i < steps.length - 1"
-            class="step-line flex-1 h-px mx-3 shrink-0 min-w-[12px]"
-            :class="i < currentStep ? 'bg-[#0ea5e9]' : 'bg-gray-200 dark:bg-gray-700'"
-          />
-        </template>
-      </div>
+      <WizardStepper
+        class="avatar-wizard-steps"
+        :steps="wizardSteps"
+        :current="currentStep"
+        :aria-label="
+          t('avatar.wizard.stepProgress', { current: currentStep + 1, total: steps.length })
+        "
+      />
 
       <div class="mb-6">
         <p
@@ -118,7 +89,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { message } from 'ant-design-vue'
-import { CheckOutlined } from '@ant-design/icons-vue'
+import WizardStepper from '@/components/WizardStepper/index.vue'
 import { createAvatar } from '@/api/avatars'
 import StepType from './steps/StepType.vue'
 import StepScope from './steps/StepScope.vue'
@@ -174,6 +145,12 @@ const stepInfoRef = ref<InstanceType<typeof StepInfo> | null>(null)
 const titleId = 'avatar-wizard-title'
 const contentId = 'avatar-wizard-description'
 const lastStepIndex = computed(() => steps.length - 1)
+const wizardSteps = computed(() =>
+  steps.map((step) => ({
+    key: step.key,
+    title: t(step.titleKey),
+  }))
+)
 
 function onCancel() {
   if (currentStep.value > 0) {
@@ -192,11 +169,6 @@ function setCloseButtonAriaLabel() {
     }
   })
 }
-
-watch(
-  () => currentStep.value,
-  () => {}
-)
 
 watch(
   () => props.open,
@@ -247,7 +219,9 @@ async function onSubmit() {
 </script>
 
 <style scoped lang="scss">
-/* 弹窗宽度：小屏 90vw，最大 640px；Modal 挂载在 body，需用 :deep 或全局 */
+.avatar-wizard-steps {
+  margin-bottom: var(--spacing-xl);
+}
 </style>
 
 <style lang="scss">

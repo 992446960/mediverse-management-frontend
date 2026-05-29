@@ -1,64 +1,42 @@
 <template>
   <div class="step-confirm">
-    <h3 class="step-confirm-title">
-      {{ t('avatar.wizard.confirmSectionTitle') }}
-    </h3>
-    <div class="step-confirm-list">
-      <template v-for="row in confirmRows" :key="row.key">
-        <div
-          v-if="row.visible"
-          class="step-confirm-row"
-          :class="{ 'step-confirm-row--avatar': row.key === 'avatar' }"
-        >
-          <span :id="`confirm-label-${row.key}`" class="step-confirm-label">{{ row.label }}</span>
-          <div class="step-confirm-value" :aria-labelledby="`confirm-label-${row.key}`">
-            <!-- 头像预览：圆形图片 -->
-            <template v-if="row.key === 'avatar'">
-              <img
-                v-if="modelValue.avatar_url"
-                :src="modelValue.avatar_url"
-                :alt="t('avatar.avatar')"
-                class="step-confirm-avatar"
-              />
-              <span v-else class="step-confirm-empty">{{ t('common.noData') }}</span>
-            </template>
-            <!-- 标签：a-tag 随机颜色 -->
-            <template v-else-if="row.key === 'tags'">
-              <span class="step-confirm-tags">
-                <a-tag
-                  v-for="(tag, i) in modelValue.tags ?? []"
-                  :key="tag"
-                  :color="TAG_COLORS[i % TAG_COLORS.length]"
-                >
-                  {{ tag }}
-                </a-tag>
-              </span>
-              <span v-if="!modelValue.tags?.length" class="step-confirm-empty">{{
-                t('common.noData')
-              }}</span>
-            </template>
-            <!-- 普通文案 -->
-            <template v-else>
-              <span class="step-confirm-text">{{ row.value }}</span>
-            </template>
-          </div>
-        </div>
-      </template>
-    </div>
+    <section class="step-confirm__hero">
+      <IdentitySummary
+        :avatar-url="modelValue.avatar_url"
+        :name="modelValue.name || t('avatar.name')"
+        :scope="scopeText"
+        :status-text="t(getTypeLabelKey(modelValue.type))"
+        status-color="blue"
+        :tags="modelValue.tags"
+      />
+    </section>
+
+    <section class="step-confirm__section">
+      <SectionTitle :title="t('avatar.wizard.basicInfo')" />
+      <ReadonlyDescription :items="contentSummaryItems" />
+    </section>
+
+    <section class="step-confirm__section">
+      <SectionTitle :title="t('avatar.advanced.title')" />
+      <ReadonlyDescription :items="advancedSummaryItems" />
+    </section>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import IdentitySummary from '@/components/IdentitySummary/index.vue'
+import ReadonlyDescription from '@/components/ReadonlyDescription/index.vue'
+import SectionTitle from '@/components/SectionTitle/index.vue'
+import { getEngines, getModels, getTools } from '@/api/advancedConfig'
 import { getOrganizations } from '@/api/organizations'
 import { getDepartments } from '@/api/departments'
 import { getUsers } from '@/api/users'
+import { getSkills } from '@/api/skills'
+import type { EngineItem, ModelGroup, SkillItem, ToolGroup } from '@/types/advancedConfig'
 import type { AvatarWizardForm, AvatarType, AvatarStyle } from '@/types/avatar'
 import { AVATAR_TYPE_LABEL_KEYS } from '@/types/avatar'
-import { resolveAdvancedConfigSummary } from '@/utils/avatarAdvancedConfig'
-
-/** 确认预览中标签可用的 a-tag 颜色，按索引循环分配 */
-const TAG_COLORS = ['pink', 'red', 'orange', 'green', 'cyan', 'blue', 'purple'] as const
+import { normalizeSkillOptions, resolveAdvancedConfigSummary } from '@/utils/avatarAdvancedConfig'
 
 const { t } = useI18n()
 
@@ -67,6 +45,11 @@ const props = defineProps<{
 }>()
 
 const scopeNames = ref<{ orgName?: string; deptName?: string; userName?: string }>({})
+const advancedLoaded = ref(false)
+const toolGroups = ref<ToolGroup[]>([])
+const skillOptions = ref<SkillItem[]>([])
+const engineOptions = ref<EngineItem[]>([])
+const modelGroups = ref<ModelGroup[]>([])
 
 const STYLE_LABEL_KEYS: Record<AvatarStyle, string> = {
   formal: 'avatar.wizard.styleFormal',
@@ -119,185 +102,100 @@ watch(
   { immediate: true, deep: true }
 )
 
-/** 确认预览行配置：类型、机构、科室、分身名称、头像预览、简介、标签、开场白、沟通风格 */
-const confirmRows = computed(() => {
+async function loadAdvancedOptions() {
+  if (advancedLoaded.value) return
+  const [tools, skills, engines, models] = await Promise.all([
+    getTools(),
+    getSkills(),
+    getEngines(),
+    getModels(),
+  ])
+  toolGroups.value = tools
+  skillOptions.value = normalizeSkillOptions(skills)
+  engineOptions.value = engines
+  modelGroups.value = models
+  advancedLoaded.value = true
+}
+
+onMounted(loadAdvancedOptions)
+
+const scopeText = computed(() => {
   const form = props.modelValue
-  const advancedSummary = resolveAdvancedConfigSummary(
+  return [
+    scopeNames.value.orgName ?? form.org_id,
+    scopeNames.value.deptName ?? form.dept_id,
+    scopeNames.value.userName ?? form.user_id,
+  ]
+    .filter(Boolean)
+    .join(' / ')
+})
+
+const advancedSummary = computed(() => {
+  const form = props.modelValue
+  return resolveAdvancedConfigSummary(
     {
       tools: form.tools.map((name) => ({ name, enabled: true })),
       skills: form.skills.map((name) => ({ name, enabled: true })),
       algorithm: form.algorithm,
       model: form.model,
     },
-    { emptyText: '—' }
+    {
+      tools: toolGroups.value,
+      skills: skillOptions.value,
+      engines: engineOptions.value,
+      modelGroups: modelGroups.value,
+      emptyText: '—',
+    }
   )
-  const rows: { key: string; label: string; value: string; visible: boolean }[] = [
+})
+
+const contentSummaryItems = computed(() => {
+  const form = props.modelValue
+  return [
+    { label: t('avatar.type'), value: t(getTypeLabelKey(form.type)) },
+    { label: t('avatar.org'), value: scopeNames.value.orgName ?? form.org_id ?? '—' },
+    { label: t('avatar.dept'), value: scopeNames.value.deptName ?? form.dept_id ?? '—' },
+    { label: t('avatar.bindUser'), value: scopeNames.value.userName ?? form.user_id ?? '—' },
+    { label: t('avatar.name'), value: form.name || '—' },
+    { label: t('avatar.tags'), value: form.tags ?? [] },
+    { label: t('avatar.bio'), value: form.bio || '—', span: 2 as const },
+    { label: t('avatar.greeting'), value: form.greeting || '—', span: 2 as const },
+    { label: t('avatar.style'), value: t(getStyleLabelKey(form.style)) },
     {
-      key: 'type',
-      label: t('avatar.type'),
-      value: t(getTypeLabelKey(form.type)),
-      visible: true,
-    },
-    {
-      key: 'org',
-      label: t('avatar.org'),
-      value: scopeNames.value.orgName ?? form.org_id ?? '—',
-      visible: !!form.org_id,
-    },
-    {
-      key: 'dept',
-      label: t('avatar.dept'),
-      value: scopeNames.value.deptName ?? form.dept_id ?? '—',
-      visible: !!form.dept_id,
-    },
-    {
-      key: 'user',
-      label: t('avatar.bindUser'),
-      value: scopeNames.value.userName ?? form.user_id ?? '—',
-      visible: !!form.user_id,
-    },
-    {
-      key: 'name',
-      label: t('avatar.name'),
-      value: form.name || '—',
-      visible: true,
-    },
-    {
-      key: 'avatar',
-      label: t('avatar.wizard.avatarPreview'),
-      value: '',
-      visible: true,
-    },
-    {
-      key: 'bio',
-      label: t('avatar.bio'),
-      value: form.bio || '—',
-      visible: true,
-    },
-    {
-      key: 'tags',
-      label: t('avatar.tags'),
-      value: '',
-      visible: true,
-    },
-    {
-      key: 'greeting',
-      label: t('avatar.greeting'),
-      value: form.greeting || '—',
-      visible: true,
-    },
-    {
-      key: 'style',
-      label: t('avatar.style'),
-      value: t(getStyleLabelKey(form.style)),
-      visible: true,
-    },
-    {
-      key: 'tools',
-      label: t('avatar.advanced.tools'),
-      value: advancedSummary.tools.join('、') || '—',
-      visible: true,
-    },
-    {
-      key: 'skills',
-      label: t('avatar.advanced.skills'),
-      value: advancedSummary.skills.join('、') || '—',
-      visible: true,
-    },
-    {
-      key: 'algorithm',
-      label: t('avatar.advanced.engine'),
-      value: advancedSummary.algorithm,
-      visible: true,
-    },
-    {
-      key: 'model',
-      label: t('avatar.advanced.model'),
-      value: advancedSummary.model,
-      visible: true,
+      label: t('avatar.styleCustom'),
+      value: form.style === 'custom' ? form.style_custom || '—' : '—',
     },
   ]
-  return rows
+})
+
+const advancedSummaryItems = computed(() => {
+  const summary = advancedSummary.value
+  return [
+    { label: t('avatar.advanced.tools'), value: summary.tools },
+    { label: t('avatar.advanced.skills'), value: summary.skills },
+    { label: t('avatar.advanced.engine'), value: summary.algorithm },
+    { label: t('avatar.advanced.model'), value: summary.model },
+  ]
 })
 </script>
 
 <style scoped lang="scss">
 .step-confirm {
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-.step-confirm-title {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--ant-color-text, #262626);
-  margin-bottom: 12px;
-}
-
-.step-confirm-list {
-  border: 1px solid var(--ant-color-border-secondary, #f0f0f0);
-  border-radius: 8px;
-  overflow: hidden;
-  background: var(--ant-color-bg-container, #fff);
-}
-
-.step-confirm-row {
   display: flex;
-  align-items: flex-start;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--ant-color-border-secondary, #f0f0f0);
-  gap: 16px;
+  flex-direction: column;
+  gap: var(--spacing-lg);
 }
 
-.step-confirm-row:last-child {
-  border-bottom: none;
-}
-
-.step-confirm-row--avatar {
-  align-items: center;
-}
-
-.step-confirm-label {
-  flex-shrink: 0;
-  width: 88px;
-  color: var(--ant-color-text-secondary, #595959);
-  font-size: 14px;
-}
-
-.step-confirm-value {
-  flex: 1;
+.step-confirm__hero,
+.step-confirm__section {
   min-width: 0;
-  color: var(--ant-color-text, #262626);
-  font-size: 14px;
+  padding: var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  background: var(--color-bg-container);
 }
 
-.step-confirm-text {
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-.step-confirm-empty {
-  color: var(--ant-color-text-tertiary, #8c8c8c);
-}
-
-/* 头像预览：圆形 */
-.step-confirm-avatar {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  object-fit: cover;
-  display: block;
-}
-
-/* 标签：a-tag 多色，仅用 gap 控制间距 */
-.step-confirm-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.step-confirm-tags :deep(.ant-tag) {
-  margin-right: 0;
-  margin-inline-end: 0;
+.step-confirm__section :deep(.section-title) {
+  margin-bottom: var(--spacing-md);
 }
 </style>

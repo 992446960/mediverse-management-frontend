@@ -14,6 +14,7 @@
           show-search
           :filter-option="filterOption"
           :options="orgOptions"
+          :loading="orgLoading"
           class="w-full step-scope-select"
           @change="onOrgChange"
         />
@@ -32,6 +33,7 @@
             show-search
             :filter-option="filterOption"
             :options="deptOptions"
+            :loading="deptLoading"
             :disabled="!localForm.org_id"
             class="w-full step-scope-select"
             @change="onDeptChange"
@@ -55,12 +57,21 @@
             show-search
             :filter-option="filterOptionUser"
             :options="userOptions"
+            :loading="userLoading"
             :disabled="!localForm.dept_id"
             class="w-full step-scope-select"
           />
         </a-form-item>
       </template>
     </a-form>
+
+    <section v-if="scopePreviewItems.length" class="step-scope-preview">
+      <SectionTitle
+        :title="t('avatar.wizard.bindScope')"
+        :description="t('avatar.wizard.scopeHint')"
+      />
+      <ReadonlyDescription :items="scopePreviewItems" />
+    </section>
   </div>
 </template>
 
@@ -70,6 +81,8 @@ import type { FormInstance } from 'ant-design-vue'
 import { getOrganizations } from '@/api/organizations'
 import { getDepartments } from '@/api/departments'
 import { getUsers } from '@/api/users'
+import ReadonlyDescription from '@/components/ReadonlyDescription/index.vue'
+import SectionTitle from '@/components/SectionTitle/index.vue'
 import type { AvatarWizardForm } from '@/types/avatar'
 import type { Organization } from '@/types/organization'
 import type { Department } from '@/types/department'
@@ -139,6 +152,9 @@ const showUser = computed(() => props.modelValue.type === 'expert')
 const orgOptions = ref<{ label: string; value: string }[]>([])
 const deptOptions = ref<{ label: string; value: string }[]>([])
 const userOptions = ref<{ label: string; value: string }[]>([])
+const orgLoading = ref(false)
+const deptLoading = ref(false)
+const userLoading = ref(false)
 
 const orgRules = computed(() => [
   { required: true, message: t('common.required'), trigger: 'change' },
@@ -160,9 +176,7 @@ function onOrgChange() {
   deptOptions.value = []
   userOptions.value = []
   if (localForm.value.org_id) {
-    getDepartments({ org_id: localForm.value.org_id, page: 1, page_size: 200 }).then((res) => {
-      deptOptions.value = res.items.map((d: Department) => ({ label: d.name, value: d.id }))
-    })
+    loadDepartments(localForm.value.org_id)
   }
 }
 
@@ -170,41 +184,74 @@ function onDeptChange() {
   localForm.value.user_id = undefined
   userOptions.value = []
   if (localForm.value.dept_id && localForm.value.org_id) {
-    getUsers({
-      org_id: localForm.value.org_id,
-      dept_id: localForm.value.dept_id,
+    loadUsers(localForm.value.org_id, localForm.value.dept_id)
+  }
+}
+
+async function loadOrganizations() {
+  orgLoading.value = true
+  try {
+    const res = await getOrganizations({ page: 1, page_size: 200 })
+    orgOptions.value = res.items.map((o: Organization) => ({ label: o.name, value: o.id }))
+  } finally {
+    orgLoading.value = false
+  }
+}
+
+async function loadDepartments(orgId: string) {
+  deptLoading.value = true
+  try {
+    const res = await getDepartments({ org_id: orgId, page: 1, page_size: 200 })
+    deptOptions.value = res.items.map((d: Department) => ({ label: d.name, value: d.id }))
+  } finally {
+    deptLoading.value = false
+  }
+}
+
+async function loadUsers(orgId: string, deptId: string) {
+  userLoading.value = true
+  try {
+    const res = await getUsers({
+      org_id: orgId,
+      dept_id: deptId,
       page: 1,
       page_size: 200,
-    }).then((res) => {
-      userOptions.value = res.items.map((u: UserListItem) => ({ label: u.real_name, value: u.id }))
     })
+    userOptions.value = res.items.map((u: UserListItem) => ({ label: u.real_name, value: u.id }))
+  } finally {
+    userLoading.value = false
   }
 }
 
 onMounted(() => {
-  getOrganizations({ page: 1, page_size: 200 }).then((res) => {
-    orgOptions.value = res.items.map((o: Organization) => ({ label: o.name, value: o.id }))
-  })
+  loadOrganizations()
   if (props.modelValue.org_id) {
-    getDepartments({ org_id: props.modelValue.org_id, page: 1, page_size: 200 }).then((res) => {
-      deptOptions.value = res.items.map((d: Department) => ({ label: d.name, value: d.id }))
-    })
+    loadDepartments(props.modelValue.org_id)
   }
   if (props.modelValue.dept_id && props.modelValue.org_id) {
-    getUsers({
-      org_id: props.modelValue.org_id,
-      dept_id: props.modelValue.dept_id,
-      page: 1,
-      page_size: 200,
-    }).then((res) => {
-      userOptions.value = res.items.map((u: UserListItem) => ({ label: u.real_name, value: u.id }))
-    })
+    loadUsers(props.modelValue.org_id, props.modelValue.dept_id)
   }
 })
 
 function filterOptionUser(input: string, option: { label?: string; value?: string }) {
   return (option.label ?? '').toLowerCase().includes((input || '').toLowerCase())
 }
+
+function findLabel(options: { label: string; value: string }[], value?: string) {
+  if (!value) return ''
+  return options.find((option) => option.value === value)?.label ?? ''
+}
+
+const scopePreviewItems = computed(() => {
+  const items: { label: string; value: string }[] = []
+  const orgName = findLabel(orgOptions.value, localForm.value.org_id)
+  const deptName = findLabel(deptOptions.value, localForm.value.dept_id)
+  const userName = findLabel(userOptions.value, localForm.value.user_id)
+  if (orgName) items.push({ label: t('avatar.org'), value: orgName })
+  if (deptName) items.push({ label: t('avatar.dept'), value: deptName })
+  if (userName) items.push({ label: t('avatar.bindUser'), value: userName })
+  return items
+})
 
 defineExpose({
   validate: () => formRef.value?.validate(),
@@ -273,5 +320,16 @@ defineExpose({
 /* 禁用态仍保持可见 */
 .step-scope :deep(.step-scope-select.ant-select-disabled .ant-select-selector) {
   color: var(--ant-color-text-quaternary, #8c8c8c);
+}
+
+.step-scope-preview {
+  padding: var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  background: var(--color-bg-container);
+}
+
+.step-scope-preview :deep(.section-title) {
+  margin-bottom: var(--spacing-md);
 }
 </style>
