@@ -53,64 +53,7 @@
                 <template #label>
                   <span class="step-info-label">{{ t('avatar.tags') }}</span>
                 </template>
-                <div class="step-info-tags-wrap">
-                  <template v-for="(tag, index) in local.tags" :key="`${tag}-${index}`">
-                    <span class="step-info-tag-pill">
-                      <span class="step-info-tag-text">{{ tag }}</span>
-                      <span
-                        class="step-info-tag-remove"
-                        role="button"
-                        tabindex="0"
-                        :aria-label="t('common.delete')"
-                        @click="removeTag(index)"
-                        @keydown.enter.prevent="removeTag(index)"
-                        @keydown.space.prevent="removeTag(index)"
-                      >
-                        <CloseOutlined class="step-info-tag-remove-icon" />
-                      </span>
-                    </span>
-                  </template>
-                  <a-popover
-                    v-if="local.tags.length < TAG_MAX_COUNT"
-                    v-model:open="tagPopoverOpen"
-                    trigger="click"
-                    overlay-class-name="step-info-tag-popover"
-                    @open-change="onTagPopoverOpenChange"
-                  >
-                    <template #content>
-                      <div class="step-info-tag-add-popover p-1">
-                        <a-input
-                          ref="tagInputRef"
-                          v-model:value="tagInputValue"
-                          :placeholder="t('avatar.wizard.tagPlaceholder')"
-                          :maxlength="20"
-                          size="small"
-                          class="w-48"
-                          @keydown.enter.prevent="confirmAddTag"
-                        />
-                        <a-button
-                          type="primary"
-                          size="small"
-                          class="mt-2 w-full"
-                          @click="confirmAddTag"
-                        >
-                          {{ t('common.confirm') }}
-                        </a-button>
-                      </div>
-                    </template>
-                    <span
-                      class="step-info-tag-add-pill"
-                      role="button"
-                      tabindex="0"
-                      :aria-label="t('avatar.wizard.addTag')"
-                      @keydown.enter.prevent="tagPopoverOpen = true"
-                      @keydown.space.prevent="tagPopoverOpen = true"
-                    >
-                      <PlusOutlined class="step-info-tag-add-icon" />
-                      <span>{{ t('avatar.wizard.tagPlaceholderAdd') }}</span>
-                    </span>
-                  </a-popover>
-                </div>
+                <TagListEditor v-model:tags="local.tags" />
               </a-form-item>
             </div>
           </section>
@@ -154,10 +97,10 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { CloseOutlined, PlusOutlined } from '@ant-design/icons-vue'
 import type { FormInstance } from 'ant-design-vue'
 import AvatarUploadPanel from '@/components/AvatarUploadPanel/index.vue'
 import SectionTitle from '@/components/SectionTitle/index.vue'
+import TagListEditor from '@/components/TagListEditor/index.vue'
 import AvatarStyleSelector from '../AvatarStyleSelector.vue'
 import type { AvatarWizardForm, AvatarStyle } from '@/types/avatar'
 import { uploadAvatar } from '@/api/upload'
@@ -175,10 +118,6 @@ const emit = defineEmits<{
 }>()
 
 const formRef = ref<FormInstance>()
-const tagPopoverOpen = ref(false)
-const tagInputValue = ref('')
-const tagInputRef = ref<{ focus: () => void } | null>(null)
-const TAG_MAX_COUNT = 10
 const avatarFileRef = ref<HTMLInputElement | null>(null)
 const avatarPreviewUrl = ref('')
 const AVATAR_ACCEPT = 'image/jpeg,image/png,image/gif,image/webp'
@@ -254,29 +193,6 @@ watch(
   },
   { deep: true }
 )
-
-function removeTag(index: number) {
-  const next = local.value.tags.filter((_, i) => i !== index)
-  local.value = { ...local.value, tags: next }
-}
-
-function confirmAddTag() {
-  const raw = tagInputValue.value?.trim()
-  if (!raw) return
-  if (local.value.tags.length >= TAG_MAX_COUNT) return
-  if (local.value.tags.includes(raw)) {
-    tagInputValue.value = ''
-    return
-  }
-  local.value = { ...local.value, tags: [...local.value.tags, raw] }
-  tagInputValue.value = ''
-  tagPopoverOpen.value = false
-}
-
-function onTagPopoverOpenChange(open: boolean) {
-  if (!open) tagInputValue.value = ''
-  else setTimeout(() => tagInputRef.value?.focus(), 80)
-}
 
 function revokeAvatarPreview() {
   if (avatarPreviewUrl.value && avatarPreviewUrl.value.startsWith('blob:')) {
@@ -401,81 +317,6 @@ defineExpose({
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 20%, transparent);
 }
 
-.step-info-tags-wrap {
-  min-height: 32px;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
-.step-info-tag-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 10px 4px 12px;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 40%, transparent);
-  border-radius: var(--radius-full);
-  color: var(--color-primary);
-  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-  font-size: 12px;
-}
-
-.step-info-tag-text {
-  max-width: 160px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.step-info-tag-remove {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 14px;
-  height: 14px;
-  border-radius: var(--radius-full);
-  color: var(--color-primary);
-  cursor: pointer;
-  transition:
-    color 0.15s,
-    background 0.15s;
-}
-.step-info-tag-remove:hover {
-  color: var(--color-primary-hover);
-  background: color-mix(in srgb, var(--color-primary) 15%, transparent);
-}
-.step-info-tag-remove:focus-visible,
-.step-info-tag-add-pill:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-.step-info-tag-remove-icon {
-  font-size: 10px;
-}
-.step-info-tag-add-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 12px;
-  border: 1px dashed var(--color-border);
-  border-radius: var(--radius-full);
-  background: transparent;
-  color: var(--color-text-tertiary);
-  font-size: 12px;
-  cursor: pointer;
-  transition:
-    border-color 0.15s,
-    color 0.15s;
-}
-.step-info-tag-add-pill:hover {
-  border-color: var(--color-text-tertiary);
-  color: var(--color-text-secondary);
-}
-.step-info-tag-add-pill .step-info-tag-add-icon,
-.step-info-tag-add-pill :deep(.anticon) {
-  color: inherit;
-  font-size: 12px;
-}
 @media (max-width: 768px) {
   .step-info-layout {
     grid-template-columns: 1fr;

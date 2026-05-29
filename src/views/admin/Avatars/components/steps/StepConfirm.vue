@@ -101,15 +101,14 @@ import {
   UserOutlined,
 } from '@ant-design/icons-vue'
 import type { Component } from 'vue'
-import { getEngines, getModels, getTools } from '@/api/advancedConfig'
 import { getOrganizations } from '@/api/organizations'
 import { getDepartments } from '@/api/departments'
 import { getUsers } from '@/api/users'
-import { getSkills } from '@/api/skills'
-import type { EngineItem, ModelGroup, SkillItem, ToolGroup } from '@/types/advancedConfig'
-import type { AvatarWizardForm, AvatarType, AvatarStyle } from '@/types/avatar'
+import { useAdvancedConfigOptions } from '@/composables/useAdvancedConfigOptions'
+import type { AvatarWizardForm, AvatarType } from '@/types/avatar'
 import { AVATAR_TYPE_LABEL_KEYS } from '@/types/avatar'
-import { normalizeSkillOptions, resolveAdvancedConfigSummary } from '@/utils/avatarAdvancedConfig'
+import { resolveAdvancedConfigSummary } from '@/utils/avatarAdvancedConfig'
+import { getStyleLabel, STYLE_DESCRIPTION_KEYS } from '@/utils/avatar'
 
 const { t } = useI18n()
 
@@ -118,27 +117,8 @@ const props = defineProps<{
 }>()
 
 const scopeNames = ref<{ orgName?: string; deptName?: string; userName?: string }>({})
-const advancedLoaded = ref(false)
-const toolGroups = ref<ToolGroup[]>([])
-const skillOptions = ref<SkillItem[]>([])
-const engineOptions = ref<EngineItem[]>([])
-const modelGroups = ref<ModelGroup[]>([])
-
-const STYLE_LABEL_KEYS: Record<AvatarStyle, string> = {
-  formal: 'avatar.wizard.styleFormal',
-  friendly: 'avatar.wizard.styleFriendly',
-  concise: 'avatar.wizard.styleConcise',
-  detailed: 'avatar.wizard.styleDetailed',
-  custom: 'avatar.wizard.styleCustom',
-}
-
-const STYLE_DESCRIPTION_KEYS: Record<AvatarStyle, string> = {
-  formal: 'avatar.wizard.styleFormalDesc',
-  friendly: 'avatar.wizard.styleFriendlyDesc',
-  concise: 'avatar.wizard.styleConciseDesc',
-  detailed: 'avatar.wizard.styleDetailedDesc',
-  custom: 'avatar.wizard.styleCustomDesc',
-}
+const { toolGroups, skillOptions, engineOptions, modelGroups, loadAdvancedOptions } =
+  useAdvancedConfigOptions()
 
 type ConfirmContentRow = {
   label: string
@@ -150,10 +130,6 @@ type ConfirmContentRow = {
 
 function getTypeLabelKey(type: AvatarType): string {
   return AVATAR_TYPE_LABEL_KEYS[type] ?? 'avatar.type'
-}
-
-function getStyleLabelKey(style: AvatarStyle): string {
-  return STYLE_LABEL_KEYS[style] ?? style
 }
 
 function resolveNames(form: AvatarWizardForm) {
@@ -190,21 +166,6 @@ watch(
   (form) => resolveNames(form),
   { immediate: true, deep: true }
 )
-
-async function loadAdvancedOptions() {
-  if (advancedLoaded.value) return
-  const [tools, skills, engines, models] = await Promise.all([
-    getTools(),
-    getSkills(),
-    getEngines(),
-    getModels(),
-  ])
-  toolGroups.value = tools
-  skillOptions.value = normalizeSkillOptions(skills)
-  engineOptions.value = engines
-  modelGroups.value = models
-  advancedLoaded.value = true
-}
 
 onMounted(loadAdvancedOptions)
 
@@ -252,7 +213,7 @@ const contentRows = computed<ConfirmContentRow[]>(() => {
   return [
     {
       label: t('avatar.style'),
-      value: t(getStyleLabelKey(form.style)),
+      value: getStyleLabel(form.style, t),
       description: t(STYLE_DESCRIPTION_KEYS[form.style]),
       icon: UserOutlined,
       kind: 'style',

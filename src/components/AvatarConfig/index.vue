@@ -104,55 +104,7 @@
             </a-form-item>
 
             <a-form-item :label="t('avatar.tags')" name="tags">
-              <div class="step-info-tags-wrap">
-                <span
-                  v-for="(tag, index) in formData.tags"
-                  :key="`${tag}-${index}`"
-                  class="step-info-tag-pill"
-                >
-                  <span class="step-info-tag-text">{{ tag }}</span>
-                  <span
-                    class="step-info-tag-remove"
-                    role="button"
-                    tabindex="0"
-                    :aria-label="t('common.delete')"
-                    @click="removeTag(index)"
-                    @keydown.enter.prevent="removeTag(index)"
-                    @keydown.space.prevent="removeTag(index)"
-                  >
-                    <CloseOutlined class="step-info-tag-remove-icon" />
-                  </span>
-                </span>
-
-                <a-popover v-model:open="tagPopoverVisible" trigger="click" placement="bottomLeft">
-                  <template #content>
-                    <div class="p-2 flex gap-2">
-                      <a-input
-                        v-model:value="newTag"
-                        :placeholder="t('avatar.wizard.tagPlaceholder')"
-                        :maxlength="20"
-                        size="small"
-                        class="w-32"
-                        @press-enter="addTag"
-                      />
-                      <a-button type="primary" size="small" @click="addTag">
-                        {{ t('common.add') }}
-                      </a-button>
-                    </div>
-                  </template>
-                  <span
-                    class="step-info-tag-add-pill"
-                    role="button"
-                    tabindex="0"
-                    :aria-label="t('avatar.wizard.addTag')"
-                    @keydown.enter.prevent="tagPopoverVisible = true"
-                    @keydown.space.prevent="tagPopoverVisible = true"
-                  >
-                    <PlusOutlined class="step-info-tag-add-icon" />
-                    <span>{{ t('avatar.wizard.tagPlaceholderAdd') }}</span>
-                  </span>
-                </a-popover>
-              </div>
+              <TagListEditor v-model:tags="formData.tags" />
             </a-form-item>
           </div>
         </div>
@@ -186,33 +138,21 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { CloseOutlined, PlusOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import AdvancedConfigFields from './AdvancedConfigFields.vue'
 import AvatarUploadPanel from '@/components/AvatarUploadPanel/index.vue'
 import SectionTitle from '@/components/SectionTitle/index.vue'
+import TagListEditor from '@/components/TagListEditor/index.vue'
 import AvatarStyleSelector from '@/views/admin/Avatars/components/AvatarStyleSelector.vue'
 import type { OwnerType } from '@/constants/avatar'
 import type { UpdateAvatarConfigParams } from '@/types/avatarConfig'
 import type { AvatarStyle, UpdateAvatarParams } from '@/types/avatar'
-import type {
-  AvatarModelConfig,
-  EngineItem,
-  ModelGroup,
-  SkillItem,
-  ToolGroup,
-} from '@/types/advancedConfig'
-import { getEngines, getModels, getTools } from '@/api/advancedConfig'
+import type { AvatarModelConfig } from '@/types/advancedConfig'
+import { useAdvancedConfigOptions } from '@/composables/useAdvancedConfigOptions'
 import { getAvatarConfig, updateMyAvatarConfig } from '@/api/avatarConfig'
 import { getAvatarDetail, updateAvatar } from '@/api/avatars'
-import { getSkills } from '@/api/skills'
 import { uploadAvatar } from '@/api/upload'
-import {
-  getDefaultEngineName,
-  getEnabledNames,
-  normalizeSkillOptions,
-  resolveModelSelection,
-} from '@/utils/avatarAdvancedConfig'
+import { extractAvatarFormValues } from '@/utils/avatar'
 
 const props = defineProps<{
   ownerType: OwnerType
@@ -232,15 +172,16 @@ const loading = ref(false)
 const saving = ref(false)
 const formRef = ref()
 const fileInputRef = ref<HTMLInputElement>()
-const tagPopoverVisible = ref(false)
-const newTag = ref('')
 const avatarUploading = ref(false)
-const advancedLoading = ref(false)
-const advancedLoaded = ref(false)
-const toolGroups = ref<ToolGroup[]>([])
-const skillOptions = ref<SkillItem[]>([])
-const engineOptions = ref<EngineItem[]>([])
-const modelGroups = ref<ModelGroup[]>([])
+const {
+  toolGroups,
+  skillOptions,
+  engineOptions,
+  modelGroups,
+  advancedLoading,
+  loadAdvancedOptions,
+  applyAdvancedDefaults,
+} = useAdvancedConfigOptions()
 
 const AVATAR_ACCEPT = 'image/jpeg,image/png,image/gif,image/webp'
 
@@ -284,46 +225,11 @@ function assignFormFromDetail(res: {
   algorithm?: string | null
   model?: UpdateAvatarConfigParams['model']
 }) {
+  const values = extractAvatarFormValues(res)
   Object.assign(formData, {
-    name: res.name,
-    avatar_url: res.avatar_url,
-    bio: res.bio,
-    greeting: res.greeting,
-    style: res.style,
-    style_custom: res.style_custom ?? null,
-    tags: res.tags || [],
-    tools: getEnabledNames(res.tools),
-    skills: getEnabledNames(res.skills),
-    algorithm: res.algorithm ?? getEnabledNames(res.algorithms)[0] ?? null,
-    model: res.model ?? null,
+    ...values,
+    style_custom: values.style_custom || null,
   })
-}
-
-async function loadAdvancedOptions() {
-  if (advancedLoaded.value) return
-  advancedLoading.value = true
-  try {
-    const [tools, skills, engines, models] = await Promise.all([
-      getTools(),
-      getSkills(),
-      getEngines(),
-      getModels(),
-    ])
-    toolGroups.value = tools
-    skillOptions.value = normalizeSkillOptions(skills)
-    engineOptions.value = engines
-    modelGroups.value = models
-    advancedLoaded.value = true
-  } catch (err) {
-    console.error('Failed to fetch advanced avatar config options:', err)
-  } finally {
-    advancedLoading.value = false
-  }
-}
-
-function applyAdvancedDefaults() {
-  formData.algorithm = getDefaultEngineName(formData.algorithm, engineOptions.value)
-  formData.model = resolveModelSelection(formData.model, modelGroups.value)
 }
 
 const fetchConfig = async () => {
@@ -345,7 +251,7 @@ const fetchConfig = async () => {
       })(),
       loadAdvancedOptions(),
     ])
-    applyAdvancedDefaults()
+    applyAdvancedDefaults(formData)
   } catch (err) {
     console.error('Failed to fetch avatar config:', err)
   } finally {
@@ -430,19 +336,6 @@ function onStyleCustomUpdate(v: string) {
   formData.style_custom = v?.trim() ? v : null
 }
 
-const removeTag = (index: number) => {
-  formData.tags.splice(index, 1)
-}
-
-const addTag = () => {
-  const tag = newTag.value.trim()
-  if (tag && !formData.tags.includes(tag)) {
-    formData.tags.push(tag)
-  }
-  newTag.value = ''
-  tagPopoverVisible.value = false
-}
-
 watch(
   () => [props.ownerType, props.ownerId, props.avatarId],
   () => {
@@ -520,43 +413,6 @@ onMounted(fetchConfig)
 
 .step-info-input:focus {
   @apply outline-none border-[#0ea5e9] ring-2 ring-[#0ea5e9]/20;
-}
-
-.step-info-tags-wrap {
-  @apply flex flex-wrap items-center gap-2 min-h-[32px];
-}
-
-.step-info-tag-pill {
-  @apply inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#0ea5e9]/10 border border-[#0ea5e9]/40 text-[#0ea5e9] text-xs;
-  max-width: 180px;
-}
-
-.step-info-tag-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.step-info-tag-remove {
-  @apply inline-flex items-center justify-center w-3.5 h-3.5 rounded-full hover:bg-[#0ea5e9]/20 cursor-pointer shrink-0;
-}
-
-.step-info-tag-remove:focus-visible,
-.step-info-tag-add-pill:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
-.step-info-tag-remove-icon {
-  @apply text-[10px];
-}
-
-.step-info-tag-add-pill {
-  @apply inline-flex items-center gap-1 px-3 py-1 rounded-full border border-dashed border-gray-300 dark:border-gray-600 text-gray-400 text-xs cursor-pointer hover:border-gray-400 hover:text-gray-500 transition-colors;
-}
-
-.step-info-tag-add-icon {
-  @apply text-xs;
 }
 
 :deep(.ant-form-item-label > label) {

@@ -144,6 +144,7 @@ declare module 'vue' {
     SourceCitation: typeof import('./src/components/ChatWindow/SourceCitation.vue')['default']
     StatCard: typeof import('./src/components/StatCard/index.vue')['default']
     TableFilter: typeof import('./src/components/TableFilter/index.vue')['default']
+    TagListEditor: typeof import('./src/components/TagListEditor/index.vue')['default']
     TagsView: typeof import('./src/components/TagsView/index.vue')['default']
     TextFileViewer: typeof import('./src/components/FilePreview/TextFileViewer.vue')['default']
     ThemeSwitcher: typeof import('./src/components/ThemeSwitcher/index.vue')['default']

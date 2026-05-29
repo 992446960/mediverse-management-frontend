@@ -106,64 +106,7 @@
                   <template #label>
                     <span class="step-info-label">{{ t('avatar.tags') }}</span>
                   </template>
-                  <div class="step-info-tags-wrap flex flex-wrap items-center gap-2">
-                    <template v-for="(tag, index) in form.tags" :key="`${tag}-${index}`">
-                      <span class="step-info-tag-pill">
-                        <span class="step-info-tag-text">{{ tag }}</span>
-                        <span
-                          class="step-info-tag-remove"
-                          role="button"
-                          tabindex="0"
-                          :aria-label="t('common.delete')"
-                          @click="removeTag(index)"
-                          @keydown.enter.prevent="removeTag(index)"
-                          @keydown.space.prevent="removeTag(index)"
-                        >
-                          <CloseOutlined class="step-info-tag-remove-icon" />
-                        </span>
-                      </span>
-                    </template>
-                    <a-popover
-                      v-if="form.tags.length < TAG_MAX_COUNT"
-                      v-model:open="tagPopoverOpen"
-                      trigger="click"
-                      overlay-class-name="step-info-tag-popover"
-                      @open-change="onTagPopoverOpenChange"
-                    >
-                      <template #content>
-                        <div class="step-info-tag-add-popover p-1">
-                          <a-input
-                            ref="tagInputRef"
-                            v-model:value="tagInputValue"
-                            :placeholder="t('avatar.wizard.tagPlaceholder')"
-                            :maxlength="20"
-                            size="small"
-                            class="w-48"
-                            @keydown.enter.prevent="confirmAddTag"
-                          />
-                          <a-button
-                            type="primary"
-                            size="small"
-                            class="mt-2 w-full"
-                            @click="confirmAddTag"
-                          >
-                            {{ t('common.confirm') }}
-                          </a-button>
-                        </div>
-                      </template>
-                      <span
-                        class="step-info-tag-add-pill"
-                        role="button"
-                        tabindex="0"
-                        :aria-label="t('avatar.wizard.addTag')"
-                        @keydown.enter.prevent="tagPopoverOpen = true"
-                        @keydown.space.prevent="tagPopoverOpen = true"
-                      >
-                        <PlusOutlined class="step-info-tag-add-icon" />
-                        <span>{{ t('avatar.wizard.tagPlaceholderAdd') }}</span>
-                      </span>
-                    </a-popover>
-                  </div>
+                  <TagListEditor v-model:tags="form.tags" />
                 </a-form-item>
 
                 <a-form-item :label="t('avatar.greeting')" name="greeting">
@@ -232,10 +175,8 @@ import { message } from 'ant-design-vue'
 import type { FormInstance } from 'ant-design-vue'
 import {
   CheckCircleOutlined,
-  CloseOutlined,
   InfoCircleFilled,
   MessageOutlined,
-  PlusOutlined,
   RobotOutlined,
   SettingOutlined,
 } from '@ant-design/icons-vue'
@@ -243,26 +184,15 @@ import { useI18n } from 'vue-i18n'
 import AdvancedConfigFields from '@/components/AvatarConfig/AdvancedConfigFields.vue'
 import AvatarUploadPanel from '@/components/AvatarUploadPanel/index.vue'
 import SectionTitle from '@/components/SectionTitle/index.vue'
+import TagListEditor from '@/components/TagListEditor/index.vue'
 import AvatarStyleSelector from './AvatarStyleSelector.vue'
-import { getEngines, getModels, getTools } from '@/api/advancedConfig'
 import { getAvatarDetail, updateAvatar } from '@/api/avatars'
-import { getSkills } from '@/api/skills'
 import { uploadAvatar } from '@/api/upload'
-import type {
-  AvatarModelConfig,
-  EngineItem,
-  ModelGroup,
-  SkillItem,
-  ToolGroup,
-} from '@/types/advancedConfig'
+import type { AvatarModelConfig } from '@/types/advancedConfig'
 import type { Avatar, AvatarStyle, UpdateAvatarParams } from '@/types/avatar'
-import {
-  getDefaultEngineName,
-  getEnabledNames,
-  normalizeSkillOptions,
-  resolveAdvancedConfigSummary,
-  resolveModelSelection,
-} from '@/utils/avatarAdvancedConfig'
+import { useAdvancedConfigOptions } from '@/composables/useAdvancedConfigOptions'
+import { extractAvatarFormValues, formatScope, getStyleLabel } from '@/utils/avatar'
+import { resolveAdvancedConfigSummary } from '@/utils/avatarAdvancedConfig'
 import type { Component } from 'vue'
 
 const AVATAR_ACCEPT = 'image/jpeg,image/png,image/gif,image/webp'
@@ -287,23 +217,15 @@ const avatar = ref<Avatar | null>(null)
 const formRef = ref<FormInstance>()
 const avatarFileRef = ref<HTMLInputElement | null>(null)
 const avatarUploading = ref(false)
-const advancedLoading = ref(false)
-const advancedLoaded = ref(false)
-const toolGroups = ref<ToolGroup[]>([])
-const skillOptions = ref<SkillItem[]>([])
-const engineOptions = ref<EngineItem[]>([])
-const modelGroups = ref<ModelGroup[]>([])
-const tagPopoverOpen = ref(false)
-const tagInputValue = ref('')
-const tagInputRef = ref<{ focus: () => void } | null>(null)
-const TAG_MAX_COUNT = 10
-const STYLE_LABEL_KEYS: Record<AvatarStyle, string> = {
-  formal: 'avatar.wizard.styleFormal',
-  friendly: 'avatar.wizard.styleFriendly',
-  concise: 'avatar.wizard.styleConcise',
-  detailed: 'avatar.wizard.styleDetailed',
-  custom: 'avatar.wizard.styleCustom',
-}
+const {
+  toolGroups,
+  skillOptions,
+  engineOptions,
+  modelGroups,
+  advancedLoading,
+  loadAdvancedOptions,
+  applyAdvancedDefaults,
+} = useAdvancedConfigOptions()
 
 interface EditFormState {
   name: string
@@ -380,37 +302,8 @@ const overviewItems = computed<
   },
 ])
 
-function formatScope(record: Avatar): string {
-  const parts: string[] = [record.org_name]
-  if (record.dept_name) parts.push(record.dept_name)
-  if (record.user_name) parts.push(record.user_name)
-  return parts.join(' / ')
-}
-
 function styleLabel(style: AvatarStyle): string {
-  return t(STYLE_LABEL_KEYS[style] ?? STYLE_LABEL_KEYS.formal)
-}
-
-function removeTag(index: number) {
-  form.value.tags = form.value.tags.filter((_, i) => i !== index)
-}
-
-function confirmAddTag() {
-  const raw = tagInputValue.value?.trim()
-  if (!raw) return
-  if (form.value.tags.length >= TAG_MAX_COUNT) return
-  if (form.value.tags.includes(raw)) {
-    tagInputValue.value = ''
-    return
-  }
-  form.value = { ...form.value, tags: [...form.value.tags, raw] }
-  tagInputValue.value = ''
-  tagPopoverOpen.value = false
-}
-
-function onTagPopoverOpenChange(open: boolean) {
-  if (!open) tagInputValue.value = ''
-  else setTimeout(() => tagInputRef.value?.focus(), 80)
+  return getStyleLabel(style, t)
 }
 
 function triggerAvatarFileInput() {
@@ -440,47 +333,7 @@ async function onAvatarFileChange(e: Event) {
 
 function fillFromAvatar(a: Avatar) {
   avatar.value = a
-  form.value = {
-    name: a.name ?? '',
-    avatar_url: a.avatar_url ?? '',
-    bio: a.bio ?? '',
-    tags: a.tags ?? [],
-    greeting: a.greeting ?? '',
-    style: a.style ?? 'formal',
-    style_custom: a.style_custom ?? '',
-    tools: getEnabledNames(a.tools),
-    skills: getEnabledNames(a.skills),
-    algorithm: a.algorithm ?? getEnabledNames(a.algorithms)[0] ?? null,
-    model: a.model ?? null,
-  }
-}
-
-async function loadAdvancedOptions() {
-  if (advancedLoaded.value) return
-  advancedLoading.value = true
-  try {
-    const [tools, skills, engines, models] = await Promise.all([
-      getTools(),
-      getSkills(),
-      getEngines(),
-      getModels(),
-    ])
-    toolGroups.value = tools
-    skillOptions.value = normalizeSkillOptions(skills)
-    engineOptions.value = engines
-    modelGroups.value = models
-    advancedLoaded.value = true
-  } finally {
-    advancedLoading.value = false
-  }
-}
-
-function applyAdvancedDefaults() {
-  form.value = {
-    ...form.value,
-    algorithm: getDefaultEngineName(form.value.algorithm, engineOptions.value),
-    model: resolveModelSelection(form.value.model, modelGroups.value),
-  }
+  form.value = extractAvatarFormValues(a)
 }
 
 async function loadDetail(id: string) {
@@ -498,7 +351,7 @@ async function loadOpenData() {
     props.avatarId ? loadDetail(props.avatarId) : Promise.resolve(),
     loadAdvancedOptions(),
   ])
-  applyAdvancedDefaults()
+  applyAdvancedDefaults(form)
 }
 
 watch(
@@ -792,73 +645,6 @@ async function onSubmit() {
 
 .step-info-label {
   display: inline-block;
-}
-.step-info-tags-wrap {
-  min-height: 32px;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
-.step-info-tag-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 10px 4px 12px;
-  border-radius: 9999px;
-  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-primary) 40%, transparent);
-  color: var(--color-primary);
-  font-size: 12px;
-}
-.step-info-tag-remove {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  color: var(--color-primary);
-  cursor: pointer;
-  transition:
-    color 0.15s,
-    background 0.15s;
-}
-.step-info-tag-remove:hover {
-  color: var(--color-primary-hover);
-  background: color-mix(in srgb, var(--color-primary) 15%, transparent);
-}
-.step-info-tag-remove:focus-visible,
-.step-info-tag-add-pill:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-.step-info-tag-remove-icon {
-  font-size: 10px;
-}
-.step-info-tag-add-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 12px;
-  border-radius: 9999px;
-  background: transparent;
-  border: 1px dashed var(--color-border);
-  color: var(--color-text-tertiary);
-  font-size: 12px;
-  cursor: pointer;
-  transition:
-    border-color 0.15s,
-    color 0.15s;
-}
-.step-info-tag-add-pill:hover {
-  border-color: var(--color-text-tertiary);
-  color: var(--color-text-secondary);
-}
-.step-info-tag-add-pill .step-info-tag-add-icon,
-.step-info-tag-add-pill :deep(.anticon) {
-  color: inherit;
-  font-size: 12px;
 }
 
 .edit-avatar-section :deep(.config-section) {
