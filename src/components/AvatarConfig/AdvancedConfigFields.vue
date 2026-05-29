@@ -514,7 +514,7 @@ function updateModel(modelId: string) {
 }
 
 .advanced-config-fields--cards .advanced-form-item {
-  padding: 20px;
+  padding: 16px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-base);
   background: var(--color-bg-container);
@@ -525,7 +525,7 @@ function updateModel(modelId: string) {
   align-items: center;
   justify-content: space-between;
   gap: var(--spacing-md);
-  margin-bottom: 26px;
+  margin-bottom: 12px;
 }
 
 .advanced-card-title,
@@ -567,7 +567,7 @@ function updateModel(modelId: string) {
 .advanced-config-fields--cards .advanced-tags-wrap {
   align-content: flex-start;
   align-items: flex-start;
-  min-height: 84px;
+  min-height: 40px;
   padding: 0;
   border: 0;
   background: transparent;
@@ -575,10 +575,10 @@ function updateModel(modelId: string) {
 
 .advanced-config-fields--cards .advanced-select-panel {
   grid-template-columns: 1fr;
-  gap: 20px;
-  padding: 0;
-  border: 0;
-  background: transparent;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-container);
 }
 
 .advanced-config-fields--cards .advanced-select-panel .advanced-form-item {
@@ -591,7 +591,9 @@ function updateModel(modelId: string) {
 
 .advanced-config-fields--cards .advanced-form-item--engine,
 .advanced-config-fields--cards .advanced-form-item--model {
-  padding: 20px;
+  padding: 0;
+  border: 0;
+  background: transparent;
 }
 
 .advanced-select-panel :deep(.ant-select) {

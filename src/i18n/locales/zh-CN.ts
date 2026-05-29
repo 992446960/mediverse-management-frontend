@@ -650,6 +650,8 @@ export default {
     grantedAt: '授权时间',
     confirmStatusContent: '确定要切换该分身状态吗？',
     scopeDisplay: '所属机构：{scope}',
+    overview: '分身概览',
+    changeAvatar: '更换头像',
     advanced: {
       title: '高级能力配置',
       tools: '工具配置',

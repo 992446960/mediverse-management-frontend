@@ -664,6 +664,8 @@ export default {
     grantedAt: 'Granted at',
     confirmStatusContent: "Are you sure you want to change this avatar's status?",
     scopeDisplay: 'Organization: {scope}',
+    overview: 'Avatar overview',
+    changeAvatar: 'Change avatar',
     advanced: {
       title: 'Advanced Capabilities',
       tools: 'Tools',

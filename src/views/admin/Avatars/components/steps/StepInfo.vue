@@ -130,26 +130,7 @@
             </a-form-item>
 
             <a-form-item :label="t('avatar.style')" name="style">
-              <a-radio-group v-model:value="local.style" class="step-info-style-group">
-                <a-radio
-                  v-for="styleOpt in styleOptions"
-                  :key="styleOpt.value"
-                  :value="styleOpt.value"
-                  class="step-info-style-card"
-                  :class="[
-                    `step-info-style-card--${styleOpt.value}`,
-                    { 'step-info-style-card--selected': local.style === styleOpt.value },
-                  ]"
-                >
-                  <span class="step-info-style-card__content">
-                    <span class="step-info-style-card__icon-wrap">
-                      <component :is="styleOpt.icon" class="step-info-style-card__icon" />
-                    </span>
-                    <span class="step-info-style-card__title">{{ t(styleOpt.labelKey) }}</span>
-                    <span class="step-info-style-card__desc">{{ t(styleOpt.descriptionKey) }}</span>
-                  </span>
-                </a-radio>
-              </a-radio-group>
+              <AvatarStyleSelector v-model="local.style" />
             </a-form-item>
 
             <a-form-item
@@ -173,21 +154,13 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import {
-  CloseOutlined,
-  FileTextOutlined,
-  MessageOutlined,
-  PlusOutlined,
-  SettingOutlined,
-  ThunderboltOutlined,
-  UserOutlined,
-} from '@ant-design/icons-vue'
+import { CloseOutlined, PlusOutlined } from '@ant-design/icons-vue'
 import type { FormInstance } from 'ant-design-vue'
 import AvatarUploadPanel from '@/components/AvatarUploadPanel/index.vue'
 import SectionTitle from '@/components/SectionTitle/index.vue'
+import AvatarStyleSelector from '../AvatarStyleSelector.vue'
 import type { AvatarWizardForm, AvatarStyle } from '@/types/avatar'
 import { uploadAvatar } from '@/api/upload'
-import type { Component } from 'vue'
 
 const { t } = useI18n()
 
@@ -357,39 +330,6 @@ const rules = computed(() => ({
   ],
 }))
 
-const styleOptions = [
-  {
-    value: 'formal',
-    labelKey: 'avatar.wizard.styleFormal',
-    descriptionKey: 'avatar.wizard.styleFormalDesc',
-    icon: UserOutlined,
-  },
-  {
-    value: 'friendly',
-    labelKey: 'avatar.wizard.styleFriendly',
-    descriptionKey: 'avatar.wizard.styleFriendlyDesc',
-    icon: MessageOutlined,
-  },
-  {
-    value: 'concise',
-    labelKey: 'avatar.wizard.styleConcise',
-    descriptionKey: 'avatar.wizard.styleConciseDesc',
-    icon: ThunderboltOutlined,
-  },
-  {
-    value: 'detailed',
-    labelKey: 'avatar.wizard.styleDetailed',
-    descriptionKey: 'avatar.wizard.styleDetailedDesc',
-    icon: FileTextOutlined,
-  },
-  {
-    value: 'custom',
-    labelKey: 'avatar.wizard.styleCustom',
-    descriptionKey: 'avatar.wizard.styleCustomDesc',
-    icon: SettingOutlined,
-  },
-] satisfies { value: AvatarStyle; labelKey: string; descriptionKey: string; icon: Component }[]
-
 defineExpose({
   validate: () => formRef.value?.validate(),
 })
@@ -536,106 +476,6 @@ defineExpose({
   color: inherit;
   font-size: 12px;
 }
-.step-info-style-group {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: var(--spacing-md);
-  width: 100%;
-}
-.step-info-style-card {
-  --style-color: var(--color-primary);
-  position: relative;
-  display: flex;
-  min-height: 128px;
-  align-items: stretch;
-  justify-content: center;
-  margin-inline-end: 0;
-  padding: 16px 12px 14px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-base);
-  background: var(--color-bg-container);
-  transition:
-    border-color var(--transition-fast),
-    background var(--transition-fast),
-    color var(--transition-fast);
-}
-.step-info-style-card:hover,
-.step-info-style-card--selected {
-  border-color: var(--style-color);
-  background: color-mix(in srgb, var(--style-color) 10%, var(--color-bg-container));
-}
-.step-info-style-card--selected {
-  color: var(--style-color);
-}
-
-.step-info-style-card--formal {
-  --style-color: #0ea5e9;
-}
-
-.step-info-style-card--friendly {
-  --style-color: #10b981;
-}
-
-.step-info-style-card--concise {
-  --style-color: #f59e0b;
-}
-
-.step-info-style-card--detailed {
-  --style-color: #7c3aed;
-}
-
-.step-info-style-card--custom {
-  --style-color: #64748b;
-}
-
-.step-info-style-card :deep(.ant-radio) {
-  position: absolute;
-  top: 14px;
-  left: 14px;
-  margin: 0;
-}
-
-.step-info-style-card__content {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-width: 0;
-  gap: 6px;
-  color: inherit;
-  font-size: 0.875rem;
-  text-align: center;
-}
-
-.step-info-style-card__icon-wrap {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 42px;
-  height: 42px;
-  border-radius: var(--radius-full);
-  color: var(--style-color);
-  background: color-mix(in srgb, var(--style-color) 16%, transparent);
-  font-size: 1.375rem;
-}
-
-.step-info-style-card__icon {
-  flex-shrink: 0;
-}
-
-.step-info-style-card__title {
-  color: var(--color-text-base);
-  font-weight: 600;
-  line-height: 1.4;
-}
-
-.step-info-style-card__desc {
-  color: var(--color-text-secondary);
-  font-size: 0.8125rem;
-  line-height: 1.45;
-}
-
 @media (max-width: 768px) {
   .step-info-layout {
     grid-template-columns: 1fr;
@@ -646,10 +486,6 @@ defineExpose({
     min-height: 0;
     padding-right: 0;
     border-right: 0;
-  }
-
-  .step-info-style-group {
-    grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
   }
 }
 </style>

@@ -35,7 +35,7 @@
 
 - 用户详情/编辑/新增弹窗按 UI 图回修样式：`UserForm.vue` 继续复用同一弹窗组件，详情保留身份摘要与单列只读分区并修正表格 label 样式，编辑/新增弹窗调整为中等宽度；`ReadonlyDescription` 修正单列宽行跨列问题，并新增视觉契约单测防止宽弹窗和卡片式布局回归。
 - API Token 管理表格修复 Token 码列：slot 列补稳定 `token_hash` 列标识并默认开启列宽拖拽，单元格改为左侧 token 文本占剩余宽度、右侧显示/复制图标固定对齐，避免宽度充足时仍被固定 140px 截断。
-- 分身详情和编辑分身弹窗按 UI 图回修：详情页重做摘要区、高级能力图标行和知识库授权空态；编辑页复用新增分身的头像上传、高级能力卡片，并抽出 `AvatarStyleSelector` 让新增/编辑共用沟通风格卡片。
+- 分身详情和编辑分身弹窗按 UI 图回修：详情页重做摘要区、基础信息分行样式、高级能力图标行和知识库授权空态；编辑页复用新增分身的头像上传、高级能力卡片，并抽出 `AvatarStyleSelector` 让新增/编辑共用沟通风格卡片；全局滚动条轨道改为透明、滑块复用主题色变量。
 - `PageFilter` 多行筛选的“展开/收起”按钮并入查询/重置操作列，操作区按按钮与展开控件整体估算宽度，避免用户管理筛选栏中展开入口脱离按钮盒子。
 - 按新增分身 UI 设计图继续回修向导细节：绑定范围下拉补前置图标并改为紧凑预览卡布局，基础信息头像支持移除且去除外层 body 边框，沟通风格卡补齐多色 icon 背景，高级能力配置恢复卡片间距、工具/技能 tag 配色和推理/模型纵向布局，确认预览补齐沟通风格 tag、高级配置图标间距、底部取消按钮与统一按钮尺寸，并将工具/技能多 tag 区域改为最多三行、透明轨道的横向滚动；共享组件单测覆盖头像移除事件。
 - 完成分身与用户 UI 统一计划落地：新增 `SectionTitle`、`ReadonlyDescription`、`AvatarUploadPanel`、`IdentitySummary`、`WizardStepper` 共享组件；统一分身详情/编辑/新增向导、科室工作台分身配置、个人资料、用户详情/新增/编辑样式；Chrome 验收覆盖 `/admin/avatars`、`/dept/avatar`、`/my/profile`、`/admin/users`，并通过 `pnpm exec vitest run tests/unit/avatarAdvancedConfig.test.ts tests/unit/uiSharedComponents.test.ts` 与 `pnpm verify`。

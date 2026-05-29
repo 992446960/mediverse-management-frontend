@@ -17,24 +17,115 @@
       <template v-if="detail">
         <div class="avatar-detail">
           <section class="avatar-detail__summary">
-            <IdentitySummary
-              :name="detail.name"
-              :scope="formatScope(detail)"
-              :avatar-url="detail.avatar_url || undefined"
-              :status-text="detail.status === 'active' ? t('status.active') : t('status.inactive')"
-              :status-color="detail.status === 'active' ? 'success' : 'error'"
-            />
+            <a-avatar
+              :src="detail.avatar_url || undefined"
+              :size="88"
+              class="avatar-detail__avatar"
+            >
+              <template #icon>
+                <UserOutlined />
+              </template>
+            </a-avatar>
+            <div class="avatar-detail__summary-content">
+              <div class="avatar-detail__summary-header">
+                <h3 class="avatar-detail__name">{{ detail.name }}</h3>
+                <a-tag
+                  :color="detail.status === 'active' ? 'success' : 'error'"
+                  class="avatar-detail__status"
+                >
+                  {{ detail.status === 'active' ? t('status.active') : t('status.inactive') }}
+                </a-tag>
+              </div>
+              <div class="avatar-detail__scope" :title="formatScope(detail)">
+                {{ formatScope(detail) }}
+              </div>
+            </div>
           </section>
 
           <div class="avatar-detail__grid">
             <section class="avatar-detail__section">
               <SectionTitle :title="t('avatar.wizard.basicInfo')" />
-              <ReadonlyDescription :items="basicItems" :columns="1" />
+              <div class="avatar-detail-basic">
+                <div class="avatar-detail-basic__row">
+                  <div class="avatar-detail-basic__label">{{ t('avatar.type') }}</div>
+                  <div class="avatar-detail-basic__value">
+                    <a-tag :color="AVATAR_TYPE_TAG_COLORS[detail.type]" class="avatar-detail-tag">
+                      {{ t(AVATAR_TYPE_DISPLAY_KEYS[detail.type]) }}
+                    </a-tag>
+                  </div>
+                </div>
+                <div class="avatar-detail-basic__row">
+                  <div class="avatar-detail-basic__label">{{ t('avatar.bio') }}</div>
+                  <div class="avatar-detail-basic__value">
+                    {{ detail.bio?.trim() || t('avatar.noBio') }}
+                  </div>
+                </div>
+                <div class="avatar-detail-basic__row">
+                  <div class="avatar-detail-basic__label">{{ t('avatar.greeting') }}</div>
+                  <div class="avatar-detail-basic__value">
+                    {{ detail.greeting?.trim() || '—' }}
+                  </div>
+                </div>
+                <div class="avatar-detail-basic__row">
+                  <div class="avatar-detail-basic__label">{{ t('avatar.style') }}</div>
+                  <div class="avatar-detail-basic__value">
+                    <div class="avatar-detail-style">
+                      <span class="avatar-detail-style__icon">
+                        <MessageOutlined />
+                      </span>
+                      <div class="avatar-detail-style__content">
+                        <span class="avatar-detail-style__name">{{ styleLabel(detail) }}</span>
+                        <span class="avatar-detail-style__desc">{{
+                          styleDescription(detail)
+                        }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="avatar-detail-basic__row">
+                  <div class="avatar-detail-basic__label">{{ t('avatar.tags') }}</div>
+                  <div class="avatar-detail-basic__value">
+                    <a-space v-if="detail.tags.length" wrap :size="[6, 6]">
+                      <a-tag v-for="tag in detail.tags" :key="tag" class="avatar-detail-tag">
+                        {{ tag }}
+                      </a-tag>
+                    </a-space>
+                    <span v-else>—</span>
+                  </div>
+                </div>
+                <div class="avatar-detail-basic__row">
+                  <div class="avatar-detail-basic__label">{{ t('common.createdAt') }}</div>
+                  <div class="avatar-detail-basic__value">
+                    {{ dayjs(detail.created_at).format('YYYY-MM-DD HH:mm:ss') }}
+                  </div>
+                </div>
+              </div>
             </section>
 
             <section class="avatar-detail__section">
               <SectionTitle :title="t('avatar.advanced.title')" />
-              <ReadonlyDescription :items="advancedItems" :columns="1" />
+              <div class="avatar-detail-advanced">
+                <div
+                  v-for="row in advancedRows"
+                  :key="row.label"
+                  class="avatar-detail-advanced__row"
+                >
+                  <span class="avatar-detail-advanced__icon" :class="`is-${row.tone}`">
+                    <component :is="row.icon" />
+                  </span>
+                  <div class="avatar-detail-advanced__content">
+                    <div class="avatar-detail-advanced__label">{{ row.label }}</div>
+                    <div class="avatar-detail-advanced__value">
+                      <a-space v-if="row.tags?.length" wrap :size="[6, 6]">
+                        <a-tag v-for="tag in row.tags" :key="tag" class="avatar-detail-tag">
+                          {{ tag }}
+                        </a-tag>
+                      </a-space>
+                      <span v-else>{{ row.value }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </section>
           </div>
 
@@ -54,7 +145,9 @@
                 </template>
               </template>
             </a-table>
-            <a-empty v-else :description="t('common.noData')" />
+            <div v-else class="avatar-detail__empty">
+              <a-empty :description="t('common.noData')" />
+            </div>
           </section>
         </div>
       </template>
@@ -65,15 +158,27 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
-import IdentitySummary from '@/components/IdentitySummary/index.vue'
-import ReadonlyDescription from '@/components/ReadonlyDescription/index.vue'
+import {
+  BulbOutlined,
+  MessageOutlined,
+  RobotOutlined,
+  SettingOutlined,
+  ToolOutlined,
+  UserOutlined,
+} from '@ant-design/icons-vue'
 import SectionTitle from '@/components/SectionTitle/index.vue'
 import { getEngines, getModels, getTools } from '@/api/advancedConfig'
 import { getAvatarDetail } from '@/api/avatars'
 import { getSkills } from '@/api/skills'
-import { AVATAR_TYPE_LABEL_KEYS, type AvatarDetail, type AvatarStyle } from '@/types/avatar'
+import {
+  AVATAR_TYPE_DISPLAY_KEYS,
+  AVATAR_TYPE_TAG_COLORS,
+  type AvatarDetail,
+  type AvatarStyle,
+} from '@/types/avatar'
 import type { EngineItem, ModelGroup, SkillItem, ToolGroup } from '@/types/advancedConfig'
 import { normalizeSkillOptions, resolveAdvancedConfigSummary } from '@/utils/avatarAdvancedConfig'
+import type { Component } from 'vue'
 
 const props = defineProps<{
   open: boolean
@@ -93,12 +198,6 @@ const skillOptions = ref<SkillItem[]>([])
 const engineOptions = ref<EngineItem[]>([])
 const modelGroups = ref<ModelGroup[]>([])
 
-interface ReadonlyDescriptionItem {
-  label: string
-  value?: string | number | string[] | null
-  span?: 1 | 2
-}
-
 const STYLE_I18N: Record<AvatarStyle, string> = {
   formal: 'avatar.wizard.styleFormal',
   friendly: 'avatar.wizard.styleFriendly',
@@ -107,26 +206,15 @@ const STYLE_I18N: Record<AvatarStyle, string> = {
   custom: 'avatar.wizard.styleCustom',
 }
 
+const STYLE_DESCRIPTION_I18N: Record<AvatarStyle, string> = {
+  formal: 'avatar.wizard.styleFormalDesc',
+  friendly: 'avatar.wizard.styleFriendlyDesc',
+  concise: 'avatar.wizard.styleConciseDesc',
+  detailed: 'avatar.wizard.styleDetailedDesc',
+  custom: 'avatar.wizard.styleCustomDesc',
+}
+
 const grantRows = computed(() => detail.value?.knowledge_grants ?? [])
-const basicItems = computed<ReadonlyDescriptionItem[]>(() => {
-  if (!detail.value) return []
-  return [
-    { label: t('avatar.type'), value: t(AVATAR_TYPE_LABEL_KEYS[detail.value.type]) },
-    { label: t('avatar.bio'), value: detail.value.bio?.trim() || t('avatar.noBio'), span: 2 },
-    { label: t('avatar.greeting'), value: detail.value.greeting?.trim(), span: 2 },
-    { label: t('avatar.style'), value: styleLabel(detail.value), span: 2 },
-    { label: t('avatar.tags'), value: detail.value.tags ?? [], span: 2 },
-    {
-      label: t('common.createdAt'),
-      value: dayjs(detail.value.created_at).format('YYYY-MM-DD HH:mm'),
-    },
-    {
-      label: t('common.updatedAt'),
-      value: dayjs(detail.value.updated_at).format('YYYY-MM-DD HH:mm'),
-    },
-    { label: t('common.createdBy'), value: detail.value.created_by, span: 2 },
-  ]
-})
 const advancedSummary = computed(() =>
   resolveAdvancedConfigSummary(detail.value ?? {}, {
     tools: toolGroups.value,
@@ -136,11 +224,42 @@ const advancedSummary = computed(() =>
     emptyText: '—',
   })
 )
-const advancedItems = computed<ReadonlyDescriptionItem[]>(() => [
-  { label: t('avatar.advanced.tools'), value: advancedSummary.value.tools, span: 2 },
-  { label: t('avatar.advanced.skills'), value: advancedSummary.value.skills, span: 2 },
-  { label: t('avatar.advanced.engine'), value: advancedSummary.value.algorithm },
-  { label: t('avatar.advanced.model'), value: advancedSummary.value.model },
+
+const advancedRows = computed<
+  {
+    label: string
+    value: string
+    tags?: string[]
+    icon: Component
+    tone: 'blue' | 'green' | 'slate'
+  }[]
+>(() => [
+  {
+    label: t('avatar.advanced.tools'),
+    value: '—',
+    tags: advancedSummary.value.tools,
+    icon: ToolOutlined,
+    tone: 'blue',
+  },
+  {
+    label: t('avatar.advanced.skills'),
+    value: '—',
+    tags: advancedSummary.value.skills,
+    icon: BulbOutlined,
+    tone: 'green',
+  },
+  {
+    label: t('avatar.advanced.engine'),
+    value: advancedSummary.value.algorithm,
+    icon: RobotOutlined,
+    tone: 'slate',
+  },
+  {
+    label: t('avatar.advanced.model'),
+    value: advancedSummary.value.model,
+    icon: SettingOutlined,
+    tone: 'slate',
+  },
 ])
 
 const grantColumns = computed(() => [
@@ -162,6 +281,11 @@ function styleLabel(d: AvatarDetail): string {
     return `${t(STYLE_I18N.custom)}：${d.style_custom.trim()}`
   }
   return t(STYLE_I18N[d.style] ?? STYLE_I18N.formal)
+}
+
+function styleDescription(d: AvatarDetail): string {
+  if (d.style === 'custom' && d.style_custom?.trim()) return d.style_custom.trim()
+  return t(STYLE_DESCRIPTION_I18N[d.style] ?? STYLE_DESCRIPTION_I18N.formal)
 }
 
 async function loadDetail(id: string) {
@@ -213,13 +337,68 @@ watch(
   gap: var(--spacing-lg);
 }
 
-.avatar-detail__summary,
 .avatar-detail__section {
   min-width: 0;
   padding: var(--spacing-lg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-bg-container);
+}
+
+.avatar-detail__summary {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 28px;
+  padding: 20px 28px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-container);
+}
+
+.avatar-detail__avatar {
+  flex-shrink: 0;
+  color: var(--color-text-inverse);
+  background: linear-gradient(135deg, #c000ff 0%, #147cff 100%);
+  border: 0;
+}
+
+.avatar-detail__summary-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.avatar-detail__summary-header {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 12px;
+}
+
+.avatar-detail__name {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--color-text-base);
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.avatar-detail__status {
+  flex-shrink: 0;
+  margin-inline-end: 0;
+}
+
+.avatar-detail__scope {
+  margin-top: 10px;
+  overflow: hidden;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .avatar-detail__grid {
@@ -230,6 +409,162 @@ watch(
 
 .avatar-detail__section :deep(.section-title) {
   margin-bottom: var(--spacing-md);
+}
+
+.avatar-detail-basic {
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  background: var(--color-bg-container);
+}
+
+.avatar-detail-basic__row {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr);
+  min-width: 0;
+  border-bottom: 1px solid var(--color-border-secondary);
+}
+
+.avatar-detail-basic__row:last-child {
+  border-bottom: 0;
+}
+
+.avatar-detail-basic__label {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 52px;
+  padding: 14px 12px;
+  color: var(--color-text-base);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.avatar-detail-basic__value {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 52px;
+  padding: 14px 16px;
+  color: var(--color-text-base);
+  font-size: 0.875rem;
+  line-height: 1.65;
+  word-break: break-word;
+}
+
+.avatar-detail-style {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 12px;
+}
+
+.avatar-detail-style__icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  color: #1677ff;
+  font-size: 15px;
+  border-radius: var(--radius-full);
+  background: #e7f3ff;
+}
+
+.avatar-detail-style__content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;
+}
+
+.avatar-detail-style__name {
+  color: var(--color-text-base);
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.avatar-detail-style__desc {
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.avatar-detail-advanced {
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  background: var(--color-bg-container);
+}
+
+.avatar-detail-advanced__row {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  gap: 14px;
+  min-width: 0;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--color-border-secondary);
+}
+
+.avatar-detail-advanced__row:last-child {
+  border-bottom: 0;
+}
+
+.avatar-detail-advanced__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  color: var(--detail-icon-color);
+  font-size: 18px;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--detail-icon-color) 15%, transparent);
+}
+
+.avatar-detail-advanced__icon.is-blue {
+  --detail-icon-color: #0ea5e9;
+}
+
+.avatar-detail-advanced__icon.is-green {
+  --detail-icon-color: #10b981;
+}
+
+.avatar-detail-advanced__icon.is-slate {
+  --detail-icon-color: #64748b;
+}
+
+.avatar-detail-advanced__content {
+  min-width: 0;
+}
+
+.avatar-detail-advanced__label {
+  margin-bottom: 8px;
+  color: var(--color-text-base);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.avatar-detail-advanced__value {
+  min-width: 0;
+  color: var(--color-text-base);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.avatar-detail-tag {
+  margin-inline-end: 0;
+}
+
+.avatar-detail__empty {
+  display: flex;
+  min-height: 150px;
+  align-items: center;
+  justify-content: center;
 }
 
 @media (max-width: 900px) {

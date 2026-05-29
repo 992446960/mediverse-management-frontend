@@ -2,8 +2,11 @@
   <a-modal
     :open="open"
     :title="t('avatar.editAvatar')"
-    width="920px"
+    width="1140px"
+    :style="{ maxWidth: '96vw' }"
+    wrap-class-name="avatar-edit-modal"
     :confirm-loading="submitLoading"
+    :ok-button-props="{ disabled: loading || submitLoading }"
     :ok-text="t('common.confirm')"
     :cancel-text="t('common.cancel')"
     :destroy-on-close="true"
@@ -13,7 +16,19 @@
     <a-skeleton v-if="loading" active />
 
     <template v-else>
-      <a-form ref="formRef" layout="vertical" :model="form" :rules="rules">
+      <a-form
+        ref="formRef"
+        layout="vertical"
+        :model="form"
+        :rules="rules"
+        :required-mark="false"
+        class="edit-avatar-form"
+      >
+        <div v-if="avatar" class="edit-avatar-scope-banner">
+          <InfoCircleFilled class="edit-avatar-scope-banner__icon" />
+          <span>{{ t('avatar.scopeDisplay', { scope: formatScope(avatar) }) }}</span>
+        </div>
+
         <div class="edit-avatar-layout">
           <aside class="edit-avatar-layout__rail">
             <input
@@ -24,24 +39,51 @@
               aria-hidden="true"
               @change="onAvatarFileChange"
             />
-            <AvatarUploadPanel
-              :image-url="form.avatar_url"
-              :title="t('avatar.avatar')"
-              :action-text="t('common.selectFile')"
-              :hint="t('avatar.wizard.avatarSizeHint') + '，' + t('avatar.wizard.avatarFormatHint')"
-              :loading="avatarUploading"
-              @upload="triggerAvatarFileInput"
-            />
-            <div v-if="avatar" class="edit-avatar-layout__scope">
-              {{ t('avatar.scopeDisplay', { scope: formatScope(avatar) }) }}
+            <div class="edit-avatar-upload">
+              <div class="edit-avatar-upload__title">{{ t('avatar.avatar') }}</div>
+              <AvatarUploadPanel
+                :image-url="form.avatar_url"
+                :title="t('avatar.avatar')"
+                :action-text="t('avatar.changeAvatar')"
+                :hint="
+                  t('avatar.wizard.avatarSizeHint') + '，' + t('avatar.wizard.avatarFormatHint')
+                "
+                :loading="avatarUploading"
+                variant="wizard"
+                :avatar-size="128"
+                @upload="triggerAvatarFileInput"
+              />
+            </div>
+
+            <div v-if="avatar" class="edit-avatar-overview">
+              <div class="edit-avatar-overview__title">{{ t('avatar.overview') }}</div>
+              <div
+                v-for="item in overviewItems"
+                :key="item.label"
+                class="edit-avatar-overview__item"
+              >
+                <span class="edit-avatar-overview__icon" :class="`is-${item.tone}`">
+                  <component :is="item.icon" />
+                </span>
+                <span class="edit-avatar-overview__content">
+                  <span class="edit-avatar-overview__label">{{ item.label }}</span>
+                  <span class="edit-avatar-overview__value">{{ item.value }}</span>
+                </span>
+              </div>
             </div>
           </aside>
 
           <div class="edit-avatar-layout__content">
-            <section class="edit-avatar-section">
+            <section class="edit-avatar-section edit-avatar-section--basic">
               <SectionTitle :title="t('avatar.wizard.basicInfo')" />
               <div class="edit-avatar-section__body">
-                <a-form-item :label="t('avatar.name')" name="name">
+                <a-form-item name="name">
+                  <template #label>
+                    <span class="edit-avatar-required-label">
+                      <span>{{ t('avatar.name') }}</span>
+                      <span class="edit-avatar-required-label__mark">*</span>
+                    </span>
+                  </template>
                   <a-input
                     v-model:value="form.name"
                     :placeholder="t('avatar.name')"
@@ -123,37 +165,24 @@
                     </a-popover>
                   </div>
                 </a-form-item>
-              </div>
-            </section>
 
-            <section class="edit-avatar-section">
-              <SectionTitle :title="t('avatar.style')" />
-              <div class="edit-avatar-section__body">
                 <a-form-item :label="t('avatar.greeting')" name="greeting">
                   <a-textarea
                     v-model:value="form.greeting"
-                    :placeholder="t('avatar.greeting')"
-                    :rows="2"
+                    :placeholder="t('avatar.wizard.placeholderGreeting')"
+                    :rows="3"
                     :maxlength="200"
                     show-count
                   />
                 </a-form-item>
+              </div>
+            </section>
 
+            <section class="edit-avatar-section edit-avatar-section--style">
+              <SectionTitle :title="t('avatar.style')" />
+              <div class="edit-avatar-section__body">
                 <a-form-item :label="t('avatar.style')" name="style">
-                  <a-radio-group v-model:value="form.style" class="edit-style-group">
-                    <a-radio
-                      v-for="styleOpt in styleOptions"
-                      :key="styleOpt.value"
-                      :value="styleOpt.value"
-                      class="edit-style-card"
-                      :class="{ 'edit-style-card--selected': form.style === styleOpt.value }"
-                    >
-                      <span class="edit-style-card__content">
-                        <component :is="styleOpt.icon" class="edit-style-card__icon" />
-                        <span>{{ t(styleOpt.labelKey) }}</span>
-                      </span>
-                    </a-radio>
-                  </a-radio-group>
+                  <AvatarStyleSelector v-model="form.style" />
                 </a-form-item>
 
                 <a-form-item
@@ -184,6 +213,7 @@
                 :engines="engineOptions"
                 :model-groups="modelGroups"
                 :loading="advancedLoading"
+                variant="cards"
                 @update:selected-tools="form.tools = $event"
                 @update:selected-skills="form.skills = $event"
                 @update:selected-algorithm="form.algorithm = $event"
@@ -201,18 +231,19 @@
 import { message } from 'ant-design-vue'
 import type { FormInstance } from 'ant-design-vue'
 import {
+  CheckCircleOutlined,
   CloseOutlined,
-  FileTextOutlined,
+  InfoCircleFilled,
   MessageOutlined,
   PlusOutlined,
+  RobotOutlined,
   SettingOutlined,
-  ThunderboltOutlined,
-  UserOutlined,
 } from '@ant-design/icons-vue'
 import { useI18n } from 'vue-i18n'
 import AdvancedConfigFields from '@/components/AvatarConfig/AdvancedConfigFields.vue'
 import AvatarUploadPanel from '@/components/AvatarUploadPanel/index.vue'
 import SectionTitle from '@/components/SectionTitle/index.vue'
+import AvatarStyleSelector from './AvatarStyleSelector.vue'
 import { getEngines, getModels, getTools } from '@/api/advancedConfig'
 import { getAvatarDetail, updateAvatar } from '@/api/avatars'
 import { getSkills } from '@/api/skills'
@@ -229,6 +260,7 @@ import {
   getDefaultEngineName,
   getEnabledNames,
   normalizeSkillOptions,
+  resolveAdvancedConfigSummary,
   resolveModelSelection,
 } from '@/utils/avatarAdvancedConfig'
 import type { Component } from 'vue'
@@ -265,13 +297,13 @@ const tagPopoverOpen = ref(false)
 const tagInputValue = ref('')
 const tagInputRef = ref<{ focus: () => void } | null>(null)
 const TAG_MAX_COUNT = 10
-const styleOptions = [
-  { value: 'formal', labelKey: 'avatar.wizard.styleFormal', icon: UserOutlined },
-  { value: 'friendly', labelKey: 'avatar.wizard.styleFriendly', icon: MessageOutlined },
-  { value: 'concise', labelKey: 'avatar.wizard.styleConcise', icon: ThunderboltOutlined },
-  { value: 'detailed', labelKey: 'avatar.wizard.styleDetailed', icon: FileTextOutlined },
-  { value: 'custom', labelKey: 'avatar.wizard.styleCustom', icon: SettingOutlined },
-] satisfies { value: AvatarStyle; labelKey: string; icon: Component }[]
+const STYLE_LABEL_KEYS: Record<AvatarStyle, string> = {
+  formal: 'avatar.wizard.styleFormal',
+  friendly: 'avatar.wizard.styleFriendly',
+  concise: 'avatar.wizard.styleConcise',
+  detailed: 'avatar.wizard.styleDetailed',
+  custom: 'avatar.wizard.styleCustom',
+}
 
 interface EditFormState {
   name: string
@@ -301,11 +333,62 @@ const form = ref<EditFormState>({
   model: null,
 })
 
+const advancedSummary = computed(() =>
+  resolveAdvancedConfigSummary(
+    {
+      tools: form.value.tools.map((name) => ({ name, enabled: true })),
+      skills: form.value.skills.map((name) => ({ name, enabled: true })),
+      algorithm: form.value.algorithm,
+      model: form.value.model,
+    },
+    {
+      tools: toolGroups.value,
+      skills: skillOptions.value,
+      engines: engineOptions.value,
+      modelGroups: modelGroups.value,
+      emptyText: '—',
+    }
+  )
+)
+
+const overviewItems = computed<
+  { label: string; value: string; icon: Component; tone: 'teal' | 'green' | 'blue' | 'purple' }[]
+>(() => [
+  {
+    label: t('avatar.style'),
+    value: styleLabel(form.value.style),
+    icon: MessageOutlined,
+    tone: 'teal',
+  },
+  {
+    label: t('user.status'),
+    value: avatar.value?.status === 'active' ? t('status.active') : t('status.inactive'),
+    icon: CheckCircleOutlined,
+    tone: 'green',
+  },
+  {
+    label: t('avatar.advanced.engine'),
+    value: advancedSummary.value.algorithm,
+    icon: RobotOutlined,
+    tone: 'blue',
+  },
+  {
+    label: t('avatar.advanced.model'),
+    value: advancedSummary.value.model,
+    icon: SettingOutlined,
+    tone: 'purple',
+  },
+])
+
 function formatScope(record: Avatar): string {
   const parts: string[] = [record.org_name]
   if (record.dept_name) parts.push(record.dept_name)
   if (record.user_name) parts.push(record.user_name)
   return parts.join(' / ')
+}
+
+function styleLabel(style: AvatarStyle): string {
+  return t(STYLE_LABEL_KEYS[style] ?? STYLE_LABEL_KEYS.formal)
 }
 
 function removeTag(index: number) {
@@ -470,7 +553,7 @@ function toUpdatePayload(v: EditFormState): UpdateAvatarParams {
 }
 
 async function onSubmit() {
-  if (!props.avatarId) return
+  if (loading.value || submitLoading.value || !props.avatarId || !avatar.value) return
 
   try {
     await formRef.value?.validate()
@@ -491,42 +574,172 @@ async function onSubmit() {
 </script>
 
 <style scoped lang="scss">
+.edit-avatar-form {
+  display: flex;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.edit-avatar-scope-banner {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px 16px;
+  margin-bottom: 24px;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  border: 1px solid var(--color-primary-200);
+  border-radius: var(--radius-base);
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-bg-container));
+}
+
+.edit-avatar-scope-banner__icon {
+  flex-shrink: 0;
+  color: var(--color-primary);
+  font-size: 20px;
+}
+
 .edit-avatar-layout {
   display: grid;
-  grid-template-columns: minmax(220px, 260px) minmax(0, 1fr);
-  gap: var(--spacing-lg);
+  flex: 1;
+  grid-template-columns: 212px minmax(0, 1fr);
+  gap: 24px;
   align-items: start;
+  min-height: 0;
 }
 
 .edit-avatar-layout__rail {
-  position: sticky;
-  top: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: 16px;
+  height: 100%;
+  min-height: 0;
+  padding-right: 24px;
+  border-right: 1px solid var(--color-border);
+}
+
+.edit-avatar-upload {
+  min-width: 0;
+}
+
+.edit-avatar-upload__title,
+.edit-avatar-overview__title {
+  margin-bottom: 12px;
+  color: var(--color-text-base);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.edit-avatar-upload :deep(.avatar-upload-panel) {
+  align-items: center;
+}
+
+.edit-avatar-upload :deep(.avatar-upload-panel__title) {
+  display: none;
+}
+
+.edit-avatar-upload :deep(.avatar-upload-panel__avatar) {
+  background: linear-gradient(135deg, #a7d8ff 0%, #248eff 100%);
+}
+
+.edit-avatar-upload :deep(.ant-btn) {
+  min-width: 168px;
+  height: 40px;
 }
 
 .edit-avatar-layout__rail :deep(.avatar-upload-panel__hint) {
+  max-width: 168px;
   overflow: visible;
   text-overflow: clip;
   white-space: normal;
 }
 
-.edit-avatar-layout__scope {
-  padding: var(--spacing-sm) var(--spacing-md);
-  color: var(--color-text-secondary);
-  font-size: 0.8125rem;
-  line-height: 1.5;
-  border: 1px solid var(--color-border-secondary);
+.edit-avatar-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.edit-avatar-overview__item {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-base);
-  background: var(--color-bg-layout);
+  background: var(--color-bg-container);
+}
+
+.edit-avatar-overview__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  color: var(--overview-color);
+  font-size: 17px;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--overview-color) 14%, transparent);
+}
+
+.edit-avatar-overview__icon.is-teal {
+  --overview-color: #14b8a6;
+}
+
+.edit-avatar-overview__icon.is-green {
+  --overview-color: #10b981;
+}
+
+.edit-avatar-overview__icon.is-blue {
+  --overview-color: #3b82f6;
+}
+
+.edit-avatar-overview__icon.is-purple {
+  --overview-color: #8b5cf6;
+}
+
+.edit-avatar-overview__content {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.edit-avatar-overview__label {
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.edit-avatar-overview__value {
+  overflow: hidden;
+  color: var(--color-text-base);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .edit-avatar-layout__content {
   display: flex;
   min-width: 0;
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 8px;
   flex-direction: column;
-  gap: var(--spacing-lg);
+  gap: 24px;
 }
 
 .edit-avatar-section {
@@ -537,11 +750,40 @@ async function onSubmit() {
   margin-bottom: var(--spacing-md);
 }
 
+.edit-avatar-form :deep(.ant-form-item) {
+  margin-bottom: 18px;
+}
+
+.edit-avatar-form :deep(.ant-form-item-label) {
+  padding-bottom: 8px;
+}
+
+.edit-avatar-form :deep(.ant-form-item-label > label) {
+  height: auto;
+  color: var(--color-text-base);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.edit-avatar-required-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.edit-avatar-required-label__mark {
+  color: var(--color-error);
+}
+
 .edit-avatar-section__body {
-  padding: var(--spacing-md);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-base);
-  background: var(--color-bg-container);
+  min-width: 0;
+}
+
+.edit-avatar-section--basic .edit-avatar-section__body,
+.edit-avatar-section--style .edit-avatar-section__body {
+  padding: 0;
+  border: 0;
+  background: transparent;
 }
 
 .edit-avatar-section__body :deep(.ant-form-item:last-child) {
@@ -618,51 +860,6 @@ async function onSubmit() {
   color: inherit;
   font-size: 12px;
 }
-.edit-style-group {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
-  gap: var(--spacing-sm);
-  width: 100%;
-}
-
-.edit-style-card {
-  margin-inline-end: 0;
-  padding: 10px 12px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-base);
-  background: var(--color-bg-container);
-  transition:
-    border-color var(--transition-fast),
-    background var(--transition-fast),
-    color var(--transition-fast);
-}
-
-.edit-style-card:hover,
-.edit-style-card--selected {
-  border-color: var(--color-primary);
-  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-bg-container));
-}
-
-.edit-style-card--selected {
-  color: var(--color-primary);
-}
-
-.edit-style-card :deep(.ant-radio) {
-  align-self: flex-start;
-  margin-top: 2px;
-}
-
-.edit-style-card__content {
-  display: inline-flex;
-  align-items: center;
-  min-width: 0;
-  gap: var(--spacing-xs);
-  color: inherit;
-}
-
-.edit-style-card__icon {
-  flex-shrink: 0;
-}
 
 .edit-avatar-section :deep(.config-section) {
   padding: var(--spacing-md);
@@ -682,6 +879,32 @@ async function onSubmit() {
 
   .edit-avatar-layout__rail {
     position: static;
+    padding-right: 0;
+    border-right: 0;
   }
+}
+</style>
+
+<style lang="scss">
+.avatar-edit-modal .ant-modal {
+  padding-bottom: 0;
+}
+
+.avatar-edit-modal .ant-modal-content {
+  display: flex;
+  height: 80vh;
+  max-height: 80vh;
+  flex-direction: column;
+}
+
+.avatar-edit-modal .ant-modal-header,
+.avatar-edit-modal .ant-modal-footer {
+  flex-shrink: 0;
+}
+
+.avatar-edit-modal .ant-modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 </style>
