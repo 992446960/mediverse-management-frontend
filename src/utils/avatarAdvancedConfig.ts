@@ -1,3 +1,5 @@
+export * from './avatar'
+
 import type {
   AvatarAdvancedEnabledItem,
   AvatarModelConfig,
