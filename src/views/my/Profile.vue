@@ -33,9 +33,10 @@
               </a>
             </div>
           </a-col>
+
           <!-- 左侧：全部表单 -->
-          <a-col :xs="24" :lg="18">
-            <a-card class="h-full">
+          <a-col :xs="24" :lg="17">
+            <a-card class="profile-editor-card">
               <a-form
                 :model="formState"
                 :rules="formRules"
@@ -43,8 +44,7 @@
                 @finish="handleSubmit"
               >
                 <div class="profile-form-stack">
-                  <section class="profile-section">
-                    <SectionTitle :title="t('profile.changeAvatar')" />
+                  <section class="profile-identity-form">
                     <input
                       ref="fileInputRef"
                       type="file"
@@ -53,38 +53,42 @@
                       aria-hidden="true"
                       @change="onAvatarFileChange"
                     />
-                    <a-form-item name="avatar_url" class="profile-section__form-item">
-                      <AvatarUploadPanel
-                        :image-url="avatarDisplayUrl"
-                        :title="t('profile.changeAvatar')"
-                        :action-text="t('common.selectFile')"
-                        :hint="t('profile.avatarFormatHint')"
-                        :loading="avatarUploading"
-                        @upload="triggerAvatarInput"
-                      />
+                    <a-form-item name="avatar_url" class="profile-avatar-field">
+                      <div class="profile-avatar-editor">
+                        <a-avatar
+                          :src="avatarDisplayUrl || undefined"
+                          :size="96"
+                          class="profile-avatar"
+                        >
+                          <template #icon>
+                            <UserOutlined />
+                          </template>
+                        </a-avatar>
+                        <a-button
+                          shape="circle"
+                          type="primary"
+                          size="small"
+                          :title="t('profile.changeAvatar')"
+                          :loading="avatarUploading"
+                          class="profile-avatar-action"
+                          @click="triggerAvatarInput"
+                        >
+                          <template #icon>
+                            <CameraOutlined />
+                          </template>
+                        </a-button>
+                      </div>
                     </a-form-item>
-                  </section>
 
-                  <section class="profile-section">
-                    <SectionTitle :title="t('avatar.wizard.basicInfo')" />
-                    <div class="profile-section__body">
+                    <div class="profile-fields">
                       <a-row :gutter="[16, 16]">
-                        <a-col :xs="24" :sm="12">
+                        <a-col :xs="24">
                           <a-form-item :label="t('user.realName')" name="real_name">
                             <a-input
                               v-model:value="formState.real_name"
                               :placeholder="t('user.realName')"
                               :maxlength="50"
                               show-count
-                            />
-                          </a-form-item>
-                        </a-col>
-                        <a-col :xs="24" :sm="12">
-                          <a-form-item :label="t('user.username')" name="username">
-                            <a-input
-                              v-model:value="formState.username"
-                              :placeholder="t('user.username')"
-                              disabled
                             />
                           </a-form-item>
                         </a-col>
@@ -108,23 +112,29 @@
                             />
                           </a-form-item>
                         </a-col>
+                        <a-col :xs="24">
+                          <a-form-item :label="t('user.username')" name="username">
+                            <a-input
+                              v-model:value="formState.username"
+                              :placeholder="t('user.username')"
+                              disabled
+                            />
+                          </a-form-item>
+                        </a-col>
                       </a-row>
                     </div>
                   </section>
 
-                  <section class="profile-section">
-                    <SectionTitle :title="t('user.remark')" />
-                    <div class="profile-section__body">
-                      <a-form-item :label="t('user.remark')" name="remark">
-                        <a-textarea
-                          v-model:value="formState.remark"
-                          :placeholder="t('profile.remarkPlaceholder')"
-                          :rows="3"
-                          :maxlength="500"
-                          show-count
-                        />
-                      </a-form-item>
-                    </div>
+                  <section class="profile-remark">
+                    <a-form-item :label="t('user.remark')" name="remark">
+                      <a-textarea
+                        v-model:value="formState.remark"
+                        :placeholder="t('profile.remarkPlaceholder')"
+                        :rows="4"
+                        :maxlength="500"
+                        show-count
+                      />
+                    </a-form-item>
                   </section>
 
                   <div class="profile-actions">
@@ -141,22 +151,47 @@
           </a-col>
 
           <!-- 右侧：个人名片预览 -->
-          <a-col :xs="24" :lg="6">
-            <a-card class="profile-preview-card" :title="t('profile.previewTitle')">
+          <a-col :xs="24" :lg="7">
+            <a-card class="profile-preview-card">
               <div class="profile-preview">
-                <IdentitySummary
-                  :name="previewName"
-                  :avatar-url="previewAvatarUrl"
-                  :scope="previewScope"
-                  :status-text="user.is_active ? t('status.active') : t('status.inactive')"
-                  :status-color="user.is_active ? 'success' : 'error'"
-                  :tags="previewTags"
-                />
+                <h2 class="profile-preview-title">{{ t('profile.previewTitle') }}</h2>
+                <div class="profile-preview-hero">
+                  <a-avatar
+                    :src="previewAvatarUrl || undefined"
+                    :size="72"
+                    class="profile-preview-avatar"
+                  >
+                    <template #icon>
+                      <UserOutlined />
+                    </template>
+                  </a-avatar>
+                  <div class="profile-preview-name">{{ previewName }}</div>
+                  <div v-if="previewTags.length > 0" class="profile-preview-tags">
+                    <a-tag v-for="tag in previewTags" :key="tag" color="blue">{{ tag }}</a-tag>
+                    <a-tag :color="user.is_active ? 'success' : 'error'">
+                      {{ user.is_active ? t('status.active') : t('status.inactive') }}
+                    </a-tag>
+                  </div>
+                </div>
 
-                <section class="profile-preview__section">
-                  <SectionTitle :title="t('avatar.wizard.basicInfo')" />
-                  <ReadonlyDescription :items="previewItems" />
-                </section>
+                <div class="profile-preview-list">
+                  <div
+                    v-for="item in previewCardItems"
+                    :key="item.label"
+                    class="profile-preview-item"
+                    :class="{ 'profile-preview-item--wide': item.span === 2 }"
+                  >
+                    <div class="profile-preview-icon">
+                      <component :is="item.icon" />
+                    </div>
+                    <div class="profile-preview-copy">
+                      <div class="profile-preview-label">{{ item.label }}</div>
+                      <div class="profile-preview-value">
+                        {{ getPreviewDisplayValue(item.value) }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </a-card>
           </a-col>
@@ -190,15 +225,22 @@ import { useAuthStore } from '@/stores/auth'
 import { authApi } from '@/api/auth'
 import { toAbsoluteFileUrl, uploadAvatar } from '@/api/upload'
 import { message } from 'ant-design-vue'
-import { LockOutlined } from '@ant-design/icons-vue'
+import {
+  ApartmentOutlined,
+  BankOutlined,
+  CameraOutlined,
+  FileTextOutlined,
+  IdcardOutlined,
+  LockOutlined,
+  MailOutlined,
+  PhoneOutlined,
+  UserOutlined,
+} from '@ant-design/icons-vue'
+import type { Component } from 'vue'
 import type { UserRole } from '@/types/auth'
 import { normalizeAuthUser, mergeUserWithWorkbenchFlags } from '@/utils/authUser'
 import type { Rule } from 'ant-design-vue/es/form'
-import AvatarUploadPanel from '@/components/AvatarUploadPanel/index.vue'
 import ChangePasswordForm from '@/components/ChangePasswordForm/index.vue'
-import IdentitySummary from '@/components/IdentitySummary/index.vue'
-import ReadonlyDescription from '@/components/ReadonlyDescription/index.vue'
-import SectionTitle from '@/components/SectionTitle/index.vue'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -224,6 +266,10 @@ interface ReadonlyDescriptionItem {
   label: string
   value?: string | number | string[] | null
   span?: 1 | 2
+}
+
+interface ProfilePreviewCardItem extends ReadonlyDescriptionItem {
+  icon: Component
 }
 
 const roleLabel = computed(() => {
@@ -268,22 +314,27 @@ const previewAvatarUrl = computed(() =>
   preview.value.avatar_url ? toAbsoluteFileUrl(preview.value.avatar_url) : ''
 )
 
-const previewScope = computed(() =>
-  [user.value?.org_name || user.value?.org_id, user.value?.dept_name || user.value?.dept_id]
-    .filter(Boolean)
-    .join(' / ')
-)
-
 const previewTags = computed(() => (roleLabel.value === '–' ? [] : [roleLabel.value]))
 
-const previewItems = computed<ReadonlyDescriptionItem[]>(() => [
-  { label: t('user.username'), value: preview.value.username },
-  { label: t('user.phone'), value: preview.value.phone },
-  { label: t('user.email'), value: preview.value.email },
-  { label: t('user.org'), value: user.value?.org_name || user.value?.org_id },
-  { label: t('user.dept'), value: user.value?.dept_name || user.value?.dept_id },
-  { label: t('user.remark'), value: preview.value.remark, span: 2 },
+const previewCardItems = computed<ProfilePreviewCardItem[]>(() => [
+  { label: t('user.username'), value: preview.value.username, icon: IdcardOutlined },
+  { label: t('user.phone'), value: preview.value.phone, icon: PhoneOutlined },
+  { label: t('user.email'), value: preview.value.email, icon: MailOutlined },
+  { label: t('user.org'), value: user.value?.org_name || user.value?.org_id, icon: BankOutlined },
+  {
+    label: t('user.dept'),
+    value: user.value?.dept_name || user.value?.dept_id,
+    icon: ApartmentOutlined,
+  },
+  { label: t('user.remark'), value: preview.value.remark, span: 2, icon: FileTextOutlined },
 ])
+
+function getPreviewDisplayValue(value: ReadonlyDescriptionItem['value']) {
+  if (value == null) return '–'
+  if (Array.isArray(value)) return value.length > 0 ? value.join('、') : '–'
+  if (value === '') return '–'
+  return value
+}
 
 const formRules: Record<string, Rule[]> = {
   real_name: [
@@ -451,46 +502,95 @@ onMounted(() => {
   width: 100%;
   min-width: 0;
 }
-.profile-layout :deep(.ant-card-body) {
-  padding: var(--spacing-4, 1rem);
-}
 
 .profile-form-stack {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-lg);
+  gap: 28px;
+  min-height: 520px;
 }
 
-.profile-section {
+.profile-editor-card,
+.profile-preview-card {
+  height: 100%;
+  border: 1px solid var(--color-border-secondary);
+  border-radius: 10px;
+  box-shadow: 0 10px 32px rgb(15 23 42 / 6%);
+}
+
+.profile-editor-card :deep(.ant-card-body) {
+  padding: 28px;
+}
+
+.profile-preview-title {
+  margin: 0;
+  color: var(--color-text-base);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.profile-identity-form {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  align-items: start;
+  gap: 24px;
   min-width: 0;
 }
 
-.profile-section :deep(.section-title) {
-  margin-bottom: var(--spacing-md);
-}
-
-.profile-section__body {
-  padding: var(--spacing-md);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-base);
-  background: var(--color-bg-container);
-}
-
-.profile-section__body :deep(.ant-form-item:last-child),
-.profile-section__form-item {
+.profile-avatar-field {
   margin-bottom: 0;
 }
 
-.profile-section :deep(.avatar-upload-panel__hint) {
-  overflow: visible;
-  text-overflow: clip;
-  white-space: normal;
+.profile-avatar-editor {
+  position: relative;
+  width: 96px;
+  height: 96px;
+}
+
+.profile-avatar,
+.profile-preview-avatar {
+  color: var(--color-primary);
+  background: linear-gradient(135deg, #e7f3ff 0%, #f0fbff 100%);
+  border: 1px solid #d5ebff;
+}
+
+.profile-avatar-action {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  box-shadow: 0 4px 12px rgb(14 165 233 / 28%);
+}
+
+.profile-fields {
+  min-width: 0;
+}
+
+.profile-fields :deep(.ant-form-item),
+.profile-remark :deep(.ant-form-item) {
+  margin-bottom: 0;
+}
+
+.profile-fields :deep(.ant-form-item-label > label),
+.profile-remark :deep(.ant-form-item-label > label) {
+  color: var(--color-text-base);
+  font-weight: 600;
+}
+
+.profile-remark :deep(.ant-input) {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.profile-remark :deep(.ant-input-textarea-show-count::after) {
+  color: var(--color-text-tertiary);
 }
 
 .profile-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--spacing-sm);
+  gap: 12px;
+  padding-top: 12px;
 }
 
 .profile-preview-card {
@@ -499,33 +599,121 @@ onMounted(() => {
   width: 100%;
 }
 
+.profile-preview-card :deep(.ant-card-body) {
+  padding: 28px 22px 24px;
+}
+
 .profile-preview {
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: var(--spacing-lg);
+  gap: 24px;
 }
 
-.profile-preview :deep(.identity-summary) {
-  align-items: flex-start;
+.profile-preview-title {
+  align-self: flex-start;
 }
 
-.profile-preview__section :deep(.section-title) {
-  margin-bottom: var(--spacing-md);
+.profile-preview-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
 }
 
-.profile-preview__section :deep(.readonly-description) {
-  grid-template-columns: 1fr;
-  gap: var(--spacing-sm);
+.profile-preview-name {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--color-text-base);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.45;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.profile-preview__section :deep(.readonly-description__item--wide) {
-  grid-column: span 1;
+.profile-preview-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.profile-preview-tags :deep(.ant-tag) {
+  margin-inline-end: 0;
+}
+
+.profile-preview-list {
+  display: grid;
+  gap: 14px;
+}
+
+.profile-preview-item {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  align-items: center;
+  min-width: 0;
+  padding: 12px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #f2f8ff 0%, #f7faff 100%);
+}
+
+.profile-preview-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  color: var(--color-primary);
+  background: #e3f2ff;
+  font-size: 16px;
+}
+
+.profile-preview-copy {
+  min-width: 0;
+}
+
+.profile-preview-label {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.profile-preview-value {
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+  color: var(--color-text-base);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+:global(html[data-theme='dark']) .profile-preview-item {
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg-elevated);
+  background-image: none;
+}
+
+:global(html[data-theme='dark']) .profile-preview-icon {
+  background: rgb(56 189 248 / 12%);
 }
 
 @media (max-width: 992px) {
   .profile-preview-card {
     position: static;
+  }
+}
+
+@media (max-width: 640px) {
+  .profile-editor-card :deep(.ant-card-body),
+  .profile-preview-card :deep(.ant-card-body) {
+    padding: 20px;
+  }
+
+  .profile-identity-form {
+    grid-template-columns: 1fr;
   }
 }
 </style>
