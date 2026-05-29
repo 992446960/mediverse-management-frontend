@@ -16,12 +16,15 @@
           @change="emit('update:modelValue', { ...modelValue, type: opt.value })"
         />
         <div class="step-type__card">
-          <div class="step-type__radio" aria-hidden="true">
-            <span v-if="modelValue.type === opt.value" />
+          <div class="step-type__icon" :class="`step-type__icon--${opt.value}`" aria-hidden="true">
+            <component :is="TYPE_ICON_MAP[opt.value]" />
           </div>
           <div class="step-type__content">
             <h3 class="step-type__title">{{ t(opt.titleKey) }}</h3>
             <p class="step-type__description">{{ t(opt.detailKey) }}</p>
+          </div>
+          <div class="step-type__radio" aria-hidden="true">
+            <span v-if="modelValue.type === opt.value" />
           </div>
         </div>
       </label>
@@ -30,12 +33,20 @@
 </template>
 
 <script setup lang="ts">
+import type { Component } from 'vue'
+import { ApartmentOutlined, BankOutlined, UserOutlined } from '@ant-design/icons-vue'
 import { useI18n } from 'vue-i18n'
 import { useAvatarCreatePermission } from '@/composables/useAvatarCreatePermission'
 import type { AvatarWizardForm, AvatarType } from '@/types/avatar'
 
 const { t } = useI18n()
 const { allowedTypeOptions, isTypeAllowed } = useAvatarCreatePermission()
+
+const TYPE_ICON_MAP: Record<AvatarType, Component> = {
+  general: BankOutlined,
+  specialist: ApartmentOutlined,
+  expert: UserOutlined,
+}
 
 const props = defineProps<{
   modelValue: AvatarWizardForm
@@ -63,7 +74,7 @@ watch(
 <style scoped lang="scss">
 .step-type__grid {
   display: grid;
-  gap: var(--spacing-md);
+  gap: 16px;
 }
 
 .step-type__option {
@@ -85,10 +96,11 @@ watch(
 
 .step-type__card {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   min-width: 0;
-  gap: var(--spacing-md);
-  padding: var(--spacing-lg);
+  min-height: 112px;
+  gap: 22px;
+  padding: 20px 32px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-bg-container);
@@ -113,6 +125,34 @@ watch(
   outline-offset: 2px;
 }
 
+.step-type__icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-full);
+  color: var(--type-icon-color);
+  background: var(--type-icon-bg);
+  font-size: 1.75rem;
+}
+
+.step-type__icon--general {
+  --type-icon-color: #6157ff;
+  --type-icon-bg: color-mix(in srgb, #6157ff 16%, transparent);
+}
+
+.step-type__icon--specialist {
+  --type-icon-color: #14b8b2;
+  --type-icon-bg: color-mix(in srgb, #14b8b2 16%, transparent);
+}
+
+.step-type__icon--expert {
+  --type-icon-color: #0ea5e9;
+  --type-icon-bg: color-mix(in srgb, #0ea5e9 16%, transparent);
+}
+
 .step-type__radio {
   display: inline-flex;
   flex-shrink: 0;
@@ -120,7 +160,7 @@ watch(
   justify-content: center;
   width: 20px;
   height: 20px;
-  margin-top: 2px;
+  margin-left: auto;
   border: 2px solid var(--color-border);
   border-radius: var(--radius-full);
   background: var(--color-bg-container);
@@ -138,13 +178,14 @@ watch(
 }
 
 .step-type__content {
+  flex: 1 1 auto;
   min-width: 0;
 }
 
 .step-type__title {
   margin: 0;
   color: var(--color-text-base);
-  font-size: 1rem;
+  font-size: 1.125rem;
   font-weight: 600;
   line-height: 1.5;
 }

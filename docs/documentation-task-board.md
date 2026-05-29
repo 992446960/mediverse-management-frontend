@@ -18,7 +18,7 @@
 | `docs/requirements/shanghai-first-hospital-customization-requirements.md` | 定制需求和 `docs/requirements/assets/`                            | 已存在 | 需求范围、素材或验收标准变化时更新               |
 | `tests/api-contract/API_CONTRACT_TEST_REPORT.md`                          | `tests/api-contract/`、真实 API 测试结果                          | 已存在 | API 合规测试覆盖或结果变化时更新                 |
 | `docs/superpowers/plans/2026-05-20-python-mock-backend-openapi.md`        | 线上 Swagger、Python mock 后端实现计划                            | 已新增 | mock 后端接口范围、路径或验证命令变化时更新      |
-| `docs/superpowers/specs/2026-05-29-avatar-user-ui-unification-design.md`  | 分身与用户管理 UI 设计图、当前 Vue/Ant Design 组件边界             | 已新增 | 分身、用户、个人资料 UI 统一规格变化时更新       |
+| `docs/superpowers/specs/2026-05-29-avatar-user-ui-unification-design.md`  | 分身与用户管理 UI 设计图、当前 Vue/Ant Design 组件边界            | 已新增 | 分身、用户、个人资料 UI 统一规格变化时更新       |
 | `docs/superpowers/plans/2026-05-29-avatar-user-ui-unification.md`         | UI 统一设计规格、当前组件结构、验证要求                           | 已新增 | 分身与用户 UI 实施任务或验收范围变化时更新       |
 
 ## 检查任务
@@ -33,6 +33,7 @@
 
 ## 近期同步记录
 
+- 按新增分身 UI 设计图继续回修向导细节：绑定范围下拉补前置图标并改为紧凑预览卡布局，基础信息头像支持移除且去除外层 body 边框，沟通风格卡补齐多色 icon 背景，高级能力配置恢复卡片间距、工具/技能 tag 配色和推理/模型纵向布局，确认预览补齐沟通风格 tag、高级配置图标间距、底部取消按钮与统一按钮尺寸，并将工具/技能多 tag 区域改为最多三行、透明轨道的横向滚动；共享组件单测覆盖头像移除事件。
 - 完成分身与用户 UI 统一计划落地：新增 `SectionTitle`、`ReadonlyDescription`、`AvatarUploadPanel`、`IdentitySummary`、`WizardStepper` 共享组件；统一分身详情/编辑/新增向导、科室工作台分身配置、个人资料、用户详情/新增/编辑样式；Chrome 验收覆盖 `/admin/avatars`、`/dept/avatar`、`/my/profile`、`/admin/users`，并通过 `pnpm exec vitest run tests/unit/avatarAdvancedConfig.test.ts tests/unit/uiSharedComponents.test.ts` 与 `pnpm verify`。
 - 制定分身与用户管理 UI 统一设计规格和实施计划：覆盖分身详情、新增分身 5 阶段、编辑分身、科室工作台分身配置、个人资料、用户详情、用户编辑、用户新增；设计图资产已落到 `docs/superpowers/specs/assets/2026-05-29-avatar-user-ui/`，计划明确共享组件、页面改造、单测、`pnpm verify` 与 Chrome 验收范围。
 - 分身配置新增高级能力配置区块：个人/科室/机构配置页、后台新增/编辑/详情支持工具、技能、推理引擎、模型配置，前端接入 `GET /tools`、`GET /engines`、`GET /models` 并同步 MSW mock、单元测试与 Chrome 验收清单。

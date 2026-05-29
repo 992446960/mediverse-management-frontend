@@ -1,12 +1,32 @@
 <template>
-  <div class="config-section advanced-config-fields">
+  <div class="config-section advanced-config-fields" :class="`advanced-config-fields--${variant}`">
     <div class="section-header">
       <span class="section-title">{{ t('avatar.advanced.title') }}</span>
     </div>
 
     <div class="section-content advanced-config-fields__body">
       <div class="advanced-chip-grid">
-        <a-form-item :label="t('avatar.advanced.tools')" name="tools" class="advanced-form-item">
+        <a-form-item
+          :label="variant === 'cards' ? undefined : t('avatar.advanced.tools')"
+          name="tools"
+          class="advanced-form-item advanced-form-item--tools"
+        >
+          <div v-if="variant === 'cards'" class="advanced-card-header">
+            <span class="advanced-card-title">
+              <span class="advanced-card-icon advanced-card-icon--tools">
+                <ToolOutlined />
+              </span>
+              <span>{{ t('avatar.advanced.tools') }}</span>
+            </span>
+            <button
+              type="button"
+              class="advanced-tag-add-pill"
+              @click.stop.prevent="openToolSelector"
+            >
+              <PlusOutlined class="advanced-tag-add-icon" />
+              <span>{{ t('avatar.advanced.addTool') }}</span>
+            </button>
+          </div>
           <div
             class="advanced-tags-wrap"
             :class="{ 'advanced-tags-wrap--empty': !selectedToolItems.length }"
@@ -26,6 +46,7 @@
               </span>
             </span>
             <button
+              v-if="variant !== 'cards'"
               type="button"
               class="advanced-tag-add-pill"
               @click.stop.prevent="openToolSelector"
@@ -36,7 +57,27 @@
           </div>
         </a-form-item>
 
-        <a-form-item :label="t('avatar.advanced.skills')" name="skills" class="advanced-form-item">
+        <a-form-item
+          :label="variant === 'cards' ? undefined : t('avatar.advanced.skills')"
+          name="skills"
+          class="advanced-form-item advanced-form-item--skills"
+        >
+          <div v-if="variant === 'cards'" class="advanced-card-header">
+            <span class="advanced-card-title">
+              <span class="advanced-card-icon advanced-card-icon--skills">
+                <BulbOutlined />
+              </span>
+              <span>{{ t('avatar.advanced.skills') }}</span>
+            </span>
+            <button
+              type="button"
+              class="advanced-tag-add-pill"
+              @click.stop.prevent="openSkillSelector"
+            >
+              <PlusOutlined class="advanced-tag-add-icon" />
+              <span>{{ t('avatar.advanced.addSkill') }}</span>
+            </button>
+          </div>
           <div
             class="advanced-tags-wrap"
             :class="{ 'advanced-tags-wrap--empty': !selectedSkillItems.length }"
@@ -56,6 +97,7 @@
               </span>
             </span>
             <button
+              v-if="variant !== 'cards'"
               type="button"
               class="advanced-tag-add-pill"
               @click.stop.prevent="openSkillSelector"
@@ -68,11 +110,18 @@
       </div>
 
       <div class="advanced-select-panel">
-        <a-form-item
-          :label="t('avatar.advanced.engine')"
-          name="algorithm"
-          class="advanced-form-item"
-        >
+        <a-form-item name="algorithm" class="advanced-form-item advanced-form-item--engine">
+          <template #label>
+            <span class="advanced-field-label">
+              <span
+                v-if="variant === 'cards'"
+                class="advanced-card-icon advanced-card-icon--engine"
+              >
+                <RobotOutlined />
+              </span>
+              <span>{{ t('avatar.advanced.engine') }}</span>
+            </span>
+          </template>
           <a-select
             :value="selectedAlgorithm"
             :loading="loading"
@@ -86,10 +135,15 @@
           </a-select>
         </a-form-item>
 
-        <a-form-item
-          :label="t('avatar.advanced.model')"
-          class="advanced-form-item advanced-form-item--model"
-        >
+        <a-form-item class="advanced-form-item advanced-form-item--model">
+          <template #label>
+            <span class="advanced-field-label">
+              <span v-if="variant === 'cards'" class="advanced-card-icon advanced-card-icon--model">
+                <SettingOutlined />
+              </span>
+              <span>{{ t('avatar.advanced.model') }}</span>
+            </span>
+          </template>
           <div class="advanced-model-grid">
             <a-select
               :value="selectedModel?.provider"
@@ -142,7 +196,14 @@
 </template>
 
 <script setup lang="ts">
-import { CloseOutlined, PlusOutlined } from '@ant-design/icons-vue'
+import {
+  BulbOutlined,
+  CloseOutlined,
+  PlusOutlined,
+  RobotOutlined,
+  SettingOutlined,
+  ToolOutlined,
+} from '@ant-design/icons-vue'
 import { useI18n } from 'vue-i18n'
 import ToolSkillSelector, {
   type ToolSkillSelectorGroup,
@@ -168,9 +229,11 @@ const props = withDefaults(
     engines: EngineItem[]
     modelGroups: ModelGroup[]
     loading?: boolean
+    variant?: 'default' | 'cards'
   }>(),
   {
     loading: false,
+    variant: 'default',
   }
 )
 
@@ -327,6 +390,15 @@ function updateModel(modelId: string) {
 .advanced-form-item {
   min-width: 0;
   margin-bottom: 0;
+  --advanced-chip-color: var(--color-primary);
+}
+
+.advanced-form-item--tools {
+  --advanced-chip-color: #0ea5e9;
+}
+
+.advanced-form-item--skills {
+  --advanced-chip-color: #10b981;
 }
 
 .advanced-tags-wrap {
@@ -351,11 +423,11 @@ function updateModel(modelId: string) {
   gap: 4px;
   max-width: min(100%, 220px);
   padding: 4px 10px 4px 12px;
-  color: var(--color-primary);
+  color: var(--advanced-chip-color);
   font-size: 12px;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 40%, transparent);
+  border: 1px solid color-mix(in srgb, var(--advanced-chip-color) 42%, transparent);
   border-radius: var(--radius-full);
-  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  background: color-mix(in srgb, var(--advanced-chip-color) 13%, transparent);
 }
 
 .advanced-tag-text {
@@ -371,7 +443,7 @@ function updateModel(modelId: string) {
   flex-shrink: 0;
   width: 14px;
   height: 14px;
-  color: var(--color-primary);
+  color: var(--advanced-chip-color);
   border-radius: var(--radius-full);
   cursor: pointer;
   transition:
@@ -380,8 +452,8 @@ function updateModel(modelId: string) {
 }
 
 .advanced-tag-remove:hover {
-  color: var(--color-primary-hover);
-  background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+  color: var(--advanced-chip-color);
+  background: color-mix(in srgb, var(--advanced-chip-color) 16%, transparent);
 }
 
 .advanced-tag-remove:focus-visible,
@@ -432,19 +504,114 @@ function updateModel(modelId: string) {
   background: var(--color-bg-layout);
 }
 
+.advanced-config-fields--cards .advanced-config-fields__body {
+  gap: 20px;
+}
+
+.advanced-config-fields--cards .advanced-chip-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.advanced-config-fields--cards .advanced-form-item {
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  background: var(--color-bg-container);
+}
+
+.advanced-config-fields--cards .advanced-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  margin-bottom: 26px;
+}
+
+.advanced-card-title,
+.advanced-field-label {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  gap: var(--spacing-sm);
+  color: var(--color-text-base);
+  font-weight: 600;
+}
+
+.advanced-card-icon {
+  display: inline-flex;
+  flex: 0 0 42px;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-full);
+  color: var(--advanced-icon-color);
+  background: color-mix(in srgb, var(--advanced-icon-color) 14%, transparent);
+  font-size: 1.375rem;
+}
+
+.advanced-card-icon--tools,
+.advanced-card-icon--engine {
+  --advanced-icon-color: #0ea5e9;
+}
+
+.advanced-card-icon--skills {
+  --advanced-icon-color: #10b981;
+}
+
+.advanced-card-icon--model {
+  --advanced-icon-color: #64748b;
+}
+
+.advanced-config-fields--cards .advanced-tags-wrap {
+  align-content: flex-start;
+  align-items: flex-start;
+  min-height: 84px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.advanced-config-fields--cards .advanced-select-panel {
+  grid-template-columns: 1fr;
+  gap: 20px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.advanced-config-fields--cards .advanced-select-panel .advanced-form-item {
+  display: block;
+}
+
+.advanced-config-fields--cards .advanced-select-panel :deep(.ant-form-item-label) {
+  padding-bottom: var(--spacing-md);
+}
+
+.advanced-config-fields--cards .advanced-form-item--engine,
+.advanced-config-fields--cards .advanced-form-item--model {
+  padding: 20px;
+}
+
 .advanced-select-panel :deep(.ant-select) {
   width: 100%;
 }
 
 .advanced-model-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
-  gap: var(--spacing-sm);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
   min-width: 0;
 }
 
 @media (max-width: 640px) {
-  .advanced-chip-grid {
+  .advanced-chip-grid,
+  .advanced-config-fields--cards .advanced-chip-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .advanced-model-grid {
     grid-template-columns: 1fr;
   }
 }

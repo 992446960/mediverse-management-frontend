@@ -1,7 +1,9 @@
 <template>
-  <div class="avatar-upload-panel">
+  <div class="avatar-upload-panel" :class="`avatar-upload-panel--${variant}`">
+    <div v-if="variant === 'wizard'" class="avatar-upload-panel__title">{{ title }}</div>
+
     <div class="avatar-upload-panel__preview">
-      <a-avatar :src="imageUrl || undefined" :size="72" class="avatar-upload-panel__avatar">
+      <a-avatar :src="imageUrl || undefined" :size="avatarSize" class="avatar-upload-panel__avatar">
         <template #icon>
           <UserOutlined />
         </template>
@@ -9,8 +11,7 @@
     </div>
 
     <div class="avatar-upload-panel__body">
-      <div class="avatar-upload-panel__title">{{ title }}</div>
-      <div v-if="hint" class="avatar-upload-panel__hint">{{ hint }}</div>
+      <div v-if="variant === 'inline'" class="avatar-upload-panel__title">{{ title }}</div>
       <a-button
         type="primary"
         ghost
@@ -24,6 +25,18 @@
         </template>
         {{ actionText }}
       </a-button>
+      <a-button
+        v-if="clearable && imageUrl"
+        type="link"
+        danger
+        size="small"
+        class="avatar-upload-panel__clear"
+        :disabled="disabled || loading"
+        @click="emit('clear')"
+      >
+        {{ clearText }}
+      </a-button>
+      <div v-if="hint" class="avatar-upload-panel__hint">{{ hint }}</div>
     </div>
   </div>
 </template>
@@ -39,17 +52,26 @@ withDefaults(
     hint?: string
     loading?: boolean
     disabled?: boolean
+    variant?: 'inline' | 'wizard'
+    avatarSize?: number
+    clearable?: boolean
+    clearText?: string
   }>(),
   {
     imageUrl: '',
     hint: '',
     loading: false,
     disabled: false,
+    variant: 'inline',
+    avatarSize: 72,
+    clearable: false,
+    clearText: '移除头像',
   }
 )
 
 const emit = defineEmits<{
   upload: []
+  clear: []
 }>()
 </script>
 
@@ -82,6 +104,47 @@ const emit = defineEmits<{
   align-items: flex-start;
   min-width: 0;
   gap: var(--spacing-xs);
+}
+
+.avatar-upload-panel--inline .avatar-upload-panel__title {
+  display: block;
+}
+
+.avatar-upload-panel--wizard {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.avatar-upload-panel--wizard .avatar-upload-panel__preview {
+  align-self: center;
+}
+
+.avatar-upload-panel--wizard .avatar-upload-panel__body {
+  align-items: center;
+  width: 100%;
+  text-align: center;
+}
+
+.avatar-upload-panel--wizard .avatar-upload-panel__hint {
+  max-width: 150px;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+.avatar-upload-panel--wizard :deep(.ant-btn) {
+  border-style: dashed;
+}
+
+.avatar-upload-panel--wizard .avatar-upload-panel__clear {
+  height: auto;
+  padding: 0;
+  border-style: solid;
+  line-height: 1.4;
 }
 
 .avatar-upload-panel__title {

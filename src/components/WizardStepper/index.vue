@@ -126,7 +126,7 @@ withDefaults(
 
 .wizard-stepper__label {
   min-width: 0;
-  max-width: 8em;
+  max-width: 10em;
   overflow: hidden;
   color: var(--color-text-secondary);
   font-size: 0.875rem;

@@ -14,6 +14,7 @@
             :engines="engineOptions"
             :model-groups="modelGroups"
             :loading="advancedLoading"
+            variant="cards"
             @update:selected-tools="updateField('tools', $event)"
             @update:selected-skills="updateField('skills', $event)"
             @update:selected-algorithm="updateField('algorithm', $event)"
@@ -102,7 +103,7 @@ onMounted(loadAdvancedOptions)
 
 <style scoped lang="scss">
 .step-advanced__panel {
-  padding: var(--spacing-md);
+  padding: 20px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-base);
   background: var(--color-bg-container);

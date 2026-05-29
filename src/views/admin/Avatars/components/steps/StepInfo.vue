@@ -17,7 +17,12 @@
             :action-text="t('common.selectFile')"
             :hint="t('avatar.wizard.avatarSizeHint') + '，' + t('avatar.wizard.avatarFormatHint')"
             :loading="avatarUploading"
+            variant="wizard"
+            :avatar-size="112"
+            clearable
+            :clear-text="t('avatar.wizard.removeAvatar')"
             @upload="triggerAvatarFileInput"
+            @clear="clearAvatar"
           />
         </aside>
 
@@ -109,52 +114,58 @@
               </a-form-item>
             </div>
           </section>
-
-          <section class="step-info-section">
-            <SectionTitle :title="t('avatar.style')" />
-            <div class="step-info-section__body">
-              <a-form-item :label="t('avatar.greeting')" name="greeting">
-                <a-textarea
-                  v-model:value="local.greeting"
-                  :placeholder="t('avatar.wizard.placeholderGreeting')"
-                  :rows="2"
-                  :maxlength="200"
-                  show-count
-                />
-              </a-form-item>
-
-              <a-form-item :label="t('avatar.style')" name="style">
-                <a-radio-group v-model:value="local.style" class="step-info-style-group">
-                  <a-radio
-                    v-for="styleOpt in styleOptions"
-                    :key="styleOpt.value"
-                    :value="styleOpt.value"
-                    class="step-info-style-card"
-                    :class="{ 'step-info-style-card--selected': local.style === styleOpt.value }"
-                  >
-                    <span class="step-info-style-card__content">
-                      <component :is="styleOpt.icon" class="step-info-style-card__icon" />
-                      <span>{{ t(styleOpt.labelKey) }}</span>
-                    </span>
-                  </a-radio>
-                </a-radio-group>
-              </a-form-item>
-
-              <a-form-item
-                v-if="local.style === 'custom'"
-                :label="t('avatar.styleCustom')"
-                name="style_custom"
-              >
-                <a-input
-                  v-model:value="local.style_custom"
-                  :placeholder="t('avatar.styleCustom')"
-                  :maxlength="100"
-                  show-count
-                />
-              </a-form-item>
-            </div>
-          </section>
         </div>
+
+        <section class="step-info-section step-info-section--style">
+          <SectionTitle :title="t('avatar.style')" />
+          <div class="step-info-section__body">
+            <a-form-item :label="t('avatar.greeting')" name="greeting">
+              <a-textarea
+                v-model:value="local.greeting"
+                :placeholder="t('avatar.wizard.placeholderGreeting')"
+                :rows="2"
+                :maxlength="200"
+                show-count
+              />
+            </a-form-item>
+
+            <a-form-item :label="t('avatar.style')" name="style">
+              <a-radio-group v-model:value="local.style" class="step-info-style-group">
+                <a-radio
+                  v-for="styleOpt in styleOptions"
+                  :key="styleOpt.value"
+                  :value="styleOpt.value"
+                  class="step-info-style-card"
+                  :class="[
+                    `step-info-style-card--${styleOpt.value}`,
+                    { 'step-info-style-card--selected': local.style === styleOpt.value },
+                  ]"
+                >
+                  <span class="step-info-style-card__content">
+                    <span class="step-info-style-card__icon-wrap">
+                      <component :is="styleOpt.icon" class="step-info-style-card__icon" />
+                    </span>
+                    <span class="step-info-style-card__title">{{ t(styleOpt.labelKey) }}</span>
+                    <span class="step-info-style-card__desc">{{ t(styleOpt.descriptionKey) }}</span>
+                  </span>
+                </a-radio>
+              </a-radio-group>
+            </a-form-item>
+
+            <a-form-item
+              v-if="local.style === 'custom'"
+              :label="t('avatar.styleCustom')"
+              name="style_custom"
+            >
+              <a-input
+                v-model:value="local.style_custom"
+                :placeholder="t('avatar.styleCustom')"
+                :maxlength="100"
+                show-count
+              />
+            </a-form-item>
+          </div>
+        </section>
       </div>
     </a-form>
   </div>
@@ -305,6 +316,11 @@ function triggerAvatarFileInput() {
   avatarFileRef.value?.click()
 }
 
+function clearAvatar() {
+  revokeAvatarPreview()
+  local.value = { ...local.value, avatar_url: '' }
+}
+
 async function onAvatarFileChange(e: Event) {
   const input = e.target as HTMLInputElement
   const file = input.files?.[0]
@@ -342,12 +358,37 @@ const rules = computed(() => ({
 }))
 
 const styleOptions = [
-  { value: 'formal', labelKey: 'avatar.wizard.styleFormal', icon: UserOutlined },
-  { value: 'friendly', labelKey: 'avatar.wizard.styleFriendly', icon: MessageOutlined },
-  { value: 'concise', labelKey: 'avatar.wizard.styleConcise', icon: ThunderboltOutlined },
-  { value: 'detailed', labelKey: 'avatar.wizard.styleDetailed', icon: FileTextOutlined },
-  { value: 'custom', labelKey: 'avatar.wizard.styleCustom', icon: SettingOutlined },
-] satisfies { value: AvatarStyle; labelKey: string; icon: Component }[]
+  {
+    value: 'formal',
+    labelKey: 'avatar.wizard.styleFormal',
+    descriptionKey: 'avatar.wizard.styleFormalDesc',
+    icon: UserOutlined,
+  },
+  {
+    value: 'friendly',
+    labelKey: 'avatar.wizard.styleFriendly',
+    descriptionKey: 'avatar.wizard.styleFriendlyDesc',
+    icon: MessageOutlined,
+  },
+  {
+    value: 'concise',
+    labelKey: 'avatar.wizard.styleConcise',
+    descriptionKey: 'avatar.wizard.styleConciseDesc',
+    icon: ThunderboltOutlined,
+  },
+  {
+    value: 'detailed',
+    labelKey: 'avatar.wizard.styleDetailed',
+    descriptionKey: 'avatar.wizard.styleDetailedDesc',
+    icon: FileTextOutlined,
+  },
+  {
+    value: 'custom',
+    labelKey: 'avatar.wizard.styleCustom',
+    descriptionKey: 'avatar.wizard.styleCustomDesc',
+    icon: SettingOutlined,
+  },
+] satisfies { value: AvatarStyle; labelKey: string; descriptionKey: string; icon: Component }[]
 
 defineExpose({
   validate: () => formRef.value?.validate(),
@@ -357,24 +398,21 @@ defineExpose({
 <style scoped lang="scss">
 .step-info-layout {
   display: grid;
-  grid-template-columns: minmax(220px, 260px) minmax(0, 1fr);
-  gap: var(--spacing-lg);
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 20px;
   align-items: start;
 }
 
 .step-info-layout__rail {
   position: sticky;
   top: 0;
+  min-height: 420px;
+  padding-right: 20px;
+  border-right: 1px solid var(--color-border-secondary);
 }
 
 .step-info-layout__rail :deep(.avatar-upload-panel) {
   align-items: flex-start;
-}
-
-.step-info-layout__rail :deep(.avatar-upload-panel__hint) {
-  overflow: visible;
-  text-overflow: clip;
-  white-space: normal;
 }
 
 .step-info-layout__content {
@@ -388,13 +426,17 @@ defineExpose({
   min-width: 0;
 }
 
+.step-info-section--style {
+  grid-column: 1 / -1;
+}
+
 .step-info-section :deep(.section-title) {
   margin-bottom: var(--spacing-md);
 }
 
 .step-info-section__body {
-  padding: var(--spacing-md);
-  border: 1px solid var(--color-border);
+  padding: 0;
+  border: 0;
   border-radius: var(--radius-base);
   background: var(--color-bg-container);
 }
@@ -496,13 +538,19 @@ defineExpose({
 }
 .step-info-style-group {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
-  gap: var(--spacing-sm);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--spacing-md);
   width: 100%;
 }
 .step-info-style-card {
+  --style-color: var(--color-primary);
+  position: relative;
+  display: flex;
+  min-height: 128px;
+  align-items: stretch;
+  justify-content: center;
   margin-inline-end: 0;
-  padding: 10px 12px;
+  padding: 16px 12px 14px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-base);
   background: var(--color-bg-container);
@@ -513,32 +561,79 @@ defineExpose({
 }
 .step-info-style-card:hover,
 .step-info-style-card--selected {
-  border-color: var(--color-primary);
-  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-bg-container));
+  border-color: var(--style-color);
+  background: color-mix(in srgb, var(--style-color) 10%, var(--color-bg-container));
 }
 .step-info-style-card--selected {
-  color: var(--color-primary);
+  color: var(--style-color);
+}
+
+.step-info-style-card--formal {
+  --style-color: #0ea5e9;
+}
+
+.step-info-style-card--friendly {
+  --style-color: #10b981;
+}
+
+.step-info-style-card--concise {
+  --style-color: #f59e0b;
+}
+
+.step-info-style-card--detailed {
+  --style-color: #7c3aed;
+}
+
+.step-info-style-card--custom {
+  --style-color: #64748b;
 }
 
 .step-info-style-card :deep(.ant-radio) {
-  align-self: flex-start;
-  margin-top: 2px;
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  margin: 0;
 }
 
 .step-info-style-card__content {
-  display: inline-flex;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
   min-width: 0;
-  gap: var(--spacing-xs);
-  overflow: hidden;
+  gap: 6px;
   color: inherit;
   font-size: 0.875rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  text-align: center;
+}
+
+.step-info-style-card__icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-full);
+  color: var(--style-color);
+  background: color-mix(in srgb, var(--style-color) 16%, transparent);
+  font-size: 1.375rem;
 }
 
 .step-info-style-card__icon {
   flex-shrink: 0;
+}
+
+.step-info-style-card__title {
+  color: var(--color-text-base);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.step-info-style-card__desc {
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+  line-height: 1.45;
 }
 
 @media (max-width: 768px) {
@@ -548,6 +643,13 @@ defineExpose({
 
   .step-info-layout__rail {
     position: static;
+    min-height: 0;
+    padding-right: 0;
+    border-right: 0;
+  }
+
+  .step-info-style-group {
+    grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
   }
 }
 </style>

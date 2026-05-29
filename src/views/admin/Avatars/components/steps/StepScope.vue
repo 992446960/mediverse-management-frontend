@@ -7,17 +7,20 @@
             {{ t('avatar.org') }}
           </span>
         </template>
-        <a-select
-          v-model:value="localForm.org_id"
-          :placeholder="t('avatar.wizard.placeholderOrg')"
-          allow-clear
-          show-search
-          :filter-option="filterOption"
-          :options="orgOptions"
-          :loading="orgLoading"
-          class="w-full step-scope-select"
-          @change="onOrgChange"
-        />
+        <div class="step-scope-select-field">
+          <BankOutlined class="step-scope-select-field__icon" />
+          <a-select
+            v-model:value="localForm.org_id"
+            :placeholder="t('avatar.wizard.placeholderOrg')"
+            allow-clear
+            show-search
+            :filter-option="filterOption"
+            :options="orgOptions"
+            :loading="orgLoading"
+            class="w-full step-scope-select"
+            @change="onOrgChange"
+          />
+        </div>
       </a-form-item>
       <template v-if="showDept">
         <a-form-item name="dept_id" :rules="deptRules">
@@ -26,18 +29,21 @@
               {{ t('avatar.dept') }}
             </span>
           </template>
-          <a-select
-            v-model:value="localForm.dept_id"
-            :placeholder="t('avatar.wizard.placeholderDept')"
-            allow-clear
-            show-search
-            :filter-option="filterOption"
-            :options="deptOptions"
-            :loading="deptLoading"
-            :disabled="!localForm.org_id"
-            class="w-full step-scope-select"
-            @change="onDeptChange"
-          />
+          <div class="step-scope-select-field">
+            <ApartmentOutlined class="step-scope-select-field__icon" />
+            <a-select
+              v-model:value="localForm.dept_id"
+              :placeholder="t('avatar.wizard.placeholderDept')"
+              allow-clear
+              show-search
+              :filter-option="filterOption"
+              :options="deptOptions"
+              :loading="deptLoading"
+              :disabled="!localForm.org_id"
+              class="w-full step-scope-select"
+              @change="onDeptChange"
+            />
+          </div>
         </a-form-item>
       </template>
       <template v-if="showUser">
@@ -50,39 +56,49 @@
               }}</span>
             </span>
           </template>
-          <a-select
-            v-model:value="localForm.user_id"
-            :placeholder="t('avatar.wizard.placeholderUser')"
-            allow-clear
-            show-search
-            :filter-option="filterOptionUser"
-            :options="userOptions"
-            :loading="userLoading"
-            :disabled="!localForm.dept_id"
-            class="w-full step-scope-select"
-          />
+          <div class="step-scope-select-field">
+            <UserOutlined class="step-scope-select-field__icon" />
+            <a-select
+              v-model:value="localForm.user_id"
+              :placeholder="t('avatar.wizard.placeholderUser')"
+              allow-clear
+              show-search
+              :filter-option="filterOptionUser"
+              :options="userOptions"
+              :loading="userLoading"
+              :disabled="!localForm.dept_id"
+              class="w-full step-scope-select"
+            />
+          </div>
         </a-form-item>
       </template>
     </a-form>
 
     <section v-if="scopePreviewItems.length" class="step-scope-preview">
-      <SectionTitle
-        :title="t('avatar.wizard.bindScope')"
-        :description="t('avatar.wizard.scopeHint')"
-      />
-      <ReadonlyDescription :items="scopePreviewItems" />
+      <h3 class="step-scope-preview__title">{{ t('avatar.wizard.scopePreviewTitle') }}</h3>
+      <div class="step-scope-preview__grid">
+        <div v-for="item in scopePreviewItems" :key="item.kind" class="step-scope-preview__item">
+          <span class="step-scope-preview__icon" aria-hidden="true">
+            <component :is="item.icon" />
+          </span>
+          <span class="step-scope-preview__content">
+            <span class="step-scope-preview__label">{{ item.label }}</span>
+            <span class="step-scope-preview__value">{{ item.value }}</span>
+          </span>
+        </div>
+      </div>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
+import type { Component } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { FormInstance } from 'ant-design-vue'
+import { ApartmentOutlined, BankOutlined, UserOutlined } from '@ant-design/icons-vue'
 import { getOrganizations } from '@/api/organizations'
 import { getDepartments } from '@/api/departments'
 import { getUsers } from '@/api/users'
-import ReadonlyDescription from '@/components/ReadonlyDescription/index.vue'
-import SectionTitle from '@/components/SectionTitle/index.vue'
 import type { AvatarWizardForm } from '@/types/avatar'
 import type { Organization } from '@/types/organization'
 import type { Department } from '@/types/department'
@@ -243,13 +259,16 @@ function findLabel(options: { label: string; value: string }[], value?: string) 
 }
 
 const scopePreviewItems = computed(() => {
-  const items: { label: string; value: string }[] = []
+  const items: { kind: string; label: string; value: string; icon: Component }[] = []
   const orgName = findLabel(orgOptions.value, localForm.value.org_id)
   const deptName = findLabel(deptOptions.value, localForm.value.dept_id)
   const userName = findLabel(userOptions.value, localForm.value.user_id)
-  if (orgName) items.push({ label: t('avatar.org'), value: orgName })
-  if (deptName) items.push({ label: t('avatar.dept'), value: deptName })
-  if (userName) items.push({ label: t('avatar.bindUser'), value: userName })
+  if (orgName)
+    items.push({ kind: 'org', label: t('avatar.org'), value: orgName, icon: BankOutlined })
+  if (deptName)
+    items.push({ kind: 'dept', label: t('avatar.dept'), value: deptName, icon: ApartmentOutlined })
+  if (userName)
+    items.push({ kind: 'user', label: t('avatar.bindUser'), value: userName, icon: UserOutlined })
   return items
 })
 
@@ -272,10 +291,25 @@ defineExpose({
 .step-scope-form :deep(.ant-form-item) + .ant-form-item {
   margin-top: 24px;
 }
+.step-scope-select-field {
+  position: relative;
+  min-width: 0;
+}
+.step-scope-select-field__icon {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: 18px;
+  color: var(--color-primary);
+  font-size: 1.25rem;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
 /* 下拉框：圆角、内边距、边框、focus 环 */
 .step-scope-select :deep(.ant-select-selector) {
   border-radius: 0.5rem !important;
   border: 1px solid #e5e7eb !important;
+  padding-left: 44px !important;
   transition:
     border-color 0.2s,
     box-shadow 0.2s;
@@ -323,13 +357,90 @@ defineExpose({
 }
 
 .step-scope-preview {
-  padding: var(--spacing-md);
-  border: 1px solid var(--color-border);
+  margin-top: 20px;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--color-border));
   border-radius: var(--radius-base);
-  background: var(--color-bg-container);
+  background: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg-container));
 }
 
-.step-scope-preview :deep(.section-title) {
-  margin-bottom: var(--spacing-md);
+.step-scope-preview__title {
+  margin: 0 0 12px;
+  color: var(--color-text-base);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.step-scope-preview__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+}
+
+.step-scope-preview__item {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 40px;
+  gap: 12px;
+  padding: 0 18px;
+  border-right: 1px solid var(--color-border-secondary);
+}
+
+.step-scope-preview__item:first-child {
+  padding-left: 0;
+}
+
+.step-scope-preview__item:last-child {
+  padding-right: 0;
+  border-right: 0;
+}
+
+.step-scope-preview__icon {
+  display: inline-flex;
+  flex: 0 0 40px;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--color-border));
+  border-radius: var(--radius-base);
+  color: var(--color-primary);
+  background: var(--color-bg-container);
+  font-size: 1.25rem;
+}
+
+.step-scope-preview__content {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.step-scope-preview__label {
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+}
+
+.step-scope-preview__value {
+  overflow: hidden;
+  color: var(--color-text-base);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .step-scope-preview__grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
+
+  .step-scope-preview__item {
+    padding: 0;
+    border-right: 0;
+  }
 }
 </style>

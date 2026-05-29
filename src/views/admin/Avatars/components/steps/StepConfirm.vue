@@ -1,33 +1,106 @@
 <template>
   <div class="step-confirm">
-    <section class="step-confirm__hero">
-      <IdentitySummary
-        :avatar-url="modelValue.avatar_url"
-        :name="modelValue.name || t('avatar.name')"
-        :scope="scopeText"
-        :status-text="t(getTypeLabelKey(modelValue.type))"
-        status-color="blue"
-        :tags="modelValue.tags"
-      />
+    <div class="step-confirm__top-grid">
+      <section class="step-confirm-card step-confirm-card--identity">
+        <h3 class="step-confirm-card__title">{{ t('avatar.wizard.identityTitle') }}</h3>
+        <div class="step-confirm-identity">
+          <a-avatar
+            :src="modelValue.avatar_url || undefined"
+            :size="84"
+            class="step-confirm-avatar"
+          >
+            <template #icon>
+              <UserOutlined />
+            </template>
+          </a-avatar>
+          <div class="step-confirm-identity__body">
+            <div class="step-confirm-identity__name">{{ modelValue.name || t('avatar.name') }}</div>
+            <div class="step-confirm-identity__tags">
+              <a-tag color="blue">{{ typeLabel }}</a-tag>
+              <a-tag>{{ t('avatar.wizard.pendingCreate') }}</a-tag>
+            </div>
+          </div>
+        </div>
+        <div class="step-confirm-scope">
+          <div v-for="row in scopeRows" :key="row.label" class="step-confirm-scope__row">
+            <component :is="row.icon" class="step-confirm-scope__icon" />
+            <span class="step-confirm-scope__label">{{ row.label }}</span>
+            <span class="step-confirm-scope__value">{{ row.value || '—' }}</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="step-confirm-card">
+        <h3 class="step-confirm-card__title">{{ t('avatar.advanced.title') }}</h3>
+        <div class="step-confirm-advanced">
+          <div
+            v-for="row in advancedRows"
+            :key="row.label"
+            class="step-confirm-advanced__row"
+            :class="{ 'step-confirm-advanced__row--tags': Array.isArray(row.value) }"
+          >
+            <span class="step-confirm-advanced__icon" aria-hidden="true">
+              <component :is="row.icon" />
+            </span>
+            <span class="step-confirm-advanced__label">{{ row.label }}</span>
+            <span
+              class="step-confirm-advanced__value"
+              :class="{ 'step-confirm-advanced__value--tags': Array.isArray(row.value) }"
+            >
+              <template v-if="Array.isArray(row.value)">
+                <a-tag v-for="item in row.value" :key="item">{{ item }}</a-tag>
+              </template>
+              <template v-else>{{ row.value || '—' }}</template>
+            </span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <section class="step-confirm-card">
+      <h3 class="step-confirm-card__title">{{ t('avatar.wizard.conversationContent') }}</h3>
+      <div class="step-confirm-content">
+        <div v-for="row in contentRows" :key="row.label" class="step-confirm-content__row">
+          <component :is="row.icon" class="step-confirm-content__icon" />
+          <span class="step-confirm-content__label">{{ row.label }}</span>
+          <span class="step-confirm-content__value">
+            <template v-if="row.kind === 'style'">
+              <a-tag color="blue">{{ row.value }}</a-tag>
+              <span class="step-confirm-content__desc">{{ row.description }}</span>
+            </template>
+            <template v-else-if="Array.isArray(row.value)">
+              <a-tag v-for="item in row.value" :key="item">{{ item }}</a-tag>
+            </template>
+            <template v-else>{{ row.value || '—' }}</template>
+          </span>
+        </div>
+      </div>
     </section>
 
-    <section class="step-confirm__section">
-      <SectionTitle :title="t('avatar.wizard.basicInfo')" />
-      <ReadonlyDescription :items="contentSummaryItems" />
-    </section>
-
-    <section class="step-confirm__section">
-      <SectionTitle :title="t('avatar.advanced.title')" />
-      <ReadonlyDescription :items="advancedSummaryItems" />
-    </section>
+    <a-alert
+      class="step-confirm__hint"
+      type="info"
+      show-icon
+      :message="t('avatar.wizard.afterCreateHint')"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import IdentitySummary from '@/components/IdentitySummary/index.vue'
-import ReadonlyDescription from '@/components/ReadonlyDescription/index.vue'
-import SectionTitle from '@/components/SectionTitle/index.vue'
+import {
+  ApartmentOutlined,
+  BankOutlined,
+  BulbOutlined,
+  FileTextOutlined,
+  MessageOutlined,
+  RobotOutlined,
+  SettingOutlined,
+  TagOutlined,
+  ToolOutlined,
+  UserOutlined,
+} from '@ant-design/icons-vue'
+import type { Component } from 'vue'
 import { getEngines, getModels, getTools } from '@/api/advancedConfig'
 import { getOrganizations } from '@/api/organizations'
 import { getDepartments } from '@/api/departments'
@@ -57,6 +130,22 @@ const STYLE_LABEL_KEYS: Record<AvatarStyle, string> = {
   concise: 'avatar.wizard.styleConcise',
   detailed: 'avatar.wizard.styleDetailed',
   custom: 'avatar.wizard.styleCustom',
+}
+
+const STYLE_DESCRIPTION_KEYS: Record<AvatarStyle, string> = {
+  formal: 'avatar.wizard.styleFormalDesc',
+  friendly: 'avatar.wizard.styleFriendlyDesc',
+  concise: 'avatar.wizard.styleConciseDesc',
+  detailed: 'avatar.wizard.styleDetailedDesc',
+  custom: 'avatar.wizard.styleCustomDesc',
+}
+
+type ConfirmContentRow = {
+  label: string
+  value: string | string[]
+  icon: Component
+  kind?: 'style'
+  description?: string
 }
 
 function getTypeLabelKey(type: AvatarType): string {
@@ -119,16 +208,25 @@ async function loadAdvancedOptions() {
 
 onMounted(loadAdvancedOptions)
 
-const scopeText = computed(() => {
-  const form = props.modelValue
-  return [
-    scopeNames.value.orgName ?? form.org_id,
-    scopeNames.value.deptName ?? form.dept_id,
-    scopeNames.value.userName ?? form.user_id,
-  ]
-    .filter(Boolean)
-    .join(' / ')
-})
+const typeLabel = computed(() => t(getTypeLabelKey(props.modelValue.type)))
+
+const scopeRows = computed(() => [
+  {
+    label: t('avatar.org'),
+    value: scopeNames.value.orgName ?? props.modelValue.org_id ?? '—',
+    icon: BankOutlined,
+  },
+  {
+    label: t('avatar.dept'),
+    value: scopeNames.value.deptName ?? props.modelValue.dept_id ?? '—',
+    icon: ApartmentOutlined,
+  },
+  {
+    label: t('avatar.bindUser'),
+    value: scopeNames.value.userName ?? props.modelValue.user_id ?? '—',
+    icon: UserOutlined,
+  },
+])
 
 const advancedSummary = computed(() => {
   const form = props.modelValue
@@ -149,34 +247,33 @@ const advancedSummary = computed(() => {
   )
 })
 
-const contentSummaryItems = computed(() => {
+const contentRows = computed<ConfirmContentRow[]>(() => {
   const form = props.modelValue
   return [
-    { label: t('avatar.type'), value: t(getTypeLabelKey(form.type)) },
-    { label: t('avatar.org'), value: scopeNames.value.orgName ?? form.org_id ?? '—' },
-    { label: t('avatar.dept'), value: scopeNames.value.deptName ?? form.dept_id ?? '—' },
-    { label: t('avatar.bindUser'), value: scopeNames.value.userName ?? form.user_id ?? '—' },
-    { label: t('avatar.name'), value: form.name || '—' },
-    { label: t('avatar.tags'), value: form.tags ?? [] },
-    { label: t('avatar.bio'), value: form.bio || '—', span: 2 as const },
-    { label: t('avatar.greeting'), value: form.greeting || '—', span: 2 as const },
-    { label: t('avatar.style'), value: t(getStyleLabelKey(form.style)) },
     {
-      label: t('avatar.styleCustom'),
-      value: form.style === 'custom' ? form.style_custom || '—' : '—',
+      label: t('avatar.style'),
+      value: t(getStyleLabelKey(form.style)),
+      description: t(STYLE_DESCRIPTION_KEYS[form.style]),
+      icon: UserOutlined,
+      kind: 'style',
     },
+    { label: t('avatar.bio'), value: form.bio || '—', icon: FileTextOutlined },
+    { label: t('avatar.greeting'), value: form.greeting || '—', icon: MessageOutlined },
+    { label: t('avatar.tags'), value: form.tags?.length ? form.tags : ['—'], icon: TagOutlined },
   ]
 })
 
-const advancedSummaryItems = computed(() => {
-  const summary = advancedSummary.value
-  return [
-    { label: t('avatar.advanced.tools'), value: summary.tools },
-    { label: t('avatar.advanced.skills'), value: summary.skills },
-    { label: t('avatar.advanced.engine'), value: summary.algorithm },
-    { label: t('avatar.advanced.model'), value: summary.model },
-  ]
-})
+const advancedRows = computed<{ label: string; value: string | string[]; icon: Component }[]>(
+  () => {
+    const summary = advancedSummary.value
+    return [
+      { label: t('avatar.advanced.tools'), value: summary.tools, icon: ToolOutlined },
+      { label: t('avatar.advanced.skills'), value: summary.skills, icon: BulbOutlined },
+      { label: t('avatar.advanced.engine'), value: summary.algorithm, icon: RobotOutlined },
+      { label: t('avatar.advanced.model'), value: summary.model, icon: SettingOutlined },
+    ]
+  }
+)
 </script>
 
 <style scoped lang="scss">
@@ -186,16 +283,222 @@ const advancedSummaryItems = computed(() => {
   gap: var(--spacing-lg);
 }
 
-.step-confirm__hero,
-.step-confirm__section {
+.step-confirm__top-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.step-confirm-card {
   min-width: 0;
-  padding: var(--spacing-md);
+  padding: 20px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-base);
   background: var(--color-bg-container);
 }
 
-.step-confirm__section :deep(.section-title) {
-  margin-bottom: var(--spacing-md);
+.step-confirm-card__title {
+  margin: 0 0 var(--spacing-lg);
+  color: var(--color-text-base);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.step-confirm-identity {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+  padding-bottom: var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border-secondary);
+}
+
+.step-confirm-avatar {
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+}
+
+.step-confirm-identity__body {
+  min-width: 0;
+}
+
+.step-confirm-identity__name {
+  margin-bottom: var(--spacing-sm);
+  color: var(--color-text-base);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.step-confirm-identity__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+}
+
+.step-confirm-scope {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+}
+
+.step-confirm-scope__row,
+.step-confirm-content__row {
+  display: grid;
+  grid-template-columns: 28px 112px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--spacing-sm);
+  min-width: 0;
+}
+
+.step-confirm-advanced__row {
+  display: grid;
+  grid-template-columns: 46px 96px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.step-confirm-scope__icon,
+.step-confirm-content__icon {
+  color: var(--color-primary);
+  font-size: 1.25rem;
+}
+
+.step-confirm-scope__label,
+.step-confirm-advanced__label,
+.step-confirm-content__label {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+
+.step-confirm-scope__value,
+.step-confirm-advanced__value,
+.step-confirm-content__value {
+  min-width: 0;
+  color: var(--color-text-base);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.step-confirm-advanced {
+  display: flex;
+  flex-direction: column;
+}
+
+.step-confirm-advanced__row {
+  min-height: 58px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border-secondary);
+}
+
+.step-confirm-advanced__row--tags {
+  align-items: start;
+}
+
+.step-confirm-advanced__row:last-child {
+  border-bottom: 0;
+}
+
+.step-confirm-advanced__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-full);
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  font-size: 1.125rem;
+}
+
+.step-confirm-advanced__row--tags .step-confirm-advanced__icon {
+  margin-top: 2px;
+}
+
+.step-confirm-advanced__row--tags .step-confirm-advanced__label {
+  padding-top: 8px;
+}
+
+.step-confirm-advanced__value--tags {
+  display: grid;
+  min-width: 0;
+  max-width: 100%;
+  max-height: 100px;
+  padding-bottom: 4px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  grid-auto-columns: max-content;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(3, max-content);
+  gap: 6px;
+  scrollbar-color: color-mix(in srgb, var(--color-primary) 45%, transparent) transparent;
+  scrollbar-width: thin;
+}
+
+.step-confirm-advanced__value--tags :deep(.ant-tag) {
+  margin: 0;
+}
+
+.step-confirm-advanced__value--tags::-webkit-scrollbar {
+  height: 6px;
+  background: transparent;
+}
+
+.step-confirm-advanced__value--tags::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.step-confirm-advanced__value--tags::-webkit-scrollbar-thumb {
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--color-primary) 35%, transparent);
+}
+
+.step-confirm-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.step-confirm-content__row {
+  grid-template-columns: 28px 112px minmax(0, 1fr);
+  min-height: 48px;
+  border-bottom: 1px solid var(--color-border-secondary);
+}
+
+.step-confirm-content__row:last-child {
+  border-bottom: 0;
+}
+
+.step-confirm-content__value {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.step-confirm-content__desc {
+  color: var(--color-text-base);
+}
+
+.step-confirm__hint {
+  border-color: color-mix(in srgb, var(--color-primary) 18%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary) 6%, var(--color-bg-container));
+}
+
+@media (max-width: 760px) {
+  .step-confirm__top-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .step-confirm-scope__row,
+  .step-confirm-content__row {
+    grid-template-columns: 28px minmax(80px, 112px) minmax(0, 1fr);
+  }
+
+  .step-confirm-advanced__row {
+    grid-template-columns: 42px minmax(80px, 96px) minmax(0, 1fr);
+  }
 }
 </style>

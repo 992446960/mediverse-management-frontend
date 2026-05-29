@@ -2,53 +2,60 @@
   <a-modal
     :open="open"
     :title="t('avatar.detailTitle')"
-    width="820px"
-    :footer="null"
+    width="960px"
     :destroy-on-close="true"
     @cancel="emit('update:open', false)"
   >
+    <template #footer>
+      <a-button @click="emit('update:open', false)">{{ t('common.close') }}</a-button>
+    </template>
+
     <div v-if="loading && !detail" class="avatar-detail-loading">
       <a-spin />
     </div>
     <template v-else>
       <template v-if="detail">
         <div class="avatar-detail">
-          <IdentitySummary
-            :name="detail.name"
-            :scope="formatScope(detail)"
-            :avatar-url="detail.avatar_url || undefined"
-            :status-text="detail.status === 'active' ? t('status.active') : t('status.inactive')"
-            :status-color="detail.status === 'active' ? 'success' : 'error'"
-          />
-
-          <section class="avatar-detail__section">
-            <SectionTitle :title="t('avatar.wizard.basicInfo')" />
-            <ReadonlyDescription :items="basicItems" />
+          <section class="avatar-detail__summary">
+            <IdentitySummary
+              :name="detail.name"
+              :scope="formatScope(detail)"
+              :avatar-url="detail.avatar_url || undefined"
+              :status-text="detail.status === 'active' ? t('status.active') : t('status.inactive')"
+              :status-color="detail.status === 'active' ? 'success' : 'error'"
+            />
           </section>
 
-          <section class="avatar-detail__section">
-            <SectionTitle :title="t('avatar.advanced.title')" />
-            <ReadonlyDescription :items="advancedItems" />
-          </section>
-        </div>
+          <div class="avatar-detail__grid">
+            <section class="avatar-detail__section">
+              <SectionTitle :title="t('avatar.wizard.basicInfo')" />
+              <ReadonlyDescription :items="basicItems" :columns="1" />
+            </section>
 
-        <div class="avatar-detail__section">
-          <SectionTitle :title="t('avatar.knowledgeGrants')" />
-          <a-table
-            v-if="grantRows.length"
-            size="small"
-            :pagination="false"
-            row-key="id"
-            :columns="grantColumns"
-            :data-source="grantRows"
-          >
-            <template #bodyCell="{ column, record }">
-              <template v-if="column.key === 'granted_at'">
-                {{ dayjs(record.granted_at).format('YYYY-MM-DD HH:mm') }}
+            <section class="avatar-detail__section">
+              <SectionTitle :title="t('avatar.advanced.title')" />
+              <ReadonlyDescription :items="advancedItems" :columns="1" />
+            </section>
+          </div>
+
+          <section class="avatar-detail__section">
+            <SectionTitle :title="t('avatar.knowledgeGrants')" />
+            <a-table
+              v-if="grantRows.length"
+              size="small"
+              :pagination="false"
+              row-key="id"
+              :columns="grantColumns"
+              :data-source="grantRows"
+            >
+              <template #bodyCell="{ column, record }">
+                <template v-if="column.key === 'granted_at'">
+                  {{ dayjs(record.granted_at).format('YYYY-MM-DD HH:mm') }}
+                </template>
               </template>
-            </template>
-          </a-table>
-          <a-empty v-else :description="t('common.noData')" />
+            </a-table>
+            <a-empty v-else :description="t('common.noData')" />
+          </section>
         </div>
       </template>
     </template>
@@ -206,11 +213,28 @@ watch(
   gap: var(--spacing-lg);
 }
 
+.avatar-detail__summary,
 .avatar-detail__section {
-  margin-top: var(--spacing-lg);
+  min-width: 0;
+  padding: var(--spacing-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-container);
+}
+
+.avatar-detail__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-lg);
 }
 
 .avatar-detail__section :deep(.section-title) {
   margin-bottom: var(--spacing-md);
+}
+
+@media (max-width: 900px) {
+  .avatar-detail__grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

@@ -4,8 +4,8 @@
     :footer="null"
     :destroy-on-close="true"
     wrap-class-name="avatar-wizard-modal"
-    :width="672"
-    :style="{ maxWidth: '90vw' }"
+    :width="880"
+    :style="{ maxWidth: '94vw' }"
     :aria-labelledby="titleId"
     :aria-describedby="contentId"
     @cancel="emit('update:open', false)"
@@ -45,7 +45,7 @@
         </p>
       </div>
 
-      <div class="avatar-wizard-content-inner min-h-[280px]">
+      <div class="avatar-wizard-content-inner">
         <StepType v-if="currentStep === 0" v-model="form" />
         <StepScope v-if="currentStep === 1" ref="stepScopeRef" v-model="form" />
         <StepInfo v-if="currentStep === 2" ref="stepInfoRef" v-model="form" />
@@ -59,10 +59,25 @@
       class="avatar-wizard-footer pt-3 pb-2 border-t border-gray-100 dark:border-gray-800 flex justify-end items-center gap-3"
     >
       <a-button
+        v-if="currentStep === 0"
         class="avatar-wizard-btn cursor-pointer transition-colors duration-200"
-        @click="onCancel"
+        @click="closeWizard"
       >
-        {{ currentStep > 0 ? t('common.prev') : t('common.cancel') }}
+        {{ t('common.cancel') }}
+      </a-button>
+      <a-button
+        v-else
+        class="avatar-wizard-btn cursor-pointer transition-colors duration-200"
+        @click="onPrev"
+      >
+        {{ t('common.prev') }}
+      </a-button>
+      <a-button
+        v-if="currentStep === lastStepIndex"
+        class="avatar-wizard-btn cursor-pointer transition-colors duration-200"
+        @click="closeWizard"
+      >
+        {{ t('common.cancel') }}
       </a-button>
       <a-button
         v-if="currentStep < lastStepIndex"
@@ -71,12 +86,12 @@
         :loading="loading"
         @click="onNext"
       >
-        {{ t('common.confirm') }}
+        {{ t('common.next') }}
       </a-button>
       <a-button
         v-if="currentStep === lastStepIndex"
         type="primary"
-        class="avatar-wizard-btn min-h-[44px] min-w-[100px] cursor-pointer transition-colors duration-200 bg-[#0ea5e9] hover:bg-sky-600! border-0"
+        class="avatar-wizard-btn cursor-pointer transition-colors duration-200 bg-[#0ea5e9] hover:bg-sky-600! border-0"
         :loading="submitLoading"
         @click="onSubmit"
       >
@@ -152,12 +167,12 @@ const wizardSteps = computed(() =>
   }))
 )
 
-function onCancel() {
-  if (currentStep.value > 0) {
-    currentStep.value--
-  } else {
-    emit('update:open', false)
-  }
+function closeWizard() {
+  emit('update:open', false)
+}
+
+function onPrev() {
+  if (currentStep.value > 0) currentStep.value--
 }
 
 function setCloseButtonAriaLabel() {
@@ -222,12 +237,18 @@ async function onSubmit() {
 .avatar-wizard-steps {
   margin-bottom: var(--spacing-xl);
 }
+
+.avatar-wizard-btn {
+  min-width: 76px;
+  height: 34px;
+  padding: 0 16px;
+}
 </style>
 
 <style lang="scss">
 .avatar-wizard-modal.ant-modal-wrap .ant-modal {
-  width: 90vw;
-  max-width: 672px;
+  width: 94vw;
+  max-width: 880px;
 }
 .avatar-wizard-modal .ant-modal-content {
   padding: 0;
