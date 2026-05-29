@@ -2,7 +2,7 @@
   <a-modal
     :open="open"
     :title="t('avatar.editAvatar')"
-    width="40%"
+    width="920px"
     :confirm-loading="submitLoading"
     :ok-text="t('common.confirm')"
     :cancel-text="t('common.cancel')"
@@ -13,26 +13,9 @@
     <a-skeleton v-if="loading" active />
 
     <template v-else>
-      <div v-if="avatar" class="edit-avatar-alert-wrap">
-        <a-alert
-          type="info"
-          :message="t('avatar.scopeDisplay', { scope: formatScope(avatar) })"
-          show-icon
-        />
-      </div>
-
       <a-form ref="formRef" layout="vertical" :model="form" :rules="rules">
-        <a-form-item :label="t('avatar.name')" name="name">
-          <a-input
-            v-model:value="form.name"
-            :placeholder="t('avatar.name')"
-            :maxlength="100"
-            show-count
-          />
-        </a-form-item>
-
-        <a-form-item :label="t('avatar.avatar')" name="avatar_url">
-          <div class="edit-avatar-wrap flex flex-col gap-2">
+        <div class="edit-avatar-layout">
+          <aside class="edit-avatar-layout__rail">
             <input
               ref="avatarFileRef"
               type="file"
@@ -41,169 +24,174 @@
               aria-hidden="true"
               @change="onAvatarFileChange"
             />
-            <div
-              class="edit-avatar-upload-card group relative w-20 h-20 rounded-full bg-gray-50 dark:bg-gray-700 flex flex-col items-center justify-center border border-dashed border-gray-300 dark:border-gray-600 overflow-hidden shrink-0"
-              :class="[
-                form.avatar_url
-                  ? ''
-                  : 'cursor-pointer hover:border-[#0ea5e9] hover:text-[#0ea5e9] transition-all',
-                avatarUploading ? 'pointer-events-none opacity-70' : '',
-              ]"
-              @click="onAvatarClick"
-            >
-              <a-spin v-if="avatarUploading" />
-              <template v-else-if="form.avatar_url">
-                <div class="absolute inset-0 w-full h-full" @click.stop>
-                  <a-image
-                    :src="form.avatar_url"
-                    :alt="t('avatar.avatar')"
-                    class="w-full h-full [&_.ant-image]:block! [&_.ant-image-img]:w-full! [&_.ant-image-img]:h-full! [&_.ant-image-img]:object-cover!"
-                  />
-                </div>
-              </template>
-              <template v-else>
-                <PlusOutlined class="text-gray-400 text-lg" />
-                <span class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{
-                  t('avatar.wizard.avatarUpload')
-                }}</span>
-              </template>
+            <AvatarUploadPanel
+              :image-url="form.avatar_url"
+              :title="t('avatar.avatar')"
+              :action-text="t('common.selectFile')"
+              :hint="t('avatar.wizard.avatarSizeHint') + '，' + t('avatar.wizard.avatarFormatHint')"
+              :loading="avatarUploading"
+              @upload="triggerAvatarFileInput"
+            />
+            <div v-if="avatar" class="edit-avatar-layout__scope">
+              {{ t('avatar.scopeDisplay', { scope: formatScope(avatar) }) }}
             </div>
-            <template v-if="form.avatar_url">
-              <div class="text-left">
-                <a-button
-                  type="link"
-                  size="small"
-                  class="p-0 h-auto"
-                  @click="triggerAvatarFileInput"
-                >
-                  {{ t('common.selectFile') }}
-                </a-button>
-              </div>
-            </template>
-            <p class="text-xs text-gray-400">
-              {{ t('avatar.wizard.avatarSizeHint') + '，' + t('avatar.wizard.avatarFormatHint') }}
-            </p>
-          </div>
-        </a-form-item>
+          </aside>
 
-        <a-form-item :label="t('avatar.bio')" name="bio">
-          <a-textarea
-            v-model:value="form.bio"
-            :placeholder="t('avatar.bio')"
-            :rows="3"
-            :maxlength="500"
-            show-count
-          />
-        </a-form-item>
-
-        <a-form-item name="tags">
-          <template #label>
-            <span class="step-info-label">{{ t('avatar.tags') }}</span>
-          </template>
-          <div class="step-info-tags-wrap flex flex-wrap items-center gap-2">
-            <template v-for="(tag, index) in form.tags" :key="`${tag}-${index}`">
-              <span class="step-info-tag-pill">
-                <span class="step-info-tag-text">{{ tag }}</span>
-                <span
-                  class="step-info-tag-remove"
-                  role="button"
-                  tabindex="0"
-                  :aria-label="t('common.delete')"
-                  @click="removeTag(index)"
-                  @keydown.enter.prevent="removeTag(index)"
-                  @keydown.space.prevent="removeTag(index)"
-                >
-                  <CloseOutlined class="step-info-tag-remove-icon" />
-                </span>
-              </span>
-            </template>
-            <a-popover
-              v-if="form.tags.length < TAG_MAX_COUNT"
-              v-model:open="tagPopoverOpen"
-              trigger="click"
-              overlay-class-name="step-info-tag-popover"
-              @open-change="onTagPopoverOpenChange"
-            >
-              <template #content>
-                <div class="step-info-tag-add-popover p-1">
+          <div class="edit-avatar-layout__content">
+            <section class="edit-avatar-section">
+              <SectionTitle :title="t('avatar.wizard.basicInfo')" />
+              <div class="edit-avatar-section__body">
+                <a-form-item :label="t('avatar.name')" name="name">
                   <a-input
-                    ref="tagInputRef"
-                    v-model:value="tagInputValue"
-                    :placeholder="t('avatar.wizard.tagPlaceholder')"
-                    :maxlength="20"
-                    size="small"
-                    class="w-48"
-                    @keydown.enter.prevent="confirmAddTag"
+                    v-model:value="form.name"
+                    :placeholder="t('avatar.name')"
+                    :maxlength="100"
+                    show-count
                   />
-                  <a-button type="primary" size="small" class="mt-2 w-full" @click="confirmAddTag">
-                    {{ t('common.confirm') }}
-                  </a-button>
-                </div>
-              </template>
-              <span
-                class="step-info-tag-add-pill"
-                role="button"
-                tabindex="0"
-                :aria-label="t('avatar.wizard.addTag')"
-                @keydown.enter.prevent="tagPopoverOpen = true"
-                @keydown.space.prevent="tagPopoverOpen = true"
-              >
-                <PlusOutlined class="step-info-tag-add-icon" />
-                <span>{{ t('avatar.wizard.tagPlaceholderAdd') }}</span>
-              </span>
-            </a-popover>
+                </a-form-item>
+
+                <a-form-item :label="t('avatar.bio')" name="bio">
+                  <a-textarea
+                    v-model:value="form.bio"
+                    :placeholder="t('avatar.bio')"
+                    :rows="3"
+                    :maxlength="500"
+                    show-count
+                  />
+                </a-form-item>
+
+                <a-form-item name="tags">
+                  <template #label>
+                    <span class="step-info-label">{{ t('avatar.tags') }}</span>
+                  </template>
+                  <div class="step-info-tags-wrap flex flex-wrap items-center gap-2">
+                    <template v-for="(tag, index) in form.tags" :key="`${tag}-${index}`">
+                      <span class="step-info-tag-pill">
+                        <span class="step-info-tag-text">{{ tag }}</span>
+                        <span
+                          class="step-info-tag-remove"
+                          role="button"
+                          tabindex="0"
+                          :aria-label="t('common.delete')"
+                          @click="removeTag(index)"
+                          @keydown.enter.prevent="removeTag(index)"
+                          @keydown.space.prevent="removeTag(index)"
+                        >
+                          <CloseOutlined class="step-info-tag-remove-icon" />
+                        </span>
+                      </span>
+                    </template>
+                    <a-popover
+                      v-if="form.tags.length < TAG_MAX_COUNT"
+                      v-model:open="tagPopoverOpen"
+                      trigger="click"
+                      overlay-class-name="step-info-tag-popover"
+                      @open-change="onTagPopoverOpenChange"
+                    >
+                      <template #content>
+                        <div class="step-info-tag-add-popover p-1">
+                          <a-input
+                            ref="tagInputRef"
+                            v-model:value="tagInputValue"
+                            :placeholder="t('avatar.wizard.tagPlaceholder')"
+                            :maxlength="20"
+                            size="small"
+                            class="w-48"
+                            @keydown.enter.prevent="confirmAddTag"
+                          />
+                          <a-button
+                            type="primary"
+                            size="small"
+                            class="mt-2 w-full"
+                            @click="confirmAddTag"
+                          >
+                            {{ t('common.confirm') }}
+                          </a-button>
+                        </div>
+                      </template>
+                      <span
+                        class="step-info-tag-add-pill"
+                        role="button"
+                        tabindex="0"
+                        :aria-label="t('avatar.wizard.addTag')"
+                        @keydown.enter.prevent="tagPopoverOpen = true"
+                        @keydown.space.prevent="tagPopoverOpen = true"
+                      >
+                        <PlusOutlined class="step-info-tag-add-icon" />
+                        <span>{{ t('avatar.wizard.tagPlaceholderAdd') }}</span>
+                      </span>
+                    </a-popover>
+                  </div>
+                </a-form-item>
+              </div>
+            </section>
+
+            <section class="edit-avatar-section">
+              <SectionTitle :title="t('avatar.style')" />
+              <div class="edit-avatar-section__body">
+                <a-form-item :label="t('avatar.greeting')" name="greeting">
+                  <a-textarea
+                    v-model:value="form.greeting"
+                    :placeholder="t('avatar.greeting')"
+                    :rows="2"
+                    :maxlength="200"
+                    show-count
+                  />
+                </a-form-item>
+
+                <a-form-item :label="t('avatar.style')" name="style">
+                  <a-radio-group v-model:value="form.style" class="edit-style-group">
+                    <a-radio
+                      v-for="styleOpt in styleOptions"
+                      :key="styleOpt.value"
+                      :value="styleOpt.value"
+                      class="edit-style-card"
+                      :class="{ 'edit-style-card--selected': form.style === styleOpt.value }"
+                    >
+                      <span class="edit-style-card__content">
+                        <component :is="styleOpt.icon" class="edit-style-card__icon" />
+                        <span>{{ t(styleOpt.labelKey) }}</span>
+                      </span>
+                    </a-radio>
+                  </a-radio-group>
+                </a-form-item>
+
+                <a-form-item
+                  v-if="form.style === 'custom'"
+                  :label="t('avatar.styleCustom')"
+                  name="style_custom"
+                >
+                  <a-input
+                    v-model:value="form.style_custom"
+                    :placeholder="t('avatar.styleCustom')"
+                    :maxlength="100"
+                    show-count
+                    allow-clear
+                  />
+                </a-form-item>
+              </div>
+            </section>
+
+            <section class="edit-avatar-section">
+              <SectionTitle :title="t('avatar.advanced.title')" />
+              <AdvancedConfigFields
+                :selected-tools="form.tools"
+                :selected-skills="form.skills"
+                :selected-algorithm="form.algorithm"
+                :selected-model="form.model"
+                :tools="toolGroups"
+                :skills="skillOptions"
+                :engines="engineOptions"
+                :model-groups="modelGroups"
+                :loading="advancedLoading"
+                @update:selected-tools="form.tools = $event"
+                @update:selected-skills="form.skills = $event"
+                @update:selected-algorithm="form.algorithm = $event"
+                @update:selected-model="form.model = $event"
+              />
+            </section>
           </div>
-        </a-form-item>
-
-        <a-form-item :label="t('avatar.greeting')" name="greeting">
-          <a-textarea
-            v-model:value="form.greeting"
-            :placeholder="t('avatar.greeting')"
-            :rows="2"
-            :maxlength="200"
-            show-count
-          />
-        </a-form-item>
-
-        <a-form-item :label="t('avatar.style')" name="style">
-          <a-radio-group v-model:value="form.style" class="w-full">
-            <a-radio value="formal">{{ t('avatar.wizard.styleFormal') }}</a-radio>
-            <a-radio value="friendly">{{ t('avatar.wizard.styleFriendly') }}</a-radio>
-            <a-radio value="concise">{{ t('avatar.wizard.styleConcise') }}</a-radio>
-            <a-radio value="detailed">{{ t('avatar.wizard.styleDetailed') }}</a-radio>
-            <a-radio value="custom">{{ t('avatar.wizard.styleCustom') }}</a-radio>
-          </a-radio-group>
-        </a-form-item>
-
-        <a-form-item
-          v-if="form.style === 'custom'"
-          :label="t('avatar.styleCustom')"
-          name="style_custom"
-        >
-          <a-input
-            v-model:value="form.style_custom"
-            :placeholder="t('avatar.styleCustom')"
-            :maxlength="100"
-            show-count
-            allow-clear
-          />
-        </a-form-item>
-
-        <AdvancedConfigFields
-          :selected-tools="form.tools"
-          :selected-skills="form.skills"
-          :selected-algorithm="form.algorithm"
-          :selected-model="form.model"
-          :tools="toolGroups"
-          :skills="skillOptions"
-          :engines="engineOptions"
-          :model-groups="modelGroups"
-          :loading="advancedLoading"
-          @update:selected-tools="form.tools = $event"
-          @update:selected-skills="form.skills = $event"
-          @update:selected-algorithm="form.algorithm = $event"
-          @update:selected-model="form.model = $event"
-        />
+        </div>
       </a-form>
     </template>
   </a-modal>
@@ -212,9 +200,19 @@
 <script setup lang="ts">
 import { message } from 'ant-design-vue'
 import type { FormInstance } from 'ant-design-vue'
-import { PlusOutlined, CloseOutlined } from '@ant-design/icons-vue'
+import {
+  CloseOutlined,
+  FileTextOutlined,
+  MessageOutlined,
+  PlusOutlined,
+  SettingOutlined,
+  ThunderboltOutlined,
+  UserOutlined,
+} from '@ant-design/icons-vue'
 import { useI18n } from 'vue-i18n'
 import AdvancedConfigFields from '@/components/AvatarConfig/AdvancedConfigFields.vue'
+import AvatarUploadPanel from '@/components/AvatarUploadPanel/index.vue'
+import SectionTitle from '@/components/SectionTitle/index.vue'
 import { getEngines, getModels, getTools } from '@/api/advancedConfig'
 import { getAvatarDetail, updateAvatar } from '@/api/avatars'
 import { getSkills } from '@/api/skills'
@@ -233,6 +231,7 @@ import {
   normalizeSkillOptions,
   resolveModelSelection,
 } from '@/utils/avatarAdvancedConfig'
+import type { Component } from 'vue'
 
 const AVATAR_ACCEPT = 'image/jpeg,image/png,image/gif,image/webp'
 
@@ -266,6 +265,13 @@ const tagPopoverOpen = ref(false)
 const tagInputValue = ref('')
 const tagInputRef = ref<{ focus: () => void } | null>(null)
 const TAG_MAX_COUNT = 10
+const styleOptions = [
+  { value: 'formal', labelKey: 'avatar.wizard.styleFormal', icon: UserOutlined },
+  { value: 'friendly', labelKey: 'avatar.wizard.styleFriendly', icon: MessageOutlined },
+  { value: 'concise', labelKey: 'avatar.wizard.styleConcise', icon: ThunderboltOutlined },
+  { value: 'detailed', labelKey: 'avatar.wizard.styleDetailed', icon: FileTextOutlined },
+  { value: 'custom', labelKey: 'avatar.wizard.styleCustom', icon: SettingOutlined },
+] satisfies { value: AvatarStyle; labelKey: string; icon: Component }[]
 
 interface EditFormState {
   name: string
@@ -326,11 +332,6 @@ function onTagPopoverOpenChange(open: boolean) {
 
 function triggerAvatarFileInput() {
   avatarFileRef.value?.click()
-}
-
-function onAvatarClick() {
-  if (form.value.avatar_url) return
-  triggerAvatarFileInput()
 }
 
 async function onAvatarFileChange(e: Event) {
@@ -490,28 +491,63 @@ async function onSubmit() {
 </script>
 
 <style scoped lang="scss">
-.edit-avatar-alert-wrap {
-  margin-bottom: 1rem;
-}
-.edit-avatar-upload-card {
-  min-width: 80px;
-  min-height: 80px;
-  border-radius: 50%;
-}
-.edit-avatar-upload-card :deep(.ant-image) {
-  width: 100%;
-  height: 100%;
-  display: block;
-  border-radius: 50%;
-}
-.edit-avatar-upload-card :deep(.ant-image-img) {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
-  border-radius: 50%;
+.edit-avatar-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 260px) minmax(0, 1fr);
+  gap: var(--spacing-lg);
+  align-items: start;
 }
 
-/* 标签：与新增分身 StepInfo 一致 - 已选浅蓝底+蓝边框+蓝字+蓝色 ×，「添加标签」灰虚线边框+灰字 */
+.edit-avatar-layout__rail {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.edit-avatar-layout__rail :deep(.avatar-upload-panel__hint) {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+.edit-avatar-layout__scope {
+  padding: var(--spacing-sm) var(--spacing-md);
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--radius-base);
+  background: var(--color-bg-layout);
+}
+
+.edit-avatar-layout__content {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.edit-avatar-section {
+  min-width: 0;
+}
+
+.edit-avatar-section :deep(.section-title) {
+  margin-bottom: var(--spacing-md);
+}
+
+.edit-avatar-section__body {
+  padding: var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  background: var(--color-bg-container);
+}
+
+.edit-avatar-section__body :deep(.ant-form-item:last-child) {
+  margin-bottom: 0;
+}
+
 .step-info-label {
   display: inline-block;
 }
@@ -528,9 +564,9 @@ async function onSubmit() {
   gap: 4px;
   padding: 4px 10px 4px 12px;
   border-radius: 9999px;
-  background: rgba(14, 165, 233, 0.12);
-  border: 1px solid rgba(14, 165, 233, 0.4);
-  color: #0ea5e9;
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 40%, transparent);
+  color: var(--color-primary);
   font-size: 12px;
 }
 .step-info-tag-remove {
@@ -540,15 +576,20 @@ async function onSubmit() {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  color: #0ea5e9;
+  color: var(--color-primary);
   cursor: pointer;
   transition:
     color 0.15s,
     background 0.15s;
 }
 .step-info-tag-remove:hover {
-  color: #0284c7;
-  background: rgba(14, 165, 233, 0.15);
+  color: var(--color-primary-hover);
+  background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+}
+.step-info-tag-remove:focus-visible,
+.step-info-tag-add-pill:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 .step-info-tag-remove-icon {
   font-size: 10px;
@@ -560,8 +601,8 @@ async function onSubmit() {
   padding: 4px 12px;
   border-radius: 9999px;
   background: transparent;
-  border: 1px dashed #d1d5db;
-  color: #9ca3af;
+  border: 1px dashed var(--color-border);
+  color: var(--color-text-tertiary);
   font-size: 12px;
   cursor: pointer;
   transition:
@@ -569,20 +610,78 @@ async function onSubmit() {
     color 0.15s;
 }
 .step-info-tag-add-pill:hover {
-  border-color: #9ca3af;
-  color: #6b7280;
+  border-color: var(--color-text-tertiary);
+  color: var(--color-text-secondary);
 }
 .step-info-tag-add-pill .step-info-tag-add-icon,
 .step-info-tag-add-pill :deep(.anticon) {
   color: inherit;
   font-size: 12px;
 }
-.dark .step-info-tag-add-pill {
-  border-color: #4b5563;
-  color: #9ca3af;
+.edit-style-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: var(--spacing-sm);
+  width: 100%;
 }
-.dark .step-info-tag-add-pill:hover {
-  border-color: #6b7280;
-  color: #d1d5db;
+
+.edit-style-card {
+  margin-inline-end: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  background: var(--color-bg-container);
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.edit-style-card:hover,
+.edit-style-card--selected {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-bg-container));
+}
+
+.edit-style-card--selected {
+  color: var(--color-primary);
+}
+
+.edit-style-card :deep(.ant-radio) {
+  align-self: flex-start;
+  margin-top: 2px;
+}
+
+.edit-style-card__content {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  gap: var(--spacing-xs);
+  color: inherit;
+}
+
+.edit-style-card__icon {
+  flex-shrink: 0;
+}
+
+.edit-avatar-section :deep(.config-section) {
+  padding: var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  background: var(--color-bg-container);
+}
+
+.edit-avatar-section :deep(.config-section .section-header) {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .edit-avatar-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .edit-avatar-layout__rail {
+    position: static;
+  }
 }
 </style>

@@ -12,96 +12,28 @@
     </div>
     <template v-else>
       <template v-if="detail">
-        <div class="flex items-start gap-4 mb-4">
-          <div v-if="detail.avatar_url" class="shrink-0">
-            <a-image
-              :src="detail.avatar_url"
-              :alt="detail.name"
-              :width="72"
-              class="rounded-lg overflow-hidden [&_.ant-image-img]:rounded-lg!"
-            />
-          </div>
-          <div class="min-w-0 flex-1">
-            <div class="text-base font-medium text-(--color-text-base) dark:text-gray-100 m-0">
-              {{ detail.name }}
-            </div>
-            <div class="mt-1 text-sm text-(--color-text-secondary)">
-              {{ t('avatar.scopeDisplay', { scope: formatScope(detail) }) }}
-            </div>
-          </div>
+        <div class="avatar-detail">
+          <IdentitySummary
+            :name="detail.name"
+            :scope="formatScope(detail)"
+            :avatar-url="detail.avatar_url || undefined"
+            :status-text="detail.status === 'active' ? t('status.active') : t('status.inactive')"
+            :status-color="detail.status === 'active' ? 'success' : 'error'"
+          />
+
+          <section class="avatar-detail__section">
+            <SectionTitle :title="t('avatar.wizard.basicInfo')" />
+            <ReadonlyDescription :items="basicItems" />
+          </section>
+
+          <section class="avatar-detail__section">
+            <SectionTitle :title="t('avatar.advanced.title')" />
+            <ReadonlyDescription :items="advancedItems" />
+          </section>
         </div>
 
-        <a-descriptions bordered :column="2" size="small" class="avatar-detail-desc">
-          <a-descriptions-item :label="t('avatar.type')">
-            <a-tag :color="AVATAR_TYPE_TAG_COLORS[detail.type]">
-              {{ t(AVATAR_TYPE_LABEL_KEYS[detail.type]) }}
-            </a-tag>
-          </a-descriptions-item>
-          <a-descriptions-item :label="t('org.status')">
-            <a-tag :color="detail.status === 'active' ? 'success' : 'error'">
-              {{ detail.status === 'active' ? t('status.active') : t('status.inactive') }}
-            </a-tag>
-          </a-descriptions-item>
-          <a-descriptions-item :label="t('avatar.bio')" :span="2">
-            {{ detail.bio?.trim() || t('avatar.noBio') }}
-          </a-descriptions-item>
-          <a-descriptions-item :label="t('avatar.greeting')" :span="2">
-            {{ detail.greeting?.trim() || '—' }}
-          </a-descriptions-item>
-          <a-descriptions-item :label="t('avatar.style')" :span="2">
-            <span>{{ styleLabel(detail) }}</span>
-          </a-descriptions-item>
-          <a-descriptions-item :label="t('avatar.tags')" :span="2">
-            <template v-if="detail.tags?.length">
-              <a-tag v-for="tag in detail.tags" :key="tag" class="mb-1">{{ tag }}</a-tag>
-            </template>
-            <span v-else>—</span>
-          </a-descriptions-item>
-          <a-descriptions-item :label="t('common.createdAt')">
-            {{ dayjs(detail.created_at).format('YYYY-MM-DD HH:mm') }}
-          </a-descriptions-item>
-          <a-descriptions-item :label="t('common.updatedAt')">
-            {{ dayjs(detail.updated_at).format('YYYY-MM-DD HH:mm') }}
-          </a-descriptions-item>
-          <a-descriptions-item :label="t('common.createdBy')" :span="2">
-            {{ detail.created_by }}
-          </a-descriptions-item>
-        </a-descriptions>
-
-        <div class="mt-6">
-          <div class="text-sm font-medium text-(--color-text-base) dark:text-gray-100 mb-2">
-            {{ t('avatar.advanced.title') }}
-          </div>
-          <a-descriptions bordered :column="2" size="small" class="avatar-detail-desc">
-            <a-descriptions-item :label="t('avatar.advanced.tools')" :span="2">
-              <template v-if="advancedSummary.tools.length">
-                <a-tag v-for="tool in advancedSummary.tools" :key="tool" class="mb-1">
-                  {{ tool }}
-                </a-tag>
-              </template>
-              <span v-else>—</span>
-            </a-descriptions-item>
-            <a-descriptions-item :label="t('avatar.advanced.skills')" :span="2">
-              <template v-if="advancedSummary.skills.length">
-                <a-tag v-for="skill in advancedSummary.skills" :key="skill" class="mb-1">
-                  {{ skill }}
-                </a-tag>
-              </template>
-              <span v-else>—</span>
-            </a-descriptions-item>
-            <a-descriptions-item :label="t('avatar.advanced.engine')">
-              {{ advancedSummary.algorithm }}
-            </a-descriptions-item>
-            <a-descriptions-item :label="t('avatar.advanced.model')">
-              {{ advancedSummary.model }}
-            </a-descriptions-item>
-          </a-descriptions>
-        </div>
-
-        <div class="mt-6">
-          <div class="text-sm font-medium text-(--color-text-base) dark:text-gray-100 mb-2">
-            {{ t('avatar.knowledgeGrants') }}
-          </div>
+        <div class="avatar-detail__section">
+          <SectionTitle :title="t('avatar.knowledgeGrants')" />
           <a-table
             v-if="grantRows.length"
             size="small"
@@ -126,15 +58,13 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
+import IdentitySummary from '@/components/IdentitySummary/index.vue'
+import ReadonlyDescription from '@/components/ReadonlyDescription/index.vue'
+import SectionTitle from '@/components/SectionTitle/index.vue'
 import { getEngines, getModels, getTools } from '@/api/advancedConfig'
 import { getAvatarDetail } from '@/api/avatars'
 import { getSkills } from '@/api/skills'
-import {
-  AVATAR_TYPE_LABEL_KEYS,
-  AVATAR_TYPE_TAG_COLORS,
-  type AvatarDetail,
-  type AvatarStyle,
-} from '@/types/avatar'
+import { AVATAR_TYPE_LABEL_KEYS, type AvatarDetail, type AvatarStyle } from '@/types/avatar'
 import type { EngineItem, ModelGroup, SkillItem, ToolGroup } from '@/types/advancedConfig'
 import { normalizeSkillOptions, resolveAdvancedConfigSummary } from '@/utils/avatarAdvancedConfig'
 
@@ -156,6 +86,12 @@ const skillOptions = ref<SkillItem[]>([])
 const engineOptions = ref<EngineItem[]>([])
 const modelGroups = ref<ModelGroup[]>([])
 
+interface ReadonlyDescriptionItem {
+  label: string
+  value?: string | number | string[] | null
+  span?: 1 | 2
+}
+
 const STYLE_I18N: Record<AvatarStyle, string> = {
   formal: 'avatar.wizard.styleFormal',
   friendly: 'avatar.wizard.styleFriendly',
@@ -165,6 +101,25 @@ const STYLE_I18N: Record<AvatarStyle, string> = {
 }
 
 const grantRows = computed(() => detail.value?.knowledge_grants ?? [])
+const basicItems = computed<ReadonlyDescriptionItem[]>(() => {
+  if (!detail.value) return []
+  return [
+    { label: t('avatar.type'), value: t(AVATAR_TYPE_LABEL_KEYS[detail.value.type]) },
+    { label: t('avatar.bio'), value: detail.value.bio?.trim() || t('avatar.noBio'), span: 2 },
+    { label: t('avatar.greeting'), value: detail.value.greeting?.trim(), span: 2 },
+    { label: t('avatar.style'), value: styleLabel(detail.value), span: 2 },
+    { label: t('avatar.tags'), value: detail.value.tags ?? [], span: 2 },
+    {
+      label: t('common.createdAt'),
+      value: dayjs(detail.value.created_at).format('YYYY-MM-DD HH:mm'),
+    },
+    {
+      label: t('common.updatedAt'),
+      value: dayjs(detail.value.updated_at).format('YYYY-MM-DD HH:mm'),
+    },
+    { label: t('common.createdBy'), value: detail.value.created_by, span: 2 },
+  ]
+})
 const advancedSummary = computed(() =>
   resolveAdvancedConfigSummary(detail.value ?? {}, {
     tools: toolGroups.value,
@@ -174,6 +129,12 @@ const advancedSummary = computed(() =>
     emptyText: '—',
   })
 )
+const advancedItems = computed<ReadonlyDescriptionItem[]>(() => [
+  { label: t('avatar.advanced.tools'), value: advancedSummary.value.tools, span: 2 },
+  { label: t('avatar.advanced.skills'), value: advancedSummary.value.skills, span: 2 },
+  { label: t('avatar.advanced.engine'), value: advancedSummary.value.algorithm },
+  { label: t('avatar.advanced.model'), value: advancedSummary.value.model },
+])
 
 const grantColumns = computed(() => [
   { title: t('avatar.grantScope'), key: 'scope_name', dataIndex: 'scope_name' },
@@ -239,7 +200,17 @@ watch(
   justify-content: center;
 }
 
-.avatar-detail-desc :deep(.ant-descriptions-item-label) {
-  width: 120px;
+.avatar-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.avatar-detail__section {
+  margin-top: var(--spacing-lg);
+}
+
+.avatar-detail__section :deep(.section-title) {
+  margin-bottom: var(--spacing-md);
 }
 </style>
