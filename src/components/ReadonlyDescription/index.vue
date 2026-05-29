@@ -135,6 +135,10 @@ function getDisplayValue(value: ReadonlyDescriptionItem['value']) {
   grid-column: span 2;
 }
 
+.readonly-description--single .readonly-description__row--wide {
+  grid-column: span 1;
+}
+
 .readonly-description__label {
   display: flex;
   min-width: 0;

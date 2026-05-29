@@ -134,6 +134,8 @@ export default {
     status: 'Status',
     addUser: 'Add User',
     editUser: 'Edit User',
+    detailTitle: 'User Detail',
+    organizationScope: 'Organization Scope',
     selectOrgDeptFirst: 'Please select an organization or department on the left',
     roleEditor: 'Role Settings',
     resetPassword: 'Reset Password',

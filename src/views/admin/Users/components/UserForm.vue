@@ -1,10 +1,10 @@
 <template>
   <a-modal
     :open="open"
-    :title="viewOnly ? t('common.detail') : isEdit ? t('user.editUser') : t('user.addUser')"
-    width="760px"
+    :title="viewOnly ? t('user.detailTitle') : isEdit ? t('user.editUser') : t('user.addUser')"
+    :width="560"
     :confirm-loading="confirmLoading"
-    :ok-text="t('common.confirm')"
+    :ok-text="isEdit ? t('common.save') : t('common.confirm')"
     :cancel-text="t('common.cancel')"
     @ok="handleOk"
     @cancel="emit('update:open', false)"
@@ -22,17 +22,17 @@
 
         <section class="user-form-detail__section">
           <SectionTitle :title="t('avatar.wizard.basicInfo')" />
-          <ReadonlyDescription :items="detailBasicItems" />
+          <ReadonlyDescription :items="detailBasicItems" :columns="1" />
         </section>
 
         <section class="user-form-detail__section">
-          <SectionTitle :title="organizationSectionTitle" />
-          <ReadonlyDescription :items="detailOrganizationItems" />
+          <SectionTitle :title="t('user.organizationScope')" />
+          <ReadonlyDescription :items="detailOrganizationItems" :columns="1" />
         </section>
 
         <section class="user-form-detail__section">
-          <SectionTitle :title="detailAccountSectionTitle" />
-          <ReadonlyDescription :items="detailAccountItems" />
+          <SectionTitle :title="t('user.remark')" />
+          <ReadonlyDescription :items="detailRemarkItems" :columns="1" />
         </section>
       </div>
     </template>
@@ -44,192 +44,156 @@
       layout="vertical"
       @submit.prevent="handleOk"
     >
-      <div class="user-form-layout">
-        <section v-if="!isEdit" class="user-form-section">
-          <SectionTitle :title="organizationSectionTitle" />
-          <div class="user-form-section__body">
-            <a-row :gutter="[16, 16]">
-              <a-col :xs="24" :sm="12">
-                <a-form-item :label="t('user.org')" name="org_id">
-                  <a-select
-                    v-model:value="formState.org_id"
-                    :placeholder="t('user.org')"
-                    :disabled="lockOrg"
-                    allow-clear
-                    show-search
-                    :filter-option="filterOption"
-                    @change="onOrgChange"
-                  >
-                    <a-select-option v-for="o in orgOptions" :key="o.id" :value="o.id">
-                      {{ o.name }}
-                    </a-select-option>
-                  </a-select>
-                </a-form-item>
-              </a-col>
-              <a-col :xs="24" :sm="12">
-                <a-form-item :label="t('user.dept')" name="dept_id">
-                  <a-select
-                    v-model:value="formState.dept_id"
-                    :placeholder="t('user.dept')"
-                    :disabled="lockDept"
-                    allow-clear
-                    show-search
-                    :filter-option="filterOption"
-                  >
-                    <a-select-option v-for="d in deptOptions" :key="d.id" :value="d.id">
-                      {{ d.name }}
-                    </a-select-option>
-                  </a-select>
-                </a-form-item>
-              </a-col>
-            </a-row>
-          </div>
-        </section>
-
-        <section class="user-form-section">
-          <SectionTitle :title="t('avatar.wizard.basicInfo')" />
-          <div class="user-form-section__body">
-            <a-row :gutter="[16, 16]">
-              <a-col :xs="24" :sm="12">
-                <a-form-item :label="t('user.username')" name="username">
-                  <a-input
-                    v-model:value="formState.username"
-                    :placeholder="t('user.username')"
-                    :disabled="isEdit"
-                    :maxlength="50"
-                    show-count
-                  />
-                </a-form-item>
-              </a-col>
-              <a-col :xs="24" :sm="12">
-                <a-form-item :label="t('user.realName')" name="real_name">
-                  <a-input
-                    v-model:value="formState.real_name"
-                    :placeholder="t('user.realName')"
-                    :maxlength="50"
-                    show-count
-                  />
-                </a-form-item>
-              </a-col>
-              <a-col :xs="24" :sm="12">
-                <a-form-item :label="t('user.phone')" name="phone">
-                  <a-input
-                    v-model:value="formState.phone"
-                    :placeholder="t('profile.phonePlaceholder')"
-                    :maxlength="20"
-                    addon-before="+86"
-                  />
-                </a-form-item>
-              </a-col>
-              <a-col :xs="24" :sm="12">
-                <a-form-item :label="t('user.email')" name="email">
-                  <a-input
-                    v-model:value="formState.email"
-                    :placeholder="t('profile.emailPlaceholder')"
-                    type="text"
-                    autocomplete="email"
-                  />
-                </a-form-item>
-              </a-col>
-              <a-col v-if="!isEdit" :xs="24" :sm="12">
-                <a-form-item :label="t('user.initialPasswordLabel')" name="password">
-                  <a-input-password
-                    v-model:value="formState.password"
-                    :placeholder="t('user.passwordOptionalPlaceholder')"
-                    autocomplete="new-password"
-                  />
-                </a-form-item>
-              </a-col>
-            </a-row>
-          </div>
-        </section>
-
-        <section v-if="isEdit" class="user-form-section">
-          <SectionTitle :title="organizationSectionTitle" />
-          <div class="user-form-section__body">
-            <a-row :gutter="[16, 16]">
-              <a-col :xs="24" :sm="12">
-                <a-form-item :label="t('user.org')" name="org_id">
-                  <a-select
-                    v-model:value="formState.org_id"
-                    :placeholder="t('user.org')"
-                    :disabled="lockOrg"
-                    allow-clear
-                    show-search
-                    :filter-option="filterOption"
-                    @change="onOrgChange"
-                  >
-                    <a-select-option v-for="o in orgOptionsForEdit" :key="o.id" :value="o.id">
-                      {{ o.name }}
-                    </a-select-option>
-                  </a-select>
-                </a-form-item>
-              </a-col>
-              <a-col :xs="24" :sm="12">
-                <a-form-item :label="t('user.dept')" name="dept_id">
-                  <a-select
-                    v-model:value="formState.dept_id"
-                    :placeholder="t('user.dept')"
-                    :disabled="lockDept"
-                    allow-clear
-                    show-search
-                    :filter-option="filterOption"
-                  >
-                    <a-select-option v-for="d in deptOptionsForEdit" :key="d.id" :value="d.id">
-                      {{ d.name }}
-                    </a-select-option>
-                  </a-select>
-                </a-form-item>
-              </a-col>
-            </a-row>
-          </div>
-        </section>
-
-        <section class="user-form-section">
-          <SectionTitle :title="accessSectionTitle" />
-          <div class="user-form-section__body">
-            <a-row :gutter="[16, 16]">
-              <a-col v-if="showRoleField" :span="24">
-                <a-form-item :label="t('user.roles')" name="roles">
-                  <a-checkbox-group v-model:value="formState.roles" class="user-form-roles-wrap">
-                    <a-checkbox
-                      v-for="r in assignableRoles"
-                      :key="r"
-                      :value="r"
-                      :disabled="r === 'user'"
-                    >
-                      {{ t(ROLE_LABEL_KEYS[r] ?? r) }}
-                    </a-checkbox>
-                  </a-checkbox-group>
-                </a-form-item>
-              </a-col>
-              <a-col :xs="24" :sm="12">
-                <a-form-item :label="t('user.status')" name="status">
-                  <a-radio-group
-                    v-model:value="formState.status"
-                    size="small"
-                    class="user-form-status-group"
-                  >
-                    <a-radio-button value="active">{{ t('status.active') }}</a-radio-button>
-                    <a-radio-button value="inactive">{{ t('status.inactive') }}</a-radio-button>
-                  </a-radio-group>
-                </a-form-item>
-              </a-col>
-              <a-col :span="24">
-                <a-form-item :label="t('user.remark')" name="remark">
-                  <a-textarea
-                    v-model:value="formState.remark"
-                    :placeholder="t('user.remark')"
-                    :rows="2"
-                    :maxlength="500"
-                    show-count
-                  />
-                </a-form-item>
-              </a-col>
-            </a-row>
-          </div>
-        </section>
-      </div>
+      <a-row :gutter="[16, 12]">
+        <template v-if="!isEdit">
+          <a-col :xs="24" :sm="12">
+            <a-form-item :label="t('user.org')" name="org_id">
+              <a-select
+                v-model:value="formState.org_id"
+                :placeholder="t('user.org')"
+                :disabled="lockOrg"
+                allow-clear
+                show-search
+                :filter-option="filterOption"
+                @change="onOrgChange"
+              >
+                <a-select-option v-for="o in orgOptions" :key="o.id" :value="o.id">
+                  {{ o.name }}
+                </a-select-option>
+              </a-select>
+            </a-form-item>
+          </a-col>
+          <a-col :xs="24" :sm="12">
+            <a-form-item :label="t('user.dept')" name="dept_id">
+              <a-select
+                v-model:value="formState.dept_id"
+                :placeholder="t('user.dept')"
+                :disabled="lockDept"
+                allow-clear
+                show-search
+                :filter-option="filterOption"
+              >
+                <a-select-option v-for="d in deptOptions" :key="d.id" :value="d.id">
+                  {{ d.name }}
+                </a-select-option>
+              </a-select>
+            </a-form-item>
+          </a-col>
+        </template>
+        <a-col :xs="24" :sm="12">
+          <a-form-item :label="t('user.username')" name="username">
+            <a-input
+              v-model:value="formState.username"
+              :placeholder="t('user.username')"
+              :disabled="isEdit"
+              :maxlength="50"
+              show-count
+            />
+          </a-form-item>
+        </a-col>
+        <a-col :xs="24" :sm="12">
+          <a-form-item :label="t('user.realName')" name="real_name">
+            <a-input
+              v-model:value="formState.real_name"
+              :placeholder="t('user.realName')"
+              :maxlength="50"
+              show-count
+            />
+          </a-form-item>
+        </a-col>
+        <a-col :xs="24" :sm="12">
+          <a-form-item :label="t('user.phone')" name="phone">
+            <a-input
+              v-model:value="formState.phone"
+              :placeholder="t('profile.phonePlaceholder')"
+              :maxlength="20"
+              addon-before="+86"
+            />
+          </a-form-item>
+        </a-col>
+        <a-col :xs="24" :sm="12">
+          <a-form-item :label="t('user.email')" name="email">
+            <a-input
+              v-model:value="formState.email"
+              :placeholder="t('profile.emailPlaceholder')"
+              type="text"
+              autocomplete="email"
+            />
+          </a-form-item>
+        </a-col>
+        <a-col v-if="!isEdit" :xs="24" :sm="12">
+          <a-form-item :label="t('user.initialPasswordLabel')" name="password">
+            <a-input-password
+              v-model:value="formState.password"
+              :placeholder="t('user.passwordOptionalPlaceholder')"
+              autocomplete="new-password"
+            />
+          </a-form-item>
+        </a-col>
+        <template v-if="isEdit">
+          <a-col :xs="24" :sm="12">
+            <a-form-item :label="t('user.org')" name="org_id">
+              <a-select
+                v-model:value="formState.org_id"
+                :placeholder="t('user.org')"
+                :disabled="lockOrg"
+                allow-clear
+                show-search
+                :filter-option="filterOption"
+                @change="onOrgChange"
+              >
+                <a-select-option v-for="o in orgOptionsForEdit" :key="o.id" :value="o.id">
+                  {{ o.name }}
+                </a-select-option>
+              </a-select>
+            </a-form-item>
+          </a-col>
+          <a-col :xs="24" :sm="12">
+            <a-form-item :label="t('user.dept')" name="dept_id">
+              <a-select
+                v-model:value="formState.dept_id"
+                :placeholder="t('user.dept')"
+                :disabled="lockDept"
+                allow-clear
+                show-search
+                :filter-option="filterOption"
+              >
+                <a-select-option v-for="d in deptOptionsForEdit" :key="d.id" :value="d.id">
+                  {{ d.name }}
+                </a-select-option>
+              </a-select>
+            </a-form-item>
+          </a-col>
+        </template>
+        <a-col v-if="showRoleField" :span="24">
+          <a-form-item :label="t('user.roles')" name="roles">
+            <a-checkbox-group v-model:value="formState.roles" class="user-form-roles-wrap">
+              <a-checkbox v-for="r in assignableRoles" :key="r" :value="r" :disabled="r === 'user'">
+                {{ t(ROLE_LABEL_KEYS[r] ?? r) }}
+              </a-checkbox>
+            </a-checkbox-group>
+          </a-form-item>
+        </a-col>
+        <a-col :span="24">
+          <a-form-item :label="t('user.remark')" name="remark">
+            <a-textarea
+              v-model:value="formState.remark"
+              :placeholder="t('user.remark')"
+              :rows="2"
+              :maxlength="500"
+              show-count
+            />
+          </a-form-item>
+        </a-col>
+        <a-col :xs="24" :sm="12">
+          <a-form-item :label="t('user.status')" name="status">
+            <a-radio-group v-model:value="formState.status" class="user-form-status-group">
+              <a-radio value="active">{{ t('status.active') }}</a-radio>
+              <a-radio value="inactive">{{ t('status.inactive') }}</a-radio>
+            </a-radio-group>
+          </a-form-item>
+        </a-col>
+      </a-row>
     </a-form>
     <template v-if="viewOnly" #footer>
       <a-button @click="emit('update:open', false)">{{ t('common.close') }}</a-button>
@@ -239,7 +203,6 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import dayjs from 'dayjs'
 import { useAuthStore } from '@/stores/auth'
 import type { FormInstance } from 'ant-design-vue'
 import { toAbsoluteFileUrl } from '@/api/upload'
@@ -262,10 +225,6 @@ const ROLE_LABEL_KEYS: Record<UserRole, string> = {
   org_admin: 'user.roleOrgAdmin',
   dept_admin: 'user.roleDeptAdmin',
   user: 'user.roleUser',
-}
-
-function formatCreatedAt(iso: string): string {
-  return dayjs(iso).format('YYYY-MM-DD HH:mm')
 }
 
 interface ReadonlyDescriptionItem {
@@ -303,11 +262,6 @@ const isEdit = computed(() => !!props.initialRecord?.id)
 const lockOrg = computed(() => authStore.isDeptAdmin || authStore.isOrgAdmin)
 const lockDept = computed(() => authStore.isDeptAdmin)
 const showRoleField = computed(() => !authStore.isDeptAdmin)
-const organizationSectionTitle = computed(() => `${t('user.org')} / ${t('user.dept')}`)
-const detailAccountSectionTitle = computed(() => `${t('user.roles')} / ${t('user.status')}`)
-const accessSectionTitle = computed(() =>
-  showRoleField.value ? t('user.roles') : t('user.status')
-)
 
 const detailRoleLabels = computed(() =>
   (props.initialRecord?.roles ?? []).map((role) => t(ROLE_LABEL_KEYS[role] ?? role))
@@ -337,13 +291,8 @@ const detailOrganizationItems = computed<ReadonlyDescriptionItem[]>(() => [
   { label: t('user.org'), value: props.initialRecord?.org_name || props.initialRecord?.org_id },
   { label: t('user.dept'), value: props.initialRecord?.dept_name || props.initialRecord?.dept_id },
 ])
-const detailAccountItems = computed<ReadonlyDescriptionItem[]>(() => [
-  { label: t('user.roles'), value: detailRoleLabels.value, span: 2 },
-  { label: t('user.status'), value: detailStatusText.value },
-  {
-    label: t('common.createdAt'),
-    value: props.initialRecord?.created_at ? formatCreatedAt(props.initialRecord.created_at) : '',
-  },
+const detailRemarkItems = computed<ReadonlyDescriptionItem[]>(() => [
+  { label: t('user.remark'), value: props.initialRecord?.remark },
 ])
 
 const formRef = ref<FormInstance>()
@@ -541,71 +490,54 @@ async function handleOk() {
 </script>
 
 <style scoped lang="scss">
-.user-form-detail,
-.user-form-layout {
+.user-form-detail {
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: var(--spacing-lg);
+  gap: var(--spacing-md);
 }
 
-.user-form-detail__section,
-.user-form-section {
+.user-form-detail__section {
   min-width: 0;
 }
 
-.user-form-detail__section :deep(.section-title),
-.user-form-section :deep(.section-title) {
-  margin-bottom: var(--spacing-md);
+.user-form-detail__section :deep(.section-title) {
+  margin-bottom: var(--spacing-sm);
 }
 
-.user-form-section__body {
-  padding: var(--spacing-md);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-base);
-  background: var(--color-bg-container);
+.user-form-detail :deep(.readonly-description__row) {
+  grid-template-columns: 88px minmax(0, 1fr);
+  min-height: 32px;
 }
 
-.user-form-section__body :deep(.ant-form-item:last-child) {
-  margin-bottom: 0;
+.user-form-detail :deep(.readonly-description__label) {
+  padding: 6px 10px;
+  background: transparent;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.user-form-detail :deep(.readonly-description__value) {
+  min-height: 32px;
+  padding: 6px 10px;
+  font-size: 0.8125rem;
+  line-height: 1.45;
 }
 
 .user-form-roles-wrap {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 8px 16px;
 }
 
 .user-form-roles-wrap :deep(.ant-checkbox-wrapper) {
   margin-inline-start: 0;
-  padding: 4px 10px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-full);
-  background: var(--color-bg-container);
-  transition:
-    border-color var(--transition-fast),
-    background var(--transition-fast),
-    color var(--transition-fast);
-}
-
-.user-form-roles-wrap :deep(.ant-checkbox-wrapper:hover),
-.user-form-roles-wrap :deep(.ant-checkbox-wrapper-checked) {
-  border-color: var(--color-primary);
-  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-bg-container));
-  color: var(--color-primary);
-}
-
-.user-form-roles-wrap :deep(.ant-checkbox) {
-  margin-inline-end: 6px;
 }
 
 .user-form-status-group {
-  display: inline-flex;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
   max-width: 100%;
-}
-
-.user-form-status-group :deep(.ant-radio-button-wrapper) {
-  min-width: 64px;
-  text-align: center;
 }
 </style>

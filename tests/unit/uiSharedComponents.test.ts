@@ -62,6 +62,10 @@ describe('shared UI components', () => {
   })
 
   it('supports single-column readonly rows in narrow panels', () => {
+    const source = readFileSync(
+      resolve(process.cwd(), 'src/components/ReadonlyDescription/index.vue'),
+      'utf8'
+    )
     const wrapper = mount(ReadonlyDescription, {
       props: {
         columns: 1,
@@ -74,6 +78,8 @@ describe('shared UI components', () => {
 
     expect(wrapper.classes()).toContain('readonly-description--single')
     expect(wrapper.findAll('.readonly-description__row--wide')).toHaveLength(2)
+    expect(source).toContain('.readonly-description--single .readonly-description__row--wide')
+    expect(source).toContain('grid-column: span 1')
   })
 
   it('emits upload click from avatar upload panel', async () => {

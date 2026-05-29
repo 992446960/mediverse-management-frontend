@@ -134,6 +134,8 @@ export default {
     status: '状态',
     addUser: '新增用户',
     editUser: '编辑用户',
+    detailTitle: '用户详情',
+    organizationScope: '组织归属',
     selectOrgDeptFirst: '请先选择左侧机构或科室',
     roleEditor: '角色设置',
     resetPassword: '重置密码',
