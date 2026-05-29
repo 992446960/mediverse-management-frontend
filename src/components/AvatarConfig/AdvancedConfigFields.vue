@@ -1,127 +1,166 @@
 <template>
   <div class="config-section advanced-config-fields" :class="`advanced-config-fields--${variant}`">
-    <div class="section-header">
-      <span class="section-title">{{ t('avatar.advanced.title') }}</span>
-    </div>
+    <SectionTitle v-if="variant === 'default'" :title="t('avatar.advanced.title')" />
 
     <div class="section-content advanced-config-fields__body">
-      <div class="advanced-chip-grid">
+      <template v-if="variant === 'cards'">
+        <div class="advanced-chip-grid">
+          <a-form-item
+            :label="variant === 'cards' ? undefined : t('avatar.advanced.tools')"
+            name="tools"
+            class="advanced-form-item advanced-form-item--tools"
+          >
+            <div v-if="variant === 'cards'" class="advanced-card-header">
+              <span class="advanced-card-title">
+                <span class="advanced-card-icon advanced-card-icon--tools">
+                  <ToolOutlined />
+                </span>
+                <span>{{ t('avatar.advanced.tools') }}</span>
+              </span>
+              <button
+                type="button"
+                class="advanced-tag-add-pill"
+                @click.stop.prevent="openToolSelector"
+              >
+                <PlusOutlined class="advanced-tag-add-icon" />
+                <span>{{ t('avatar.advanced.addTool') }}</span>
+              </button>
+            </div>
+            <AdvancedTagList
+              :items="selectedToolItems"
+              tone="tools"
+              :add-text="t('avatar.advanced.addTool')"
+              :show-add="false"
+              @add="openToolSelector"
+              @remove="removeTool"
+            />
+          </a-form-item>
+
+          <a-form-item
+            :label="variant === 'cards' ? undefined : t('avatar.advanced.skills')"
+            name="skills"
+            class="advanced-form-item advanced-form-item--skills"
+          >
+            <div v-if="variant === 'cards'" class="advanced-card-header">
+              <span class="advanced-card-title">
+                <span class="advanced-card-icon advanced-card-icon--skills">
+                  <BulbOutlined />
+                </span>
+                <span>{{ t('avatar.advanced.skills') }}</span>
+              </span>
+              <button
+                type="button"
+                class="advanced-tag-add-pill"
+                @click.stop.prevent="openSkillSelector"
+              >
+                <PlusOutlined class="advanced-tag-add-icon" />
+                <span>{{ t('avatar.advanced.addSkill') }}</span>
+              </button>
+            </div>
+            <AdvancedTagList
+              :items="selectedSkillItems"
+              tone="skills"
+              :add-text="t('avatar.advanced.addSkill')"
+              :show-add="false"
+              @add="openSkillSelector"
+              @remove="removeSkill"
+            />
+          </a-form-item>
+        </div>
+
+        <div class="advanced-select-panel">
+          <a-form-item name="algorithm" class="advanced-form-item advanced-form-item--engine">
+            <template #label>
+              <span class="advanced-field-label">
+                <span class="advanced-card-icon advanced-card-icon--engine">
+                  <RobotOutlined />
+                </span>
+                <span>{{ t('avatar.advanced.engine') }}</span>
+              </span>
+            </template>
+            <a-select
+              :value="selectedAlgorithm"
+              :loading="loading"
+              :placeholder="t('avatar.advanced.enginePlaceholder')"
+              allow-clear
+              @update:value="updateAlgorithm"
+            >
+              <a-select-option v-for="engine in engines" :key="engine.name" :value="engine.name">
+                {{ getEngineLabel(engine) }}
+              </a-select-option>
+            </a-select>
+          </a-form-item>
+
+          <a-form-item class="advanced-form-item advanced-form-item--model">
+            <template #label>
+              <span class="advanced-field-label">
+                <span class="advanced-card-icon advanced-card-icon--model">
+                  <SettingOutlined />
+                </span>
+                <span>{{ t('avatar.advanced.model') }}</span>
+              </span>
+            </template>
+            <div class="advanced-model-grid">
+              <a-select
+                :value="selectedModel?.provider"
+                :loading="loading"
+                :placeholder="t('avatar.advanced.providerPlaceholder')"
+                @update:value="updateProvider"
+              >
+                <a-select-option
+                  v-for="group in modelGroups"
+                  :key="group.provider"
+                  :value="group.provider"
+                >
+                  {{ getProviderLabel(group.provider) }}
+                </a-select-option>
+              </a-select>
+              <a-select
+                :value="selectedModel?.model_id"
+                :loading="loading"
+                :disabled="!selectedModel?.provider"
+                :placeholder="t('avatar.advanced.modelPlaceholder')"
+                @update:value="updateModel"
+              >
+                <a-select-option v-for="model in currentModels" :key="model.id" :value="model.id">
+                  {{ model.name }}
+                </a-select-option>
+              </a-select>
+            </div>
+          </a-form-item>
+        </div>
+      </template>
+
+      <template v-else>
         <a-form-item
-          :label="variant === 'cards' ? undefined : t('avatar.advanced.tools')"
+          :label="t('avatar.advanced.tools')"
           name="tools"
           class="advanced-form-item advanced-form-item--tools"
         >
-          <div v-if="variant === 'cards'" class="advanced-card-header">
-            <span class="advanced-card-title">
-              <span class="advanced-card-icon advanced-card-icon--tools">
-                <ToolOutlined />
-              </span>
-              <span>{{ t('avatar.advanced.tools') }}</span>
-            </span>
-            <button
-              type="button"
-              class="advanced-tag-add-pill"
-              @click.stop.prevent="openToolSelector"
-            >
-              <PlusOutlined class="advanced-tag-add-icon" />
-              <span>{{ t('avatar.advanced.addTool') }}</span>
-            </button>
-          </div>
-          <div
-            class="advanced-tags-wrap"
-            :class="{ 'advanced-tags-wrap--empty': !selectedToolItems.length }"
-          >
-            <span v-for="item in selectedToolItems" :key="item.name" class="advanced-tag-pill">
-              <span class="advanced-tag-text">{{ item.label || item.name }}</span>
-              <span
-                class="advanced-tag-remove"
-                role="button"
-                tabindex="0"
-                :aria-label="t('common.delete')"
-                @click="removeTool(item.name)"
-                @keydown.enter.prevent="removeTool(item.name)"
-                @keydown.space.prevent="removeTool(item.name)"
-              >
-                <CloseOutlined class="advanced-tag-remove-icon" />
-              </span>
-            </span>
-            <button
-              v-if="variant !== 'cards'"
-              type="button"
-              class="advanced-tag-add-pill"
-              @click.stop.prevent="openToolSelector"
-            >
-              <PlusOutlined class="advanced-tag-add-icon" />
-              <span>{{ t('avatar.advanced.addTool') }}</span>
-            </button>
-          </div>
+          <AdvancedTagList
+            :items="selectedToolItems"
+            tone="tools"
+            :add-text="t('avatar.advanced.addTool')"
+            @add="openToolSelector"
+            @remove="removeTool"
+          />
         </a-form-item>
 
         <a-form-item
-          :label="variant === 'cards' ? undefined : t('avatar.advanced.skills')"
+          :label="t('avatar.advanced.skills')"
           name="skills"
           class="advanced-form-item advanced-form-item--skills"
         >
-          <div v-if="variant === 'cards'" class="advanced-card-header">
-            <span class="advanced-card-title">
-              <span class="advanced-card-icon advanced-card-icon--skills">
-                <BulbOutlined />
-              </span>
-              <span>{{ t('avatar.advanced.skills') }}</span>
-            </span>
-            <button
-              type="button"
-              class="advanced-tag-add-pill"
-              @click.stop.prevent="openSkillSelector"
-            >
-              <PlusOutlined class="advanced-tag-add-icon" />
-              <span>{{ t('avatar.advanced.addSkill') }}</span>
-            </button>
-          </div>
-          <div
-            class="advanced-tags-wrap"
-            :class="{ 'advanced-tags-wrap--empty': !selectedSkillItems.length }"
-          >
-            <span v-for="item in selectedSkillItems" :key="item.name" class="advanced-tag-pill">
-              <span class="advanced-tag-text">{{ item.label || item.name }}</span>
-              <span
-                class="advanced-tag-remove"
-                role="button"
-                tabindex="0"
-                :aria-label="t('common.delete')"
-                @click="removeSkill(item.name)"
-                @keydown.enter.prevent="removeSkill(item.name)"
-                @keydown.space.prevent="removeSkill(item.name)"
-              >
-                <CloseOutlined class="advanced-tag-remove-icon" />
-              </span>
-            </span>
-            <button
-              v-if="variant !== 'cards'"
-              type="button"
-              class="advanced-tag-add-pill"
-              @click.stop.prevent="openSkillSelector"
-            >
-              <PlusOutlined class="advanced-tag-add-icon" />
-              <span>{{ t('avatar.advanced.addSkill') }}</span>
-            </button>
-          </div>
+          <AdvancedTagList
+            :items="selectedSkillItems"
+            tone="skills"
+            :add-text="t('avatar.advanced.addSkill')"
+            @add="openSkillSelector"
+            @remove="removeSkill"
+          />
         </a-form-item>
-      </div>
 
-      <div class="advanced-select-panel">
-        <a-form-item name="algorithm" class="advanced-form-item advanced-form-item--engine">
-          <template #label>
-            <span class="advanced-field-label">
-              <span
-                v-if="variant === 'cards'"
-                class="advanced-card-icon advanced-card-icon--engine"
-              >
-                <RobotOutlined />
-              </span>
-              <span>{{ t('avatar.advanced.engine') }}</span>
-            </span>
-          </template>
+        <a-form-item :label="t('avatar.advanced.engine')" name="algorithm">
           <a-select
             :value="selectedAlgorithm"
             :loading="loading"
@@ -135,15 +174,7 @@
           </a-select>
         </a-form-item>
 
-        <a-form-item class="advanced-form-item advanced-form-item--model">
-          <template #label>
-            <span class="advanced-field-label">
-              <span v-if="variant === 'cards'" class="advanced-card-icon advanced-card-icon--model">
-                <SettingOutlined />
-              </span>
-              <span>{{ t('avatar.advanced.model') }}</span>
-            </span>
-          </template>
+        <a-form-item :label="t('avatar.advanced.model')">
           <div class="advanced-model-grid">
             <a-select
               :value="selectedModel?.provider"
@@ -172,7 +203,7 @@
             </a-select>
           </div>
         </a-form-item>
-      </div>
+      </template>
     </div>
 
     <ToolSkillSelector
@@ -198,17 +229,18 @@
 <script setup lang="ts">
 import {
   BulbOutlined,
-  CloseOutlined,
   PlusOutlined,
   RobotOutlined,
   SettingOutlined,
   ToolOutlined,
 } from '@ant-design/icons-vue'
 import { useI18n } from 'vue-i18n'
+import AdvancedTagList from './AdvancedTagList.vue'
 import ToolSkillSelector, {
   type ToolSkillSelectorGroup,
   type ToolSkillSelectorItem,
 } from './ToolSkillSelector.vue'
+import SectionTitle from '@/components/SectionTitle/index.vue'
 import type {
   AvatarModelConfig,
   EngineItem,
@@ -357,19 +389,8 @@ function updateModel(modelId: string) {
   min-width: 0;
 }
 
-.section-header {
-  display: flex;
-  align-items: center;
-  padding-left: var(--spacing-sm);
+.advanced-config-fields :deep(.section-title) {
   margin-bottom: var(--spacing-md);
-  border-left: 3px solid var(--color-primary);
-}
-
-.section-title {
-  color: var(--color-text-base);
-  font-size: 1rem;
-  font-weight: 600;
-  line-height: 1.5;
 }
 
 .advanced-config-fields__body {
@@ -377,6 +398,10 @@ function updateModel(modelId: string) {
   flex-direction: column;
   gap: var(--spacing-md);
   min-width: 0;
+}
+
+.advanced-config-fields--default .advanced-config-fields__body {
+  gap: 24px;
 }
 
 .advanced-chip-grid {
@@ -415,6 +440,13 @@ function updateModel(modelId: string) {
 
 .advanced-tags-wrap--empty {
   align-items: center;
+}
+
+.advanced-config-fields--default .advanced-tags-wrap {
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  background: transparent;
 }
 
 .advanced-tag-pill {
@@ -605,6 +637,11 @@ function updateModel(modelId: string) {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 24px;
   min-width: 0;
+}
+
+.advanced-config-fields--default .advanced-model-grid {
+  grid-template-columns: minmax(180px, 240px) minmax(220px, 1fr);
+  gap: 12px;
 }
 
 @media (max-width: 640px) {

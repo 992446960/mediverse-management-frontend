@@ -1,6 +1,8 @@
 <template>
   <div class="avatar-upload-panel" :class="`avatar-upload-panel--${variant}`">
-    <div v-if="variant === 'wizard'" class="avatar-upload-panel__title">{{ title }}</div>
+    <div v-if="variant === 'wizard' && showTitle" class="avatar-upload-panel__title">
+      {{ title }}
+    </div>
 
     <div class="avatar-upload-panel__preview">
       <a-avatar :src="imageUrl || undefined" :size="avatarSize" class="avatar-upload-panel__avatar">
@@ -11,7 +13,9 @@
     </div>
 
     <div class="avatar-upload-panel__body">
-      <div v-if="variant === 'inline'" class="avatar-upload-panel__title">{{ title }}</div>
+      <div v-if="variant === 'inline' && showTitle" class="avatar-upload-panel__title">
+        {{ title }}
+      </div>
       <a-button
         type="primary"
         ghost
@@ -56,6 +60,7 @@ withDefaults(
     avatarSize?: number
     clearable?: boolean
     clearText?: string
+    showTitle?: boolean
   }>(),
   {
     imageUrl: '',
@@ -66,6 +71,7 @@ withDefaults(
     avatarSize: 72,
     clearable: false,
     clearText: '移除头像',
+    showTitle: true,
   }
 )
 

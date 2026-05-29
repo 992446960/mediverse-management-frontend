@@ -28,6 +28,7 @@ declare module 'vue' {
     ADivider: typeof import('ant-design-vue/es')['Divider']
     ADropdown: typeof import('ant-design-vue/es')['Dropdown']
     AdvancedConfigFields: typeof import('./src/components/AvatarConfig/AdvancedConfigFields.vue')['default']
+    AdvancedTagList: typeof import('./src/components/AvatarConfig/AdvancedTagList.vue')['default']
     AEmpty: typeof import('ant-design-vue/es')['Empty']
     AForm: typeof import('ant-design-vue/es')['Form']
     AFormItem: typeof import('ant-design-vue/es')['FormItem']

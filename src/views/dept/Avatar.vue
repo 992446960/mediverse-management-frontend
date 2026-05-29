@@ -8,7 +8,7 @@
 
     <div class="flex flex-col lg:flex-row gap-6">
       <!-- 左侧配置表单 -->
-      <div class="min-w-0 flex-1">
+      <div class="flex-1 app-container p-6">
         <AvatarConfig owner-type="dept" :owner-id="currentDeptId || undefined" />
       </div>
 
