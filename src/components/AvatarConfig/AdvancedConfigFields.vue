@@ -52,7 +52,7 @@
           @update:value="updateAlgorithm"
         >
           <a-select-option v-for="engine in engines" :key="engine.name" :value="engine.name">
-            {{ engine.description }}
+            {{ getEngineLabel(engine) }}
           </a-select-option>
         </a-select>
       </a-form-item>
@@ -122,7 +122,7 @@ import type {
   SkillItem,
   ToolGroup,
 } from '@/types/advancedConfig'
-import { getProviderLabel } from '@/utils/avatarAdvancedConfig'
+import { getEngineLabel, getProviderLabel } from '@/utils/avatarAdvancedConfig'
 
 const props = withDefaults(
   defineProps<{

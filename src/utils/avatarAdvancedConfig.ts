@@ -23,6 +23,14 @@ export function getDefaultEngineName(
   return engines.find((engine) => engine.default)?.name ?? engines[0]?.name ?? null
 }
 
+export function getEngineLabel(engine: EngineItem): string {
+  const name = engine.name.trim()
+  const description = engine.description.trim()
+  if (!description) return name
+  if (!name || name === description) return description
+  return `${description}（${name}）`
+}
+
 export function resolveModelSelection(
   savedModel: AvatarModelConfig | null | undefined,
   groups: ModelGroup[]
@@ -111,7 +119,7 @@ export function resolveAdvancedConfigSummary(
     (options.skills ?? []).map((item) => [item.name, item.label ?? item.name])
   )
   const engineLabelMap = new Map(
-    (options.engines ?? []).map((item) => [item.name, item.description])
+    (options.engines ?? []).map((item) => [item.name, getEngineLabel(item)])
   )
 
   const toolNames = getEnabledNames(source.tools)

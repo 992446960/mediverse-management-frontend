@@ -3,6 +3,7 @@ import {
   buildAvatarCreatePayload,
   getDefaultEngineName,
   getEnabledNames,
+  getEngineLabel,
   normalizeSkillOptions,
   resolveAdvancedConfigSummary,
   resolveModelSelection,
@@ -38,6 +39,25 @@ describe('avatar advanced config helpers', () => {
 
     expect(getDefaultEngineName(null, engines)).toBe('standard')
     expect(getDefaultEngineName('fast', engines)).toBe('fast')
+  })
+
+  it('disambiguates engine labels when name differs from description', () => {
+    expect(
+      getEngineLabel({
+        name: 'engine1',
+        description: '数字医生核心推理引擎',
+        default: true,
+        version: 'v2.1b',
+      })
+    ).toBe('数字医生核心推理引擎（engine1）')
+    expect(
+      getEngineLabel({
+        name: '数字医生核心推理引擎',
+        description: '数字医生核心推理引擎',
+        default: true,
+        version: 'v2.1b',
+      })
+    ).toBe('数字医生核心推理引擎')
   })
 
   it('normalizes skill API items returned with name fields', () => {
@@ -158,7 +178,7 @@ describe('avatar advanced config helpers', () => {
     expect(summary).toEqual({
       tools: ['calculator'],
       skills: ['知识检索'],
-      algorithm: '标准引擎',
+      algorithm: '标准引擎（standard）',
       model: 'GPT 系列 (OpenAI) / GPT-4 Turbo',
     })
   })
