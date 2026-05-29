@@ -1,91 +1,124 @@
 <template>
-  <div class="config-section">
+  <div class="config-section advanced-config-fields">
     <div class="section-header">
       <span class="section-title">{{ t('avatar.advanced.title') }}</span>
     </div>
 
-    <div class="section-content space-y-6">
-      <a-form-item :label="t('avatar.advanced.tools')" name="tools">
-        <div class="advanced-tags-wrap">
-          <span v-for="item in selectedToolItems" :key="item.name" class="advanced-tag-pill">
-            <span class="advanced-tag-text">{{ item.label || item.name }}</span>
-            <span class="advanced-tag-remove" @click="removeTool(item.name)">
-              <CloseOutlined class="advanced-tag-remove-icon" />
+    <div class="section-content advanced-config-fields__body">
+      <div class="advanced-chip-grid">
+        <a-form-item :label="t('avatar.advanced.tools')" name="tools" class="advanced-form-item">
+          <div
+            class="advanced-tags-wrap"
+            :class="{ 'advanced-tags-wrap--empty': !selectedToolItems.length }"
+          >
+            <span v-for="item in selectedToolItems" :key="item.name" class="advanced-tag-pill">
+              <span class="advanced-tag-text">{{ item.label || item.name }}</span>
+              <span
+                class="advanced-tag-remove"
+                role="button"
+                tabindex="0"
+                :aria-label="t('common.delete')"
+                @click="removeTool(item.name)"
+                @keydown.enter.prevent="removeTool(item.name)"
+                @keydown.space.prevent="removeTool(item.name)"
+              >
+                <CloseOutlined class="advanced-tag-remove-icon" />
+              </span>
             </span>
-          </span>
-          <button
-            type="button"
-            class="advanced-tag-add-pill"
-            @click.stop.prevent="openToolSelector"
-          >
-            <PlusOutlined class="advanced-tag-add-icon" />
-            <span>{{ t('avatar.advanced.addTool') }}</span>
-          </button>
-        </div>
-      </a-form-item>
-
-      <a-form-item :label="t('avatar.advanced.skills')" name="skills">
-        <div class="advanced-tags-wrap">
-          <span v-for="item in selectedSkillItems" :key="item.name" class="advanced-tag-pill">
-            <span class="advanced-tag-text">{{ item.label || item.name }}</span>
-            <span class="advanced-tag-remove" @click="removeSkill(item.name)">
-              <CloseOutlined class="advanced-tag-remove-icon" />
-            </span>
-          </span>
-          <button
-            type="button"
-            class="advanced-tag-add-pill"
-            @click.stop.prevent="openSkillSelector"
-          >
-            <PlusOutlined class="advanced-tag-add-icon" />
-            <span>{{ t('avatar.advanced.addSkill') }}</span>
-          </button>
-        </div>
-      </a-form-item>
-
-      <a-form-item :label="t('avatar.advanced.engine')" name="algorithm">
-        <a-select
-          :value="selectedAlgorithm"
-          :loading="loading"
-          :placeholder="t('avatar.advanced.enginePlaceholder')"
-          allow-clear
-          @update:value="updateAlgorithm"
-        >
-          <a-select-option v-for="engine in engines" :key="engine.name" :value="engine.name">
-            {{ getEngineLabel(engine) }}
-          </a-select-option>
-        </a-select>
-      </a-form-item>
-
-      <a-form-item :label="t('avatar.advanced.model')">
-        <div class="advanced-model-grid">
-          <a-select
-            :value="selectedModel?.provider"
-            :loading="loading"
-            :placeholder="t('avatar.advanced.providerPlaceholder')"
-            @update:value="updateProvider"
-          >
-            <a-select-option
-              v-for="group in modelGroups"
-              :key="group.provider"
-              :value="group.provider"
+            <button
+              type="button"
+              class="advanced-tag-add-pill"
+              @click.stop.prevent="openToolSelector"
             >
-              {{ getProviderLabel(group.provider) }}
-            </a-select-option>
-          </a-select>
-          <a-select
-            :value="selectedModel?.model_id"
-            :loading="loading"
-            :disabled="!selectedModel?.provider"
-            :placeholder="t('avatar.advanced.modelPlaceholder')"
-            @update:value="updateModel"
+              <PlusOutlined class="advanced-tag-add-icon" />
+              <span>{{ t('avatar.advanced.addTool') }}</span>
+            </button>
+          </div>
+        </a-form-item>
+
+        <a-form-item :label="t('avatar.advanced.skills')" name="skills" class="advanced-form-item">
+          <div
+            class="advanced-tags-wrap"
+            :class="{ 'advanced-tags-wrap--empty': !selectedSkillItems.length }"
           >
-            <a-select-option v-for="model in currentModels" :key="model.id" :value="model.id">
-              {{ model.name }}
+            <span v-for="item in selectedSkillItems" :key="item.name" class="advanced-tag-pill">
+              <span class="advanced-tag-text">{{ item.label || item.name }}</span>
+              <span
+                class="advanced-tag-remove"
+                role="button"
+                tabindex="0"
+                :aria-label="t('common.delete')"
+                @click="removeSkill(item.name)"
+                @keydown.enter.prevent="removeSkill(item.name)"
+                @keydown.space.prevent="removeSkill(item.name)"
+              >
+                <CloseOutlined class="advanced-tag-remove-icon" />
+              </span>
+            </span>
+            <button
+              type="button"
+              class="advanced-tag-add-pill"
+              @click.stop.prevent="openSkillSelector"
+            >
+              <PlusOutlined class="advanced-tag-add-icon" />
+              <span>{{ t('avatar.advanced.addSkill') }}</span>
+            </button>
+          </div>
+        </a-form-item>
+      </div>
+
+      <div class="advanced-select-panel">
+        <a-form-item
+          :label="t('avatar.advanced.engine')"
+          name="algorithm"
+          class="advanced-form-item"
+        >
+          <a-select
+            :value="selectedAlgorithm"
+            :loading="loading"
+            :placeholder="t('avatar.advanced.enginePlaceholder')"
+            allow-clear
+            @update:value="updateAlgorithm"
+          >
+            <a-select-option v-for="engine in engines" :key="engine.name" :value="engine.name">
+              {{ getEngineLabel(engine) }}
             </a-select-option>
           </a-select>
-        </div>
-      </a-form-item>
+        </a-form-item>
+
+        <a-form-item
+          :label="t('avatar.advanced.model')"
+          class="advanced-form-item advanced-form-item--model"
+        >
+          <div class="advanced-model-grid">
+            <a-select
+              :value="selectedModel?.provider"
+              :loading="loading"
+              :placeholder="t('avatar.advanced.providerPlaceholder')"
+              @update:value="updateProvider"
+            >
+              <a-select-option
+                v-for="group in modelGroups"
+                :key="group.provider"
+                :value="group.provider"
+              >
+                {{ getProviderLabel(group.provider) }}
+              </a-select-option>
+            </a-select>
+            <a-select
+              :value="selectedModel?.model_id"
+              :loading="loading"
+              :disabled="!selectedModel?.provider"
+              :placeholder="t('avatar.advanced.modelPlaceholder')"
+              @update:value="updateModel"
+            >
+              <a-select-option v-for="model in currentModels" :key="model.id" :value="model.id">
+                {{ model.name }}
+              </a-select-option>
+            </a-select>
+          </div>
+        </a-form-item>
+      </div>
     </div>
 
     <ToolSkillSelector
@@ -257,27 +290,72 @@ function updateModel(modelId: string) {
 </script>
 
 <style scoped lang="scss">
-@reference "../../styles/index.css";
-
 .config-section {
-  @apply bg-white dark:bg-gray-800 rounded-lg;
+  min-width: 0;
 }
 
 .section-header {
-  @apply flex items-center mb-4 pl-3 border-l-4 border-[#0ea5e9];
+  display: flex;
+  align-items: center;
+  padding-left: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  border-left: 3px solid var(--color-primary);
 }
 
 .section-title {
-  @apply text-base font-medium text-gray-900 dark:text-gray-100;
+  color: var(--color-text-base);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.advanced-config-fields__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  min-width: 0;
+}
+
+.advanced-chip-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--spacing-md);
+  align-items: start;
+  min-width: 0;
+}
+
+.advanced-form-item {
+  min-width: 0;
+  margin-bottom: 0;
 }
 
 .advanced-tags-wrap {
-  @apply flex flex-wrap items-center gap-2 min-h-[32px];
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px;
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--radius-base);
+  background: var(--color-bg-layout);
+}
+
+.advanced-tags-wrap--empty {
+  align-items: center;
 }
 
 .advanced-tag-pill {
-  @apply inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#0ea5e9]/10 border border-[#0ea5e9]/40 text-[#0ea5e9] text-xs;
-  max-width: 240px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: min(100%, 220px);
+  padding: 4px 10px 4px 12px;
+  color: var(--color-primary);
+  font-size: 12px;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 40%, transparent);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
 }
 
 .advanced-tag-text {
@@ -287,30 +365,86 @@ function updateModel(modelId: string) {
 }
 
 .advanced-tag-remove {
-  @apply inline-flex items-center justify-center w-3.5 h-3.5 rounded-full hover:bg-[#0ea5e9]/20 cursor-pointer shrink-0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  color: var(--color-primary);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.advanced-tag-remove:hover {
+  color: var(--color-primary-hover);
+  background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+}
+
+.advanced-tag-remove:focus-visible,
+.advanced-tag-add-pill:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .advanced-tag-remove-icon {
-  @apply text-[10px];
+  font-size: 10px;
 }
 
 .advanced-tag-add-pill {
-  @apply inline-flex items-center gap-1 px-3 py-1 rounded-full border border-dashed border-gray-300 dark:border-gray-600 bg-transparent
-         text-gray-400 text-xs cursor-pointer hover:border-gray-400 hover:text-gray-500 transition-colors;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  color: var(--color-text-tertiary);
+  font-size: 12px;
+  line-height: 1.5;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-full);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.advanced-tag-add-pill:hover {
+  color: var(--color-text-secondary);
+  border-color: var(--color-text-tertiary);
 }
 
 .advanced-tag-add-icon {
-  @apply text-xs;
+  color: inherit;
+  font-size: 12px;
+}
+
+.advanced-select-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: var(--spacing-md);
+  min-width: 0;
+  padding: var(--spacing-md);
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--radius-base);
+  background: var(--color-bg-layout);
+}
+
+.advanced-select-panel :deep(.ant-select) {
+  width: 100%;
 }
 
 .advanced-model-grid {
   display: grid;
-  grid-template-columns: minmax(180px, 240px) minmax(220px, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  gap: var(--spacing-sm);
+  min-width: 0;
 }
 
 @media (max-width: 640px) {
-  .advanced-model-grid {
+  .advanced-chip-grid {
     grid-template-columns: 1fr;
   }
 }
