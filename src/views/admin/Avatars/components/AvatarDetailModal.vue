@@ -167,17 +167,11 @@ import {
   UserOutlined,
 } from '@ant-design/icons-vue'
 import SectionTitle from '@/components/SectionTitle/index.vue'
-import { getEngines, getModels, getTools } from '@/api/advancedConfig'
 import { getAvatarDetail } from '@/api/avatars'
-import { getSkills } from '@/api/skills'
-import {
-  AVATAR_TYPE_DISPLAY_KEYS,
-  AVATAR_TYPE_TAG_COLORS,
-  type AvatarDetail,
-  type AvatarStyle,
-} from '@/types/avatar'
-import type { EngineItem, ModelGroup, SkillItem, ToolGroup } from '@/types/advancedConfig'
-import { normalizeSkillOptions, resolveAdvancedConfigSummary } from '@/utils/avatarAdvancedConfig'
+import { useAdvancedConfigOptions } from '@/composables/useAdvancedConfigOptions'
+import { AVATAR_TYPE_DISPLAY_KEYS, AVATAR_TYPE_TAG_COLORS, type AvatarDetail } from '@/types/avatar'
+import { resolveAdvancedConfigSummary } from '@/utils/avatarAdvancedConfig'
+import { formatScope, getStyleLabel, STYLE_DESCRIPTION_KEYS } from '@/utils/avatar'
 import type { Component } from 'vue'
 
 const props = defineProps<{
@@ -192,27 +186,8 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const loading = ref(false)
 const detail = ref<AvatarDetail | null>(null)
-const advancedLoaded = ref(false)
-const toolGroups = ref<ToolGroup[]>([])
-const skillOptions = ref<SkillItem[]>([])
-const engineOptions = ref<EngineItem[]>([])
-const modelGroups = ref<ModelGroup[]>([])
-
-const STYLE_I18N: Record<AvatarStyle, string> = {
-  formal: 'avatar.wizard.styleFormal',
-  friendly: 'avatar.wizard.styleFriendly',
-  concise: 'avatar.wizard.styleConcise',
-  detailed: 'avatar.wizard.styleDetailed',
-  custom: 'avatar.wizard.styleCustom',
-}
-
-const STYLE_DESCRIPTION_I18N: Record<AvatarStyle, string> = {
-  formal: 'avatar.wizard.styleFormalDesc',
-  friendly: 'avatar.wizard.styleFriendlyDesc',
-  concise: 'avatar.wizard.styleConciseDesc',
-  detailed: 'avatar.wizard.styleDetailedDesc',
-  custom: 'avatar.wizard.styleCustomDesc',
-}
+const { toolGroups, skillOptions, engineOptions, modelGroups, loadAdvancedOptions } =
+  useAdvancedConfigOptions()
 
 const grantRows = computed(() => detail.value?.knowledge_grants ?? [])
 const advancedSummary = computed(() =>
@@ -269,23 +244,16 @@ const grantColumns = computed(() => [
   { title: t('avatar.grantedAt'), key: 'granted_at', dataIndex: 'granted_at', width: 160 },
 ])
 
-function formatScope(record: AvatarDetail): string {
-  const parts: string[] = [record.org_name]
-  if (record.dept_name) parts.push(record.dept_name)
-  if (record.user_name) parts.push(record.user_name)
-  return parts.join(' / ')
-}
-
 function styleLabel(d: AvatarDetail): string {
   if (d.style === 'custom' && d.style_custom?.trim()) {
-    return `${t(STYLE_I18N.custom)}：${d.style_custom.trim()}`
+    return `${getStyleLabel('custom', t)}：${d.style_custom.trim()}`
   }
-  return t(STYLE_I18N[d.style] ?? STYLE_I18N.formal)
+  return getStyleLabel(d.style, t)
 }
 
 function styleDescription(d: AvatarDetail): string {
   if (d.style === 'custom' && d.style_custom?.trim()) return d.style_custom.trim()
-  return t(STYLE_DESCRIPTION_I18N[d.style] ?? STYLE_DESCRIPTION_I18N.formal)
+  return t(STYLE_DESCRIPTION_KEYS[d.style] ?? STYLE_DESCRIPTION_KEYS.formal)
 }
 
 async function loadDetail(id: string) {
@@ -297,21 +265,6 @@ async function loadDetail(id: string) {
   } finally {
     loading.value = false
   }
-}
-
-async function loadAdvancedOptions() {
-  if (advancedLoaded.value) return
-  const [tools, skills, engines, models] = await Promise.all([
-    getTools(),
-    getSkills(),
-    getEngines(),
-    getModels(),
-  ])
-  toolGroups.value = tools
-  skillOptions.value = normalizeSkillOptions(skills)
-  engineOptions.value = engines
-  modelGroups.value = models
-  advancedLoaded.value = true
 }
 
 watch(

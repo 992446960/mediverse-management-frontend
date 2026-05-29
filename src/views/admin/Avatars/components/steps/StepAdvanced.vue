@@ -30,15 +30,8 @@
 import { useI18n } from 'vue-i18n'
 import AdvancedConfigFields from '@/components/AvatarConfig/AdvancedConfigFields.vue'
 import SectionTitle from '@/components/SectionTitle/index.vue'
-import { getEngines, getModels, getTools } from '@/api/advancedConfig'
-import { getSkills } from '@/api/skills'
-import type { EngineItem, ModelGroup, SkillItem, ToolGroup } from '@/types/advancedConfig'
+import { useAdvancedConfigOptions } from '@/composables/useAdvancedConfigOptions'
 import type { AvatarWizardForm } from '@/types/avatar'
-import {
-  getDefaultEngineName,
-  normalizeSkillOptions,
-  resolveModelSelection,
-} from '@/utils/avatarAdvancedConfig'
 
 const { t } = useI18n()
 
@@ -50,12 +43,15 @@ const emit = defineEmits<{
   'update:modelValue': [value: AvatarWizardForm]
 }>()
 
-const advancedLoading = ref(false)
-const advancedLoaded = ref(false)
-const toolGroups = ref<ToolGroup[]>([])
-const skillOptions = ref<SkillItem[]>([])
-const engineOptions = ref<EngineItem[]>([])
-const modelGroups = ref<ModelGroup[]>([])
+const {
+  toolGroups,
+  skillOptions,
+  engineOptions,
+  modelGroups,
+  advancedLoading,
+  loadAdvancedOptions,
+  applyAdvancedDefaults,
+} = useAdvancedConfigOptions()
 
 function updateField<K extends keyof AvatarWizardForm>(key: K, value: AvatarWizardForm[K]) {
   emit('update:modelValue', {
@@ -64,41 +60,26 @@ function updateField<K extends keyof AvatarWizardForm>(key: K, value: AvatarWiza
   })
 }
 
-function applyAdvancedDefaults() {
-  const algorithm = getDefaultEngineName(props.modelValue.algorithm, engineOptions.value)
-  const model = resolveModelSelection(props.modelValue.model, modelGroups.value)
-  if (algorithm === props.modelValue.algorithm && model === props.modelValue.model) return
-  emit('update:modelValue', {
-    ...props.modelValue,
-    algorithm,
-    model,
-  })
+function applyDefaultsToModelValue() {
+  const next = { ...props.modelValue }
+  applyAdvancedDefaults(next)
+  const sameModel =
+    next.model?.provider === props.modelValue.model?.provider &&
+    next.model?.model_id === props.modelValue.model?.model_id
+  if (next.algorithm === props.modelValue.algorithm && sameModel) return
+  emit('update:modelValue', next)
 }
 
-async function loadAdvancedOptions() {
-  if (advancedLoaded.value) return
-  advancedLoading.value = true
+async function loadOptionsAndDefaults() {
   try {
-    const [tools, skills, engines, models] = await Promise.all([
-      getTools(),
-      getSkills(),
-      getEngines(),
-      getModels(),
-    ])
-    toolGroups.value = tools
-    skillOptions.value = normalizeSkillOptions(skills)
-    engineOptions.value = engines
-    modelGroups.value = models
-    advancedLoaded.value = true
-    applyAdvancedDefaults()
+    await loadAdvancedOptions()
+    applyDefaultsToModelValue()
   } catch (err) {
     console.error('Failed to fetch advanced avatar config options:', err)
-  } finally {
-    advancedLoading.value = false
   }
 }
 
-onMounted(loadAdvancedOptions)
+onMounted(loadOptionsAndDefaults)
 </script>
 
 <style scoped lang="scss">

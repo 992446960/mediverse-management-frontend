@@ -48,6 +48,7 @@ import dayjs from 'dayjs'
 import { getStatusColor, getStatusLabelKey } from '@/utils/status'
 import type { Avatar, AvatarType } from '@/types/avatar'
 import { AVATAR_TYPE_LABEL_KEYS, AVATAR_TYPE_TAG_COLORS } from '@/types/avatar'
+import { formatScope } from '@/utils/avatar'
 
 const { t } = useI18n()
 
@@ -72,13 +73,6 @@ function getTypeTagColor(type: AvatarType): string {
 
 function getTypeLabelKey(type: AvatarType): string {
   return AVATAR_TYPE_LABEL_KEYS[type] ?? 'avatar.type'
-}
-
-function formatScope(record: Avatar): string {
-  const parts: string[] = [record.org_name]
-  if (record.dept_name) parts.push(record.dept_name)
-  if (record.user_name) parts.push(record.user_name)
-  return parts.join(' / ')
 }
 
 function getStatusBadgeStatus(status: 'active' | 'inactive'): 'success' | 'default' {

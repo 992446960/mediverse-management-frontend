@@ -53,6 +53,7 @@ import { getAvatars, updateAvatar, deleteAvatar } from '@/api/avatars'
 import { getOrganizations } from '@/api/organizations'
 import { getDepartments } from '@/api/departments'
 import { confirmDelete } from '@/utils/confirm'
+import { formatScope } from '@/utils/avatar'
 import {
   AVATAR_TYPE_VALUES,
   AVATAR_TYPE_LABEL_KEYS,
@@ -189,13 +190,6 @@ const filterConf = computed<PageFilterConfig>(() => {
     btnsCol: 6,
   }
 })
-
-function formatScope(record: Avatar): string {
-  const parts: string[] = [record.org_name]
-  if (record.dept_name) parts.push(record.dept_name)
-  if (record.user_name) parts.push(record.user_name)
-  return parts.join(' / ')
-}
 
 const tableConf = computed<PageTableConfig>(() => ({
   isLoading: loading.value,

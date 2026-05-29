@@ -1,14 +1,20 @@
 import { describe, expect, it } from 'vitest'
 import {
   buildAvatarCreatePayload,
+  extractAvatarFormValues,
+  formatScope,
   getDefaultEngineName,
   getEnabledNames,
   getEngineLabel,
+  getStyleLabel,
   normalizeSkillOptions,
   resolveAdvancedConfigSummary,
   resolveModelSelection,
+  STYLE_DESCRIPTION_KEYS,
+  STYLE_LABEL_KEYS,
 } from '../../src/utils/avatarAdvancedConfig'
 import type { EngineItem, ModelGroup } from '../../src/types/advancedConfig'
+import type { Avatar } from '../../src/types/avatar'
 
 describe('avatar advanced config helpers', () => {
   it('keeps only enabled names from avatar config entries', () => {
@@ -219,6 +225,55 @@ describe('avatar advanced config helpers', () => {
       bio: '测试简介',
       tags: ['验收'],
       greeting: '你好',
+      style: 'custom',
+      style_custom: '严谨',
+      tools: ['calculator'],
+      skills: ['knowledge-retrieval'],
+      algorithm: 'standard',
+      model: { provider: 'openai', model_id: 'gpt-4-turbo' },
+    })
+  })
+
+  it('formats avatar scope from available organization, department, and user names', () => {
+    expect(formatScope({ org_name: '华西', dept_name: '心内科', user_name: '王医生' })).toBe(
+      '华西 / 心内科 / 王医生'
+    )
+    expect(formatScope({ org_name: '华西', dept_name: null, user_name: null })).toBe('华西')
+  })
+
+  it('resolves avatar style labels through shared i18n keys', () => {
+    const translate = (key: string) => `translated:${key}`
+
+    expect(STYLE_LABEL_KEYS.friendly).toBe('avatar.wizard.styleFriendly')
+    expect(STYLE_DESCRIPTION_KEYS.concise).toBe('avatar.wizard.styleConciseDesc')
+    expect(getStyleLabel('friendly', translate)).toBe('translated:avatar.wizard.styleFriendly')
+    expect(getStyleLabel('unknown', translate)).toBe('translated:avatar.wizard.styleFormal')
+  })
+
+  it('extracts edit form values from avatar detail consistently', () => {
+    const avatar = {
+      name: '分身',
+      avatar_url: null,
+      bio: null,
+      tags: ['心内科'],
+      greeting: null,
+      style: 'custom',
+      style_custom: '严谨',
+      tools: [
+        { name: 'calculator', enabled: true },
+        { name: 'web_search', enabled: false },
+      ],
+      skills: [{ name: 'knowledge-retrieval', enabled: true }],
+      algorithms: [{ name: 'standard', enabled: true }],
+      model: { provider: 'openai', model_id: 'gpt-4-turbo' },
+    } satisfies Partial<Avatar>
+
+    expect(extractAvatarFormValues(avatar)).toEqual({
+      name: '分身',
+      avatar_url: '',
+      bio: '',
+      tags: ['心内科'],
+      greeting: '',
       style: 'custom',
       style_custom: '严谨',
       tools: ['calculator'],
