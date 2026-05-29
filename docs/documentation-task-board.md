@@ -18,6 +18,8 @@
 | `docs/requirements/shanghai-first-hospital-customization-requirements.md` | 定制需求和 `docs/requirements/assets/`                            | 已存在 | 需求范围、素材或验收标准变化时更新               |
 | `tests/api-contract/API_CONTRACT_TEST_REPORT.md`                          | `tests/api-contract/`、真实 API 测试结果                          | 已存在 | API 合规测试覆盖或结果变化时更新                 |
 | `docs/superpowers/plans/2026-05-20-python-mock-backend-openapi.md`        | 线上 Swagger、Python mock 后端实现计划                            | 已新增 | mock 后端接口范围、路径或验证命令变化时更新      |
+| `docs/superpowers/specs/2026-05-29-avatar-user-ui-unification-design.md`  | 分身与用户管理 UI 设计图、当前 Vue/Ant Design 组件边界             | 已新增 | 分身、用户、个人资料 UI 统一规格变化时更新       |
+| `docs/superpowers/plans/2026-05-29-avatar-user-ui-unification.md`         | UI 统一设计规格、当前组件结构、验证要求                           | 已新增 | 分身与用户 UI 实施任务或验收范围变化时更新       |
 
 ## 检查任务
 
@@ -31,6 +33,7 @@
 
 ## 近期同步记录
 
+- 制定分身与用户管理 UI 统一设计规格和实施计划：覆盖分身详情、新增分身 5 阶段、编辑分身、科室工作台分身配置、个人资料、用户详情、用户编辑、用户新增；设计图资产已落到 `docs/superpowers/specs/assets/2026-05-29-avatar-user-ui/`，计划明确共享组件、页面改造、单测、`pnpm verify` 与 Chrome 验收范围。
 - 分身配置新增高级能力配置区块：个人/科室/机构配置页、后台新增/编辑/详情支持工具、技能、推理引擎、模型配置，前端接入 `GET /tools`、`GET /engines`、`GET /models` 并同步 MSW mock、单元测试与 Chrome 验收清单。
 - 科室工作台分身配置 Chrome 验收确认高级配置区块、工具/技能选择器可用；当前线上 `PUT /api/v1/my/avatar` 对当前登录科室管理员返回 `分身不存在`，`PUT /api/v1/avatars/{id}` 返回 `doctor_id ... 不存在`，保存回显需后端修复 specialist 分身更新合同。
 - 二次对比飞书 Wiki「API设计」目录更新：确认 `3.2.3` / `3.2.4` / `3.2.5` 上次未落地，补齐 `GET /api/v1/tools`、`GET /api/v1/engines`、`GET /api/v1/models`；同步整理 §2.1.4-§2.1.9 分身配置、编辑、统计接口字段，修复旧的破损 JSON/表格占位。

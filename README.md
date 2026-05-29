@@ -75,3 +75,5 @@ docker compose down
 | API 设计 | `docs/API设计.docx`、`docs/API设计.md` | Management、Ecosys、KnowledgeBase 域接口详细设计（md 为 docx 导出副本，便于 diff） |
 | 文档任务看板 | `docs/documentation-task-board.md` | 文档资产和新鲜度维护状态 |
 | 定制需求 | `docs/requirements/shanghai-first-hospital-customization-requirements.md` | 上海市第一人民医院定制需求 |
+| 分身与用户 UI 统一设计 | `docs/superpowers/specs/2026-05-29-avatar-user-ui-unification-design.md` | 分身、用户、个人资料与工作台配置统一视觉规格 |
+| 分身与用户 UI 统一计划 | `docs/superpowers/plans/2026-05-29-avatar-user-ui-unification.md` | 可执行的组件拆分、页面改造、测试和验收计划 |
