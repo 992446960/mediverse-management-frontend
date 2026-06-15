@@ -426,34 +426,4 @@ watch(
   overflow-y: auto;
   overflow-x: hidden;
 }
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-</style>
-
-<style>
-/* 用户菜单：关闭「与触发器等宽」后，由内容决定宽度；略设 max-width 防溢出 */
-.user-menu-overlay.ant-dropdown {
-  width: max-content;
-  max-width: min(100vw - var(--spacing-xl), 20rem);
-}
-
-.user-menu-overlay .ant-dropdown-menu {
-  width: max-content;
-  min-width: unset;
-}
-
-.user-menu-overlay .ant-dropdown-menu-item {
-  .user-menu-item-text {
-    white-space: nowrap;
-    margin-left: var(--spacing-xs);
-  }
-}
 </style>

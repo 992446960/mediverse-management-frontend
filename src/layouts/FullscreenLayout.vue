@@ -4,7 +4,7 @@
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .fullscreen-layout {
   min-height: 100vh;
   width: 100%;
