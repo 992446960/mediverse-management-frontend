@@ -1,5 +1,6 @@
 import api from '@/api'
 import { message } from 'ant-design-vue'
+import { getI18nMessage } from '@/utils/i18nMessage'
 
 export async function downloadFile(
   url: string,
@@ -19,9 +20,9 @@ export async function downloadFile(
       const text = await blob.text()
       try {
         const json = JSON.parse(text)
-        message.error(json.message || '下载失败')
+        message.error(json.message || getI18nMessage('common.downloadFallback', '下载失败'))
       } catch {
-        message.error('下载失败')
+        message.error(getI18nMessage('common.downloadFallback', '下载失败'))
       }
       return
     }
@@ -46,7 +47,8 @@ export async function downloadFile(
     document.body.removeChild(link)
     URL.revokeObjectURL(blobUrl)
   } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : '下载失败'
+    const msg =
+      error instanceof Error ? error.message : getI18nMessage('common.downloadFallback', '下载失败')
     message.error(msg)
     throw error
   }

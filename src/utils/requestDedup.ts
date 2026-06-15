@@ -1,4 +1,5 @@
 import type { InternalAxiosRequestConfig } from 'axios'
+import { getI18nMessage } from '@/utils/i18nMessage'
 
 /**
  * 防重复提交模块
@@ -96,6 +97,6 @@ export function checkRepeatSubmit(config: InternalAxiosRequestConfig): void {
   const key = generateKey(config)
 
   if (!throttle(key)) {
-    throw new Error('数据正在处理，请勿重复提交')
+    throw new Error(getI18nMessage('common.repeatSubmit', '数据正在处理，请勿重复提交'))
   }
 }

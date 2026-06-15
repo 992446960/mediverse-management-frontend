@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import type { InternalAxiosRequestConfig } from 'axios'
 import { checkRepeatSubmit } from '../../src/utils/requestDedup'
+import { i18n } from '../../src/i18n'
 
 function buildUploadConfig(
   file: File,
@@ -18,6 +19,10 @@ function buildUploadConfig(
 }
 
 describe('request deduplication', () => {
+  beforeEach(() => {
+    i18n.global.locale.value = 'zh-CN'
+  })
+
   it('allows concurrent FormData uploads with different files', () => {
     const first = new File(['first'], 'first.txt', { type: 'text/plain' })
     const second = new File(['second'], 'second.txt', { type: 'text/plain' })

@@ -7,7 +7,9 @@ import { useAuthStore } from '@/stores/auth'
 import { getAvatars } from '@/api/avatars'
 import AvatarTestPage from '@/components/AvatarTestPage/index.vue'
 import { Spin, Empty, Button } from 'ant-design-vue'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const authStore = useAuthStore()
 const { currentOrgId } = storeToRefs(authStore)
 const avatarId = ref<string>('')
@@ -51,10 +53,12 @@ onMounted(async () => {
         <Empty
           image="https://gw.alipayobjects.com/zos/antfincdn/ZHrcdLPrvN/empty.svg"
           :image-style="{ height: '60px' }"
-          description="未找到本机构的全科分身"
+          :description="t('avatarTest.orgEmpty')"
         >
           <template #footer>
-            <Button type="primary" @click="$router.push('/org/avatar')">去配置分身</Button>
+            <Button type="primary" @click="$router.push('/org/avatar')">
+              {{ t('avatarTest.configureAvatar') }}
+            </Button>
           </template>
         </Empty>
       </div>

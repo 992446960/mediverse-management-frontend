@@ -73,9 +73,27 @@ export default {
     query: '查询',
     minValue: '最小值',
     maxValue: '最大值',
+    loginExpired: '登录已过期，请重新登录',
+    requestFailed: '请求失败',
+    downloadFallback: '下载失败',
+    repeatSubmit: '数据正在处理，请勿重复提交',
   },
   app: {
     brandName: 'Mediverse Management',
+  },
+  error: {
+    unauthorizedSubtitle: '您尚未登录，请先登录。',
+    forbiddenSubtitle: '您没有权限访问该页面。',
+    notFoundSubtitle: '您访问的页面不存在。',
+    goBack: '返回上一页',
+    goToLogin: '去登录',
+    backHome: '返回首页',
+  },
+  avatarTest: {
+    personalEmpty: '未找到您的专家分身',
+    deptEmpty: '未找到本科室的专科分身',
+    orgEmpty: '未找到本机构的全科分身',
+    configureAvatar: '去配置分身',
   },
   tagsView: {
     refresh: '刷新页面',

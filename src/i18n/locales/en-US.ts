@@ -73,9 +73,27 @@ export default {
     query: 'Query',
     minValue: 'Min',
     maxValue: 'Max',
+    loginExpired: 'Login expired. Please log in again.',
+    requestFailed: 'Request failed',
+    downloadFallback: 'Download failed',
+    repeatSubmit: 'Data is being processed. Please do not submit repeatedly.',
   },
   app: {
     brandName: 'Mediverse Management',
+  },
+  error: {
+    unauthorizedSubtitle: 'You are not authenticated. Please log in first.',
+    forbiddenSubtitle: 'You are not authorized to access this page.',
+    notFoundSubtitle: 'The page you visited does not exist.',
+    goBack: 'Go Back',
+    goToLogin: 'Go to Login',
+    backHome: 'Back Home',
+  },
+  avatarTest: {
+    personalEmpty: 'No expert avatar found for your account',
+    deptEmpty: 'No specialist avatar found for this department',
+    orgEmpty: 'No general avatar found for this organization',
+    configureAvatar: 'Configure Avatar',
   },
   tagsView: {
     refresh: 'Refresh',
