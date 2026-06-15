@@ -153,8 +153,8 @@
         v-if="resizable"
         type="button"
         class="directory-tree__resize-handle"
-        title="可拖拽调整宽度，双击恢复默认宽度"
-        aria-label="拖拽调整目录宽度"
+        :title="t('common.resizePanelHint')"
+        :aria-label="t('common.resizeDirectoryWidth')"
         @pointerdown="startResize"
         @dblclick="resetWidth"
       >
@@ -163,11 +163,11 @@
         <span />
       </button>
 
-      <a-tooltip v-if="collapsible" title="收起目录">
+      <a-tooltip v-if="collapsible" :title="t('common.collapseDirectory')">
         <button
           type="button"
           class="directory-tree__collapse-button"
-          aria-label="收起目录"
+          :aria-label="t('common.collapseDirectory')"
           @click="collapsePanel"
         >
           <CaretLeftOutlined />
@@ -175,15 +175,19 @@
       </a-tooltip>
     </template>
 
-    <a-tooltip v-else :title="`点击展开${collapsedLabel}`" placement="right">
+    <a-tooltip
+      v-else
+      :title="t('common.expandPanelHint', { label: resolvedCollapsedLabel })"
+      placement="right"
+    >
       <button
         type="button"
         class="directory-tree__collapsed-entry"
-        :aria-label="`展开${collapsedLabel}`"
+        :aria-label="t('common.expandPanel', { label: resolvedCollapsedLabel })"
         @click="expandPanel"
       >
         <FolderOpenOutlined class="directory-tree__collapsed-icon" />
-        <span class="directory-tree__collapsed-text">{{ collapsedLabel }}</span>
+        <span class="directory-tree__collapsed-text">{{ resolvedCollapsedLabel }}</span>
         <span class="directory-tree__collapsed-action">
           <RightOutlined />
         </span>
@@ -240,7 +244,7 @@ const props = withDefaults(defineProps<Props>(), {
   minWidth: MIN_TREE_WIDTH,
   maxWidth: MAX_TREE_WIDTH,
   collapsedWidth: COLLAPSED_TREE_WIDTH,
-  collapsedLabel: '目录',
+  collapsedLabel: '',
 })
 
 const emit = defineEmits<{
@@ -253,6 +257,7 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const searchKeyword = ref('')
 const treeStyle = computed(() => ({ height: props.maxHeight }))
+const resolvedCollapsedLabel = computed(() => props.collapsedLabel || t('knowledge.directory'))
 const collapsed = ref(false)
 const resizing = ref(false)
 const panelWidth = ref(clampWidth(props.defaultWidth))

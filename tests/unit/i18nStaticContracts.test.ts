@@ -17,16 +17,45 @@ const requiredKeys = [
   'common.requestFailed',
   'common.downloadFallback',
   'common.repeatSubmit',
+  'common.resizePanelHint',
+  'common.resizeDirectoryWidth',
+  'common.resizeTreeWidth',
+  'common.collapseDirectory',
+  'common.collapseTree',
+  'common.expandPanel',
+  'common.expandPanelHint',
+  'common.filterTree',
+  'common.switchToLight',
+  'common.switchToDark',
   'error.unauthorizedSubtitle',
   'error.forbiddenSubtitle',
   'error.notFoundSubtitle',
   'error.goBack',
   'error.goToLogin',
   'error.backHome',
+  'error.http.400',
+  'error.http.401',
+  'error.http.403',
+  'error.http.404',
+  'error.http.405',
+  'error.http.408',
+  'error.http.409',
+  'error.http.413',
+  'error.http.422',
+  'error.http.429',
+  'error.http.500',
+  'error.http.502',
+  'error.http.503',
+  'error.http.504',
+  'error.http.fallback',
   'avatarTest.personalEmpty',
   'avatarTest.deptEmpty',
   'avatarTest.orgEmpty',
   'avatarTest.configureAvatar',
+  'chat.createSessionBackendInvalid',
+  'chat.createSessionFrontendInvalid',
+  'chat.skillTagHypertensionGuideline',
+  'chat.skillTagDiabetesDiet',
 ]
 
 const sourceExpectations = [
@@ -54,6 +83,55 @@ const sourceExpectations = [
     file: 'src/views/org/AvatarTest.vue',
     keys: ['avatarTest.orgEmpty', 'avatarTest.configureAvatar'],
   },
+  {
+    file: 'src/components/RightToolbar/index.vue',
+    keys: ['common.search', 'common.refresh', 'common.columnSettings'],
+  },
+  {
+    file: 'src/components/DirectoryTree/index.vue',
+    keys: [
+      'common.resizePanelHint',
+      'common.resizeDirectoryWidth',
+      'common.collapseDirectory',
+      'common.expandPanel',
+      'common.expandPanelHint',
+    ],
+  },
+  {
+    file: 'src/components/PageTree/index.vue',
+    keys: [
+      'common.resizePanelHint',
+      'common.resizeTreeWidth',
+      'common.collapse',
+      'common.collapseTree',
+      'common.expandPanel',
+      'common.expandPanelHint',
+    ],
+  },
+  {
+    file: 'src/views/shared/KnowledgeFiles.vue',
+    keys: ['knowledge.directory'],
+  },
+  {
+    file: 'src/components/SkillPanel/index.vue',
+    keys: ['chat.skillTagHypertensionGuideline', 'chat.skillTagDiabetesDiet'],
+  },
+  {
+    file: 'src/components/ThemeSwitcher/index.vue',
+    keys: ['common.switchToLight', 'common.switchToDark'],
+  },
+  {
+    file: 'src/api/sessions.ts',
+    keys: ['chat.createSessionBackendInvalid'],
+  },
+  {
+    file: 'src/stores/chat.ts',
+    keys: ['chat.createSessionFrontendInvalid'],
+  },
+  {
+    file: 'src/config/errorCodes.ts',
+    keys: ['error.http.401', 'error.http.fallback'],
+  },
 ]
 
 describe('i18n static contracts', () => {
@@ -68,8 +146,15 @@ describe('i18n static contracts', () => {
     for (const expectation of sourceExpectations) {
       const source = readFileSync(resolve(process.cwd(), expectation.file), 'utf8')
       for (const key of expectation.keys) {
-        expect(source, `${expectation.file} should use ${key}`).toContain(`t('${key}')`)
+        expect(source, `${expectation.file} should use ${key}`).toContain(key)
       }
     }
+  })
+
+  it('keeps HTTP error fallbacks locale-driven instead of hardcoded Chinese', () => {
+    const source = readFileSync(resolve(process.cwd(), 'src/config/errorCodes.ts'), 'utf8')
+    expect(source).not.toContain('登录已过期，请重新登录')
+    expect(source).not.toContain('请求失败 (')
+    expect(source).toContain('getI18nMessage')
   })
 })

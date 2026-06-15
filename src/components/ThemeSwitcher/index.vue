@@ -1,7 +1,7 @@
 <template>
   <button
     class="theme-switcher-btn group"
-    :aria-label="isDark ? '切换亮色模式' : '切换深色模式'"
+    :aria-label="isDark ? t('common.switchToLight') : t('common.switchToDark')"
     @click="toggleTheme"
   >
     <!-- 太阳图标：浅色模式下显示 -->
@@ -71,10 +71,12 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { useThemeStore } from '@/stores/theme'
 
 const themeStore = useThemeStore()
 const { isDark } = storeToRefs(themeStore)
+const { t } = useI18n()
 
 /** 切换主题模式 */
 const toggleTheme = () => {

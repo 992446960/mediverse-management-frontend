@@ -1,5 +1,6 @@
 import { request } from '@/api/index'
 import { getToken } from '@/utils/auth'
+import { getI18nMessage } from '@/utils/i18nMessage'
 import type {
   Session,
   SessionQuota,
@@ -48,7 +49,12 @@ export async function createChatSession(payload: {
   const res = await request.post<CreateChatSessionResponse>('/chat/sessions', payload)
 
   if (!res?.session?.id) {
-    throw new Error('创建会话失败：后端未返回有效的 session.id')
+    throw new Error(
+      getI18nMessage(
+        'chat.createSessionBackendInvalid',
+        'Failed to create conversation: backend did not return a valid session.id'
+      )
+    )
   }
 
   return res

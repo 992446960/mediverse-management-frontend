@@ -1,20 +1,30 @@
-export const httpErrorMessages: Record<number, string> = {
-  400: '请求参数有误',
-  401: '登录已过期，请重新登录',
-  403: '没有权限访问该资源',
-  404: '请求的资源不存在',
-  405: '请求方法不被允许',
-  408: '请求超时，请稍后重试',
-  409: '数据冲突，请刷新后重试',
-  413: '上传内容过大',
-  422: '请求参数校验失败',
-  429: '请求过于频繁，请稍后重试',
-  500: '服务器内部错误',
-  502: '网关错误',
-  503: '服务暂时不可用，请稍后重试',
-  504: '网关超时',
+import { getI18nMessage } from '@/utils/i18nMessage'
+
+export const httpErrorMessageKeys: Record<number, string> = {
+  400: 'error.http.400',
+  401: 'error.http.401',
+  403: 'error.http.403',
+  404: 'error.http.404',
+  405: 'error.http.405',
+  408: 'error.http.408',
+  409: 'error.http.409',
+  413: 'error.http.413',
+  422: 'error.http.422',
+  429: 'error.http.429',
+  500: 'error.http.500',
+  502: 'error.http.502',
+  503: 'error.http.503',
+  504: 'error.http.504',
 }
 
 export function getHttpErrorMessage(status: number, fallback?: string): string {
-  return httpErrorMessages[status] || fallback || `请求失败 (${status})`
+  const key = httpErrorMessageKeys[status]
+  if (key) {
+    return getI18nMessage(
+      key,
+      fallback || getI18nMessage('error.http.fallback', 'Request failed ({status})', { status })
+    )
+  }
+
+  return fallback || getI18nMessage('error.http.fallback', 'Request failed ({status})', { status })
 }

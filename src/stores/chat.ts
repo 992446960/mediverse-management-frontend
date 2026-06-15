@@ -130,7 +130,7 @@ export const useChatStore = defineStore('chat', () => {
       })
 
       if (!isValidSessionId(session.id)) {
-        throw new Error('创建会话失败：前端未拿到有效的 session.id')
+        throw new Error(t('chat.createSessionFrontendInvalid'))
       }
 
       if (quota?.is_exhausted) {

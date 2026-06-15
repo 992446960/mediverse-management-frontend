@@ -188,11 +188,11 @@ const goBack = () => {
             <div v-if="getSkillCode(skill) === 'knowledge-retrieval'" class="flex flex-wrap gap-2">
               <span
                 class="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-[10px] rounded-full"
-                >高血压指南</span
+                >{{ t('chat.skillTagHypertensionGuideline') }}</span
               >
               <span
                 class="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-[10px] rounded-full"
-                >糖尿病饮食</span
+                >{{ t('chat.skillTagDiabetesDiet') }}</span
               >
             </div>
           </div>

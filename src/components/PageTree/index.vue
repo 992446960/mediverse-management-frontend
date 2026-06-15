@@ -129,8 +129,8 @@
         v-if="resizable"
         type="button"
         class="page-tree__resize-handle"
-        title="可拖拽调整宽度，双击恢复默认宽度"
-        aria-label="拖拽调整筛选树宽度"
+        :title="t('common.resizePanelHint')"
+        :aria-label="t('common.resizeTreeWidth')"
         @pointerdown="startResize"
         @dblclick="resetWidth"
       >
@@ -139,11 +139,11 @@
         <span />
       </button>
 
-      <a-tooltip v-if="collapsible" title="收起">
+      <a-tooltip v-if="collapsible" :title="t('common.collapse')">
         <button
           type="button"
           class="page-tree__collapse-button"
-          aria-label="收起筛选树"
+          :aria-label="t('common.collapseTree')"
           @click="collapsePanel"
         >
           <CaretLeftOutlined />
@@ -151,15 +151,19 @@
       </a-tooltip>
     </template>
 
-    <a-tooltip v-else :title="`点击展开${collapsedLabel}`" placement="right">
+    <a-tooltip
+      v-else
+      :title="t('common.expandPanelHint', { label: resolvedCollapsedLabel })"
+      placement="right"
+    >
       <button
         type="button"
         class="page-tree__collapsed-entry"
-        :aria-label="`展开${collapsedLabel}`"
+        :aria-label="t('common.expandPanel', { label: resolvedCollapsedLabel })"
         @click="expandPanel"
       >
         <BankOutlined class="page-tree__collapsed-icon" />
-        <span class="page-tree__collapsed-text">{{ collapsedLabel }}</span>
+        <span class="page-tree__collapsed-text">{{ resolvedCollapsedLabel }}</span>
         <span class="page-tree__collapsed-action">
           <RightOutlined />
         </span>
@@ -177,6 +181,7 @@ import {
   BankOutlined,
   RightOutlined,
 } from '@ant-design/icons-vue'
+import { useI18n } from 'vue-i18n'
 import { TABLE_TREE_HEIGHT_CALC } from '@/constants/layout'
 import { tableTreeIconMap } from './icons'
 import type { TableTreeNode, TableTreeClickPayload } from './types'
@@ -235,12 +240,14 @@ const props = withDefaults(defineProps<Props>(), {
   minWidth: MIN_TREE_WIDTH,
   maxWidth: MAX_TREE_WIDTH,
   collapsedWidth: COLLAPSED_TREE_WIDTH,
-  collapsedLabel: '筛选',
+  collapsedLabel: '',
 })
 
 /** 根节点样式：固定高度以让内部 overflow 滚动生效，避免 flex-1 导致滚动失效 */
+const { t } = useI18n()
 const tableTreeStyle = computed(() => ({ height: props.maxHeight }))
 const canRefresh = computed(() => typeof props.fetchData === 'function')
+const resolvedCollapsedLabel = computed(() => props.collapsedLabel || t('common.filterTree'))
 const collapsed = ref(false)
 const resizing = ref(false)
 const panelWidth = ref(clampWidth(props.defaultWidth))

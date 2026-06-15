@@ -67,6 +67,7 @@
 - 按飞书 Wiki「API设计」评论 `7642609880704240604` 同步 `docs/API设计.md`：§4.1.9 创建知识卡 Request 补 `json_content` 非必填说明，§4.1.9/§4.1.10 Response 将 `online_status` 标注为任务状态占位并注明 `creating` / `updating` 含义。
 - `DirectoryTree` 支持通过配置开启拖拽调整宽度与一键收起，文件管理页启用该能力；默认进入页面仍展示目录筛选条件，收起态保留明显的「目录」展开入口。
 - `PageTree` 支持通过配置开启拖拽调整宽度与一键收起，科室管理和用户管理页启用该能力，收起态保留明显展开入口。
+- 剩余公共组件文案收口：`RightToolbar`、`DirectoryTree`、`PageTree`、`SkillPanel`、主题切换按钮与 HTTP/session 错误兜底改为使用 i18n key，并补齐 icon-only 按钮可访问名称。
 - `PageTable` 列配置弹窗改名为“列表设置”，并从单一显示勾选改为表格式配置行；每列可配置显示、列宽拖拽和固定位置，selection 列补齐“选择”名称，operation 列默认右固定。
 - `PageTable` 横向滚动宽度改为按当前可见列宽求和，不再使用 `max-content`，避免长文件名内容撑开列宽导致文件名列无法缩小。
 - 科室/机构文件管理表格取消文件名列左侧固定，并为文件名列开启拖拽调整宽度。
