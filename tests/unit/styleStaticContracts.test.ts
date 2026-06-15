@@ -29,4 +29,29 @@ describe('style static contracts', () => {
     expect(mainLayout).not.toContain('.user-menu-overlay.ant-dropdown')
     expect(globalStyle).toContain('.user-menu-overlay.ant-dropdown')
   })
+
+  it('keeps shared tree component states on theme variables instead of hardcoded tokens', () => {
+    const treeSources = [
+      'src/components/DirectoryTree/index.vue',
+      'src/components/PageTree/index.vue',
+      'src/components/DirectoryTree/DirectoryTreeItem.vue',
+    ]
+    const bannedTreeTokens = [
+      '#fff',
+      '#0ea5e9',
+      '#e2e8f0',
+      '#475569',
+      '#334155',
+      '#94a3b8',
+      '#f0f9ff',
+      'rgb(14 165 233',
+    ]
+
+    for (const file of treeSources) {
+      const source = readSource(file).toLowerCase()
+      for (const token of bannedTreeTokens) {
+        expect(source, `${file} should not contain ${token}`).not.toContain(token)
+      }
+    }
+  })
 })
