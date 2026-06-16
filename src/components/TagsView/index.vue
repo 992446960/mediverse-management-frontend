@@ -280,7 +280,7 @@ watch(
 
 .tags-view-item.active::before {
   content: '';
-  background: #fff;
+  background: var(--color-text-inverse);
   flex-shrink: 0;
   width: 8px;
   height: 8px;

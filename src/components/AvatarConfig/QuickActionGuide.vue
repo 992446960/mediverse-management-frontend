@@ -103,7 +103,7 @@ const handleTest = () => {
   height: 40px;
   padding: 0 24px;
   border-radius: 8px;
-  background: white !important;
+  background: var(--color-text-inverse) !important;
   border: none !important;
   color: var(--color-primary) !important;
   font-size: 14px;
@@ -115,7 +115,7 @@ const handleTest = () => {
 .test-btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  background: white !important;
+  background: var(--color-text-inverse) !important;
   color: var(--color-primary) !important;
 }
 

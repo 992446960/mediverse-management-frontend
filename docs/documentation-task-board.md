@@ -23,16 +23,18 @@
 
 ## 检查任务
 
-| 任务                 | 命令                                                                             | 状态                                  |
-| -------------------- | -------------------------------------------------------------------------------- | ------------------------------------- |
-| 文档新鲜度检查       | `pnpm check:docs`                                                                | 必须通过                              |
-| 聚合验证             | `pnpm verify`                                                                    | 代码或配置变更时必须通过              |
-| Docker Compose 校验  | `docker compose config`                                                          | Docker 相关变更时必须通过             |
-| API 合规测试         | `pnpm test:api`                                                                  | 具备 `.env.api-test` 和网络条件时运行 |
-| Python mock 合同测试 | `API_TEST_USE_MOCK=true API_BASE_URL=http://127.0.0.1:8005/api/v1 pnpm test:api` | mock 后端运行时执行                   |
+| 任务                 | 命令                                                                             | 状态                                   |
+| -------------------- | -------------------------------------------------------------------------------- | -------------------------------------- |
+| 主题样式守卫         | `pnpm check:theme`                                                               | 必须通过                               |
+| 文档新鲜度检查       | `pnpm check:docs`                                                                | 必须通过                               |
+| 聚合验证             | `pnpm verify`                                                                    | 代码或配置变更时必须通过，包含主题守卫 |
+| Docker Compose 校验  | `docker compose config`                                                          | Docker 相关变更时必须通过              |
+| API 合规测试         | `pnpm test:api`                                                                  | 具备 `.env.api-test` 和网络条件时运行  |
+| Python mock 合同测试 | `API_TEST_USE_MOCK=true API_BASE_URL=http://127.0.0.1:8005/api/v1 pnpm test:api` | mock 后端运行时执行                    |
 
 ## 近期同步记录
 
+- 暗黑主题整改阶段 4 落地：新增 `scripts/check-theme-guard.mjs` 与 `pnpm check:theme`，`pnpm verify` 改为先跑主题守卫再跑文档检查和构建；开发规范第 8 节补充主题变量规则，README、AGENTS 与前端开发文档同步验证命令。
 - 暗黑主题整改阶段 3 落地：`LocaleSwitcher`、`ThemeSwitcher`、`StepScope`、`BubbleRenderer` 去除手写暗色硬编码配对，计划点名的静态灰工具类改为 `--color-*` 语义变量，并补充阶段 3 静态契约单测。
 - 暗黑主题整改阶段 2 落地：分身配置、向导按钮、沟通风格、分身类型、组织 logo 上传 hover、个人资料头像阴影、召回测试 Top-K 与详情 hover 阴影统一改为主色变量；`QuickActionGuide` 的 `#00a0e9` 并入 `var(--color-primary)`，并补充阶段 2 静态契约单测。
 - 暗黑主题整改阶段 1 落地：`KBSidebar`、`KnowledgeCardViewer` 系列、`ToolSkillSelector`、`AvatarDetailModal`、`RecallSourceDetailModal`、`KnowledgeCardEditor` 的暗色可见白底/浅灰/近黑文字改为复用 `--color-*` 主题变量，并新增阶段 1 静态契约单测防止类别 A 问题回退。

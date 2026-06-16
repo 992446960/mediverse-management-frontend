@@ -59,3 +59,12 @@
 - 新增阶段 3 静态契约测试，先看到 RED（命中 `LocaleSwitcher` 的 `.dark .locale-text`），实现后 GREEN。
 - 目标文件复扫无阶段 3 残留。
 - 验证通过：`pnpm exec vitest run tests/unit/styleStaticContracts.test.ts`；待提交前补跑 `pnpm verify`。
+
+## 2026-06-16 会话 6（阶段 4 实施）
+
+- 新增 `scripts/check-theme-guard.mjs`，默认扫描 `src/**/*.vue`，拦截 Vue 组件中新出现的裸白底背景、近黑文字和未配 `dark:`/变量的 `bg-white`。
+- `package.json` 新增 `pnpm check:theme`，并把 `pnpm verify` 调整为 `check:theme -> check:docs -> build`。
+- 先写守卫单测并看到 RED（脚本缺失），实现后 GREEN；测试覆盖坏样例拦截和变量化样例放行。
+- `TagsView` 活动圆点与 `QuickActionGuide` 白色按钮背景改为 `var(--color-text-inverse)`，避免守卫接入后命中存量裸白。
+- 同步 `docs/development-guide.md` 第 8 节、`docs/frontend-development.md`、`README.md`、`AGENTS.md`、`docs/documentation-task-board.md`。
+- 验证通过：`pnpm exec vitest run tests/unit/styleStaticContracts.test.ts`、`pnpm check:theme`；待提交前补跑 `pnpm check:docs` 和 `pnpm verify`。

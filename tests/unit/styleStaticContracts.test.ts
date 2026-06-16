@@ -1,11 +1,21 @@
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { execFileSync } from 'node:child_process'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { join, resolve } from 'node:path'
+import { tmpdir } from 'node:os'
 import { darkThemeConfig, themeConfig } from '@/config/themes'
 import { brandTokens } from '@/config/tokens'
 import { describe, expect, it } from 'vitest'
 
 function readSource(file: string): string {
   return readFileSync(resolve(process.cwd(), file), 'utf8')
+}
+
+function runThemeGuard(root: string): string {
+  return execFileSync(process.execPath, [
+    resolve(process.cwd(), 'scripts/check-theme-guard.mjs'),
+    '--root',
+    root,
+  ]).toString()
 }
 
 describe('style static contracts', () => {
@@ -206,6 +216,58 @@ describe('style static contracts', () => {
       for (const token of tokens) {
         expect(source, `${file} should not contain ${token}`).not.toContain(token)
       }
+    }
+  })
+
+  it('blocks new unthemed light surfaces with the theme guard', () => {
+    const root = mkdtempSync(join(tmpdir(), 'theme-guard-red-'))
+    try {
+      const componentDir = join(root, 'src/components')
+      mkdirSync(componentDir, { recursive: true })
+      writeFileSync(
+        join(componentDir, 'BadSurface.vue'),
+        [
+          '<template>',
+          '  <div class="bg-white text-gray-800">Bad</div>',
+          '</template>',
+          '<style scoped lang="scss">',
+          '.bad {',
+          '  background: #fff;',
+          '  color: #111827;',
+          '}',
+          '</style>',
+        ].join('\n')
+      )
+
+      expect(() => runThemeGuard(root)).toThrow(/BadSurface\.vue/)
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  })
+
+  it('allows themed surfaces in the theme guard', () => {
+    const root = mkdtempSync(join(tmpdir(), 'theme-guard-green-'))
+    try {
+      const componentDir = join(root, 'src/components')
+      mkdirSync(componentDir, { recursive: true })
+      writeFileSync(
+        join(componentDir, 'GoodSurface.vue'),
+        [
+          '<template>',
+          '  <div class="bg-white dark:bg-(--color-bg-container)">Good</div>',
+          '</template>',
+          '<style scoped lang="scss">',
+          '.good {',
+          '  background: var(--color-bg-container);',
+          '  color: var(--color-text-base);',
+          '}',
+          '</style>',
+        ].join('\n')
+      )
+
+      expect(runThemeGuard(root)).toContain('theme guard passed')
+    } finally {
+      rmSync(root, { recursive: true, force: true })
     }
   })
 })

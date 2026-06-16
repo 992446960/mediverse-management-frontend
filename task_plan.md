@@ -50,10 +50,10 @@
 
 ### 阶段 4 — 防回潮 + 文档
 
-- [ ] 加 grep 守卫脚本：拦截 `<style>` 内裸 `#fff`/`bg-white`（无 `dark:`/无 `var()`）的新增，挂到 `pnpm verify` 或 lint
-- [ ] 更新 `docs/development-guide.md` 第 8 节样式规范，明确「禁止裸色值，统一走变量/语义 token」
-- [ ] 更新 `docs/documentation-task-board.md`
-- 验证：`pnpm check:docs` + `pnpm verify`
+- [x] 加主题守卫脚本：拦截 Vue 组件中新出现的裸白底、近黑文字、未配 `dark:`/变量的 `bg-white`，挂到 `pnpm verify`
+- [x] 更新 `docs/development-guide.md` 第 8 节样式规范，明确「禁止裸色值，统一走变量/语义 token」
+- [x] 更新 `docs/documentation-task-board.md`
+- 验证：`pnpm check:theme` + `pnpm check:docs` + `pnpm verify`
 
 ## 验证命令
 
@@ -63,4 +63,4 @@
 
 ## 进度
 
-当前阶段：**阶段 3 已完成并通过验证**；下一步进入阶段 4（防回潮 + 文档）。
+当前阶段：**阶段 4 已完成并通过验证**；暗黑主题整改计划已完成。

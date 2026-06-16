@@ -7,15 +7,16 @@
 
 # 命令
 
-| 命令 | 用途 |
-| --- | --- |
-| `pnpm dev` | 启动 Vite 开发服务 |
-| `pnpm build` | 类型检查并构建 |
-| `pnpm test:api` | 运行 API 合规性测试 |
-| `pnpm check:docs` | 检查文档新鲜度 |
-| `pnpm verify` | 文档检查 + 构建 |
-| `docker compose config` | 校验 Docker Compose 配置 |
-| `docker compose up --build` | 本地预览生产镜像 |
+| 命令                        | 用途                       |
+| --------------------------- | -------------------------- |
+| `pnpm dev`                  | 启动 Vite 开发服务         |
+| `pnpm build`                | 类型检查并构建             |
+| `pnpm test:api`             | 运行 API 合规性测试        |
+| `pnpm check:theme`          | 检查 Vue 组件主题色守卫    |
+| `pnpm check:docs`           | 检查文档新鲜度             |
+| `pnpm verify`               | 主题守卫 + 文档检查 + 构建 |
+| `docker compose config`     | 校验 Docker Compose 配置   |
+| `docker compose up --build` | 本地预览生产镜像           |
 
 # 文件结构
 

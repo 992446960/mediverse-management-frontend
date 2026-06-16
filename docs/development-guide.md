@@ -12,18 +12,18 @@
 
 ## 2. 目录职责
 
-| 目录 | 职责 |
-| --- | --- |
-| `src/api/` | 按业务模块封装接口，统一导入 `request` |
-| `src/stores/` | Pinia setup store |
-| `src/router/` | 路由定义、权限守卫、标题处理 |
-| `src/config/` | 菜单、主题、错误码等配置 |
-| `src/components/` | 跨页面复用的通用组件，或已明确被多个页面复用的业务组件 |
-| `src/composables/` | 跨模块可复用组合式逻辑 |
-| `src/types/` | 跨模块 TypeScript 类型 |
-| `src/mocks/` | MSW mock handlers 和数据 |
-| `src/views/` | 页面级组件，按业务域和页面分目录 |
-| `tests/api-contract/` | 真实后端 API 合规性测试 |
+| 目录                  | 职责                                                   |
+| --------------------- | ------------------------------------------------------ |
+| `src/api/`            | 按业务模块封装接口，统一导入 `request`                 |
+| `src/stores/`         | Pinia setup store                                      |
+| `src/router/`         | 路由定义、权限守卫、标题处理                           |
+| `src/config/`         | 菜单、主题、错误码等配置                               |
+| `src/components/`     | 跨页面复用的通用组件，或已明确被多个页面复用的业务组件 |
+| `src/composables/`    | 跨模块可复用组合式逻辑                                 |
+| `src/types/`          | 跨模块 TypeScript 类型                                 |
+| `src/mocks/`          | MSW mock handlers 和数据                               |
+| `src/views/`          | 页面级组件，按业务域和页面分目录                       |
+| `tests/api-contract/` | 真实后端 API 合规性测试                                |
 
 ## 3. Vue 与组件
 
@@ -90,6 +90,9 @@
 - 全局样式入口为 `src/styles/index.css`，变量在 `src/styles/variables.css`。
 - Vue 文件的 `<style>` 块必须使用 `lang="scss"`，统一写为 `<style scoped lang="scss">`。
 - 页面布局以 Tailwind 工具类为主，Ant Design Vue 深层样式使用 `:deep(.ant-*)`。
+- 颜色必须优先使用 `src/styles/variables.css` 中的 `--color-*` 语义变量，Tailwind 中沿用既有 `text-(--color-text-base)`、`bg-(--color-bg-container)`、`border-(--color-border)` 等任意值语法。
+- 禁止在组件中新增裸 `#fff`、`#111827`、`bg-white` 等浅色/近黑硬编码；确需白色前景时使用 `var(--color-text-inverse)`，确需亮/暗差异时新增语义变量并在 `:root[data-theme='dark']` 中覆盖。
+- `pnpm verify` 会运行 `pnpm check:theme`，拦截 Vue 组件中新出现的未主题化白底和近黑文字。
 - 不要把一次性页面样式抽成全局样式；跨页面复用后再沉淀为组件或变量。
 - PC 页面需要兼容窄屏浏览器访问，表格和复杂区域要允许横向滚动或自适应换行。
 
@@ -104,6 +107,6 @@
 
 - 修改代码、接口、配置、Docker 或需求后，必须更新 `docs/documentation-task-board.md`。
 - 修改文档后必须运行 `pnpm check:docs`。
-- 修改运行时代码或配置后必须运行 `pnpm verify`。
+- 修改运行时代码或配置后必须运行 `pnpm verify`，它会依次执行主题守卫、文档检查和生产构建。
 - Docker 配置变更必须运行 `docker compose config`。
 - API 契约变更在具备 `.env.api-test` 和网络条件时运行 `pnpm test:api`。
