@@ -342,7 +342,7 @@ watch(
 }
 
 .logo__title {
-  color: var(--color-text-inverse);
+  color: var(--color-text-title);
   font-size: 17px;
   font-weight: 700;
   letter-spacing: 0;
@@ -350,7 +350,7 @@ watch(
 
 .logo__subtitle {
   margin-top: 3px;
-  color: var(--color-text-secondary);
+  color: var(--color-text-title);
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0;

@@ -25,7 +25,7 @@
   --color-bg-base:        #F8FAFC;
   --color-bg-layout:      #F1F5F9;
   --color-bg-container:   #FFFFFF;
-  --color-bg-elevated:    #FFFFFF;
+  --color-bg-elevated:    var(--color-bg-container);
   --color-bg-sidebar:     #FFFFFF;          /* 亮色模式：白色侧边栏 */
   --color-bg-sidebar-border: #E2E8F0;      /* 侧边栏右边框 */
 
@@ -33,7 +33,9 @@
   --color-text-secondary:   #64748B;
   --color-text-tertiary:    #94A3B8;
   --color-text-placeholder: #CBD5E1;
-  --color-text-inverse:     #FFFFFF;
+  --color-text-inverse:     #64748B;
+  --color-text-title:       var(--color-primary);
+  --color-text-on-primary:  #FFFFFF;
 
   --color-border:           #E2E8F0;
   --color-border-secondary: #F1F5F9;
@@ -119,7 +121,7 @@
   --color-bg-base:        #020617;
   --color-bg-layout:      #020617;
   --color-bg-container:   #141414;
-  --color-bg-elevated:    #1E293B;
+  --color-bg-elevated:    var(--color-bg-container);
   --color-bg-sidebar:     #141414;
   --color-bg-sidebar-border: #15304A;
 
@@ -128,6 +130,8 @@
   --color-text-tertiary:    #64748B;
   --color-text-placeholder: #334155;
   --color-text-inverse:     #FFFFFF;
+  --color-text-title:       #FFFFFF;
+  --color-text-on-primary:  #FFFFFF;
 
   --color-border:           #1E293B;
   --color-border-secondary: #0F172A;

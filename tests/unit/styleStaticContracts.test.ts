@@ -272,12 +272,37 @@ describe('style static contracts', () => {
     expect(markdownStyle).toContain('var(--color-code-bg)')
   })
 
-  it('keeps modal chrome on the elevated theme surface', () => {
+  it('keeps modal chrome on the elevated semantic token', () => {
     const globalStyle = readSource('src/styles/index.css')
+    const variables = readSource('src/styles/variables.css')
 
     expect(globalStyle).toContain('.ant-modal-title')
     expect(globalStyle).toContain('background-color: var(--color-bg-elevated);')
     expect(globalStyle).toContain('color: var(--color-text-base);')
+    expect(variables.match(/--color-bg-elevated:\s+var\(--color-bg-container\);/g)).toHaveLength(2)
+  })
+
+  it('keeps editable inputs and markdown editor chrome on theme variables', () => {
+    const globalStyle = readSource('src/styles/index.css')
+    expect(globalStyle).toContain("@import './editor.css';")
+    expect(globalStyle).toContain('.ant-input-affix-wrapper > input.ant-input')
+    expect(globalStyle).toContain("html[data-theme='dark']")
+    expect(globalStyle).toContain('color-scheme: dark')
+    expect(globalStyle).toContain('.ant-input-affix-wrapper-focused')
+    expect(globalStyle).toContain('input.ant-input::selection')
+    expect(globalStyle).toContain('input:-webkit-autofill')
+    expect(globalStyle).toContain('input:-webkit-autofill:focus')
+    expect(globalStyle).toContain('-webkit-text-fill-color: var(--color-text-base)')
+
+    const editor = readSource('src/components/KnowledgeCardEditor/MarkdownEditor.vue')
+    expect(editor).toContain(':theme="editorTheme"')
+    expect(editor).toContain('useThemeStore')
+    expect(editor).toContain('knowledge-card-markdown-editor')
+
+    const editorStyle = readSource('src/styles/editor.css')
+    expect(editorStyle).toContain('.knowledge-card-markdown-editor')
+    expect(editorStyle).toContain('--md-bk-color: var(--color-bg-container)')
+    expect(editorStyle).toContain('var(--color-text-base)')
   })
 
   it('blocks new unthemed light surfaces with the theme guard', () => {
