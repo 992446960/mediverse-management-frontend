@@ -219,6 +219,67 @@ describe('style static contracts', () => {
     }
   })
 
+  it('keeps dark theme surfaces from bypassing semantic variables', () => {
+    const bannedTokensByFile: Record<string, string[]> = {
+      'src/views/shared/knowledge-recall-test/components/RecallResultSection.vue': [
+        'dark:bg-[--color-bg-container]',
+        'dark:bg-[--color-bg-container]/80',
+        'dark:bg-slate-900',
+        'dark:border-slate-800',
+      ],
+      'src/components/AvatarConfig/index.vue': [
+        'dark:bg-gray-800',
+        'dark:bg-gray-700',
+        'dark:border-gray-600',
+        'dark:text-gray-300',
+      ],
+      'src/components/AvatarStats/index.vue': [
+        'dark:bg-gray-800',
+        'dark:border-gray-700',
+        'dark:text-gray-200',
+        'dark:text-gray-500',
+      ],
+    }
+
+    for (const [file, tokens] of Object.entries(bannedTokensByFile)) {
+      const source = readSource(file).toLowerCase()
+      for (const token of tokens) {
+        expect(source, `${file} should not contain ${token}`).not.toContain(token)
+      }
+    }
+  })
+
+  it('keeps markdown styling centralized in the project theme layer', () => {
+    const markdownFiles = [
+      'src/components/ChatWindow/BubbleRenderer.vue',
+      'src/components/ChatWindow/ThinkingProcess.vue',
+      'src/views/shared/knowledge-recall-test/index.vue',
+      'src/components/KnowledgeCardViewer/CardContentBody.vue',
+    ]
+
+    for (const file of markdownFiles) {
+      expect(readSource(file), `${file} should not import github light markdown css`).not.toContain(
+        'github-markdown-css/github-markdown-light.css'
+      )
+    }
+
+    const globalStyle = readSource('src/styles/index.css')
+    expect(globalStyle).toContain("@import './markdown.css';")
+
+    const markdownStyle = readSource('src/styles/markdown.css')
+    expect(markdownStyle).toContain('--markdown-bg: transparent')
+    expect(markdownStyle).toContain('var(--color-text-base)')
+    expect(markdownStyle).toContain('var(--color-code-bg)')
+  })
+
+  it('keeps modal chrome on the elevated theme surface', () => {
+    const globalStyle = readSource('src/styles/index.css')
+
+    expect(globalStyle).toContain('.ant-modal-title')
+    expect(globalStyle).toContain('background-color: var(--color-bg-elevated);')
+    expect(globalStyle).toContain('color: var(--color-text-base);')
+  })
+
   it('blocks new unthemed light surfaces with the theme guard', () => {
     const root = mkdtempSync(join(tmpdir(), 'theme-guard-red-'))
     try {
@@ -240,6 +301,31 @@ describe('style static contracts', () => {
       )
 
       expect(() => runThemeGuard(root)).toThrow(/BadSurface\.vue/)
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  })
+
+  it('blocks theme guard bypasses that still render inconsistent dark surfaces', () => {
+    const root = mkdtempSync(join(tmpdir(), 'theme-guard-bypass-'))
+    try {
+      const componentDir = join(root, 'src/components')
+      mkdirSync(componentDir, { recursive: true })
+      writeFileSync(
+        join(componentDir, 'BadThemeBypass.vue'),
+        [
+          '<script setup lang="ts">',
+          "import 'github-markdown-css/github-markdown-light.css'",
+          '</script>',
+          '<template>',
+          '  <div class="bg-white dark:bg-[--color-bg-container]">',
+          '    <section class="bg-white dark:bg-gray-800">Bad</section>',
+          '  </div>',
+          '</template>',
+        ].join('\n')
+      )
+
+      expect(() => runThemeGuard(root)).toThrow(/BadThemeBypass\.vue/)
     } finally {
       rmSync(root, { recursive: true, force: true })
     }

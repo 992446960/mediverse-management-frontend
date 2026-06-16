@@ -18,6 +18,17 @@ const styleSurfacePatterns = [
   },
 ]
 
+const sourceSurfacePatterns = [
+  {
+    label: 'invalid css variable arbitrary color utility',
+    pattern: /\b(?:bg|text|border)-\[(?:--color|--ant)-[^\]]+\]/i,
+  },
+  {
+    label: 'global light markdown css import',
+    pattern: /github-markdown-css\/github-markdown-light\.css/i,
+  },
+]
+
 function listVueFiles(dir) {
   if (!existsSync(dir)) return []
   const files = []
@@ -63,6 +74,16 @@ function inspectFile(file) {
         label: 'unpaired bg-white utility',
         text: line.trim(),
       })
+    }
+
+    for (const { label, pattern } of sourceSurfacePatterns) {
+      if (pattern.test(line)) {
+        issues.push({
+          line: index + 1,
+          label,
+          text: line.trim(),
+        })
+      }
     }
   })
 

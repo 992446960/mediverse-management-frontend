@@ -34,6 +34,7 @@
 
 ## 近期同步记录
 
+- 暗黑主题不一致补强：新增 `src/styles/markdown.css` 作为 Markdown / `v-html` 内容统一主题入口，禁止业务组件直接引入 GitHub light Markdown CSS；召回结果、Modal 标题区、分身配置和统计卡片改为语义变量，并扩展 `pnpm check:theme` 拦截无效 CSS 变量任意值与浅色 Markdown 全局 import。
 - 主布局侧栏视觉微调：品牌区按设计图改为图标加 `Mediverse` / `Management` 双行标题，标题白色展示；暗色侧边栏与菜单背景改为深海蓝主题变量，不改新增分身/新建会话等按钮颜色。
 - 暗黑主题整改阶段 4 落地：新增 `scripts/check-theme-guard.mjs` 与 `pnpm check:theme`，`pnpm verify` 改为先跑主题守卫再跑文档检查和构建；开发规范第 8 节补充主题变量规则，README、AGENTS 与前端开发文档同步验证命令。
 - 暗黑主题整改阶段 3 落地：`LocaleSwitcher`、`ThemeSwitcher`、`StepScope`、`BubbleRenderer` 去除手写暗色硬编码配对，计划点名的静态灰工具类改为 `--color-*` 语义变量，并补充阶段 3 静态契约单测。

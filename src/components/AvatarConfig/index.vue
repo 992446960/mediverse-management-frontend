@@ -349,7 +349,8 @@ onMounted(fetchConfig)
 @reference "../../styles/index.css";
 
 .config-section {
-  @apply bg-white dark:bg-gray-800 rounded-lg;
+  border-radius: var(--radius-base);
+  background: var(--color-bg-container);
 }
 
 .config-section :deep(.section-title) {
@@ -408,7 +409,13 @@ onMounted(fetchConfig)
 }
 
 .step-info-input {
-  @apply w-full px-4 py-2 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  background: var(--color-bg-container);
+  color: var(--color-text-base);
+  font-size: 0.875rem;
 }
 
 .step-info-input:focus {
@@ -416,7 +423,9 @@ onMounted(fetchConfig)
 }
 
 :deep(.ant-form-item-label > label) {
-  @apply text-sm font-medium text-gray-700 dark:text-gray-300;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
 }
 
 :deep(.ant-form-item-required::before) {

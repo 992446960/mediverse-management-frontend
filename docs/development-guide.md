@@ -88,11 +88,13 @@
 ## 8. 样式
 
 - 全局样式入口为 `src/styles/index.css`，变量在 `src/styles/variables.css`。
+- Markdown / `v-html` 内容样式统一维护在 `src/styles/markdown.css`，业务组件禁止直接引入 `github-markdown-css/github-markdown-light.css`。
 - Vue 文件的 `<style>` 块必须使用 `lang="scss"`，统一写为 `<style scoped lang="scss">`。
 - 页面布局以 Tailwind 工具类为主，Ant Design Vue 深层样式使用 `:deep(.ant-*)`。
 - 颜色必须优先使用 `src/styles/variables.css` 中的 `--color-*` 语义变量，Tailwind 中沿用既有 `text-(--color-text-base)`、`bg-(--color-bg-container)`、`border-(--color-border)` 等任意值语法。
+- Tailwind 任意值引用 CSS 变量时禁止写 `bg-[--color-*]` 这类无效形式；使用 `bg-(--color-bg-container)` 或 `bg-[var(--color-bg-container)]`。
 - 禁止在组件中新增裸 `#fff`、`#111827`、`bg-white` 等浅色/近黑硬编码；确需白色前景时使用 `var(--color-text-inverse)`，确需亮/暗差异时新增语义变量并在 `:root[data-theme='dark']` 中覆盖。
-- `pnpm verify` 会运行 `pnpm check:theme`，拦截 Vue 组件中新出现的未主题化白底和近黑文字。
+- `pnpm verify` 会运行 `pnpm check:theme`，拦截 Vue 组件中新出现的未主题化白底、近黑文字、无效 CSS 变量任意值和全局浅色 Markdown CSS import。
 - 不要把一次性页面样式抽成全局样式；跨页面复用后再沉淀为组件或变量。
 - PC 页面需要兼容窄屏浏览器访问，表格和复杂区域要允许横向滚动或自适应换行。
 

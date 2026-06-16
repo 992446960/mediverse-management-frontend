@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @import './variables.css';
 @import './nprogress.css';
+@import './markdown.css';
 
 /* 与 themeStore 一致：dark 由 html.dark 控制，不随系统 prefers-color-scheme 变化 */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -123,11 +124,15 @@ body {
 .ant-modal {
   .ant-modal-content {
     padding: 0;
+    background-color: var(--color-bg-container);
     .ant-modal-header {
       padding: 10px 20px;
       border-bottom: 1px solid var(--color-border);
-      background-color: var(--color-bg-base);
+      background-color: var(--color-bg-container);
       margin-bottom: 0;
+    }
+    .ant-modal-title {
+      color: var(--color-text-base);
     }
     .ant-modal-body {
       padding: 10px 20px;
@@ -135,6 +140,7 @@ body {
     .ant-modal-footer {
       padding: 10px 20px;
       border-top: 1px solid var(--color-border);
+      background-color: var(--color-bg-container);
     }
     /* 全局 Modal 表单样式 */
     .ant-form-item {

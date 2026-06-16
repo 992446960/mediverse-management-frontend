@@ -184,7 +184,6 @@ import RecallHistoryModal from './components/RecallHistoryModal.vue'
 import RecallResultSection from './components/RecallResultSection.vue'
 import RecallSourceDetailModal from './components/RecallSourceDetailModal.vue'
 import { useRecallForm } from './composables/useRecallForm'
-import 'github-markdown-css/github-markdown-light.css'
 
 const props = defineProps<{
   ownerType: KnowledgeRecallOwnerType
