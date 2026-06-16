@@ -33,6 +33,7 @@
 
 ## 近期同步记录
 
+- 暗黑主题整改阶段 0 基建落地：新增 `src/config/tokens.ts` 集中维护 antdv seed 主色真实色值，`themes.ts` 引用该常量；`variables.css` 新增 diff/code 专用变量并保留 CSS 兜底值；新增静态主题契约单测防止 token 通道再次分裂。
 - 前端 i18n 文案收口第一批：错误页、分身测试空态、删除确认、登录过期、请求失败、下载失败和重复提交提示统一接入 `zh-CN` / `en-US` locale，并补充静态 i18n 契约单测。
 - 前端样式规范收口第一批：`App.vue` 根级 transition 与用户菜单 overlay 样式迁入全局样式入口，`FullscreenLayout` 补齐 `scoped lang="scss"`，并新增静态样式契约单测防止回退。
 - 分身配置表单去重：新增 `src/utils/avatar.ts` 统一 scope、风格 i18n key 和详情表单映射；新增 `useAdvancedConfigOptions` 合并高级配置选项加载与默认值应用；新增 `TagListEditor` 复用标签编辑 UI，并替换新增分身、编辑分身和工作台分身配置中的重复标签逻辑。

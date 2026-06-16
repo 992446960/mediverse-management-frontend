@@ -1,5 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { darkThemeConfig, themeConfig } from '@/config/themes'
+import { brandTokens } from '@/config/tokens'
 import { describe, expect, it } from 'vitest'
 
 function readSource(file: string): string {
@@ -53,5 +55,22 @@ describe('style static contracts', () => {
         expect(source, `${file} should not contain ${token}`).not.toContain(token)
       }
     }
+  })
+  it('keeps brand theme seeds centralized and mirrored by css fallback values', () => {
+    expect(themeConfig.token?.colorPrimary).toBe(brandTokens.primary.light)
+    expect(themeConfig.token?.colorInfo).toBe(brandTokens.primary.light)
+    expect(darkThemeConfig.token?.colorPrimary).toBe(brandTokens.primary.dark)
+    expect(darkThemeConfig.token?.colorInfo).toBe(brandTokens.primary.dark)
+
+    const variables = readSource('src/styles/variables.css')
+    expect(variables).toContain(`--color-primary-500: ${brandTokens.primary.light};`)
+    expect(variables).toContain(`--color-primary-500: ${brandTokens.primary.dark};`)
+  })
+
+  it('defines dedicated diff and code block theme variables for both color modes', () => {
+    const variables = readSource('src/styles/variables.css')
+    expect(variables.match(/--color-diff-add:/g)).toHaveLength(2)
+    expect(variables.match(/--color-diff-del:/g)).toHaveLength(2)
+    expect(variables.match(/--color-code-bg:/g)).toHaveLength(2)
   })
 })

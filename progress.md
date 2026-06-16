@@ -1,0 +1,33 @@
+# 会话日志 — 暗黑主题整改
+
+## 2026-06-16 会话 1（规划）
+- 审查暗黑主题合规性：通读 `variables.css`、`themes.ts`、`stores/theme.ts`、`index.css`，确认三层 token 机制
+- 全量扫描 `.vue` 硬编码颜色与无 `dark:` 变体的 Tailwind 工具类，按 A–E 五类归档（见 findings.md）
+- 厘清架构疑问：「多套变量」非不合规，「多套真相源」才是；定位结构性根因——`themes.ts` 与 `variables.css` 主色重复定义
+- 确认 antdv seed token 无法用 `var()`，定下「TS 常量共享真值」方案（决策 D2）
+- 产出三文件规划：findings.md（机制+完整清单+替换映射）、task_plan.md（5 阶段方案+ADR）
+
+### 决策补充
+- Tailwind 语义 token 命名：对齐现有变量后缀（`bg-container`/`bg-layout`/`text-base`/`text-secondary`/`border-default`）
+- `QuickActionGuide #00a0e9` → 统一成 `var(--color-primary)`
+
+### 待办交接
+- 两处开放问题已定，等用户确认是否开工；建议从阶段 0（token 去重）起步，改动小、可立即验证
+
+## 2026-06-16 会话 2（阶段 0 审查 + 修正）
+- 审查阶段 0 改动（tokens.ts/themes.ts/variables.css/index.css + 测试），方向正确、7 项测试绿
+- 发现硬伤：`@theme` 别名 `text-base` 与 Tailwind 内置字号类冲突，颜色类不可用
+- 发现项目已广泛用 `xxx-(--color-yyy)` 任意值语法（text-(--color-text-base) 31 处等，共 70+），别名属重复第二套
+- 决策修正 D3：放弃 `@theme` 别名，统一沿用既有任意值语法（目标不变，仅换手段）
+- 回滚 index.css 6 行别名 + 对应测试 it；测试降为 6 项、全绿
+- 保留：主色去重（tokens.ts）、diff/code 变量及其测试
+- 待办：补跑 `pnpm verify` 确认构建；之后进阶段 1（按既有任意值语法替换类别 A）
+
+## 2026-06-16 会话 2（阶段 0 实施）
+- 新增 `src/config/tokens.ts`，集中维护 antdv seed 必须使用的主色真实色值。
+- `src/config/themes.ts` 改为引用 `brandTokens`，避免与 `variables.css` 重复写主色色值。
+- `src/styles/index.css` 的 Tailwind `@theme` 补齐语义色 token：container/layout/base/secondary/tertiary/border-default。
+- `src/styles/variables.css` 补齐 diff/code 专用变量，并标注主色 CSS 兜底值来源。
+- `tests/unit/styleStaticContracts.test.ts` 增加主题契约测试；已先看到 RED（缺 `@/config/tokens`），再实现后转 GREEN。
+- 验证通过：`pnpm exec vitest run tests/unit/styleStaticContracts.test.ts`、`pnpm verify`。
+- 下一阶段从类别 A 暗黑可见 bug 开始，不需要再调整阶段 0 基建。
