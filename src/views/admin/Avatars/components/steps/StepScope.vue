@@ -51,7 +51,7 @@
           <template #label>
             <span class="step-scope-label">
               {{ t('avatar.wizard.selectUser') }}
-              <span class="text-gray-400 dark:text-gray-500 font-normal ml-1">{{
+              <span class="text-(--color-text-tertiary) font-normal ml-1">{{
                 t('avatar.wizard.expertOnlyRequired')
               }}</span>
             </span>
@@ -282,7 +282,7 @@ defineExpose({
   display: block;
   font-size: 14px;
   font-weight: 500;
-  color: var(--ant-color-text, #374151);
+  color: var(--color-text-base);
 }
 /* 表单项间距与参考一致 */
 .step-scope-form :deep(.ant-form-item) {
@@ -308,16 +308,16 @@ defineExpose({
 /* 下拉框：圆角、内边距、边框、focus 环 */
 .step-scope-select :deep(.ant-select-selector) {
   border-radius: 0.5rem !important;
-  border: 1px solid #e5e7eb !important;
+  border: 1px solid var(--color-border) !important;
   padding-left: 44px !important;
   transition:
     border-color 0.2s,
     box-shadow 0.2s;
-  background-color: #fff !important;
+  background-color: var(--color-bg-container) !important;
 }
 /* 占位符：确保文案可见，避免显示为横线或透明 */
 .step-scope-select :deep(.ant-select-selection-placeholder) {
-  color: #9ca3af !important;
+  color: var(--color-text-tertiary) !important;
   opacity: 1 !important;
   font-size: 14px !important;
 }
@@ -326,7 +326,7 @@ defineExpose({
 }
 /* show-search 时内部 input 的占位符也需可见 */
 .step-scope-select :deep(.ant-select-selection-search-input::placeholder) {
-  color: #9ca3af !important;
+  color: var(--color-text-tertiary) !important;
   opacity: 1 !important;
 }
 .step-scope-select:not(.ant-select-disabled):deep(.ant-select-selector:hover) {
@@ -335,13 +335,6 @@ defineExpose({
 .step-scope-select.ant-select-focused :deep(.ant-select-selector) {
   border-color: var(--color-primary) !important;
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 20%, transparent) !important;
-}
-.dark .step-scope-select :deep(.ant-select-selector) {
-  border-color: #374151 !important;
-  background-color: #1f2937 !important;
-}
-.dark .step-scope-select :deep(.ant-select-selection-placeholder) {
-  color: #9ca3af !important;
 }
 /* 必填/校验提示紧贴对应表单项下方 */
 .step-scope :deep(.ant-form-item-control-input-content) {
@@ -353,7 +346,7 @@ defineExpose({
 }
 /* 禁用态仍保持可见 */
 .step-scope :deep(.step-scope-select.ant-select-disabled .ant-select-selector) {
-  color: var(--ant-color-text-quaternary, #8c8c8c);
+  color: var(--color-text-tertiary);
 }
 
 .step-scope-preview {

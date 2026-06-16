@@ -44,9 +44,9 @@
 
 ### 阶段 3 — 类别 B + D 收尾
 
-- [ ] 类别 B `.dark .xxx` 手写配对迁移到变量（LocaleSwitcher / ThemeSwitcher / StepScope / BubbleRenderer）
-- [ ] 类别 D 静态灰工具类 → 既有 `text-(--color-text-secondary)` 等任意值语法
-- 验证：暗黑下次要文字对比度达标
+- [x] 类别 B `.dark .xxx` 手写配对迁移到变量（LocaleSwitcher / ThemeSwitcher / StepScope / BubbleRenderer）
+- [x] 类别 D 静态灰工具类 → 既有 `text-(--color-text-secondary)` 等任意值语法
+- 验证：`pnpm exec vitest run tests/unit/styleStaticContracts.test.ts` 通过；`pnpm verify` 通过
 
 ### 阶段 4 — 防回潮 + 文档
 
@@ -63,4 +63,4 @@
 
 ## 进度
 
-当前阶段：**阶段 2 已完成并通过验证**；下一步进入阶段 3（类别 B + D 收尾）。
+当前阶段：**阶段 3 已完成并通过验证**；下一步进入阶段 4（防回潮 + 文档）。

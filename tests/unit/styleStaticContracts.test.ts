@@ -150,4 +150,62 @@ describe('style static contracts', () => {
       }
     }
   })
+
+  it('keeps phase 3 paired dark styles and static grays on theme variables', () => {
+    const bannedTokensByFile: Record<string, string[]> = {
+      'src/components/LocaleSwitcher/index.vue': [
+        '.dark .locale-text',
+        '#64748b',
+        '#475569',
+        '#94a3b8',
+        '#3b82f6',
+        'rgba(0, 0, 0, 0.03)',
+        'rgba(255, 255, 255, 0.05)',
+      ],
+      'src/components/ThemeSwitcher/index.vue': [
+        '.dark .sun-icon',
+        '.dark .moon-icon',
+        '#64748b',
+        '#94a3b8',
+        '#cbd5e1',
+        'rgba(0, 0, 0, 0.03)',
+        'rgba(255, 255, 255, 0.05)',
+      ],
+      'src/views/admin/Avatars/components/steps/StepScope.vue': [
+        '.dark .step-scope-select',
+        '#e5e7eb',
+        '#9ca3af',
+        '#374151',
+        '#1f2937',
+        'background-color: #fff',
+      ],
+      'src/components/ChatWindow/BubbleRenderer.vue': [
+        '.dark .markdown-body',
+        '#f6f8fa',
+        '#161b22',
+      ],
+      'src/components/KnowledgeCardViewer/index.vue': ['text-gray-500'],
+      'src/components/PageHead/index.vue': ['text-slate-500', 'text-slate-800', 'text-slate-400'],
+      'src/components/PageTable/index.vue': [
+        'border-slate-200',
+        'border-slate-100',
+        'bg-white',
+        'text-slate-500',
+        'text-slate-400',
+      ],
+      'src/components/ChatWindow/MessageList.vue': ['text-gray-500'],
+      'src/components/CitationPreviewHtml/index.vue': [
+        'text-gray-600',
+        'text-gray-500',
+        'dark:text-gray-400',
+      ],
+    }
+
+    for (const [file, tokens] of Object.entries(bannedTokensByFile)) {
+      const source = readSource(file).toLowerCase()
+      for (const token of tokens) {
+        expect(source, `${file} should not contain ${token}`).not.toContain(token)
+      }
+    }
+  })
 })

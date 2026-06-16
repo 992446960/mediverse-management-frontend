@@ -7,7 +7,7 @@
       <a-button
         v-if="headConf.backLeft"
         type="link"
-        class="page-head__back text-sm text-slate-500 hover:text-primary"
+        class="page-head__back text-sm text-(--color-text-secondary) hover:text-primary"
         @click="onBackClick"
       >
         <template #icon>
@@ -18,13 +18,13 @@
       <slot name="title" :title="headConf.title">
         <span
           v-if="headConf.title"
-          class="page-head__title text-base font-bold text-slate-800 dark:text-slate-100"
+          class="page-head__title text-base font-bold text-(--color-text-base)"
         >
           {{ headConf.title }}
         </span>
       </slot>
       <a-tooltip v-if="headConf.intro" :title="headConf.intro">
-        <QuestionCircleOutlined class="text-slate-400 cursor-help" />
+        <QuestionCircleOutlined class="text-(--color-text-tertiary) cursor-help" />
       </a-tooltip>
     </div>
 

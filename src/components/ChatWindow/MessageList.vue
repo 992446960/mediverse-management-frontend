@@ -299,7 +299,7 @@ const roles = {
                     v-if="isPdfPart(fp)"
                     class="message-pdf-attachment__icon shrink-0"
                   />
-                  <FileOutlined v-else class="shrink-0 text-gray-500" />
+                  <FileOutlined v-else class="shrink-0 text-(--color-text-secondary)" />
                   <span
                     :class="
                       isPdfPart(fp) ? 'message-pdf-attachment__name' : 'truncate max-w-[200px]'

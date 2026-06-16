@@ -33,6 +33,7 @@
 
 ## 近期同步记录
 
+- 暗黑主题整改阶段 3 落地：`LocaleSwitcher`、`ThemeSwitcher`、`StepScope`、`BubbleRenderer` 去除手写暗色硬编码配对，计划点名的静态灰工具类改为 `--color-*` 语义变量，并补充阶段 3 静态契约单测。
 - 暗黑主题整改阶段 2 落地：分身配置、向导按钮、沟通风格、分身类型、组织 logo 上传 hover、个人资料头像阴影、召回测试 Top-K 与详情 hover 阴影统一改为主色变量；`QuickActionGuide` 的 `#00a0e9` 并入 `var(--color-primary)`，并补充阶段 2 静态契约单测。
 - 暗黑主题整改阶段 1 落地：`KBSidebar`、`KnowledgeCardViewer` 系列、`ToolSkillSelector`、`AvatarDetailModal`、`RecallSourceDetailModal`、`KnowledgeCardEditor` 的暗色可见白底/浅灰/近黑文字改为复用 `--color-*` 主题变量，并新增阶段 1 静态契约单测防止类别 A 问题回退。
 - 暗黑主题整改阶段 0 基建落地：新增 `src/config/tokens.ts` 集中维护 antdv seed 主色真实色值，`themes.ts` 引用该常量；`variables.css` 新增 diff/code 专用变量并保留 CSS 兜底值；新增静态主题契约单测防止 token 通道再次分裂。

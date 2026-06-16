@@ -51,3 +51,11 @@
 - 新增阶段 2 静态契约测试，先看到 RED（命中 `AdvancedConfigFields` 的 `#0ea5e9`），实现后 GREEN。
 - 源码复扫后仅剩测试禁止列表和 `var(--color-primary, #0ea5e9)` 兜底写法；后者按 findings.md 属允许形态。
 - 验证通过：`pnpm exec vitest run tests/unit/styleStaticContracts.test.ts`；待提交前补跑 `pnpm verify`。
+
+## 2026-06-16 会话 5（阶段 3 实施）
+
+- 类别 B：`LocaleSwitcher`、`ThemeSwitcher`、`StepScope`、`BubbleRenderer` 去掉手写暗色硬编码配对，统一使用 `--color-*` 变量；ThemeSwitcher 改用 `isDark` 状态渲染太阳/月亮图标。
+- 类别 D：计划点名的 `KnowledgeCardViewer/index.vue`、`PageHead`、`PageTable`、`ChatWindow/MessageList`、`CitationPreviewHtml` 静态灰工具类改为既有 Tailwind 任意值语法。
+- 新增阶段 3 静态契约测试，先看到 RED（命中 `LocaleSwitcher` 的 `.dark .locale-text`），实现后 GREEN。
+- 目标文件复扫无阶段 3 残留。
+- 验证通过：`pnpm exec vitest run tests/unit/styleStaticContracts.test.ts`；待提交前补跑 `pnpm verify`。
