@@ -33,6 +33,7 @@
 
 ## 近期同步记录
 
+- 暗黑主题整改阶段 1 落地：`KBSidebar`、`KnowledgeCardViewer` 系列、`ToolSkillSelector`、`AvatarDetailModal`、`RecallSourceDetailModal`、`KnowledgeCardEditor` 的暗色可见白底/浅灰/近黑文字改为复用 `--color-*` 主题变量，并新增阶段 1 静态契约单测防止类别 A 问题回退。
 - 暗黑主题整改阶段 0 基建落地：新增 `src/config/tokens.ts` 集中维护 antdv seed 主色真实色值，`themes.ts` 引用该常量；`variables.css` 新增 diff/code 专用变量并保留 CSS 兜底值；新增静态主题契约单测防止 token 通道再次分裂。
 - 前端 i18n 文案收口第一批：错误页、分身测试空态、删除确认、登录过期、请求失败、下载失败和重复提交提示统一接入 `zh-CN` / `en-US` locale，并补充静态 i18n 契约单测。
 - 前端样式规范收口第一批：`App.vue` 根级 transition 与用户菜单 overlay 样式迁入全局样式入口，`FullscreenLayout` 补齐 `scoped lang="scss"`，并新增静态样式契约单测防止回退。

@@ -420,10 +420,10 @@ watch(
   justify-content: center;
   width: 28px;
   height: 28px;
-  color: #1677ff;
+  color: var(--color-primary);
   font-size: 15px;
   border-radius: var(--radius-full);
-  background: #e7f3ff;
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-bg-container));
 }
 
 .avatar-detail-style__content {

@@ -60,7 +60,7 @@
               <BarChartOutlined class="text-primary" />
               <span>{{ t('knowledge.recall.recallPerformance') }}</span>
             </div>
-            <div class="rounded-md border border-(--color-border) bg-white p-4 dark:bg-slate-900">
+            <div class="rounded-md border border-(--color-border) bg-(--color-bg-container) p-4">
               <div class="text-xs text-(--color-text-secondary)">
                 {{ t('knowledge.recall.recallScore') }}
               </div>
@@ -307,7 +307,7 @@ function getSourceFileMeta(file: FileSource) {
   width: 100%;
   border: 1px solid var(--color-border);
   border-radius: 0.375rem;
-  background: #fff;
+  background: var(--color-bg-container);
   padding: 0.75rem;
   cursor: pointer;
   text-align: left;
@@ -327,10 +327,6 @@ function getSourceFileMeta(file: FileSource) {
 .knowledge-recall-detail__file-card--loading {
   cursor: progress;
   opacity: 0.72;
-}
-
-.dark .knowledge-recall-detail__file-card {
-  background: rgb(15 23 42);
 }
 
 .knowledge-recall-detail__files-empty {

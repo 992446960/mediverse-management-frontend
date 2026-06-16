@@ -73,4 +73,45 @@ describe('style static contracts', () => {
     expect(variables.match(/--color-diff-del:/g)).toHaveLength(2)
     expect(variables.match(/--color-code-bg:/g)).toHaveLength(2)
   })
+
+  it('keeps phase 1 dark-mode visible surfaces on theme variables', () => {
+    const bannedTokensByFile: Record<string, string[]> = {
+      'src/components/KBSidebar/index.vue': [
+        'bg-white',
+        'border-gray-200',
+        'text-gray-700',
+        'hover:bg-gray-100',
+        'text-gray-500',
+      ],
+      'src/components/AvatarConfig/ToolSkillSelector.vue': [
+        'background: #fff',
+        'color: #111827',
+        'color: #6b7280',
+      ],
+      'src/components/KnowledgeCardViewer/VersionDiffView.vue': [
+        'bg-gray-50',
+        'background-color: #fdd',
+        'background-color: #dfd',
+      ],
+      'src/components/KnowledgeCardViewer/JsonContentPane.vue': ['bg-gray-50', 'text-gray-500'],
+      'src/components/KnowledgeCardViewer/CardContentBody.vue': ['bg-gray-50', 'text-gray-500'],
+      'src/components/KnowledgeCardViewer/VersionTimeline.vue': ['text-gray-800', 'text-gray-600'],
+      'src/views/admin/Avatars/components/AvatarDetailModal.vue': [
+        'color: #1677ff',
+        'background: #e7f3ff',
+      ],
+      'src/views/shared/knowledge-recall-test/components/RecallSourceDetailModal.vue': [
+        'bg-white',
+        'background: #fff',
+      ],
+      'src/components/KnowledgeCardEditor/index.vue': ['background: #fff'],
+    }
+
+    for (const [file, tokens] of Object.entries(bannedTokensByFile)) {
+      const source = readSource(file).toLowerCase()
+      for (const token of tokens) {
+        expect(source, `${file} should not contain ${token}`).not.toContain(token)
+      }
+    }
+  })
 })

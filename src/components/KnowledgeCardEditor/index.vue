@@ -54,7 +54,7 @@
               />
               <a-tag
                 v-else-if="formState.tags.length < 10"
-                style="background: #fff; border-style: dashed"
+                class="knowledge-card-editor__add-tag"
                 @click="showInputTag"
               >
                 <PlusOutlined /> {{ t('knowledge.card.addTag') }}
@@ -277,3 +277,10 @@ const handleInputTagConfirm = () => {
   inputTagValue.value = ''
 }
 </script>
+
+<style scoped lang="scss">
+.knowledge-card-editor__add-tag {
+  border-style: dashed;
+  background: var(--color-bg-container);
+}
+</style>

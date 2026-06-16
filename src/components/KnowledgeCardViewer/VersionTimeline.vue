@@ -10,17 +10,17 @@
         <div class="flex flex-col gap-1">
           <div class="flex items-center justify-between">
             <a-space>
-              <span class="font-bold text-gray-800">{{ v.version }}</span>
+              <span class="font-bold text-(--color-text-base)">{{ v.version }}</span>
               <a-tag v-if="isCurrentVersion(v)" color="blue">
                 {{ t('knowledge.card.currentVersion') }}
               </a-tag>
             </a-space>
-            <span class="text-xs text-gray-400">{{
+            <span class="text-xs text-(--color-text-tertiary)">{{
               dayjs(v.created_at).format('YYYY-MM-DD HH:mm')
             }}</span>
           </div>
-          <p class="text-sm text-gray-600 mb-2">{{ v.summary }}</p>
-          <div class="flex items-center justify-between text-xs text-gray-400">
+          <p class="text-sm text-(--color-text-secondary) mb-2">{{ v.summary }}</p>
+          <div class="flex items-center justify-between text-xs text-(--color-text-tertiary)">
             <span>{{ t('knowledge.card.operator') }}: {{ v.created_by_name }}</span>
             <a-space>
               <a-button

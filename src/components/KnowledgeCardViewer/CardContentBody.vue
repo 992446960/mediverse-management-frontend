@@ -3,11 +3,11 @@
     <div class="grid grid-cols-2 gap-4">
       <JsonContentPane :json-content="jsonContent" />
       <div>
-        <div class="text-sm font-medium text-gray-500 mb-2">
+        <div class="text-sm font-medium text-(--color-text-secondary) mb-2">
           {{ t('knowledge.card.markdownPane') }}
         </div>
         <div
-          class="markdown-content-pane__body p-4 bg-gray-50 rounded-lg min-h-[200px] h-[min(480px,calc(100vh-240px))] overflow-y-auto"
+          class="markdown-content-pane__body p-4 bg-(--color-bg-layout) rounded-lg min-h-[200px] h-[min(480px,calc(100vh-240px))] overflow-y-auto"
         >
           <!-- eslint-disable-next-line vue/no-v-html -- marked + DOMPurify -->
           <div v-if="hasMarkdownContent" class="markdown-body" v-html="renderedContent"></div>

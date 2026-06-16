@@ -196,7 +196,7 @@ function confirmSelection() {
   border: 0;
   border-radius: 6px;
   background: transparent;
-  color: #6b7280;
+  color: var(--color-text-secondary);
   cursor: pointer;
   font-size: 13px;
   padding: 8px 10px;
@@ -208,8 +208,8 @@ function confirmSelection() {
 
 .tool-skill-selector-tab:hover,
 .tool-skill-selector-tab--active {
-  background: rgba(14, 165, 233, 0.1);
-  color: #0ea5e9;
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-bg-container));
+  color: var(--color-primary);
 }
 
 .tool-skill-selector-list {
@@ -228,9 +228,9 @@ function confirmSelection() {
   gap: 10px;
   align-items: flex-start;
   width: 100%;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
-  background: #fff;
+  background: var(--color-bg-container);
   cursor: pointer;
   padding: 12px;
   text-align: left;
@@ -242,9 +242,9 @@ function confirmSelection() {
 
 .tool-skill-selector-card:hover,
 .tool-skill-selector-card--selected {
-  border-color: rgba(14, 165, 233, 0.65);
-  background: rgba(14, 165, 233, 0.04);
-  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.1);
+  border-color: color-mix(in srgb, var(--color-primary) 65%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg-container));
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--color-primary) 10%, transparent);
 }
 
 .tool-skill-selector-card-icon {
@@ -254,8 +254,8 @@ function confirmSelection() {
   width: 36px;
   height: 36px;
   border-radius: 8px;
-  background: rgba(14, 165, 233, 0.12);
-  color: #0284c7;
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-bg-container));
+  color: var(--color-primary-hover);
   font-size: 15px;
   font-weight: 600;
 }
@@ -265,7 +265,7 @@ function confirmSelection() {
 }
 
 .tool-skill-selector-card-title {
-  color: #111827;
+  color: var(--color-text-base);
   font-size: 14px;
   font-weight: 600;
   overflow: hidden;
@@ -274,7 +274,7 @@ function confirmSelection() {
 }
 
 .tool-skill-selector-card-desc {
-  color: #6b7280;
+  color: var(--color-text-secondary);
   display: -webkit-box;
   font-size: 12px;
   line-height: 1.5;
