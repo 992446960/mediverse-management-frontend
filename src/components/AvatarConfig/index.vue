@@ -412,7 +412,7 @@ onMounted(fetchConfig)
 }
 
 .step-info-input:focus {
-  @apply outline-none border-[#0ea5e9] ring-2 ring-[#0ea5e9]/20;
+  @apply outline-none border-primary ring-2 ring-primary/20;
 }
 
 :deep(.ant-form-item-label > label) {

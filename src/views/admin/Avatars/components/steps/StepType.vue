@@ -149,8 +149,8 @@ watch(
 }
 
 .step-type__icon--expert {
-  --type-icon-color: #0ea5e9;
-  --type-icon-bg: color-mix(in srgb, #0ea5e9 16%, transparent);
+  --type-icon-color: var(--color-primary);
+  --type-icon-bg: color-mix(in srgb, var(--color-primary) 16%, transparent);
 }
 
 .step-type__radio {

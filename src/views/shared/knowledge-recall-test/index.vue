@@ -301,7 +301,7 @@ onMounted(fetchCardTypes)
 
 <style scoped lang="scss">
 .knowledge-recall-test {
-  --knowledge-recall-top-k-color: #0ea5e9;
+  --knowledge-recall-top-k-color: var(--color-primary);
 }
 
 .knowledge-recall-test__header {

@@ -320,7 +320,7 @@ function getSourceFileMeta(file: FileSource) {
 .knowledge-recall-detail__file-card:hover,
 .knowledge-recall-detail__file-card:focus-visible {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgb(14 165 233 / 12%);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 12%, transparent);
   outline: 0;
 }
 

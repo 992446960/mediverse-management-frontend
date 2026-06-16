@@ -419,7 +419,7 @@ function updateModel(modelId: string) {
 }
 
 .advanced-form-item--tools {
-  --advanced-chip-color: #0ea5e9;
+  --advanced-chip-color: var(--color-primary);
 }
 
 .advanced-form-item--skills {
@@ -585,7 +585,7 @@ function updateModel(modelId: string) {
 
 .advanced-card-icon--tools,
 .advanced-card-icon--engine {
-  --advanced-icon-color: #0ea5e9;
+  --advanced-icon-color: var(--color-primary);
 }
 
 .advanced-card-icon--skills {

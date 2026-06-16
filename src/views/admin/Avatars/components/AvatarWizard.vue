@@ -82,7 +82,7 @@
       <a-button
         v-if="currentStep < lastStepIndex"
         type="primary"
-        class="avatar-wizard-btn cursor-pointer transition-colors duration-200 bg-[#0ea5e9] hover:bg-sky-600! border-0"
+        class="avatar-wizard-btn cursor-pointer transition-colors duration-200 bg-primary hover:bg-primary/90! border-0"
         :loading="loading"
         @click="onNext"
       >
@@ -91,7 +91,7 @@
       <a-button
         v-if="currentStep === lastStepIndex"
         type="primary"
-        class="avatar-wizard-btn cursor-pointer transition-colors duration-200 bg-[#0ea5e9] hover:bg-sky-600! border-0"
+        class="avatar-wizard-btn cursor-pointer transition-colors duration-200 bg-primary hover:bg-primary/90! border-0"
         :loading="submitLoading"
         @click="onSubmit"
       >

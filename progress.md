@@ -43,3 +43,11 @@
 - `VersionDiffView` 的增删 diff 底色改为阶段 0 新增的 `--color-diff-add` / `--color-diff-del`。
 - 新增阶段 1 静态契约测试，先看到 RED（命中 `KBSidebar` 的 `bg-white`），实现后 GREEN。
 - 验证通过：`pnpm exec vitest run tests/unit/styleStaticContracts.test.ts`；待提交前补跑 `pnpm verify`。
+
+## 2026-06-16 会话 4（阶段 2 实施）
+
+- 按类别 C 清单收口品牌色：分身配置、向导按钮、沟通风格、分身类型、组织 logo 上传 hover、个人资料头像阴影、召回测试 Top-K 和详情 hover 阴影统一引用 `var(--color-primary)` / `bg-primary`。
+- `QuickActionGuide` 的游离 `#00a0e9` 已并入主色变量。
+- 新增阶段 2 静态契约测试，先看到 RED（命中 `AdvancedConfigFields` 的 `#0ea5e9`），实现后 GREEN。
+- 源码复扫后仅剩测试禁止列表和 `var(--color-primary, #0ea5e9)` 兜底写法；后者按 findings.md 属允许形态。
+- 验证通过：`pnpm exec vitest run tests/unit/styleStaticContracts.test.ts`；待提交前补跑 `pnpm verify`。

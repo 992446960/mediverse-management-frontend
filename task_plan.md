@@ -37,10 +37,10 @@
 
 ### 阶段 2 — 类别 C 品牌色收口
 
-- [ ] 散落 `#0ea5e9`/`#0284c7`/`bg-[#0ea5e9]` → `var(--color-primary*)` / `bg-primary`
-- [ ] 局部 `--xxx-color:#0ea5e9` 定义改引用主色变量
-- [ ] `QuickActionGuide` `#00a0e9` 按 D 决策处理（待确认）
-- 验证：暗黑下品牌色统一为 `#38BDF8`，与 antdv 组件一致
+- [x] 散落 `#0ea5e9`/`#0284c7`/`bg-[#0ea5e9]` → `var(--color-primary*)` / `bg-primary`
+- [x] 局部 `--xxx-color:#0ea5e9` 定义改引用主色变量
+- [x] `QuickActionGuide` `#00a0e9` 按 D 决策处理为 `var(--color-primary)`
+- 验证：`pnpm exec vitest run tests/unit/styleStaticContracts.test.ts` 通过；`pnpm verify` 通过
 
 ### 阶段 3 — 类别 B + D 收尾
 
@@ -63,4 +63,4 @@
 
 ## 进度
 
-当前阶段：**阶段 1 已完成并通过验证**；下一步进入阶段 2（类别 C 品牌色收口）。
+当前阶段：**阶段 2 已完成并通过验证**；下一步进入阶段 3（类别 B + D 收尾）。

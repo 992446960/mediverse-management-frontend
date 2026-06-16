@@ -56,7 +56,7 @@ const handleTest = () => {
   overflow: hidden;
   padding: 24px;
   border-radius: 12px;
-  background: #00a0e9;
+  background: var(--color-primary);
   color: white;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
@@ -105,7 +105,7 @@ const handleTest = () => {
   border-radius: 8px;
   background: white !important;
   border: none !important;
-  color: #00a0e9 !important;
+  color: var(--color-primary) !important;
   font-size: 14px;
   font-weight: 600;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
@@ -116,11 +116,11 @@ const handleTest = () => {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   background: white !important;
-  color: #00a0e9 !important;
+  color: var(--color-primary) !important;
 }
 
 .test-btn-icon {
   font-size: 16px;
-  color: #00a0e9;
+  color: var(--color-primary);
 }
 </style>

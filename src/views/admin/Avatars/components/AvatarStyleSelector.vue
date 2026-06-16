@@ -118,7 +118,7 @@ function onChange(value: AvatarStyle) {
 }
 
 .avatar-style-selector__card--formal {
-  --style-color: #0ea5e9;
+  --style-color: var(--color-primary);
 }
 
 .avatar-style-selector__card--friendly {

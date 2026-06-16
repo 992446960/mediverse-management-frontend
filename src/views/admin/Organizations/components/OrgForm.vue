@@ -49,7 +49,7 @@
             :class="[
               logoPreviewUrl
                 ? ''
-                : 'cursor-pointer hover:border-[#0ea5e9] hover:text-[#0ea5e9] transition-all',
+                : 'cursor-pointer hover:border-primary hover:text-primary transition-all',
               logoUploading ? 'pointer-events-none opacity-70' : '',
             ]"
             @click="onLogoCardClick"

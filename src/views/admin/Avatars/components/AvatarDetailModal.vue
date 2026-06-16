@@ -478,7 +478,7 @@ watch(
 }
 
 .avatar-detail-advanced__icon.is-blue {
-  --detail-icon-color: #0ea5e9;
+  --detail-icon-color: var(--color-primary);
 }
 
 .avatar-detail-advanced__icon.is-green {

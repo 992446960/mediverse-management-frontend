@@ -114,4 +114,40 @@ describe('style static contracts', () => {
       }
     }
   })
+
+  it('keeps phase 2 brand colors on primary theme variables', () => {
+    const brandHardcodedFiles = [
+      'src/components/AvatarConfig/AdvancedConfigFields.vue',
+      'src/components/AvatarConfig/AdvancedTagList.vue',
+      'src/components/AvatarConfig/QuickActionGuide.vue',
+      'src/components/AvatarConfig/index.vue',
+      'src/views/admin/Avatars/components/AvatarDetailModal.vue',
+      'src/views/admin/Avatars/components/AvatarWizard.vue',
+      'src/views/admin/Avatars/components/AvatarStyleSelector.vue',
+      'src/views/admin/Avatars/components/steps/StepType.vue',
+      'src/views/admin/Avatars/components/steps/StepScope.vue',
+      'src/views/admin/Organizations/components/OrgForm.vue',
+      'src/views/my/Profile.vue',
+      'src/views/shared/knowledge-recall-test/index.vue',
+      'src/views/shared/knowledge-recall-test/components/RecallSourceDetailModal.vue',
+    ]
+    const bannedBrandTokens = [
+      '#0ea5e9',
+      '#0284c7',
+      '#00a0e9',
+      'rgb(14 165 233',
+      'rgba(14, 165, 233',
+      'bg-[#0ea5e9]',
+      'border-[#0ea5e9]',
+      'text-[#0ea5e9]',
+      'ring-[#0ea5e9]',
+    ]
+
+    for (const file of brandHardcodedFiles) {
+      const source = readSource(file).toLowerCase()
+      for (const token of bannedBrandTokens) {
+        expect(source, `${file} should not contain ${token}`).not.toContain(token)
+      }
+    }
+  })
 })

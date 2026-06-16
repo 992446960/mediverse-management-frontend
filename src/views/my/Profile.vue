@@ -559,7 +559,7 @@ onMounted(() => {
   position: absolute;
   right: -2px;
   bottom: -2px;
-  box-shadow: 0 4px 12px rgb(14 165 233 / 28%);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 28%, transparent);
 }
 
 .profile-fields {

@@ -330,11 +330,11 @@ defineExpose({
   opacity: 1 !important;
 }
 .step-scope-select:not(.ant-select-disabled):deep(.ant-select-selector:hover) {
-  border-color: #0ea5e9 !important;
+  border-color: var(--color-primary) !important;
 }
 .step-scope-select.ant-select-focused :deep(.ant-select-selector) {
-  border-color: #0ea5e9 !important;
-  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2) !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 20%, transparent) !important;
 }
 .dark .step-scope-select :deep(.ant-select-selector) {
   border-color: #374151 !important;

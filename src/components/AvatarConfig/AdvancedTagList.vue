@@ -68,7 +68,7 @@ const { t } = useI18n()
 }
 
 .advanced-tag-list--tools {
-  --advanced-tag-color: #0ea5e9;
+  --advanced-tag-color: var(--color-primary);
 }
 
 .advanced-tag-list--skills {
