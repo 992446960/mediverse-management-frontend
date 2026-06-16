@@ -20,7 +20,10 @@
               :get-popup-container="getTooltipContainer"
             >
               <template #title>{{ brandName }}</template>
-              <div class="logo__text" :title="brandName">{{ brandName }}</div>
+              <div class="logo__text" :title="brandName" :aria-label="brandName">
+                <span class="logo__title">{{ brandNameParts.title }}</span>
+                <span class="logo__subtitle">{{ brandNameParts.subtitle }}</span>
+              </div>
             </a-tooltip>
           </div>
         </div>
@@ -137,6 +140,13 @@ const { checkRoles } = usePermission()
 
 const user = computed(() => authStore.user)
 const brandName = computed(() => t('app.brandName'))
+const brandNameParts = computed(() => {
+  const [title, ...rest] = brandName.value.split(/\s+/)
+  return {
+    title: title || brandName.value,
+    subtitle: rest.join(' '),
+  }
+})
 
 function getTooltipContainer(triggerNode: HTMLElement) {
   return triggerNode?.ownerDocument?.body ?? document.body
@@ -254,44 +264,49 @@ watch(
   overflow: hidden;
 }
 
+.sider :deep(.ant-menu),
+.sider :deep(.ant-menu-sub),
+.sider :deep(.ant-menu-inline) {
+  background: var(--color-bg-sidebar) !important;
+}
+
 .logo {
   box-sizing: border-box;
   width: 100%;
   min-width: 0;
-  min-height: 44px;
-  margin: 16px 0 0;
-  padding: 0 12px 16px;
+  min-height: 78px;
+  margin: 0;
+  padding: 18px 18px 16px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   overflow: hidden;
-  color: var(--color-primary);
+  color: var(--color-text-inverse);
   font-weight: 700;
-  font-size: 16px;
-  letter-spacing: 0.5px;
   border-bottom: 1px solid var(--color-border-secondary);
 }
 
 .logo--collapsed {
   padding-left: 0;
   padding-right: 0;
+  justify-content: center;
 }
 
 .logo__inner {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   width: max-content;
   max-width: 100%;
   min-width: 0;
 }
 
 .logo__img {
-  flex: 0 0 28px;
-  width: 28px;
-  height: 28px;
-  min-width: 28px;
-  min-height: 28px;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  min-height: 34px;
   object-fit: contain;
   display: block;
 }
@@ -309,14 +324,36 @@ watch(
 }
 
 .logo__text {
-  display: block;
+  display: flex;
+  flex-direction: column;
   width: 100%;
   min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
   cursor: default;
-  line-height: 28px;
+  line-height: 1.05;
+}
+
+.logo__title,
+.logo__subtitle {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.logo__title {
+  color: var(--color-text-inverse);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.logo__subtitle {
+  margin-top: 3px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
 }
 
 .header {
