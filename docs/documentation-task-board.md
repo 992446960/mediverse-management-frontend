@@ -4,33 +4,59 @@
 
 ## 文档资产
 
-| 文档                                                                      | 事实来源                                                          | 状态   | 维护要求                                        |
-| ------------------------------------------------------------------------- | ----------------------------------------------------------------- | ------ | ----------------------------------------------- |
-| `README.md`                                                               | `package.json`、`vite.config.ts`、`README.Docker.md`、`docs/`     | 已补全 | 项目定位、命令和文档索引变化时更新              |
-| `AGENTS.md`                                                               | `project-init`、当前仓库结构、验证命令                            | 已补全 | Agent 操作边界、命令或文档索引变化时更新        |
-| `CLAUDE.md`                                                               | `project-init`、项目红线规则                                      | 已补全 | 核心红线变化时更新，保持 20 行以内              |
-| `docs/development-guide.md`                                               | `wang-convention`、`src/`、`tests/`                               | 已补全 | 编码规范、架构约束或模块边界变化时更新          |
-| `docs/frontend-development.md`                                            | `package.json`、`.env.*`、`vite.config.ts`、Docker 配置           | 已补全 | 启动、联调、验证、环境变量变化时更新            |
-| `README.Docker.md`                                                        | `Dockerfile`、`compose.yaml`、`nginx.conf`、`scripts/docker-*.sh` | 已补全 | Docker 打包、部署、变量、回滚流程变化时更新     |
-| `docs/API设计.docx`                                                       | Management、Ecosys、KnowledgeBase API 详细设计                    | 已存在 | 接口设计、字段约定或错误码变化时更新            |
-| `docs/API设计.md`                                                         | `docs/API设计.docx` 的 Markdown 副本                              | 已存在 | 自 docx 导出或随 docx 同步更新，便于检索与 diff |
-| `docs/markdown-test-sample.md`                                            | Markdown 预览、解析和样式测试文本                                 | 已新增 | Markdown 渲染测试场景变化时更新                 |
-| `docs/requirements/shanghai-first-hospital-customization-requirements.md` | 定制需求和 `docs/requirements/assets/`                            | 已存在 | 需求范围、素材或验收标准变化时更新              |
-| `tests/api-contract/API_CONTRACT_TEST_REPORT.md`                          | `tests/api-contract/`、真实 API 测试结果                          | 已存在 | API 合规测试覆盖或结果变化时更新                |
-| `docs/superpowers/plans/2026-05-20-python-mock-backend-openapi.md`        | 线上 Swagger、Python mock 后端实现计划                            | 已新增 | mock 后端接口范围、路径或验证命令变化时更新     |
+| 文档                                                                      | 事实来源                                                          | 状态   | 维护要求                                         |
+| ------------------------------------------------------------------------- | ----------------------------------------------------------------- | ------ | ------------------------------------------------ |
+| `README.md`                                                               | `package.json`、`vite.config.ts`、`README.Docker.md`、`docs/`     | 已补全 | 项目定位、命令和文档索引变化时更新               |
+| `AGENTS.md`                                                               | `project-init`、当前仓库结构、验证命令                            | 已补全 | Agent 操作边界、命令或文档索引变化时更新         |
+| `CLAUDE.md`                                                               | `project-init`、项目红线规则                                      | 已补全 | 核心红线变化时更新，保持 20 行以内               |
+| `docs/development-guide.md`                                               | `wang-convention`、`src/`、`tests/`                               | 已补全 | 编码规范、架构约束或模块边界变化时更新           |
+| `docs/frontend-development.md`                                            | `package.json`、`.env.*`、`vite.config.ts`、Docker 配置           | 已补全 | 启动、联调、验证、环境变量变化时更新             |
+| `README.Docker.md`                                                        | `Dockerfile`、`compose.yaml`、`nginx.conf`、`scripts/docker-*.sh` | 已补全 | Docker 打包、部署、变量、回滚流程变化时更新      |
+| `docs/API设计.docx`                                                       | Management、Ecosys、KnowledgeBase API 详细设计                    | 已存在 | 接口设计、字段约定或错误码变化时更新             |
+| `docs/API设计.md`                                                         | 飞书 Wiki「API设计」、线上 Swagger/OpenAPI、`docs/API设计.docx`   | 已存在 | 随飞书/Swagger 接口合同同步更新，便于检索与 diff |
+| `docs/markdown-test-sample.md`                                            | Markdown 预览、解析和样式测试文本                                 | 已新增 | Markdown 渲染测试场景变化时更新                  |
+| `docs/requirements/shanghai-first-hospital-customization-requirements.md` | 定制需求和 `docs/requirements/assets/`                            | 已存在 | 需求范围、素材或验收标准变化时更新               |
+| `tests/api-contract/API_CONTRACT_TEST_REPORT.md`                          | `tests/api-contract/`、真实 API 测试结果                          | 已存在 | API 合规测试覆盖或结果变化时更新                 |
+| `docs/superpowers/plans/2026-05-20-python-mock-backend-openapi.md`        | 线上 Swagger、Python mock 后端实现计划                            | 已新增 | mock 后端接口范围、路径或验证命令变化时更新      |
+| `docs/superpowers/specs/2026-05-29-avatar-user-ui-unification-design.md`  | 分身与用户管理 UI 设计图、当前 Vue/Ant Design 组件边界            | 已新增 | 分身、用户、个人资料 UI 统一规格变化时更新       |
+| `docs/superpowers/plans/2026-05-29-avatar-user-ui-unification.md`         | UI 统一设计规格、当前组件结构、验证要求                           | 已新增 | 分身与用户 UI 实施任务或验收范围变化时更新       |
 
 ## 检查任务
 
-| 任务                 | 命令                                                                             | 状态                                  |
-| -------------------- | -------------------------------------------------------------------------------- | ------------------------------------- |
-| 文档新鲜度检查       | `pnpm check:docs`                                                                | 必须通过                              |
-| 聚合验证             | `pnpm verify`                                                                    | 代码或配置变更时必须通过              |
-| Docker Compose 校验  | `docker compose config`                                                          | Docker 相关变更时必须通过             |
-| API 合规测试         | `pnpm test:api`                                                                  | 具备 `.env.api-test` 和网络条件时运行 |
-| Python mock 合同测试 | `API_TEST_USE_MOCK=true API_BASE_URL=http://127.0.0.1:8005/api/v1 pnpm test:api` | mock 后端运行时执行                   |
+| 任务                 | 命令                                                                             | 状态                                   |
+| -------------------- | -------------------------------------------------------------------------------- | -------------------------------------- |
+| 主题样式守卫         | `pnpm check:theme`                                                               | 必须通过                               |
+| 文档新鲜度检查       | `pnpm check:docs`                                                                | 必须通过                               |
+| 聚合验证             | `pnpm verify`                                                                    | 代码或配置变更时必须通过，包含主题守卫 |
+| Docker Compose 校验  | `docker compose config`                                                          | Docker 相关变更时必须通过              |
+| API 合规测试         | `pnpm test:api`                                                                  | 具备 `.env.api-test` 和网络条件时运行  |
+| Python mock 合同测试 | `API_TEST_USE_MOCK=true API_BASE_URL=http://127.0.0.1:8005/api/v1 pnpm test:api` | mock 后端运行时执行                    |
 
 ## 近期同步记录
 
+- 暗黑主题编辑态补强：`md-editor-v3` 知识卡编辑器绑定 `themeStore` 并新增 `src/styles/editor.css` 复用主题变量；全局 Ant 输入控件、聚焦态、文本选区和 Chrome autofill 背景改为语义变量，修复暗色下编辑器白底和用户管理搜索框浅底。
+- 暗黑主题不一致补强：新增 `src/styles/markdown.css` 作为 Markdown / `v-html` 内容统一主题入口，禁止业务组件直接引入 GitHub light Markdown CSS；召回结果、Modal 标题区、分身配置和统计卡片改为语义变量，并扩展 `pnpm check:theme` 拦截无效 CSS 变量任意值与浅色 Markdown 全局 import。
+- 主布局侧栏视觉微调：品牌区按设计图改为图标加 `Mediverse` / `Management` 双行标题，标题白色展示；暗色侧边栏与菜单背景改为深海蓝主题变量，不改新增分身/新建会话等按钮颜色。
+- 暗黑主题整改阶段 4 落地：新增 `scripts/check-theme-guard.mjs` 与 `pnpm check:theme`，`pnpm verify` 改为先跑主题守卫再跑文档检查和构建；开发规范第 8 节补充主题变量规则，README、AGENTS 与前端开发文档同步验证命令。
+- 暗黑主题整改阶段 3 落地：`LocaleSwitcher`、`ThemeSwitcher`、`StepScope`、`BubbleRenderer` 去除手写暗色硬编码配对，计划点名的静态灰工具类改为 `--color-*` 语义变量，并补充阶段 3 静态契约单测。
+- 暗黑主题整改阶段 2 落地：分身配置、向导按钮、沟通风格、分身类型、组织 logo 上传 hover、个人资料头像阴影、召回测试 Top-K 与详情 hover 阴影统一改为主色变量；`QuickActionGuide` 的 `#00a0e9` 并入 `var(--color-primary)`，并补充阶段 2 静态契约单测。
+- 暗黑主题整改阶段 1 落地：`KBSidebar`、`KnowledgeCardViewer` 系列、`ToolSkillSelector`、`AvatarDetailModal`、`RecallSourceDetailModal`、`KnowledgeCardEditor` 的暗色可见白底/浅灰/近黑文字改为复用 `--color-*` 主题变量，并新增阶段 1 静态契约单测防止类别 A 问题回退。
+- 暗黑主题整改阶段 0 基建落地：新增 `src/config/tokens.ts` 集中维护 antdv seed 主色真实色值，`themes.ts` 引用该常量；`variables.css` 新增 diff/code 专用变量并保留 CSS 兜底值；新增静态主题契约单测防止 token 通道再次分裂。
+- 前端 i18n 文案收口第一批：错误页、分身测试空态、删除确认、登录过期、请求失败、下载失败和重复提交提示统一接入 `zh-CN` / `en-US` locale，并补充静态 i18n 契约单测。
+- 前端样式规范收口第一批：`App.vue` 根级 transition 与用户菜单 overlay 样式迁入全局样式入口，`FullscreenLayout` 补齐 `scoped lang="scss"`，并新增静态样式契约单测防止回退。
+- 分身配置表单去重：新增 `src/utils/avatar.ts` 统一 scope、风格 i18n key 和详情表单映射；新增 `useAdvancedConfigOptions` 合并高级配置选项加载与默认值应用；新增 `TagListEditor` 复用标签编辑 UI，并替换新增分身、编辑分身和工作台分身配置中的重复标签逻辑。
+- 用户详情/编辑/新增弹窗按 UI 图回修样式：`UserForm.vue` 继续复用同一弹窗组件，详情保留身份摘要与单列只读分区并修正表格 label 样式，编辑/新增弹窗调整为中等宽度；`ReadonlyDescription` 修正单列宽行跨列问题，并新增视觉契约单测防止宽弹窗和卡片式布局回归。
+- 个人资料页按原 UI 图回还紧凑名片样式：`Profile.vue` 恢复左侧头像叠加上传按钮、编辑表单和备注区，右侧改为头像、角色状态与图标信息卡预览；保留用户名、手机号、邮箱、机构、科室、备注、保存、刷新、头像上传和修改密码逻辑。
+- API Token 管理表格修复 Token 码列：slot 列补稳定 `token_hash` 列标识并默认开启列宽拖拽，单元格改为左侧 token 文本占剩余宽度、右侧显示/复制图标固定对齐，避免宽度充足时仍被固定 140px 截断。
+- 分身详情和编辑分身弹窗按 UI 图回修：详情页重做摘要区、基础信息分行样式、高级能力图标行和知识库授权空态；编辑页复用新增分身的头像上传、高级能力卡片，并抽出 `AvatarStyleSelector` 让新增/编辑共用沟通风格卡片；全局滚动条轨道改为透明、滑块复用主题色变量。
+- `PageFilter` 多行筛选的“展开/收起”按钮并入查询/重置操作列，操作区按按钮与展开控件整体估算宽度，避免用户管理筛选栏中展开入口脱离按钮盒子。
+- 按新增分身 UI 设计图继续回修向导细节：绑定范围下拉补前置图标并改为紧凑预览卡布局，基础信息头像支持移除且去除外层 body 边框，沟通风格卡补齐多色 icon 背景，高级能力配置恢复卡片间距、工具/技能 tag 配色和推理/模型纵向布局，确认预览补齐沟通风格 tag、高级配置图标间距、底部取消按钮与统一按钮尺寸，并将工具/技能多 tag 区域改为最多三行、透明轨道的横向滚动；共享组件单测覆盖头像移除事件。
+- 完成分身与用户 UI 统一计划落地：新增 `SectionTitle`、`ReadonlyDescription`、`AvatarUploadPanel`、`IdentitySummary`、`WizardStepper` 共享组件；统一分身详情/编辑/新增向导、科室工作台分身配置、个人资料、用户详情/新增/编辑样式；Chrome 验收覆盖 `/admin/avatars`、`/dept/avatar`、`/my/profile`、`/admin/users`，并通过 `pnpm exec vitest run tests/unit/avatarAdvancedConfig.test.ts tests/unit/uiSharedComponents.test.ts` 与 `pnpm verify`。
+- 制定分身与用户管理 UI 统一设计规格和实施计划：覆盖分身详情、新增分身 5 阶段、编辑分身、科室工作台分身配置、个人资料、用户详情、用户编辑、用户新增；设计图资产已落到 `docs/superpowers/specs/assets/2026-05-29-avatar-user-ui/`，计划明确共享组件、页面改造、单测、`pnpm verify` 与 Chrome 验收范围。
+- 分身配置新增高级能力配置区块：个人/科室/机构配置页、后台新增/编辑/详情支持工具、技能、推理引擎、模型配置，前端接入 `GET /tools`、`GET /engines`、`GET /models` 并同步 MSW mock、单元测试与 Chrome 验收清单。
+- 科室工作台分身配置 Chrome 验收确认高级配置区块、工具/技能选择器可用；当前线上 `PUT /api/v1/my/avatar` 对当前登录科室管理员返回 `分身不存在`，`PUT /api/v1/avatars/{id}` 返回 `doctor_id ... 不存在`，保存回显需后端修复 specialist 分身更新合同。
+- 二次对比飞书 Wiki「API设计」目录更新：确认 `3.2.3` / `3.2.4` / `3.2.5` 上次未落地，补齐 `GET /api/v1/tools`、`GET /api/v1/engines`、`GET /api/v1/models`；同步整理 §2.1.4-§2.1.9 分身配置、编辑、统计接口字段，修复旧的破损 JSON/表格占位。
+- 自飞书 Wiki「API设计」（`RjKPwTWUBivbaykfexbcBzaTnvb`，docx token `D53xdwU3aoPGDnxAQLicIHEjn1d`）同步本地 `docs/API设计.md`：补充分身列表/创建/详情接口中的 `user_id`、`tools`、`skills`、`algorithm`、`model` 与 `doctor_id` 示例；§4.4.2 召回详情补 `confidence`；§4.4.5/§4.4.6 按飞书示例更新召回响应中的 `count`、空 `answer` 和知识卡正文/关联文件字段。
 - 默认品牌统一为 `Mediverse Management`：中英文 `app.brandName`、浏览器初始标题、首屏加载页和 README 项目描述同步改名；主布局侧栏品牌区沿用 SH1 长文案方案，保持侧栏宽度不变并用单行省略和 tooltip 展示完整名称。
 - 召回历史隐藏 `confidence` 展示：历史列表不展示置信度列，选中历史详情回填时不带出置信度；实时召回结果仍按接口返回展示置信度。
 - 知识卡召回测试页迁移到 `src/views/shared/knowledge-recall-test/index.vue` 页面目录结构，结果展示、历史弹窗、详情弹窗拆为页面私有组件，卡片类型选择逻辑下沉为页面私有 composable，个人/科室/机构入口同步改为 `knowledge-recall-test/index.vue`。
@@ -50,6 +76,8 @@
 - 按飞书 Wiki「API设计」评论 `7642609880704240604` 同步 `docs/API设计.md`：§4.1.9 创建知识卡 Request 补 `json_content` 非必填说明，§4.1.9/§4.1.10 Response 将 `online_status` 标注为任务状态占位并注明 `creating` / `updating` 含义。
 - `DirectoryTree` 支持通过配置开启拖拽调整宽度与一键收起，文件管理页启用该能力；默认进入页面仍展示目录筛选条件，收起态保留明显的「目录」展开入口。
 - `PageTree` 支持通过配置开启拖拽调整宽度与一键收起，科室管理和用户管理页启用该能力，收起态保留明显展开入口。
+- 剩余公共组件文案收口：`RightToolbar`、`DirectoryTree`、`PageTree`、`SkillPanel`、主题切换按钮与 HTTP/session 错误兜底改为使用 i18n key，并补齐 icon-only 按钮可访问名称。
+- `DirectoryTree`、`PageTree` 与 `DirectoryTreeItem` 的折叠态、hover、active、滚动条和分支线样式改为使用主题变量，避免硬编码主色和亮/暗色背景。
 - `PageTable` 列配置弹窗改名为“列表设置”，并从单一显示勾选改为表格式配置行；每列可配置显示、列宽拖拽和固定位置，selection 列补齐“选择”名称，operation 列默认右固定。
 - `PageTable` 横向滚动宽度改为按当前可见列宽求和，不再使用 `max-content`，避免长文件名内容撑开列宽导致文件名列无法缩小。
 - 科室/机构文件管理表格取消文件名列左侧固定，并为文件名列开启拖拽调整宽度。

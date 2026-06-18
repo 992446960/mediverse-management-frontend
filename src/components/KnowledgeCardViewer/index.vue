@@ -168,40 +168,48 @@
           <a-tab-pane key="info" :tab="t('knowledge.card.tabInfo')">
             <div class="p-4 space-y-4">
               <div class="flex justify-between gap-3 border-b pb-2">
-                <span class="text-gray-500 shrink-0">{{ t('knowledge.card.columnTitle') }}</span>
+                <span class="text-(--color-text-secondary) shrink-0">{{
+                  t('knowledge.card.columnTitle')
+                }}</span>
                 <span class="font-medium text-(--color-text-base) text-right wrap-break-word">{{
                   card.title
                 }}</span>
               </div>
               <div class="flex justify-between border-b pb-2">
-                <span class="text-gray-500">{{ t('knowledge.card.cardId') }}</span>
+                <span class="text-(--color-text-secondary)">{{ t('knowledge.card.cardId') }}</span>
                 <span class="font-mono">{{ card.id }}</span>
               </div>
               <div class="flex justify-between border-b pb-2">
-                <span class="text-gray-500">{{ t('common.createdBy') }}</span>
+                <span class="text-(--color-text-secondary)">{{ t('common.createdBy') }}</span>
                 <span>{{ card.created_by_name }}</span>
               </div>
               <div class="flex justify-between border-b pb-2">
-                <span class="text-gray-500">{{ t('common.createdAt') }}</span>
+                <span class="text-(--color-text-secondary)">{{ t('common.createdAt') }}</span>
                 <span>{{ dayjs(card.created_at).format('YYYY-MM-DD HH:mm:ss') }}</span>
               </div>
               <div class="flex justify-between border-b pb-2">
-                <span class="text-gray-500">{{ t('common.updatedAt') }}</span>
+                <span class="text-(--color-text-secondary)">{{ t('common.updatedAt') }}</span>
                 <span>{{ dayjs(card.updated_at).format('YYYY-MM-DD HH:mm:ss') }}</span>
               </div>
               <div class="flex justify-between border-b pb-2">
-                <span class="text-gray-500">{{ t('knowledge.card.referenceCount') }}</span>
+                <span class="text-(--color-text-secondary)">{{
+                  t('knowledge.card.referenceCount')
+                }}</span>
                 <span>{{ card.reference_count }} {{ t('knowledge.card.times') }}</span>
               </div>
               <div
                 v-if="card.audit_status === 'rejected' && card.audit_reject_reason"
                 class="flex flex-col gap-2 border-b pb-2"
               >
-                <span class="text-gray-500">{{ t('knowledge.card.auditRejectReason') }}</span>
+                <span class="text-(--color-text-secondary)">{{
+                  t('knowledge.card.auditRejectReason')
+                }}</span>
                 <span class="text-red-500">{{ card.audit_reject_reason }}</span>
               </div>
               <div class="flex flex-col gap-2">
-                <span class="text-gray-500">{{ t('knowledge.card.tagsLabel') }}</span>
+                <span class="text-(--color-text-secondary)">{{
+                  t('knowledge.card.tagsLabel')
+                }}</span>
                 <div class="flex flex-wrap gap-1">
                   <a-tag v-for="tag in card.tags" :key="tag">#{{ tag }}</a-tag>
                 </div>

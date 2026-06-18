@@ -1,4 +1,5 @@
 import type { PaginationParams } from './api'
+import type { AvatarModelConfig, AvatarAdvancedEnabledItem } from './advancedConfig'
 
 /** 分身类型枚举值：全科 | 专科 | 专家，供多处复用（StepType、筛选、表格等） */
 export const AVATAR_TYPE_VALUES = ['general', 'specialist', 'expert'] as const
@@ -76,6 +77,11 @@ export interface Avatar {
   style: AvatarStyle
   /** style=custom 时的自定义风格文案 */
   style_custom?: string | null
+  tools?: AvatarAdvancedEnabledItem[]
+  skills?: AvatarAdvancedEnabledItem[]
+  algorithms?: AvatarAdvancedEnabledItem[]
+  algorithm?: string | null
+  model?: AvatarModelConfig | null
   status: 'active' | 'inactive'
   created_by: string
   created_at: string
@@ -122,6 +128,10 @@ export interface CreateAvatarParams {
   greeting?: string
   style?: AvatarStyle
   style_custom?: string
+  tools?: string[]
+  skills?: string[]
+  algorithm?: string | null
+  model?: AvatarModelConfig | null
 }
 
 /** 更新分身请求体（与 API PUT /avatars/:id 一致，字段可选） */
@@ -133,6 +143,10 @@ export interface UpdateAvatarParams {
   greeting?: string | null
   style?: AvatarStyle
   style_custom?: string | null
+  tools?: string[]
+  skills?: string[]
+  algorithm?: string | null
+  model?: AvatarModelConfig | null
   status?: 'active' | 'inactive'
 }
 
@@ -149,4 +163,8 @@ export interface AvatarWizardForm {
   greeting?: string
   style: AvatarStyle
   style_custom?: string
+  tools: string[]
+  skills: string[]
+  algorithm: string | null
+  model: AvatarModelConfig | null
 }

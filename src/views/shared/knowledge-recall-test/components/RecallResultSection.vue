@@ -1,11 +1,11 @@
 <template>
   <div
-    class="knowledge-recall-test__results relative rounded-md bg-white p-5 dark:bg-[--color-bg-container]"
+    class="knowledge-recall-test__results relative rounded-md bg-white p-5 dark:bg-(--color-bg-container)"
     :class="{ 'knowledge-recall-test__results--placeholder': !result }"
   >
     <div
       v-if="loading"
-      class="absolute inset-0 z-10 flex items-center justify-center rounded-md bg-white/80 dark:bg-[--color-bg-container]/80"
+      class="knowledge-recall-test__loading-mask absolute inset-0 z-10 flex items-center justify-center rounded-md"
       role="status"
       :aria-label="t('knowledge.recall.loading')"
     >
@@ -19,9 +19,7 @@
     </div>
 
     <div v-else-if="result" class="space-y-4">
-      <section
-        class="rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900"
-      >
+      <section class="knowledge-recall-test__result-card rounded-md border p-4 shadow-sm">
         <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
           <h2 class="m-0 flex items-center gap-2 text-base font-semibold text-(--color-text-base)">
             <MessageOutlined class="text-primary" />
@@ -41,9 +39,7 @@
         </div>
       </section>
 
-      <section
-        class="rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900"
-      >
+      <section class="knowledge-recall-test__result-card rounded-md border p-4 shadow-sm">
         <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
           <h2 class="m-0 flex items-center gap-2 text-base font-semibold text-(--color-text-base)">
             <FileTextOutlined class="text-primary" />
@@ -62,7 +58,7 @@
           <article
             v-for="source in result.sources"
             :key="source.id"
-            class="cursor-pointer rounded-md border border-slate-200 p-3 transition-colors hover:border-primary hover:bg-(--ant-color-fill-tertiary) dark:border-slate-800"
+            class="knowledge-recall-test__source-card cursor-pointer rounded-md border p-3 transition-colors hover:border-primary hover:bg-(--ant-color-fill-tertiary)"
             role="button"
             tabindex="0"
             :aria-label="`${t('knowledge.recall.viewCardDetail')}: ${source.title}`"
@@ -137,6 +133,16 @@ function formatScore(score: number | null) {
   overflow-wrap: break-word;
   color: var(--color-text-base);
   line-height: 1.7;
+}
+
+.knowledge-recall-test__loading-mask {
+  background: color-mix(in srgb, var(--color-bg-container) 80%, transparent);
+}
+
+.knowledge-recall-test__result-card,
+.knowledge-recall-test__source-card {
+  border-color: var(--color-border);
+  background: var(--color-bg-container);
 }
 
 .knowledge-recall-test__answer-body :deep(p:last-child),

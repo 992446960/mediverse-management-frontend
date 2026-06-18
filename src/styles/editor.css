@@ -1,0 +1,45 @@
+.knowledge-card-markdown-editor.md-editor,
+.knowledge-card-markdown-editor.md-editor-dark {
+  --md-color: var(--color-text-base);
+  --md-hover-color: var(--color-text-base);
+  --md-bk-color: var(--color-bg-container);
+  --md-bk-color-outstand: var(--color-bg-elevated);
+  --md-bk-hover-color: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  --md-border-color: var(--color-border);
+  --md-border-hover-color: var(--color-primary);
+  --md-border-active-color: var(--color-primary);
+  --md-scrollbar-bg-color: transparent;
+  --md-scrollbar-thumb-color: color-mix(in srgb, var(--color-border) 70%, transparent);
+  --md-scrollbar-thumb-hover-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
+  --md-scrollbar-thumb-active-color: color-mix(in srgb, var(--color-primary) 60%, transparent);
+
+  background-color: var(--color-bg-container);
+  border-color: var(--color-border);
+  color: var(--color-text-base);
+}
+
+.knowledge-card-markdown-editor .md-editor-toolbar-wrapper,
+.knowledge-card-markdown-editor .md-editor-footer {
+  background-color: var(--color-bg-container);
+  border-color: var(--color-border);
+}
+
+.knowledge-card-markdown-editor .md-editor-content,
+.knowledge-card-markdown-editor .md-editor-content-wrapper,
+.knowledge-card-markdown-editor .md-editor-input-wrapper,
+.knowledge-card-markdown-editor .cm-editor,
+.knowledge-card-markdown-editor .cm-scroller {
+  background-color: var(--color-bg-container);
+  color: var(--color-text-base);
+}
+
+.knowledge-card-markdown-editor .cm-gutters {
+  background-color: var(--color-bg-container);
+  border-color: var(--color-border);
+  color: var(--color-text-tertiary);
+}
+
+.knowledge-card-markdown-editor .cm-activeLine,
+.knowledge-card-markdown-editor .cm-activeLineGutter {
+  background-color: color-mix(in srgb, var(--color-primary) 8%, transparent);
+}

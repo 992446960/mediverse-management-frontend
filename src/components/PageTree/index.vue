@@ -129,8 +129,8 @@
         v-if="resizable"
         type="button"
         class="page-tree__resize-handle"
-        title="可拖拽调整宽度，双击恢复默认宽度"
-        aria-label="拖拽调整筛选树宽度"
+        :title="t('common.resizePanelHint')"
+        :aria-label="t('common.resizeTreeWidth')"
         @pointerdown="startResize"
         @dblclick="resetWidth"
       >
@@ -139,11 +139,12 @@
         <span />
       </button>
 
-      <a-tooltip v-if="collapsible" title="收起">
+      <a-tooltip v-if="collapsible" :title="t('common.collapse')">
         <button
           type="button"
           class="page-tree__collapse-button"
-          aria-label="收起筛选树"
+          :aria-label="t('common.collapseTree')"
+          @pointerdown.stop="collapsePanel"
           @click="collapsePanel"
         >
           <CaretLeftOutlined />
@@ -151,15 +152,19 @@
       </a-tooltip>
     </template>
 
-    <a-tooltip v-else :title="`点击展开${collapsedLabel}`" placement="right">
+    <a-tooltip
+      v-else
+      :title="t('common.expandPanelHint', { label: resolvedCollapsedLabel })"
+      placement="right"
+    >
       <button
         type="button"
         class="page-tree__collapsed-entry"
-        :aria-label="`展开${collapsedLabel}`"
+        :aria-label="t('common.expandPanel', { label: resolvedCollapsedLabel })"
         @click="expandPanel"
       >
         <BankOutlined class="page-tree__collapsed-icon" />
-        <span class="page-tree__collapsed-text">{{ collapsedLabel }}</span>
+        <span class="page-tree__collapsed-text">{{ resolvedCollapsedLabel }}</span>
         <span class="page-tree__collapsed-action">
           <RightOutlined />
         </span>
@@ -177,6 +182,7 @@ import {
   BankOutlined,
   RightOutlined,
 } from '@ant-design/icons-vue'
+import { useI18n } from 'vue-i18n'
 import { TABLE_TREE_HEIGHT_CALC } from '@/constants/layout'
 import { tableTreeIconMap } from './icons'
 import type { TableTreeNode, TableTreeClickPayload } from './types'
@@ -235,12 +241,14 @@ const props = withDefaults(defineProps<Props>(), {
   minWidth: MIN_TREE_WIDTH,
   maxWidth: MAX_TREE_WIDTH,
   collapsedWidth: COLLAPSED_TREE_WIDTH,
-  collapsedLabel: '筛选',
+  collapsedLabel: '',
 })
 
 /** 根节点样式：固定高度以让内部 overflow 滚动生效，避免 flex-1 导致滚动失效 */
+const { t } = useI18n()
 const tableTreeStyle = computed(() => ({ height: props.maxHeight }))
 const canRefresh = computed(() => typeof props.fetchData === 'function')
+const resolvedCollapsedLabel = computed(() => props.collapsedLabel || t('common.filterTree'))
 const collapsed = ref(false)
 const resizing = ref(false)
 const panelWidth = ref(clampWidth(props.defaultWidth))
@@ -386,6 +394,20 @@ function onNodeClick(node: TableTreeNode, level: TableTreeClickPayload['level'])
 
 <style scoped lang="scss">
 .page-tree-shell {
+  --tree-control-bg: var(--color-bg-container);
+  --tree-control-color: var(--color-text-tertiary);
+  --tree-control-hover-bg: color-mix(in srgb, var(--color-primary) 9%, var(--color-bg-container));
+  --tree-primary-hover-bg: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  --tree-primary-soft-bg: color-mix(in srgb, var(--color-primary) 5%, transparent);
+  --tree-primary-border: color-mix(in srgb, var(--color-primary) 35%, transparent);
+  --tree-primary-border-muted: color-mix(in srgb, var(--color-primary) 28%, transparent);
+  --tree-primary-border-hover: color-mix(in srgb, var(--color-primary) 55%, transparent);
+  --tree-primary-border-strong: color-mix(in srgb, var(--color-primary) 70%, transparent);
+  --tree-scrollbar-thumb: var(--color-border);
+  --tree-branch-line: var(--color-border);
+  --tree-primary-shadow: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  --tree-primary-shadow-strong: color-mix(in srgb, var(--color-primary) 14%, transparent);
+
   position: relative;
   display: flex;
   flex: 0 0 auto;
@@ -416,7 +438,7 @@ function onNodeClick(node: TableTreeNode, level: TableTreeClickPayload['level'])
   gap: 3px;
   border: 0;
   background: transparent;
-  color: #94a3b8;
+  color: var(--tree-control-color);
   transition:
     color 0.16s ease,
     background-color 0.16s ease;
@@ -424,7 +446,7 @@ function onNodeClick(node: TableTreeNode, level: TableTreeClickPayload['level'])
 
 .page-tree__resize-handle:hover,
 .page-tree-shell.is-resizing .page-tree__resize-handle {
-  background: linear-gradient(90deg, transparent, rgb(14 165 233 / 0.08), transparent);
+  background: linear-gradient(90deg, transparent, var(--tree-primary-hover-bg), transparent);
   color: var(--color-primary);
 }
 
@@ -438,7 +460,7 @@ function onNodeClick(node: TableTreeNode, level: TableTreeClickPayload['level'])
 .page-tree__collapse-button {
   position: absolute;
   top: 50%;
-  right: -20px;
+  right: -12px;
   z-index: 4;
   display: flex;
   width: 24px;
@@ -446,9 +468,9 @@ function onNodeClick(node: TableTreeNode, level: TableTreeClickPayload['level'])
   transform: translateY(-50%);
   align-items: center;
   justify-content: center;
-  border: 1px solid rgb(14 165 233 / 0.28);
+  border: 1px solid var(--tree-primary-border-muted);
   border-radius: 999px;
-  background: #fff;
+  background: var(--tree-control-bg);
   color: var(--color-primary);
   box-shadow: 0 8px 20px rgb(15 23 42 / 0.08);
   transition:
@@ -458,9 +480,9 @@ function onNodeClick(node: TableTreeNode, level: TableTreeClickPayload['level'])
 }
 
 .page-tree__collapse-button:hover {
-  border-color: rgb(14 165 233 / 0.55);
-  background: #f0f9ff;
-  box-shadow: 0 10px 24px rgb(14 165 233 / 0.16);
+  border-color: var(--tree-primary-border-hover);
+  background: var(--tree-control-hover-bg);
+  box-shadow: 0 10px 24px var(--tree-primary-shadow);
 }
 
 .page-tree__collapsed-entry {
@@ -474,9 +496,11 @@ function onNodeClick(node: TableTreeNode, level: TableTreeClickPayload['level'])
   align-items: center;
   justify-content: flex-start;
   gap: 10px;
-  border: 1px solid rgb(14 165 233 / 0.35);
+  border: 1px solid var(--tree-primary-border);
   border-radius: 10px;
-  background: linear-gradient(180deg, rgb(240 249 255 / 0.96), #fff 38%), #fff;
+  background:
+    linear-gradient(180deg, var(--tree-control-hover-bg), var(--tree-control-bg) 38%),
+    var(--tree-control-bg);
   color: var(--color-primary);
   box-shadow: 0 8px 24px rgb(15 23 42 / 0.06);
   padding: 18px 0;
@@ -486,8 +510,8 @@ function onNodeClick(node: TableTreeNode, level: TableTreeClickPayload['level'])
 }
 
 .page-tree__collapsed-entry:hover {
-  border-color: rgb(14 165 233 / 0.7);
-  box-shadow: 0 12px 28px rgb(14 165 233 / 0.14);
+  border-color: var(--tree-primary-border-strong);
+  box-shadow: 0 12px 28px var(--tree-primary-shadow-strong);
 }
 
 .page-tree__collapsed-icon {
@@ -512,9 +536,9 @@ function onNodeClick(node: TableTreeNode, level: TableTreeClickPayload['level'])
   transform: translateY(-50%);
   align-items: center;
   justify-content: center;
-  border: 1px solid rgb(14 165 233 / 0.35);
+  border: 1px solid var(--tree-primary-border);
   border-radius: 999px;
-  background: #fff;
+  background: var(--tree-control-bg);
   box-shadow: 0 8px 20px rgb(15 23 42 / 0.1);
 }
 
@@ -528,16 +552,16 @@ function onNodeClick(node: TableTreeNode, level: TableTreeClickPayload['level'])
   width: 4px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #e2e8f0;
+  background: var(--tree-scrollbar-thumb);
   border-radius: 10px;
 }
 .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #475569;
+  background: var(--tree-scrollbar-thumb);
 }
 .institution-item-active {
-  background-color: rgb(14 165 233 / 0.05);
-  color: #0ea5e9;
-  border-left-color: #0ea5e9 !important;
+  background-color: var(--tree-primary-soft-bg);
+  color: var(--color-primary);
+  border-left-color: var(--color-primary) !important;
   font-weight: 700;
 }
 .branch-connector {
@@ -550,10 +574,10 @@ function onNodeClick(node: TableTreeNode, level: TableTreeClickPayload['level'])
   top: 0;
   bottom: 0;
   width: 1px;
-  background-color: #e2e8f0;
+  background-color: var(--tree-branch-line);
 }
 .dark .branch-connector::before {
-  background-color: #334155;
+  background-color: var(--tree-branch-line);
 }
 .branch-item::after {
   content: '';
@@ -562,9 +586,9 @@ function onNodeClick(node: TableTreeNode, level: TableTreeClickPayload['level'])
   top: 50%;
   width: 12px;
   height: 1px;
-  background-color: #e2e8f0;
+  background-color: var(--tree-branch-line);
 }
 .dark .branch-item::after {
-  background-color: #334155;
+  background-color: var(--tree-branch-line);
 }
 </style>

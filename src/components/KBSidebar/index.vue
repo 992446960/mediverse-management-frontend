@@ -1,6 +1,8 @@
 <template>
-  <div class="kb-sidebar h-full flex flex-col border-r border-gray-200 bg-white">
-    <div class="p-4 border-b border-gray-200">
+  <div
+    class="kb-sidebar h-full flex flex-col border-r border-(--color-border) bg-(--color-bg-container)"
+  >
+    <div class="p-4 border-b border-(--color-border)">
       <a-button type="primary" block @click="createNewSession">
         <template #icon><PlusOutlined /></template>
         {{ t('knowledgeSearch.newSearch') }}
@@ -19,7 +21,9 @@
           :key="key"
           class="mb-4"
         >
-          <div class="px-3 py-2 text-xs text-gray-500 font-medium uppercase tracking-wider">
+          <div
+            class="px-3 py-2 text-xs text-(--color-text-secondary) font-medium uppercase tracking-wider"
+          >
             {{ groupLabel(key) }}
           </div>
           <div
@@ -28,8 +32,8 @@
             class="group flex items-center px-3 py-2 rounded-lg cursor-pointer transition-colors"
             :class="
               currentSessionId === session.id
-                ? 'bg-blue-50 text-blue-600'
-                : 'hover:bg-gray-100 text-gray-700'
+                ? 'bg-primary/10 text-primary'
+                : 'hover:bg-(--color-bg-layout) text-(--color-text-base)'
             "
             @click="selectSession(session.id)"
           >
@@ -38,7 +42,9 @@
             </div>
             <div class="opacity-0 group-hover:opacity-100 transition-opacity ml-2">
               <a-dropdown :trigger="['click']" @click.stop>
-                <EllipsisOutlined class="text-gray-400 hover:text-gray-600" />
+                <EllipsisOutlined
+                  class="text-(--color-text-tertiary) hover:text-(--color-text-secondary)"
+                />
                 <template #overlay>
                   <a-menu>
                     <a-menu-item key="delete" danger @click="deleteSession(session.id)">

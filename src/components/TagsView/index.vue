@@ -274,13 +274,13 @@ watch(
 
 /* 激活状态：主题色背景 + 白色圆点（参考 jkjn） */
 .tags-view-item.active {
-  color: #fff;
+  color: var(--color-text-on-primary);
   border-color: var(--color-primary, #0ea5e9);
 }
 
 .tags-view-item.active::before {
   content: '';
-  background: #fff;
+  background: var(--color-text-on-primary);
   flex-shrink: 0;
   width: 8px;
   height: 8px;

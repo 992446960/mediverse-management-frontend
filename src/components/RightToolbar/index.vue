@@ -1,19 +1,23 @@
 <template>
   <div class="right-toolbar">
     <slot />
-    <a-tooltip v-if="showSearch !== undefined" title="搜索">
-      <a-button type="text" @click="$emit('update:showSearch', !showSearch)">
+    <a-tooltip v-if="showSearch !== undefined" :title="t('common.search')">
+      <a-button
+        type="text"
+        :aria-label="t('common.search')"
+        @click="$emit('update:showSearch', !showSearch)"
+      >
         <template #icon><SearchOutlined /></template>
       </a-button>
     </a-tooltip>
-    <a-tooltip title="刷新">
-      <a-button type="text" @click="$emit('refresh')">
+    <a-tooltip :title="t('common.refresh')">
+      <a-button type="text" :aria-label="t('common.refresh')" @click="$emit('refresh')">
         <template #icon><ReloadOutlined /></template>
       </a-button>
     </a-tooltip>
-    <a-tooltip title="列表设置">
+    <a-tooltip :title="t('common.columnSettings')">
       <a-popover trigger="click" placement="bottomRight">
-        <a-button type="text">
+        <a-button type="text" :aria-label="t('common.columnSettings')">
           <template #icon><SettingOutlined /></template>
         </a-button>
         <template #content>
@@ -37,6 +41,7 @@
 
 <script setup lang="ts">
 import { SearchOutlined, ReloadOutlined, SettingOutlined } from '@ant-design/icons-vue'
+import { useI18n } from 'vue-i18n'
 
 interface ColumnInfo {
   prop?: string
@@ -55,6 +60,8 @@ defineEmits<{
   'update:visibleColumns': [value: string[]]
   refresh: []
 }>()
+
+const { t } = useI18n()
 </script>
 
 <style scoped lang="scss">

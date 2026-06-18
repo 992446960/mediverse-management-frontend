@@ -146,15 +146,23 @@ onMounted(fetchStats)
 @reference "../../styles/index.css";
 
 .stats-card {
-  @apply p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700;
+  padding: 1.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-container);
+  box-shadow: var(--shadow-sm);
 }
 
 .stats-title {
-  @apply text-base font-bold mb-6 text-gray-800 dark:text-gray-200;
+  margin-bottom: 1.5rem;
+  color: var(--color-text-base);
+  font-size: 1rem;
+  font-weight: 700;
 }
 
 .stat-label {
-  @apply text-xs text-gray-400 dark:text-gray-500;
+  color: var(--color-text-tertiary);
+  font-size: 0.75rem;
 }
 
 .stat-icon {
@@ -166,7 +174,13 @@ onMounted(fetchStats)
 }
 
 .stat-item {
-  @apply pb-4 border-b border-gray-50 dark:border-gray-700 last:border-0 last:pb-0;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border-secondary);
+}
+
+.stat-item:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
 }
 
 .stat-icon--progress {
@@ -174,11 +188,15 @@ onMounted(fetchStats)
 }
 
 .knowledge-progress-meta {
-  @apply text-xs text-gray-500 dark:text-gray-400 mb-2;
+  margin-bottom: 0.5rem;
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
 }
 
 .knowledge-progress-pct {
-  @apply ml-2 font-mono text-gray-700 dark:text-gray-300;
+  margin-left: 0.5rem;
+  color: var(--color-text-base);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
 }
 
 .knowledge-progress-bar {

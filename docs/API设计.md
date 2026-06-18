@@ -783,6 +783,7 @@ GET /api/v1/avatars  参数新增user_id（非必填）
 | org_id | string | ❌ | 按机构过滤 |
 | dept_id | string | ❌ | 按科室过滤 |
 | type | string | ❌ | general / specialist / expert |
+| user_id | string | ❌ | 按用户过滤 |
 | keyword | string | ❌ | 名称模糊搜索 |
 | status | string | ❌ | active / inactive |
 | page | int | ❌ | 默认 1 |
@@ -796,24 +797,58 @@ GET /api/v1/avatars  参数新增user_id（非必填）
 {
 "items": [
 {
-"id": "uuid",
+"id": "4982ebac-c200-474e-b543-2cf64ffe6691",
 "type": "expert",
-"org_id": "uuid",
-"org_name": "XX 医院",
-"dept_id": "uuid",
-"dept_name": "内科",
-"user_id": "uuid",
-"user_name": "张三",
-"name": "张医生分身",
-"avatar_url": "https://...",
-"bio": "从事内科临床工作 20 年...",
-"tags": ["内科", "高血压", "糖尿病"],
-"greeting": "您好，我是张医生...",
+"org_id": "34f86d7e-229d-4dc5-bd40-c70ba914243a",
+"org_name": "AI创新研究院",
+"dept_id": "7618117e-fcbb-4b28-809d-db84a24031e4",
+"dept_name": "前端开发部门",
+"user_id": "90cfbdba-e55d-42f7-be0f-712d75ff7d48",
+"user_name": "xx",
+"name": "xxx",
+"avatar_url": "https://minio.example.com/bucket/path",
+"bio": null,
+"tags": [],
+"greeting": "hello",
 "style": "formal",
+"style_custom": null,
 "status": "active",
-"created_by": "uuid",
-"created_at": "2026-01-01T00:00:00Z",
-"updated_at": "2026-01-01T00:00:00Z"
+"doctor_id": "doc_ff5f3029b94344c3",
+"tools": [
+{
+"name": "web_fetch",
+"enabled": true
+},
+{
+"name": "tts",
+"enabled": true
+}
+],
+"skills": [
+{
+"name": "1password",
+"enabled": true
+},
+{
+"name": "apple-reminders",
+"enabled": true
+}
+],
+"subagents": [],
+"algorithms": [
+{
+"name": "数字医生核心推理引擎",
+"enabled": true
+}
+],
+"algorithm": "数字医生核心推理引擎",
+"model": {
+"model_id": "deepseek-v4-flash",
+"provider": "deepseek"
+},
+"created_by": "03093fe2-cfb7-4a63-b1ec-033ffb7e6794",
+"created_at": "2026-05-27T06:46:53.247429Z",
+"updated_at": "2026-05-27T06:46:53.247429Z"
 }
 ]
 }
@@ -828,17 +863,31 @@ POST /api/v1/avatars
 
 ```json
 {
-"type": "expert",
-"org_id": "uuid",
-"dept_id": "uuid",
-"user_id": "uuid",
-"name": "张医生分身",
-"avatar_url": "https://...",
-"bio": "从事内科临床工作 20 年...",
-"tags": ["内科", "高血压"],
-"greeting": "您好，我是张医生，请问有什么可以帮助您？",
+"type": "string",
+"org_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+"dept_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+"user_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+"name": "string",
+"avatar_url": "string",
+"bio": "string",
+"tags": [
+"string"
+],
+"greeting": "string",
 "style": "formal",
-"style_custom": null
+"style_custom": "string",
+"status": "active",
+"tools": [
+"string"
+],
+"skills": [
+"string"
+],
+"algorithm": "string",
+"model": {
+"provider": "string",
+"model_id": "string"
+}
 }
 ```
 
@@ -857,6 +906,17 @@ POST /api/v1/avatars
 | style | string | ❌ | formal（默认）/ friendly / concise / detailed / custom |
 | style_custom | string | 条件 | style=custom 时必填，最多 100 字 |
 
+**Responses**
+
+
+```json
+{
+"code": 0,
+"message": "ok",
+"data": {}
+}
+```
+
 
 ##### 2.1.3 查询分身详情
 
@@ -864,23 +924,71 @@ POST /api/v1/avatars
 GET /api/v1/avatars/{id}
 ```
 
-**Response data：返回完整分身对象（同 2.1.2 items 单条），另附**
+**Parameters**
+
+id: 分身 id
+
+**Response**
 
 
 ```json
 {
-"...": "同 2.1.2 的字段",
-"knowledge_grants": [
+"code": 0,
+"message": "ok",
+"data": {
+"id": "4982ebac-c200-474e-b543-2cf64ffe6691",
+"type": "expert",
+"org_id": "34f86d7e-229d-4dc5-bd40-c70ba914243a",
+"org_name": "AI创新研究院",
+"dept_id": "7618117e-fcbb-4b28-809d-db84a24031e4",
+"dept_name": "前端开发部门",
+"user_id": "90cfbdba-e55d-42f7-be0f-712d75ff7d48",
+"user_name": "余洋",
+"name": "余主任数字分身",
+"avatar_url": "https://minio.example.com/bucket/path",
+"bio": null,
+"tags": [],
+"greeting": "hello",
+"style": "formal",
+"style_custom": null,
+"status": "active",
+"doctor_id": "doc_ff5f3029b94344c3",
+"tools": [
 {
-"id": "uuid",
-"scope_type": "dept",
-"scope_id": "uuid",
-"scope_name": "内科",
-"granted_by": "uuid",
-"granted_by_name": "张三",
-"granted_at": "2026-01-01T00:00:00Z"
+"name": "web_fetch",
+"enabled": true
+},
+{
+"name": "tts",
+"enabled": true
 }
-]
+],
+"skills": [
+{
+"name": "1password",
+"enabled": true
+},
+{
+"name": "apple-reminders",
+"enabled": true
+}
+],
+"subagents": [],
+"algorithms": [
+{
+"name": "数字医生核心推理引擎",
+"enabled": true
+}
+],
+"algorithm": "数字医生核心推理引擎",
+"model": {
+"model_id": "deepseek-v4-flash",
+"provider": "deepseek"
+},
+"created_by": "03093fe2-cfb7-4a63-b1ec-033ffb7e6794",
+"created_at": "2026-05-27T06:46:53.247429Z",
+"updated_at": "2026-05-27T06:46:53.247429Z"
+}
 }
 ```
 
@@ -890,7 +998,63 @@ GET /api/v1/avatars/{id}
 ```http
 GET /api/v1/my/avatar
 ```
-返回当前登录用户的专家分身（含配置），格式同 2.1.3。
+获取当前登录用户可用的分身配置；未配置时 `data` 可为 `null`。
+
+**Response data**
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "type": "expert",
+    "org_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "org_name": "string",
+    "dept_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "dept_name": "string",
+    "user_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "user_name": "string",
+    "name": "string",
+    "avatar_url": "https://minio.example.com/bucket/path",
+    "bio": "string",
+    "tags": ["string"],
+    "greeting": "string",
+    "style": "formal",
+    "style_custom": null,
+    "status": "active",
+    "doctor_id": "doc_xxxxxxxxxxxxxxxx",
+    "tools": [
+      {
+        "name": "web_fetch",
+        "enabled": true
+      }
+    ],
+    "skills": [
+      {
+        "name": "knowledge-retrieval",
+        "enabled": true
+      }
+    ],
+    "subagents": [],
+    "algorithms": [
+      {
+        "name": "数字医生核心推理引擎",
+        "enabled": true
+      }
+    ],
+    "algorithm": "数字医生核心推理引擎",
+    "model": {
+      "provider": "deepseek",
+      "model_id": "deepseek-v4-flash"
+    },
+    "created_by": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "created_at": "2026-05-27T06:46:53.247429Z",
+    "updated_at": "2026-05-27T06:46:53.247429Z",
+    "knowledge_grants": []
+  }
+}
+```
 
 
 ##### 2.1.5 分身编辑接口
@@ -898,21 +1062,51 @@ GET /api/v1/my/avatar
 ```http
 PUT /api/v1/my/avatar
 ```
-仅允许更新以下字段：
+更新当前登录用户自己的分身。
+
+**Request Body（所有字段可选，仅传需修改字段）**
 
 
 ```json
 {
-"name": "string",
-"bio": "...",
-"tags": ["..."],
-"greeting": "...",
-"style": "friendly",
-"style_custom": null,
-"status":"str"
-"avatar_url": "https://..."
+  "type": "expert",
+  "name": "string",
+  "bio": "string",
+  "tags": ["string"],
+  "greeting": "string",
+  "style": "friendly",
+  "style_custom": null,
+  "avatar_url": "https://minio.example.com/bucket/path",
+  "status": "active",
+  "tools": ["web_fetch"],
+  "skills": ["knowledge-retrieval"],
+  "algorithm": "数字医生核心推理引擎",
+  "model": {
+    "provider": "deepseek",
+    "model_id": "deepseek-v4-flash"
+  }
 }
 ```
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| type | string | ❌ | 分身类型 |
+| name | string | ❌ | 分身名称，最多 100 字 |
+| bio | string | ❌ | 简介，最多 500 字 |
+| tags | string[] | ❌ | 标签 |
+| greeting | string | ❌ | 开场白，最多 200 字 |
+| style | string | ❌ | formal / friendly / concise / detailed / custom |
+| style_custom | string | ❌ | style=custom 时传入 |
+| avatar_url | string | ❌ | 头像 URL |
+| status | string | ❌ | active / inactive |
+| tools | string[] | ❌ | 工具 `name` 列表，下游默认 `enabled=true` |
+| skills | string[] | ❌ | 技能 `name` 列表，下游默认 `enabled=true` |
+| algorithm | string | ❌ | 单个算法引擎 `name` |
+| model | object | ❌ | `{ provider, model_id }`，可附带 `max_tokens`、`temperature` |
+
+**Response data**
+
+返回更新后的完整分身对象，格式同 2.1.4。
 
 
 ##### 2.1.6 我的分身统计
@@ -926,15 +1120,19 @@ GET /api/v1/my/avatar/stats
 
 ```json
 {
-"total_sessions": 1238,
-"today_sessions": 12,
-"today_token":"string",
-"all_token":"string",
-"knowledge_progress": {
-"indexed_files": 156,
-"total_files": 190,
-"percentage": 82.1
-}
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "total_sessions": 1238,
+    "today_sessions": 12,
+    "today_token": "string",
+    "all_token": "string",
+    "knowledge_progress": {
+      "indexed_files": 156,
+      "total_files": 190,
+      "percentage": 82.1
+    }
+  }
 }
 ```
 
@@ -942,22 +1140,35 @@ GET /api/v1/my/avatar/stats
 ##### 2.1.7 我的分身统计2.0
 
 ```http
-GET /api/v1/my/avatar/stats/{owner_type}/{owner_id}（根据owner_type类型使用不同的owner_id查询分身统计数据）
+GET /api/v1/my/avatar/stats/{owner_type}/{owner_id}
 ```
-作用：用于多角色用户进入不同角色工作台获取对应分身统计数据
+根据 `owner_type` 类型使用不同的 `owner_id` 查询分身统计数据，用于多角色用户进入不同角色工作台获取对应分身统计数据。
+
+**Parameters**
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| owner_type | string | ✅ | personal / dept / org |
+| owner_id | string(uuid) | ✅ | personal 对应 user_id，dept 对应 dept_id，org 对应 org_id |
+
+**Response data**
 
 
 ```json
 {
-"total_sessions": 1238,
-"today_sessions": 12,
-"today_token":"string",
-"all_token":"string",
-"knowledge_progress": {
-"indexed_files": 156,
-"total_files": 190,
-"percentage": 82.1
-}
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "total_sessions": 1238,
+    "today_sessions": 12,
+    "today_token": "string",
+    "all_token": "string",
+    "knowledge_progress": {
+      "indexed_files": 156,
+      "total_files": 190,
+      "percentage": 82.1
+    }
+  }
 }
 ```
 
@@ -965,18 +1176,45 @@ GET /api/v1/my/avatar/stats/{owner_type}/{owner_id}（根据owner_type类型使�
 ##### 2.1.8 我的分身配置2.0
 
 ```http
-GET /api/v1/my/avatar/{owner_type}/{owner_id}（根据owner_type类型使用不同的owner_id查询分身配置数据）
-作用：用于多角色用户进入不同角色工作台获取对应分身配置数据
+GET /api/v1/my/avatar/{owner_type}/{owner_id}
 ```
+根据 `owner_type` 类型使用不同的 `owner_id` 查询分身配置数据，用于多角色用户进入不同角色工作台获取对应分身配置数据。
+
+**Parameters**
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| owner_type | string | ✅ | personal / dept / org |
+| owner_id | string(uuid) | ✅ | personal 对应 user_id，dept 对应 dept_id，org 对应 org_id |
+
+**Response data**
 
 ```json
 {
-"bio": "...",
-"tags": ["..."],
-"greeting": "...",
-"style": "friendly",
-"style_custom": null,
-"avatar_url": "https://..."
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "type": "expert",
+    "name": "string",
+    "avatar_url": "https://minio.example.com/bucket/path",
+    "bio": "string",
+    "tags": ["string"],
+    "greeting": "string",
+    "style": "friendly",
+    "style_custom": null,
+    "status": "active",
+    "doctor_id": "doc_xxxxxxxxxxxxxxxx",
+    "tools": [],
+    "skills": [],
+    "subagents": [],
+    "algorithms": [],
+    "algorithm": null,
+    "model": null,
+    "knowledge_grants": [],
+    "created_at": "2026-05-27T06:46:53.247429Z",
+    "updated_at": "2026-05-27T06:46:53.247429Z"
+  }
 }
 ```
 
@@ -990,8 +1228,32 @@ PUT /api/v1/avatars/{id}
 **Query Parameters**
 
 
-| Python<br>id：必填（分身id）<br>{<br>  "name": "string",非必填<br>  "bio": "string",非必填<br>  "tags": [<br>    "string"<br>  ],非必填<br>  "greeting": "string",非必填<br>  "style": "string",非必填<br>  "style_custom": "string",非必填<br>  "avatar_url": "string"，非必填<br>  "status":"str"<br>} |
-| --- |
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| id | string(uuid) | ✅ | 分身 ID |
+
+**Request Body（所有字段可选，仅传需修改字段）**
+
+```json
+{
+  "type": "expert",
+  "name": "string",
+  "bio": "string",
+  "tags": ["string"],
+  "greeting": "string",
+  "style": "friendly",
+  "style_custom": null,
+  "avatar_url": "https://minio.example.com/bucket/path",
+  "status": "active",
+  "tools": ["web_fetch"],
+  "skills": ["knowledge-retrieval"],
+  "algorithm": "数字医生核心推理引擎",
+  "model": {
+    "provider": "deepseek",
+    "model_id": "deepseek-v4-flash"
+  }
+}
+```
 
 
 **Response data**
@@ -1011,7 +1273,7 @@ PUT /api/v1/avatars/{id}
 "user_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
 "user_name": "string",
 "name": "string",
-"avatar_url": "string",
+"avatar_url": "https://minio.example.com/bucket/path",
 "bio": "string",
 "tags": [
 "string"
@@ -1020,6 +1282,31 @@ PUT /api/v1/avatars/{id}
 "style": "string",
 "style_custom": "string",
 "status": "string",
+"doctor_id": "doc_xxxxxxxxxxxxxxxx",
+"tools": [
+{
+"name": "web_fetch",
+"enabled": true
+}
+],
+"skills": [
+{
+"name": "knowledge-retrieval",
+"enabled": true
+}
+],
+"subagents": [],
+"algorithms": [
+{
+"name": "数字医生核心推理引擎",
+"enabled": true
+}
+],
+"algorithm": "数字医生核心推理引擎",
+"model": {
+"provider": "deepseek",
+"model_id": "deepseek-v4-flash"
+},
 "created_by": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
 "created_at": "2026-03-16T07:24:07.905Z",
 "updated_at": "2026-03-16T07:24:07.905Z",
@@ -1455,7 +1742,7 @@ DELETE /api/v1/chat/sessions/kb-search/by-user
 | --- |
 
 
-#### 3.2 数字医生技能管理
+#### 3.2 Digital-Doctor-Config
 
 
 ##### 3.2.1 查询技能列表
@@ -1464,25 +1751,25 @@ DELETE /api/v1/chat/sessions/kb-search/by-user
 GET /api/v1/skills
 ```
 
-无 Query Parameters（直接返回全部）
+代理下游数字医生 `GET /v1/config/skills`，响应体原样透传（含 `total`）。
 
+无 Query Parameters。
 
-**Response data（数组）**
+**Response data**
 
 
 ```json
-[
 {
-"skill_code": "knowledge-retrieval",
-"title": "知识库检索",
-"description": "自动检索关联的医学指南和文献。",
-"args_schema": {
-"type": "object",
-"properties": {},
-"required": []
+  "code": 0,
+  "message": "ok",
+  "total": 1,
+  "data": [
+    {
+      "name": "knowledge-retrieval",
+      "description": "自动检索关联的医学指南和文献。"
+    }
+  ]
 }
-}
-]
 ```
 
 
@@ -1604,6 +1891,128 @@ data: {"type":"error","code":50002,"message":"AI 服务暂时不可用，请稍�
       }
     ]
   }
+}
+```
+
+
+##### 3.2.3 获取工具
+
+```http
+GET /api/v1/tools
+```
+
+代理下游数字医生 `GET /v1/config/tools`，将 flat 列表按 `category` 分组后返回。
+
+**Query Parameters**
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| category | string | ❌ | 按分类过滤：web / memory / sessions / communication / infra / media / reasoning / medical / research |
+
+**Response data**
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "total": 2,
+  "category": ["web", "medical"],
+  "data": [
+    {
+      "category": "web",
+      "items": [
+        {
+          "name": "web_fetch",
+          "description": "网页内容抓取工具",
+          "category": "web"
+        }
+      ]
+    },
+    {
+      "category": "medical",
+      "items": [
+        {
+          "name": "knowledge-retrieval",
+          "description": "医学知识检索工具",
+          "category": "medical"
+        }
+      ]
+    }
+  ]
+}
+```
+
+
+##### 3.2.4 获取算法引擎
+
+```http
+GET /api/v1/engines
+```
+
+代理下游数字医生 `GET /v1/config/engines`，响应体原样透传（含 `total`）。
+
+无 Query Parameters。
+
+**Response data**
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "total": 1,
+  "data": [
+    {
+      "name": "数字医生核心推理引擎",
+      "description": "数字医生核心推理引擎",
+      "default": true,
+      "version": "1.0"
+    }
+  ]
+}
+```
+
+
+##### 3.2.5 获取模型列表
+
+```http
+GET /api/v1/models
+```
+
+代理下游数字医生 `GET /v1/config/models`，将 flat 列表按每条模型的 `provider` 字段分组后返回。
+
+**Query Parameters**
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| provider | string | ❌ | 按 provider 过滤，如 anthropic / openai / deepseek |
+
+**Response data**
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "total": 1,
+  "provider": ["deepseek"],
+  "data": [
+    {
+      "provider": "deepseek",
+      "items": [
+        {
+          "id": "deepseek-v4-flash",
+          "name": "DeepSeek V4 Flash",
+          "provider": "deepseek",
+          "api": "chat",
+          "reasoning": false,
+          "input": ["text"],
+          "context_window": 128000,
+          "max_tokens": 8192,
+          "cost_input": null,
+          "cost_output": null
+        }
+      ]
+    }
+  ]
 }
 ```
 
@@ -2923,6 +3332,7 @@ GET /api/v1/knowledge-recall/sessions/{session_id}
 "recall_status": "string", // 召回结果状态
 "created_at": "2026-05-19T07:32:02.691Z",
 "updated_at": "2026-05-19T07:32:02.691Z",
+"confidence": 0,
 "retrieved_sources": [
 {
 "card_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
@@ -3090,20 +3500,44 @@ POST /api/v1/knowledge-recall/{owner_type}/{owner_id}/recall
   "code": 0,
   "message": "ok",
   "data": {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "count": 1,
     "query": "高血压患者可以服用哪些降压药？",
-    "answer": "根据知识库资料，常用降压药包括…[1][2]",
-    "confidence": 0.85,
-    "query_time_ms": 320.5,
-    "count": 2,
+    "answer": "",
     "sources": [
       {
         "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-        "card_type": "rule",
-        "title": "降压药用药规范",
-        "excerpt": "一线降压药包括…",
-        "relevance_score": 0.92
+        "card_type": "",
+        "title": "",
+        "excerpt": "",
+        "relevance_score": 0,
+        "json_content": "string",
+        "md_content": "string",
+        "tags": [
+          "string"
+        ],
+        "online_status": "string",
+        "audit_status": "string",
+        "audit_reject_reason": "string",
+        "current_version": 0,
+        "reference_count": 0,
+        "sources": [
+          {
+            "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "file_name": "string",
+            "file_type": "string",
+            "file_size": 0,
+            "storage_url": "string",
+            "parsed_file_url": "string",
+            "page_hint": "string"
+          }
+        ],
+        "created_at": "2026-05-21T03:13:01.804Z",
+        "updated_at": "2026-05-21T03:13:01.804Z"
       }
-    ]
+    ],
+    "confidence": 0,
+    "query_time_ms": 0
   }
 }
 ```
@@ -3112,14 +3546,17 @@ POST /api/v1/knowledge-recall/{owner_type}/{owner_id}/recall
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
 | data.query | string | 回显检索问题 |
-| data.answer | string | LLM 生成的中文答案；LLM 失败时为 fallback 文本 |
+| data.answer | string | LLM 生成的答案；可能为空字符串 |
 | data.sources | array | 命中知识卡列表（`NonAgenticSearchResultItem`） |
 | data.sources[].id | string | 知识卡 ID（`card_id`） |
 | data.sources[].excerpt | string | 摘要片段 |
 | data.sources[].relevance_score | number | BM25 相关性得分 |
+| data.sources[].json_content | string | 知识卡结构化内容 |
+| data.sources[].md_content | string | 知识卡 Markdown 正文 |
+| data.sources[].sources | array | 知识卡关联文件 |
 | data.confidence | number | 置信度（下游：`0.6 × LLM 自评 + 0.4 × search_coverage`） |
 | data.query_time_ms | number | 查询耗时（毫秒） |
-| data.count | int | 命中条数（与 `sources` 长度一致；飞书 Wiki 已收录，待线上 Swagger 同步） |
+| data.count | int | 命中条数（与 `sources` 长度一致） |
 
 
 ##### 4.4.6 知识卡非 Agentic 智能召回
@@ -3155,9 +3592,6 @@ POST /api/v1/knowledge-recall/{owner_type}/{owner_id}/search
   "message": "ok",
   "data": {
     "query": "高血压 降压药",
-    "confidence": 0.6,
-    "query_time_ms": 48.2,
-    "count": 1,
     "sources": [
       {
         "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
@@ -3166,7 +3600,11 @@ POST /api/v1/knowledge-recall/{owner_type}/{owner_id}/search
         "excerpt": "一线降压药包括…",
         "relevance_score": 0.88
       }
-    ]
+    ],
+    "confidence": 0.6,
+    "query_time_ms": 48.2,
+    "answer": "",
+    "count": 1
   }
 }
 ```
@@ -3174,11 +3612,12 @@ POST /api/v1/knowledge-recall/{owner_type}/{owner_id}/search
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| data | object | `NonAgenticSearchResponseData`，**无** `answer` 字段（飞书示例若含 `answer` 为笔误，以实现为准） |
+| data | object | `NonAgenticSearchResponseData` |
 | data.sources | array | BM25 降序命中列表 |
 | data.confidence | number | `min(found, top_k) / top_k` |
 | data.query_time_ms | number | 查询耗时（毫秒） |
-| data.count | int | 命中条数（飞书 Wiki 已收录，待线上 Swagger 同步） |
+| data.answer | string | 非 Agentic 搜索答案字段，当前飞书示例为空字符串 |
+| data.count | int | 命中条数 |
 
 
 ##### 4.4.7 一键清除当前用户全部召回历史

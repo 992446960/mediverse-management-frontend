@@ -11,7 +11,7 @@
         style="width: 160px"
         :placeholder="t('knowledge.card.diffFromLabel')"
       />
-      <span class="text-gray-400">vs</span>
+      <span class="text-(--color-text-tertiary)">vs</span>
       <a-select
         v-model:value="localTo"
         :options="versionOptions"
@@ -51,9 +51,9 @@
     <!-- 单栏 unified：所有 segment 按顺序渲染在一个块中 -->
     <div
       v-else-if="viewMode === 'unified'"
-      class="markdown-body p-4 bg-gray-50 rounded-lg overflow-auto max-h-[calc(100vh-320px)]"
+      class="markdown-body p-4 bg-(--color-bg-layout) rounded-lg overflow-auto max-h-[calc(100vh-320px)]"
     >
-      <div class="text-xs text-gray-400 mb-2 font-medium">
+      <div class="text-xs text-(--color-text-tertiary) mb-2 font-medium">
         {{ fromVersionLabel }} vs {{ toVersionLabel }}
       </div>
       <template v-for="(seg, i) in displayedDiff" :key="'u-' + i">
@@ -80,8 +80,12 @@
 
     <!-- 左右分栏：左=from（旧版本），右=to（新版本） -->
     <div v-else class="diff-split grid grid-cols-2 gap-4">
-      <div class="markdown-body p-4 bg-gray-50 rounded-lg overflow-auto max-h-[calc(100vh-320px)]">
-        <div class="text-xs text-gray-400 mb-2 font-medium">{{ fromVersionLabel }}</div>
+      <div
+        class="markdown-body p-4 bg-(--color-bg-layout) rounded-lg overflow-auto max-h-[calc(100vh-320px)]"
+      >
+        <div class="text-xs text-(--color-text-tertiary) mb-2 font-medium">
+          {{ fromVersionLabel }}
+        </div>
         <template v-for="(seg, i) in displayedDiff" :key="'l-' + i">
           <!-- eslint-disable-next-line vue/no-v-html -- marked + DOMPurify -->
           <span
@@ -97,8 +101,12 @@
           ></span>
         </template>
       </div>
-      <div class="markdown-body p-4 bg-gray-50 rounded-lg overflow-auto max-h-[calc(100vh-320px)]">
-        <div class="text-xs text-gray-400 mb-2 font-medium">{{ toVersionLabel }}</div>
+      <div
+        class="markdown-body p-4 bg-(--color-bg-layout) rounded-lg overflow-auto max-h-[calc(100vh-320px)]"
+      >
+        <div class="text-xs text-(--color-text-tertiary) mb-2 font-medium">
+          {{ toVersionLabel }}
+        </div>
         <template v-for="(seg, i) in displayedDiff" :key="'r-' + i">
           <!-- eslint-disable-next-line vue/no-v-html -- marked + DOMPurify -->
           <span
@@ -279,13 +287,13 @@ function renderSegment(content: string): string {
   display: inline;
 }
 .diff-delete {
-  background-color: #fdd;
+  background-color: var(--color-diff-del);
   text-decoration: line-through;
   display: inline;
   color: var(--color-error);
 }
 .diff-insert {
-  background-color: #dfd;
+  background-color: var(--color-diff-add);
   display: inline;
   color: var(--color-success);
 }

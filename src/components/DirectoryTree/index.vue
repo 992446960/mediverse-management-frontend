@@ -153,8 +153,8 @@
         v-if="resizable"
         type="button"
         class="directory-tree__resize-handle"
-        title="可拖拽调整宽度，双击恢复默认宽度"
-        aria-label="拖拽调整目录宽度"
+        :title="t('common.resizePanelHint')"
+        :aria-label="t('common.resizeDirectoryWidth')"
         @pointerdown="startResize"
         @dblclick="resetWidth"
       >
@@ -163,11 +163,12 @@
         <span />
       </button>
 
-      <a-tooltip v-if="collapsible" title="收起目录">
+      <a-tooltip v-if="collapsible" :title="t('common.collapseDirectory')">
         <button
           type="button"
           class="directory-tree__collapse-button"
-          aria-label="收起目录"
+          :aria-label="t('common.collapseDirectory')"
+          @pointerdown.stop="collapsePanel"
           @click="collapsePanel"
         >
           <CaretLeftOutlined />
@@ -175,15 +176,19 @@
       </a-tooltip>
     </template>
 
-    <a-tooltip v-else :title="`点击展开${collapsedLabel}`" placement="right">
+    <a-tooltip
+      v-else
+      :title="t('common.expandPanelHint', { label: resolvedCollapsedLabel })"
+      placement="right"
+    >
       <button
         type="button"
         class="directory-tree__collapsed-entry"
-        :aria-label="`展开${collapsedLabel}`"
+        :aria-label="t('common.expandPanel', { label: resolvedCollapsedLabel })"
         @click="expandPanel"
       >
         <FolderOpenOutlined class="directory-tree__collapsed-icon" />
-        <span class="directory-tree__collapsed-text">{{ collapsedLabel }}</span>
+        <span class="directory-tree__collapsed-text">{{ resolvedCollapsedLabel }}</span>
         <span class="directory-tree__collapsed-action">
           <RightOutlined />
         </span>
@@ -240,7 +245,7 @@ const props = withDefaults(defineProps<Props>(), {
   minWidth: MIN_TREE_WIDTH,
   maxWidth: MAX_TREE_WIDTH,
   collapsedWidth: COLLAPSED_TREE_WIDTH,
-  collapsedLabel: '目录',
+  collapsedLabel: '',
 })
 
 const emit = defineEmits<{
@@ -253,6 +258,7 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const searchKeyword = ref('')
 const treeStyle = computed(() => ({ height: props.maxHeight }))
+const resolvedCollapsedLabel = computed(() => props.collapsedLabel || t('knowledge.directory'))
 const collapsed = ref(false)
 const resizing = ref(false)
 const panelWidth = ref(clampWidth(props.defaultWidth))
@@ -417,6 +423,19 @@ async function handleDeleteDirectory(node: DirectoryTreeNode) {
 
 <style scoped lang="scss">
 .directory-tree-shell {
+  --tree-control-bg: var(--color-bg-container);
+  --tree-control-color: var(--color-text-tertiary);
+  --tree-control-hover-bg: color-mix(in srgb, var(--color-primary) 9%, var(--color-bg-container));
+  --tree-primary-hover-bg: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  --tree-primary-soft-bg: color-mix(in srgb, var(--color-primary) 5%, transparent);
+  --tree-primary-border: color-mix(in srgb, var(--color-primary) 35%, transparent);
+  --tree-primary-border-muted: color-mix(in srgb, var(--color-primary) 28%, transparent);
+  --tree-primary-border-hover: color-mix(in srgb, var(--color-primary) 55%, transparent);
+  --tree-primary-border-strong: color-mix(in srgb, var(--color-primary) 70%, transparent);
+  --tree-scrollbar-thumb: var(--color-border);
+  --tree-primary-shadow: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  --tree-primary-shadow-strong: color-mix(in srgb, var(--color-primary) 14%, transparent);
+
   position: relative;
   display: flex;
   flex: 0 0 auto;
@@ -447,7 +466,7 @@ async function handleDeleteDirectory(node: DirectoryTreeNode) {
   gap: 3px;
   border: 0;
   background: transparent;
-  color: #94a3b8;
+  color: var(--tree-control-color);
   transition:
     color 0.16s ease,
     background-color 0.16s ease;
@@ -455,7 +474,7 @@ async function handleDeleteDirectory(node: DirectoryTreeNode) {
 
 .directory-tree__resize-handle:hover,
 .directory-tree-shell.is-resizing .directory-tree__resize-handle {
-  background: linear-gradient(90deg, transparent, rgb(14 165 233 / 0.08), transparent);
+  background: linear-gradient(90deg, transparent, var(--tree-primary-hover-bg), transparent);
   color: var(--color-primary);
 }
 
@@ -469,7 +488,7 @@ async function handleDeleteDirectory(node: DirectoryTreeNode) {
 .directory-tree__collapse-button {
   position: absolute;
   top: 50%;
-  right: -20px;
+  right: -12px;
   z-index: 4;
   display: flex;
   width: 24px;
@@ -477,9 +496,9 @@ async function handleDeleteDirectory(node: DirectoryTreeNode) {
   transform: translateY(-50%);
   align-items: center;
   justify-content: center;
-  border: 1px solid rgb(14 165 233 / 0.28);
+  border: 1px solid var(--tree-primary-border-muted);
   border-radius: 999px;
-  background: #fff;
+  background: var(--tree-control-bg);
   color: var(--color-primary);
   box-shadow: 0 8px 20px rgb(15 23 42 / 0.08);
   transition:
@@ -489,9 +508,9 @@ async function handleDeleteDirectory(node: DirectoryTreeNode) {
 }
 
 .directory-tree__collapse-button:hover {
-  border-color: rgb(14 165 233 / 0.55);
-  background: #f0f9ff;
-  box-shadow: 0 10px 24px rgb(14 165 233 / 0.16);
+  border-color: var(--tree-primary-border-hover);
+  background: var(--tree-control-hover-bg);
+  box-shadow: 0 10px 24px var(--tree-primary-shadow);
 }
 
 .directory-tree__collapsed-entry {
@@ -505,9 +524,11 @@ async function handleDeleteDirectory(node: DirectoryTreeNode) {
   align-items: center;
   justify-content: flex-start;
   gap: 10px;
-  border: 1px solid rgb(14 165 233 / 0.35);
+  border: 1px solid var(--tree-primary-border);
   border-radius: 10px;
-  background: linear-gradient(180deg, rgb(240 249 255 / 0.96), #fff 38%), #fff;
+  background:
+    linear-gradient(180deg, var(--tree-control-hover-bg), var(--tree-control-bg) 38%),
+    var(--tree-control-bg);
   color: var(--color-primary);
   box-shadow: 0 8px 24px rgb(15 23 42 / 0.06);
   padding: 18px 0;
@@ -517,8 +538,8 @@ async function handleDeleteDirectory(node: DirectoryTreeNode) {
 }
 
 .directory-tree__collapsed-entry:hover {
-  border-color: rgb(14 165 233 / 0.7);
-  box-shadow: 0 12px 28px rgb(14 165 233 / 0.14);
+  border-color: var(--tree-primary-border-strong);
+  box-shadow: 0 12px 28px var(--tree-primary-shadow-strong);
 }
 
 .directory-tree__collapsed-icon {
@@ -543,9 +564,9 @@ async function handleDeleteDirectory(node: DirectoryTreeNode) {
   transform: translateY(-50%);
   align-items: center;
   justify-content: center;
-  border: 1px solid rgb(14 165 233 / 0.35);
+  border: 1px solid var(--tree-primary-border);
   border-radius: 999px;
-  background: #fff;
+  background: var(--tree-control-bg);
   box-shadow: 0 8px 20px rgb(15 23 42 / 0.1);
 }
 
@@ -559,16 +580,16 @@ async function handleDeleteDirectory(node: DirectoryTreeNode) {
   width: 4px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #e2e8f0;
+  background: var(--tree-scrollbar-thumb);
   border-radius: 10px;
 }
 .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #475569;
+  background: var(--tree-scrollbar-thumb);
 }
 .item-active {
-  background-color: rgb(14 165 233 / 0.05);
-  color: #0ea5e9;
-  border-left-color: #0ea5e9 !important;
+  background-color: var(--tree-primary-soft-bg);
+  color: var(--color-primary);
+  border-left-color: var(--color-primary) !important;
   font-weight: 700;
 }
 </style>

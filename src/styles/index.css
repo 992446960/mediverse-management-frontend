@@ -1,6 +1,8 @@
 @import 'tailwindcss';
 @import './variables.css';
 @import './nprogress.css';
+@import './markdown.css';
+@import './editor.css';
 
 /* 与 themeStore 一致：dark 由 html.dark 控制，不随系统 prefers-color-scheme 变化 */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -11,6 +13,15 @@
   --color-warning: var(--color-warning);
   --color-error: var(--color-error);
   --color-info: var(--color-info);
+}
+
+html {
+  color-scheme: light;
+}
+
+html.dark,
+html[data-theme='dark'] {
+  color-scheme: dark;
 }
 
 body {
@@ -25,8 +36,58 @@ body {
     color 0.3s;
     
 }
+
+* {
+  scrollbar-color: color-mix(in srgb, var( --color-border) 55%, transparent) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track,
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--color-border) 55%, transparent);
+  border-radius: var(--radius-full);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in srgb, var(--color-border) 55%, transparent);
+}
+
 .layout-content-m-h{
   max-height:var(--ant-layout-content-insert-height);
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* 用户菜单：关闭「与触发器等宽」后，由内容决定宽度；略设 max-width 防溢出 */
+.user-menu-overlay.ant-dropdown {
+  width: max-content;
+  max-width: min(100vw - var(--spacing-xl), 20rem);
+}
+
+.user-menu-overlay .ant-dropdown-menu {
+  width: max-content;
+  min-width: unset;
+}
+
+.user-menu-overlay .ant-dropdown-menu-item .user-menu-item-text {
+  white-space: nowrap;
+  margin-left: var(--spacing-xs);
 }
 
 /* a-button 全局：icon 与文字垂直居中对齐 */
@@ -40,14 +101,94 @@ body {
 .ant-input,
 .ant-input-affix-wrapper,
 .ant-input-password {
+  background-color: var(--color-bg-container);
+  border-color: var(--color-border);
+  color: var(--color-text-base);
   outline: none !important;
   box-shadow: none !important;
 }
+
+.ant-input-affix-wrapper > input.ant-input,
+.ant-input-password > input.ant-input {
+  background-color: transparent !important;
+  color: inherit;
+  box-shadow: none !important;
+  caret-color: var(--color-text-base);
+}
+
+.ant-input::placeholder,
+.ant-input-affix-wrapper > input.ant-input::placeholder,
+.ant-input-password > input.ant-input::placeholder {
+  color: var(--color-text-placeholder);
+}
+
+.ant-input::selection,
+.ant-input-affix-wrapper > input.ant-input::selection,
+.ant-input-password > input.ant-input::selection {
+  color: var(--color-text-base);
+  background-color: color-mix(in srgb, var(--color-primary) 28%, transparent);
+}
+
+.ant-input:hover,
+.ant-input-affix-wrapper:hover,
+.ant-input-password:hover,
 .ant-input:focus,
+.ant-input:focus-visible,
 .ant-input-affix-wrapper:focus-within,
-.ant-input-password:focus-within {
+.ant-input-affix-wrapper-focused,
+.ant-input-password:focus-within,
+.ant-input-password-focused {
+  border-color: var(--color-primary);
+}
+
+.ant-input-clear-icon {
+  color: var(--color-text-tertiary);
+}
+
+.ant-input-clear-icon:hover {
+  color: var(--color-text-secondary);
+}
+
+.ant-input:-webkit-autofill,
+.ant-input:-webkit-autofill:hover,
+.ant-input:-webkit-autofill:focus,
+.ant-input:-webkit-autofill:active,
+.ant-input-affix-wrapper input:-webkit-autofill,
+.ant-input-affix-wrapper input:-webkit-autofill:hover,
+.ant-input-affix-wrapper input:-webkit-autofill:focus,
+.ant-input-affix-wrapper input:-webkit-autofill:active,
+textarea.ant-input:-webkit-autofill,
+textarea.ant-input:-webkit-autofill:hover,
+textarea.ant-input:-webkit-autofill:focus,
+textarea.ant-input:-webkit-autofill:active {
+  background-color: var(--color-bg-container) !important;
+  -webkit-box-shadow: 0 0 0 1000px var(--color-bg-container) inset !important;
+  box-shadow: 0 0 0 1000px var(--color-bg-container) inset !important;
+  -webkit-text-fill-color: var(--color-text-base) !important;
+  caret-color: var(--color-text-base);
+}
+
+.ant-input:focus,
+.ant-input:focus-visible,
+.ant-input-affix-wrapper > input.ant-input:focus,
+.ant-input-affix-wrapper > input.ant-input:focus-visible,
+.ant-input-password > input.ant-input:focus,
+.ant-input-password > input.ant-input:focus-visible,
+.ant-input-affix-wrapper:focus-within,
+.ant-input-affix-wrapper-focused,
+.ant-input-password:focus-within,
+.ant-input-password-focused {
+  background-color: var(--color-bg-container);
+  color: var(--color-text-base);
   outline: none !important;
   box-shadow: none !important;
+}
+
+.ant-input-affix-wrapper > input.ant-input:focus,
+.ant-input-affix-wrapper > input.ant-input:focus-visible,
+.ant-input-password > input.ant-input:focus,
+.ant-input-password > input.ant-input:focus-visible {
+  background-color: transparent !important;
 }
 
 /* 登录页：覆盖 autofill 背景 #E8F0FE，全局写一遍提高优先级 */
@@ -73,11 +214,15 @@ body {
 .ant-modal {
   .ant-modal-content {
     padding: 0;
+    background-color: var(--color-bg-elevated);
     .ant-modal-header {
       padding: 10px 20px;
       border-bottom: 1px solid var(--color-border);
-      background-color: var(--color-bg-base);
+      background-color: var(--color-bg-elevated);
       margin-bottom: 0;
+    }
+    .ant-modal-title {
+      color: var(--color-text-base);
     }
     .ant-modal-body {
       padding: 10px 20px;
@@ -85,6 +230,7 @@ body {
     .ant-modal-footer {
       padding: 10px 20px;
       border-top: 1px solid var(--color-border);
+      background-color: var(--color-bg-elevated);
     }
     /* 全局 Modal 表单样式 */
     .ant-form-item {

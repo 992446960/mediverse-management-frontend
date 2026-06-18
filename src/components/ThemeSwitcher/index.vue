@@ -1,11 +1,12 @@
 <template>
   <button
     class="theme-switcher-btn group"
-    :aria-label="isDark ? '切换亮色模式' : '切换深色模式'"
+    :aria-label="isDark ? t('common.switchToLight') : t('common.switchToDark')"
     @click="toggleTheme"
   >
     <!-- 太阳图标：浅色模式下显示 -->
     <svg
+      v-if="!isDark"
       width="20"
       height="20"
       viewBox="0 0 24 24"
@@ -54,6 +55,7 @@
 
     <!-- 月亮图标：深色模式下显示 -->
     <svg
+      v-else
       xmlns="http://www.w3.org/2000/svg"
       width="20"
       height="20"
@@ -71,10 +73,12 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { useThemeStore } from '@/stores/theme'
 
 const themeStore = useThemeStore()
 const { isDark } = storeToRefs(themeStore)
+const { t } = useI18n()
 
 /** 切换主题模式 */
 const toggleTheme = () => {
@@ -102,42 +106,16 @@ const toggleTheme = () => {
 }
 
 .theme-switcher-btn:hover {
-  background-color: rgba(0, 0, 0, 0.03);
-}
-
-.dark .theme-switcher-btn:hover {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: color-mix(in srgb, var(--color-border) 35%, transparent);
 }
 
 .icon {
+  color: var(--color-text-secondary);
   transition: all 0.3s ease;
-}
-
-.sun-icon {
-  display: block;
-  color: #64748b; /* slate-500 */
-}
-
-.dark .sun-icon {
-  display: none;
-}
-
-.moon-icon {
-  display: none;
-  color: #94a3b8;
-}
-
-.dark .moon-icon {
-  display: block;
-  color: #cbd5e1;
 }
 
 .theme-switcher-btn:hover .icon {
   transform: scale(1.1);
-  color: var(--color-primary);
-}
-
-.dark .theme-switcher-btn:hover .icon {
   color: var(--color-primary);
 }
 </style>

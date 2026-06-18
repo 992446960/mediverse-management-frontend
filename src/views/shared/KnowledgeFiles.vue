@@ -13,7 +13,7 @@
         :min-width="220"
         :max-width="420"
         :collapsed-width="48"
-        collapsed-label="目录"
+        :collapsed-label="t('knowledge.directory')"
         @node-click="onTreeSelect"
         @create-dir="handleCreateDir"
         @rename-dir="handleRenameDir"

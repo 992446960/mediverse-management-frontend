@@ -74,13 +74,9 @@ const copyContent = async () => {
 
 <style scoped lang="scss">
 .markdown-body :deep(pre) {
-  background-color: #f6f8fa;
+  background-color: var(--color-code-bg);
   padding: 16px;
   border-radius: 6px;
   overflow: auto;
-}
-
-.dark .markdown-body :deep(pre) {
-  background-color: #161b22;
 }
 </style>

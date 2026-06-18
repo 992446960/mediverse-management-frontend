@@ -4,8 +4,8 @@
     :footer="null"
     :destroy-on-close="true"
     wrap-class-name="avatar-wizard-modal"
-    :width="672"
-    :style="{ maxWidth: '90vw' }"
+    :width="880"
+    :style="{ maxWidth: '94vw' }"
     :aria-labelledby="titleId"
     :aria-describedby="contentId"
     @cancel="emit('update:open', false)"
@@ -20,63 +20,37 @@
       :id="contentId"
       class="avatar-wizard-content pb-0"
       role="region"
-      :aria-label="t('avatar.wizard.stepProgress', { current: currentStep + 1, total: 4 })"
+      :aria-label="
+        t('avatar.wizard.stepProgress', { current: currentStep + 1, total: steps.length })
+      "
     >
-      <!-- 自定义步骤条：已完成=勾选圆，当前=主色数字圆，未到=灰色圆；连接线已过段为主色 -->
-      <div class="avatar-wizard-steps flex items-center justify-between mb-8">
-        <template v-for="(step, i) in steps" :key="step.key">
-          <div class="flex items-center shrink-0">
-            <div
-              class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors duration-200"
-              :class="
-                i < currentStep
-                  ? 'bg-blue-50 dark:bg-blue-900/30 border border-[#0ea5e9]/30 text-[#0ea5e9]'
-                  : i === currentStep
-                    ? 'bg-[#0ea5e9] text-white'
-                    : 'bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-400 dark:text-gray-400'
-              "
-            >
-              <CheckOutlined v-if="i < currentStep" class="text-lg" />
-              <span v-else class="text-sm font-semibold">{{ i + 1 }}</span>
-            </div>
-            <span
-              class="ml-2 text-sm whitespace-nowrap"
-              :class="
-                i < currentStep
-                  ? 'font-medium text-gray-700 dark:text-gray-300'
-                  : i === currentStep
-                    ? 'font-semibold text-gray-900 dark:text-gray-100'
-                    : 'text-gray-500 dark:text-gray-400'
-              "
-            >
-              {{ t(step.titleKey) }}
-            </span>
-          </div>
-          <div
-            v-if="i < steps.length - 1"
-            class="step-line flex-1 h-px mx-3 shrink-0 min-w-[12px]"
-            :class="i < currentStep ? 'bg-[#0ea5e9]' : 'bg-gray-200 dark:bg-gray-700'"
-          />
-        </template>
-      </div>
+      <WizardStepper
+        class="avatar-wizard-steps"
+        :steps="wizardSteps"
+        :current="currentStep"
+        :aria-label="
+          t('avatar.wizard.stepProgress', { current: currentStep + 1, total: steps.length })
+        "
+      />
 
       <div class="mb-6">
         <p
           class="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1"
           aria-live="polite"
         >
-          {{ t('avatar.wizard.stepProgress', { current: currentStep + 1, total: 4 }) }}
+          {{ t('avatar.wizard.stepProgress', { current: currentStep + 1, total: steps.length }) }}
         </p>
         <p v-if="currentStep === 1" class="text-sm text-gray-600 dark:text-gray-400">
           {{ t('avatar.wizard.scopeHint') }}
         </p>
       </div>
 
-      <div class="avatar-wizard-content-inner min-h-[280px]">
+      <div class="avatar-wizard-content-inner">
         <StepType v-if="currentStep === 0" v-model="form" />
         <StepScope v-if="currentStep === 1" ref="stepScopeRef" v-model="form" />
         <StepInfo v-if="currentStep === 2" ref="stepInfoRef" v-model="form" />
-        <StepConfirm v-if="currentStep === 3" :model-value="form" />
+        <StepAdvanced v-if="currentStep === 3" v-model="form" />
+        <StepConfirm v-if="currentStep === lastStepIndex" :model-value="form" />
       </div>
     </div>
 
@@ -85,24 +59,39 @@
       class="avatar-wizard-footer pt-3 pb-2 border-t border-gray-100 dark:border-gray-800 flex justify-end items-center gap-3"
     >
       <a-button
+        v-if="currentStep === 0"
         class="avatar-wizard-btn cursor-pointer transition-colors duration-200"
-        @click="onCancel"
+        @click="closeWizard"
       >
-        {{ currentStep > 0 ? t('common.prev') : t('common.cancel') }}
+        {{ t('common.cancel') }}
       </a-button>
       <a-button
-        v-if="currentStep < 3"
+        v-else
+        class="avatar-wizard-btn cursor-pointer transition-colors duration-200"
+        @click="onPrev"
+      >
+        {{ t('common.prev') }}
+      </a-button>
+      <a-button
+        v-if="currentStep === lastStepIndex"
+        class="avatar-wizard-btn cursor-pointer transition-colors duration-200"
+        @click="closeWizard"
+      >
+        {{ t('common.cancel') }}
+      </a-button>
+      <a-button
+        v-if="currentStep < lastStepIndex"
         type="primary"
-        class="avatar-wizard-btn cursor-pointer transition-colors duration-200 bg-[#0ea5e9] hover:bg-sky-600! border-0"
+        class="avatar-wizard-btn cursor-pointer transition-colors duration-200 bg-primary hover:bg-primary/90! border-0"
         :loading="loading"
         @click="onNext"
       >
-        {{ t('common.confirm') }}
+        {{ t('common.next') }}
       </a-button>
       <a-button
-        v-if="currentStep === 3"
+        v-if="currentStep === lastStepIndex"
         type="primary"
-        class="avatar-wizard-btn min-h-[44px] min-w-[100px] cursor-pointer transition-colors duration-200 bg-[#0ea5e9] hover:bg-sky-600! border-0"
+        class="avatar-wizard-btn cursor-pointer transition-colors duration-200 bg-primary hover:bg-primary/90! border-0"
         :loading="submitLoading"
         @click="onSubmit"
       >
@@ -115,14 +104,16 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { message } from 'ant-design-vue'
-import { CheckOutlined } from '@ant-design/icons-vue'
+import WizardStepper from '@/components/WizardStepper/index.vue'
 import { createAvatar } from '@/api/avatars'
 import StepType from './steps/StepType.vue'
 import StepScope from './steps/StepScope.vue'
 import StepInfo from './steps/StepInfo.vue'
+import StepAdvanced from './steps/StepAdvanced.vue'
 import StepConfirm from './steps/StepConfirm.vue'
 import { useAvatarCreatePermission } from '@/composables/useAvatarCreatePermission'
 import type { AvatarWizardForm } from '@/types/avatar'
+import { buildAvatarCreatePayload } from '@/utils/avatarAdvancedConfig'
 
 const { t } = useI18n()
 const { defaultTypeForRole } = useAvatarCreatePermission()
@@ -131,6 +122,7 @@ const steps = [
   { key: 'type', titleKey: 'avatar.wizard.selectType' },
   { key: 'scope', titleKey: 'avatar.wizard.bindScope' },
   { key: 'info', titleKey: 'avatar.wizard.basicInfo' },
+  { key: 'advanced', titleKey: 'avatar.advanced.title' },
   { key: 'confirm', titleKey: 'avatar.wizard.confirm' },
 ]
 
@@ -140,6 +132,10 @@ function getDefaultForm(): AvatarWizardForm {
     name: '',
     tags: [],
     style: 'formal',
+    tools: [],
+    skills: [],
+    algorithm: null,
+    model: null,
   }
 }
 
@@ -163,13 +159,20 @@ const stepInfoRef = ref<InstanceType<typeof StepInfo> | null>(null)
 
 const titleId = 'avatar-wizard-title'
 const contentId = 'avatar-wizard-description'
+const lastStepIndex = computed(() => steps.length - 1)
+const wizardSteps = computed(() =>
+  steps.map((step) => ({
+    key: step.key,
+    title: t(step.titleKey),
+  }))
+)
 
-function onCancel() {
-  if (currentStep.value > 0) {
-    currentStep.value--
-  } else {
-    emit('update:open', false)
-  }
+function closeWizard() {
+  emit('update:open', false)
+}
+
+function onPrev() {
+  if (currentStep.value > 0) currentStep.value--
 }
 
 function setCloseButtonAriaLabel() {
@@ -181,11 +184,6 @@ function setCloseButtonAriaLabel() {
     }
   })
 }
-
-watch(
-  () => currentStep.value,
-  () => {}
-)
 
 watch(
   () => props.open,
@@ -223,20 +221,7 @@ function onNext() {
 async function onSubmit() {
   submitLoading.value = true
   try {
-    const payload = {
-      type: form.value.type,
-      org_id: form.value.org_id,
-      dept_id: form.value.dept_id,
-      user_id: form.value.user_id,
-      name: form.value.name.trim(),
-      avatar_url: form.value.avatar_url?.trim() || undefined,
-      bio: form.value.bio?.trim() || undefined,
-      tags: form.value.tags?.length ? form.value.tags : undefined,
-      greeting: form.value.greeting?.trim() || undefined,
-      style: form.value.style,
-      style_custom: form.value.style === 'custom' ? form.value.style_custom?.trim() : undefined,
-    }
-    await createAvatar(payload)
+    await createAvatar(buildAvatarCreatePayload(form.value))
     message.success(t('avatar.wizard.createSuccess'))
     emit('update:open', false)
     emit('success')
@@ -249,13 +234,21 @@ async function onSubmit() {
 </script>
 
 <style scoped lang="scss">
-/* 弹窗宽度：小屏 90vw，最大 640px；Modal 挂载在 body，需用 :deep 或全局 */
+.avatar-wizard-steps {
+  margin-bottom: var(--spacing-xl);
+}
+
+.avatar-wizard-btn {
+  min-width: 76px;
+  height: 34px;
+  padding: 0 16px;
+}
 </style>
 
 <style lang="scss">
 .avatar-wizard-modal.ant-modal-wrap .ant-modal {
-  width: 90vw;
-  max-width: 672px;
+  width: 94vw;
+  max-width: 880px;
 }
 .avatar-wizard-modal .ant-modal-content {
   padding: 0;

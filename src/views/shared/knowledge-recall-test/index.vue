@@ -184,7 +184,6 @@ import RecallHistoryModal from './components/RecallHistoryModal.vue'
 import RecallResultSection from './components/RecallResultSection.vue'
 import RecallSourceDetailModal from './components/RecallSourceDetailModal.vue'
 import { useRecallForm } from './composables/useRecallForm'
-import 'github-markdown-css/github-markdown-light.css'
 
 const props = defineProps<{
   ownerType: KnowledgeRecallOwnerType
@@ -301,7 +300,7 @@ onMounted(fetchCardTypes)
 
 <style scoped lang="scss">
 .knowledge-recall-test {
-  --knowledge-recall-top-k-color: #0ea5e9;
+  --knowledge-recall-top-k-color: var(--color-primary);
 }
 
 .knowledge-recall-test__header {

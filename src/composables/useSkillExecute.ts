@@ -44,12 +44,15 @@ export function useSkillExecute(): UseSkillExecuteReturn {
   const result = ref<SkillExecuteResult | null>(null)
   const error = ref<string | null>(null)
 
-  let abortController: AbortController | null = null
+  let activeReader: ReadableStreamDefaultReader<Uint8Array> | null = null
+  let stopped = false
 
   const stopGeneration = () => {
-    if (abortController) {
-      abortController.abort()
-      abortController = null
+    stopped = true
+    if (activeReader) {
+      // 取消底层流读取，使 reader.read() 立即以 done 结束并关闭连接
+      activeReader.cancel().catch(() => {})
+      activeReader = null
     }
     streaming.value = false
   }
@@ -192,8 +195,8 @@ export function useSkillExecute(): UseSkillExecuteReturn {
         }
       }
 
-      // 处理流结束时 buffer 中可能剩余的最后一行
-      if (buffer.trim()) {
+      // 处理流结束时 buffer 中可能剩余的最后一行（手动停止时跳过，避免处理半截事件）
+      if (!stopped && buffer.trim()) {
         const trimmed = buffer.trim()
         let data: string
         if (trimmed.startsWith('data: ')) {
@@ -264,7 +267,7 @@ export function useSkillExecute(): UseSkillExecuteReturn {
       callbacks.onStreamEnd?.()
     } finally {
       streaming.value = false
-      abortController = null
+      activeReader = null
     }
   }
 
@@ -277,6 +280,7 @@ export function useSkillExecute(): UseSkillExecuteReturn {
     thinkingProcess.value = []
     result.value = null
     error.value = null
+    stopped = false
 
     if (!response.body) {
       error.value = 'Response body is null'
@@ -286,8 +290,8 @@ export function useSkillExecute(): UseSkillExecuteReturn {
     }
 
     try {
-      const reader = response.body.getReader()
-      await processSSEStream(reader, callbacks)
+      activeReader = response.body.getReader()
+      await processSSEStream(activeReader, callbacks)
     } catch (err: any) {
       if (err?.name === 'AbortError') return
       error.value = err.message || 'Stream error'

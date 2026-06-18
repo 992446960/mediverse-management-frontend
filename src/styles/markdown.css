@@ -1,0 +1,70 @@
+.markdown-body {
+  --markdown-bg: transparent;
+  --markdown-fg: var(--color-text-base);
+  --markdown-muted: var(--color-text-secondary);
+  --markdown-border: var(--color-border);
+  --markdown-code-bg: var(--color-code-bg);
+  color: var(--markdown-fg);
+  background-color: var(--markdown-bg);
+  line-height: 1.7;
+  overflow-wrap: break-word;
+}
+
+.markdown-body :where(p, ul, ol, blockquote, pre, table) {
+  margin-top: 0;
+  margin-bottom: 0.75em;
+}
+
+.markdown-body :where(p:last-child, ul:last-child, ol:last-child, blockquote:last-child, pre:last-child, table:last-child) {
+  margin-bottom: 0;
+}
+
+.markdown-body :where(a) {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.markdown-body :where(blockquote) {
+  padding-left: 0.875rem;
+  color: var(--markdown-muted);
+  border-left: 3px solid var(--markdown-border);
+}
+
+.markdown-body :where(code) {
+  padding: 0.15em 0.35em;
+  border-radius: var(--radius-sm);
+  background-color: var(--markdown-code-bg);
+  color: var(--markdown-fg);
+  font-size: 0.9em;
+}
+
+.markdown-body :where(pre) {
+  padding: 0.875rem;
+  overflow: auto;
+  border-radius: var(--radius-base);
+  background-color: var(--markdown-code-bg);
+  color: var(--markdown-fg);
+}
+
+.markdown-body :where(pre code) {
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+}
+
+.markdown-body :where(table) {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.markdown-body :where(th, td) {
+  padding: 0.5rem 0.625rem;
+  border: 1px solid var(--markdown-border);
+}
+
+.markdown-body :where(th) {
+  color: var(--color-text-base);
+  background-color: var(--color-bg-layout);
+}

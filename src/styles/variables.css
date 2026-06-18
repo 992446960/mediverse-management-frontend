@@ -5,7 +5,7 @@
   --color-primary-200: #BAE6FD;
   --color-primary-300: #7DD3FC;
   --color-primary-400: #38BDF8;
-  --color-primary-500: #0EA5E9;  /* base */
+  --color-primary-500: #0EA5E9;  /* base, mirrored from src/config/tokens.ts */
   --color-primary-600: #0284C7;  /* hover */
   --color-primary-700: #0369A1;  /* active */
   --color-primary-800: #075985;
@@ -25,7 +25,7 @@
   --color-bg-base:        #F8FAFC;
   --color-bg-layout:      #F1F5F9;
   --color-bg-container:   #FFFFFF;
-  --color-bg-elevated:    #FFFFFF;
+  --color-bg-elevated:    var(--color-bg-container);
   --color-bg-sidebar:     #FFFFFF;          /* 亮色模式：白色侧边栏 */
   --color-bg-sidebar-border: #E2E8F0;      /* 侧边栏右边框 */
 
@@ -33,10 +33,17 @@
   --color-text-secondary:   #64748B;
   --color-text-tertiary:    #94A3B8;
   --color-text-placeholder: #CBD5E1;
-  --color-text-inverse:     #FFFFFF;
+  --color-text-inverse:     #64748B;
+  --color-text-title:       var(--color-primary);
+  --color-text-on-primary:  #FFFFFF;
 
   --color-border:           #E2E8F0;
   --color-border-secondary: #F1F5F9;
+
+  /* ── Content Semantics ── */
+  --color-diff-add: #DCFCE7;
+  --color-diff-del: #FEE2E2;
+  --color-code-bg:  #F6F8FA;
 
   /* ── Spacing ── */
   --spacing-xs:  4px;
@@ -98,7 +105,7 @@
 
 /* ── Dark Mode Overrides（JS 通过 applyTheme 动态注入，此处为 fallback）── */
 :root[data-theme='dark'] {
-  --color-primary-500: #38BDF8;
+  --color-primary-500: #38BDF8;  /* mirrored from src/config/tokens.ts */
   --color-primary-600: #0EA5E9;
   --color-primary-700: #0284C7;
 
@@ -115,18 +122,24 @@
   --color-bg-base:        #020617;
   --color-bg-layout:      #020617;
   --color-bg-container:   #141414;
-  --color-bg-elevated:    #1E293B;
+  --color-bg-elevated:    var(--color-bg-container);
   --color-bg-sidebar:     #141414;
-  --color-bg-sidebar-border: #1E293B;
+  --color-bg-sidebar-border: #15304A;
 
   --color-text-base:        #F1F5F9;
   --color-text-secondary:   #94A3B8;
   --color-text-tertiary:    #64748B;
   --color-text-placeholder: #334155;
   --color-text-inverse:     #FFFFFF;
+  --color-text-title:       #FFFFFF;
+  --color-text-on-primary:  #FFFFFF;
 
   --color-border:           #1E293B;
   --color-border-secondary: #0F172A;
+
+  --color-diff-add: #052E16;
+  --color-diff-del: #450A0A;
+  --color-code-bg:  #161B22;
 
   --shadow-sm:   0 1px 2px 0 rgb(0 0 0 / 0.30);
   --shadow-base: 0 1px 4px 0 rgb(0 0 0 / 0.40), 0 1px 2px -1px rgb(0 0 0 / 0.30);

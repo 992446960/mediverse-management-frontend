@@ -33,6 +33,8 @@ describe('page tree interaction options', () => {
     expect(pageTreeSource).toContain('@pointerdown="startResize"')
     expect(pageTreeSource).toContain('@dblclick="resetWidth"')
     expect(pageTreeSource).toContain('page-tree__collapsed-entry')
+    expect(pageTreeSource).toContain('@pointerdown.stop="collapsePanel"')
+    expect(pageTreeSource).toContain('@click="collapsePanel"')
     expect(pageTreeSource).toContain('@click="expandPanel"')
     expect(pageTreeSource).not.toContain('localStorage')
   })

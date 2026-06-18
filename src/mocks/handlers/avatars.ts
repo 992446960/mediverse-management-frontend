@@ -185,6 +185,12 @@ export const avatarHandlers = [
       tags: body.tags ?? [],
       greeting: body.greeting?.trim() ?? null,
       style: body.style ?? 'formal',
+      style_custom: body.style_custom?.trim() ?? null,
+      tools: body.tools?.map((name) => ({ name, enabled: true })) ?? [],
+      skills: body.skills?.map((name) => ({ name, enabled: true })) ?? [],
+      algorithms: body.algorithm ? [{ name: body.algorithm, enabled: true }] : [],
+      algorithm: body.algorithm ?? null,
+      model: body.model ?? null,
       status: 'active',
       created_by: 'mock_user',
       created_at: now,
@@ -220,6 +226,19 @@ export const avatarHandlers = [
     if (body.style !== undefined) cur.style = body.style
     if (body.style_custom !== undefined)
       cur.style_custom = body.style_custom ? body.style_custom.trim() : null
+    if (body.tools !== undefined) {
+      cur.tools = body.tools.map((name) => ({ name, enabled: true }))
+    }
+    if (body.skills !== undefined) {
+      cur.skills = body.skills.map((name) => ({ name, enabled: true }))
+    }
+    if (body.algorithm !== undefined) {
+      cur.algorithm = body.algorithm
+      cur.algorithms = body.algorithm ? [{ name: body.algorithm, enabled: true }] : []
+    }
+    if (body.model !== undefined) {
+      cur.model = body.model
+    }
     if (body.status !== undefined) cur.status = body.status
     cur.updated_at = new Date().toISOString()
     return HttpResponse.json({

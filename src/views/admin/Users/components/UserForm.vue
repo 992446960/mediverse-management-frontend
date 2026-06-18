@@ -1,48 +1,40 @@
 <template>
   <a-modal
     :open="open"
-    :title="viewOnly ? t('common.detail') : isEdit ? t('user.editUser') : t('user.addUser')"
+    :title="viewOnly ? t('user.detailTitle') : isEdit ? t('user.editUser') : t('user.addUser')"
+    :width="560"
     :confirm-loading="confirmLoading"
-    :ok-text="t('common.confirm')"
+    :ok-text="isEdit ? t('common.save') : t('common.confirm')"
     :cancel-text="t('common.cancel')"
-    :footer="viewOnly ? null : undefined"
     @ok="handleOk"
     @cancel="emit('update:open', false)"
   >
     <template v-if="viewOnly && initialRecord">
-      <a-descriptions :column="1" bordered size="small" class="user-form-detail">
-        <a-descriptions-item :label="t('user.username')">
-          {{ initialRecord.username }}
-        </a-descriptions-item>
-        <a-descriptions-item :label="t('user.realName')">
-          {{ initialRecord.real_name }}
-        </a-descriptions-item>
-        <a-descriptions-item :label="t('user.phone')">
-          {{ initialRecord.phone || '—' }}
-        </a-descriptions-item>
-        <a-descriptions-item :label="t('user.email')">
-          {{ initialRecord.email || '—' }}
-        </a-descriptions-item>
-        <a-descriptions-item :label="t('user.org')">
-          {{ initialRecord.org_name }}
-        </a-descriptions-item>
-        <a-descriptions-item :label="t('user.dept')">
-          {{ initialRecord.dept_name }}
-        </a-descriptions-item>
-        <a-descriptions-item :label="t('user.roles')">
-          <a-space :size="4" wrap>
-            <a-tag v-for="r in initialRecord.roles" :key="r">
-              {{ t(ROLE_LABEL_KEYS[r] ?? r) }}
-            </a-tag>
-          </a-space>
-        </a-descriptions-item>
-        <a-descriptions-item :label="t('user.status')">
-          {{ initialRecord.status === 'active' ? t('status.active') : t('status.inactive') }}
-        </a-descriptions-item>
-        <a-descriptions-item :label="t('common.createdAt')">
-          {{ formatCreatedAt(initialRecord.created_at) }}
-        </a-descriptions-item>
-      </a-descriptions>
+      <div class="user-form-detail">
+        <IdentitySummary
+          :name="detailSummaryName"
+          :avatar-url="detailAvatarUrl"
+          :scope="detailScope"
+          :status-text="detailStatusText"
+          :status-color="detailStatusColor"
+          :tags="detailRoleLabels"
+        />
+
+        <section class="user-form-detail__section">
+          <SectionTitle :title="t('avatar.wizard.basicInfo')" />
+          <ReadonlyDescription :items="detailBasicItems" :columns="1" />
+        </section>
+
+        <section class="user-form-detail__section">
+          <SectionTitle :title="t('user.organizationScope')" />
+          <ReadonlyDescription :items="detailOrganizationItems" :columns="1" />
+        </section>
+
+        <section class="user-form-detail__section">
+          <SectionTitle :title="t('user.remark')" />
+          <ReadonlyDescription :items="detailRemarkItems" :columns="1" />
+        </section>
+      </div>
     </template>
     <a-form
       v-else
@@ -52,7 +44,7 @@
       layout="vertical"
       @submit.prevent="handleOk"
     >
-      <a-row :gutter="[16, 16]">
+      <a-row :gutter="[16, 12]">
         <template v-if="!isEdit">
           <a-col :xs="24" :sm="12">
             <a-form-item :label="t('user.org')" name="org_id">
@@ -195,7 +187,7 @@
         </a-col>
         <a-col :xs="24" :sm="12">
           <a-form-item :label="t('user.status')" name="status">
-            <a-radio-group v-model:value="formState.status">
+            <a-radio-group v-model:value="formState.status" class="user-form-status-group">
               <a-radio value="active">{{ t('status.active') }}</a-radio>
               <a-radio value="inactive">{{ t('status.inactive') }}</a-radio>
             </a-radio-group>
@@ -211,9 +203,12 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import dayjs from 'dayjs'
 import { useAuthStore } from '@/stores/auth'
 import type { FormInstance } from 'ant-design-vue'
+import { toAbsoluteFileUrl } from '@/api/upload'
+import IdentitySummary from '@/components/IdentitySummary/index.vue'
+import ReadonlyDescription from '@/components/ReadonlyDescription/index.vue'
+import SectionTitle from '@/components/SectionTitle/index.vue'
 import { useOrgDeptFromTree } from '@/composables/useOrgDeptFromTree'
 import type { UserListItem } from '@/types/user'
 import type { CreateUserPayload, UpdateUserPayload } from '@/types/user'
@@ -232,8 +227,10 @@ const ROLE_LABEL_KEYS: Record<UserRole, string> = {
   user: 'user.roleUser',
 }
 
-function formatCreatedAt(iso: string): string {
-  return dayjs(iso).format('YYYY-MM-DD HH:mm')
+interface ReadonlyDescriptionItem {
+  label: string
+  value?: string | number | string[] | null
+  span?: 1 | 2
 }
 
 interface Props {
@@ -265,6 +262,38 @@ const isEdit = computed(() => !!props.initialRecord?.id)
 const lockOrg = computed(() => authStore.isDeptAdmin || authStore.isOrgAdmin)
 const lockDept = computed(() => authStore.isDeptAdmin)
 const showRoleField = computed(() => !authStore.isDeptAdmin)
+
+const detailRoleLabels = computed(() =>
+  (props.initialRecord?.roles ?? []).map((role) => t(ROLE_LABEL_KEYS[role] ?? role))
+)
+const detailSummaryName = computed(
+  () => props.initialRecord?.real_name || props.initialRecord?.username || '—'
+)
+const detailAvatarUrl = computed(() =>
+  props.initialRecord?.avatar_url ? toAbsoluteFileUrl(props.initialRecord.avatar_url) : ''
+)
+const detailScope = computed(() =>
+  [props.initialRecord?.org_name, props.initialRecord?.dept_name].filter(Boolean).join(' / ')
+)
+const detailStatusText = computed(() =>
+  props.initialRecord?.status === 'active' ? t('status.active') : t('status.inactive')
+)
+const detailStatusColor = computed(() =>
+  props.initialRecord?.status === 'active' ? 'success' : 'error'
+)
+const detailBasicItems = computed<ReadonlyDescriptionItem[]>(() => [
+  { label: t('user.username'), value: props.initialRecord?.username },
+  { label: t('user.realName'), value: props.initialRecord?.real_name },
+  { label: t('user.phone'), value: props.initialRecord?.phone },
+  { label: t('user.email'), value: props.initialRecord?.email },
+])
+const detailOrganizationItems = computed<ReadonlyDescriptionItem[]>(() => [
+  { label: t('user.org'), value: props.initialRecord?.org_name || props.initialRecord?.org_id },
+  { label: t('user.dept'), value: props.initialRecord?.dept_name || props.initialRecord?.dept_id },
+])
+const detailRemarkItems = computed<ReadonlyDescriptionItem[]>(() => [
+  { label: t('user.remark'), value: props.initialRecord?.remark },
+])
 
 const formRef = ref<FormInstance>()
 const confirmLoading = ref(false)
@@ -461,9 +490,54 @@ async function handleOk() {
 </script>
 
 <style scoped lang="scss">
+.user-form-detail {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.user-form-detail__section {
+  min-width: 0;
+}
+
+.user-form-detail__section :deep(.section-title) {
+  margin-bottom: var(--spacing-sm);
+}
+
+.user-form-detail :deep(.readonly-description__row) {
+  grid-template-columns: 88px minmax(0, 1fr);
+  min-height: 32px;
+}
+
+.user-form-detail :deep(.readonly-description__label) {
+  padding: 6px 10px;
+  background: transparent;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.user-form-detail :deep(.readonly-description__value) {
+  min-height: 32px;
+  padding: 6px 10px;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
 .user-form-roles-wrap {
   display: flex;
   flex-wrap: wrap;
   gap: 8px 16px;
+}
+
+.user-form-roles-wrap :deep(.ant-checkbox-wrapper) {
+  margin-inline-start: 0;
+}
+
+.user-form-status-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  max-width: 100%;
 }
 </style>

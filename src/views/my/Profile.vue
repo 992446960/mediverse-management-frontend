@@ -33,228 +33,162 @@
               </a>
             </div>
           </a-col>
+
           <!-- 左侧：全部表单 -->
-          <a-col :xs="24" :lg="18">
-            <a-card class="h-full">
+          <a-col :xs="24" :lg="17">
+            <a-card class="profile-editor-card">
               <a-form
                 :model="formState"
                 :rules="formRules"
                 layout="vertical"
                 @finish="handleSubmit"
               >
-                <!-- 头像上传：大图 + 相机叠加 + 右侧文案 -->
-                <a-row :gutter="[16, 16]">
-                  <a-col :span="24">
-                    <a-form-item name="avatar_url">
-                      <div class="profile-avatar-section flex items-start gap-6">
-                        <input
-                          ref="fileInputRef"
-                          type="file"
-                          accept="image/jpeg,image/png,image/gif,image/webp"
-                          style="display: none"
-                          aria-hidden="true"
-                          @change="onAvatarFileChange"
-                        />
-                        <div
-                          class="profile-avatar-wrap relative shrink-0 cursor-pointer"
-                          :class="{ 'pointer-events-none opacity-70': avatarUploading }"
-                          @click="onAvatarCardClick"
+                <div class="profile-form-stack">
+                  <section class="profile-identity-form">
+                    <input
+                      ref="fileInputRef"
+                      type="file"
+                      accept="image/jpeg,image/png,image/gif,image/webp"
+                      style="display: none"
+                      aria-hidden="true"
+                      @change="onAvatarFileChange"
+                    />
+                    <a-form-item name="avatar_url" class="profile-avatar-field">
+                      <div class="profile-avatar-editor">
+                        <a-avatar
+                          :src="avatarDisplayUrl || undefined"
+                          :size="96"
+                          class="profile-avatar"
                         >
-                          <div
-                            class="profile-avatar-circle relative w-24 h-24 rounded-full bg-[var(--color-primary-100)] border-2 border-[var(--color-primary-200)] flex items-center justify-center overflow-hidden"
-                          >
-                            <div
-                              v-if="avatarUploading"
-                              class="absolute inset-0 flex items-center justify-center z-10 bg-white/70 rounded-full"
-                            >
-                              <a-spin />
-                            </div>
-                            <template v-else-if="formState.avatar_url">
-                              <a-image
-                                :src="avatarDisplayUrl"
-                                :alt="t('avatar.avatar')"
-                                class="profile-avatar-a-image w-full h-full [&_.ant-image]:block! [&_.ant-image-img]:w-full! [&_.ant-image-img]:h-full! [&_.ant-image-img]:object-cover!"
-                              />
-                            </template>
-                            <template v-else>
-                              <UserOutlined class="text-4xl" style="color: var(--color-primary)" />
-                            </template>
-                          </div>
-                          <!-- 右下角相机图标叠加，点击上传/更换 -->
-                          <div
-                            v-show="!avatarUploading"
-                            class="profile-avatar-camera-btn absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[var(--color-primary)] flex items-center justify-center cursor-pointer border-2 border-white shadow-sm hover:bg-[var(--color-primary-hover)] transition-colors"
-                            @click.stop="triggerAvatarInput"
-                          >
-                            <CameraOutlined class="text-white text-sm" />
-                          </div>
-                        </div>
-                        <div class="profile-avatar-text flex flex-col justify-center min-w-0">
-                          <h4 class="text-base font-medium text-[var(--color-text)] m-0">
-                            {{ t('profile.changeAvatar') }}
-                          </h4>
-                          <p class="text-sm text-[var(--color-text-tertiary)] mt-1 mb-0">
-                            {{ t('profile.avatarFormatHint') }}
-                          </p>
-                        </div>
+                          <template #icon>
+                            <UserOutlined />
+                          </template>
+                        </a-avatar>
+                        <a-button
+                          shape="circle"
+                          type="primary"
+                          size="small"
+                          :title="t('profile.changeAvatar')"
+                          :loading="avatarUploading"
+                          class="profile-avatar-action"
+                          @click="triggerAvatarInput"
+                        >
+                          <template #icon>
+                            <CameraOutlined />
+                          </template>
+                        </a-button>
                       </div>
                     </a-form-item>
-                  </a-col>
-                </a-row>
-                <a-row :gutter="[16, 16]">
-                  <a-col :xs="24" :sm="12">
-                    <a-form-item :label="t('user.realName')" name="real_name">
-                      <a-input
-                        v-model:value="formState.real_name"
-                        :placeholder="t('user.realName')"
-                        :maxlength="50"
-                        show-count
-                      />
-                    </a-form-item>
-                  </a-col>
-                  <a-col :xs="24" :sm="12">
-                    <a-form-item :label="t('user.username')" name="username">
-                      <a-input
-                        v-model:value="formState.username"
-                        :placeholder="t('user.username')"
-                        disabled
-                      />
-                    </a-form-item>
-                  </a-col>
-                </a-row>
-                <a-row :gutter="[16, 16]">
-                  <a-col :xs="24" :sm="12">
-                    <a-form-item :label="t('user.phone')" name="phone">
-                      <a-input
-                        v-model:value="formState.phone"
-                        :placeholder="t('profile.phonePlaceholder')"
-                        :maxlength="20"
-                        addon-before="+86"
-                      />
-                    </a-form-item>
-                  </a-col>
-                  <a-col :xs="24" :sm="12">
-                    <a-form-item :label="t('user.email')" name="email">
-                      <a-input
-                        v-model:value="formState.email"
-                        :placeholder="t('profile.emailPlaceholder')"
-                        type="text"
-                        autocomplete="email"
-                      />
-                    </a-form-item>
-                  </a-col>
-                </a-row>
-                <a-row :gutter="[16, 16]">
-                  <a-col :span="24">
+
+                    <div class="profile-fields">
+                      <a-row :gutter="[16, 16]">
+                        <a-col :xs="24">
+                          <a-form-item :label="t('user.realName')" name="real_name">
+                            <a-input
+                              v-model:value="formState.real_name"
+                              :placeholder="t('user.realName')"
+                              :maxlength="50"
+                              show-count
+                            />
+                          </a-form-item>
+                        </a-col>
+                        <a-col :xs="24" :sm="12">
+                          <a-form-item :label="t('user.phone')" name="phone">
+                            <a-input
+                              v-model:value="formState.phone"
+                              :placeholder="t('profile.phonePlaceholder')"
+                              :maxlength="20"
+                              addon-before="+86"
+                            />
+                          </a-form-item>
+                        </a-col>
+                        <a-col :xs="24" :sm="12">
+                          <a-form-item :label="t('user.email')" name="email">
+                            <a-input
+                              v-model:value="formState.email"
+                              :placeholder="t('profile.emailPlaceholder')"
+                              type="text"
+                              autocomplete="email"
+                            />
+                          </a-form-item>
+                        </a-col>
+                        <a-col :xs="24">
+                          <a-form-item :label="t('user.username')" name="username">
+                            <a-input
+                              v-model:value="formState.username"
+                              :placeholder="t('user.username')"
+                              disabled
+                            />
+                          </a-form-item>
+                        </a-col>
+                      </a-row>
+                    </div>
+                  </section>
+
+                  <section class="profile-remark">
                     <a-form-item :label="t('user.remark')" name="remark">
                       <a-textarea
                         v-model:value="formState.remark"
                         :placeholder="t('profile.remarkPlaceholder')"
-                        :rows="3"
+                        :rows="4"
                         :maxlength="500"
                         show-count
                       />
                     </a-form-item>
-                  </a-col>
-                </a-row>
-                <a-row :gutter="[16, 16]">
-                  <a-col :span="24">
-                    <a-form-item>
-                      <a-button type="primary" html-type="submit" :loading="submitting">
-                        {{ t('profile.saveChanges') }}
-                      </a-button>
-                      <a-button class="ml-2" @click="refreshUser">
-                        {{ t('common.refresh') }}
-                      </a-button>
-                    </a-form-item>
-                  </a-col>
-                </a-row>
+                  </section>
+
+                  <div class="profile-actions">
+                    <a-button type="primary" html-type="submit" :loading="submitting">
+                      {{ t('profile.saveChanges') }}
+                    </a-button>
+                    <a-button html-type="button" @click="refreshUser">
+                      {{ t('common.refresh') }}
+                    </a-button>
+                  </div>
+                </div>
               </a-form>
             </a-card>
           </a-col>
 
           <!-- 右侧：个人名片预览 -->
-          <a-col :xs="24" :lg="6">
-            <a-card class="profile-preview-card" :title="t('profile.previewTitle')">
-              <div class="profile-preview flex flex-col items-center w-full">
-                <!-- 头像 + 姓名 + 角色 -->
-                <div class="preview-header flex flex-col items-center text-center mb-5">
-                  <div class="preview-avatar-wrap">
-                    <div
-                      class="w-20 h-20 rounded-full bg-[var(--color-primary-100)] border-2 border-[var(--color-primary-200)] flex items-center justify-center overflow-hidden"
-                    >
-                      <template v-if="preview.avatar_url">
-                        <a-image
-                          :src="toAbsoluteFileUrl(preview.avatar_url)"
-                          :alt="t('avatar.avatar')"
-                          class="w-full h-full [&_.ant-image]:block! [&_.ant-image-img]:w-full! [&_.ant-image-img]:h-full! [&_.ant-image-img]:object-cover!"
-                        />
-                      </template>
-                      <template v-else>
-                        <UserOutlined class="text-3xl" style="color: var(--color-primary)" />
-                      </template>
-                    </div>
-                  </div>
-                  <h3 class="mt-3 text-lg font-semibold text-[var(--color-text)]">
-                    {{ preview.real_name || preview.username || '–' }}
-                  </h3>
-                  <span
-                    class="mt-1.5 inline-block px-3 py-0.5 rounded-full text-xs font-medium text-white bg-[var(--color-primary)]"
+          <a-col :xs="24" :lg="7">
+            <a-card class="profile-preview-card">
+              <div class="profile-preview">
+                <h2 class="profile-preview-title">{{ t('profile.previewTitle') }}</h2>
+                <div class="profile-preview-hero">
+                  <a-avatar
+                    :src="previewAvatarUrl || undefined"
+                    :size="72"
+                    class="profile-preview-avatar"
                   >
-                    {{ roleLabel }}
-                  </span>
+                    <template #icon>
+                      <UserOutlined />
+                    </template>
+                  </a-avatar>
+                  <div class="profile-preview-name">{{ previewName }}</div>
+                  <div v-if="previewTags.length > 0" class="profile-preview-tags">
+                    <a-tag v-for="tag in previewTags" :key="tag" color="blue">{{ tag }}</a-tag>
+                    <a-tag :color="user.is_active ? 'success' : 'error'">
+                      {{ user.is_active ? t('status.active') : t('status.inactive') }}
+                    </a-tag>
+                  </div>
                 </div>
-                <!-- 信息卡片 -->
-                <div class="preview-cards space-y-3 w-full">
-                  <div class="preview-card">
-                    <div class="preview-card-icon">
-                      <PhoneOutlined class="text-lg" style="color: var(--color-primary)" />
+
+                <div class="profile-preview-list">
+                  <div
+                    v-for="item in previewCardItems"
+                    :key="item.label"
+                    class="profile-preview-item"
+                    :class="{ 'profile-preview-item--wide': item.span === 2 }"
+                  >
+                    <div class="profile-preview-icon">
+                      <component :is="item.icon" />
                     </div>
-                    <div class="preview-card-content">
-                      <span class="preview-card-label">{{ t('user.phone') }}</span>
-                      <span class="preview-card-value">{{ preview.phone || '–' }}</span>
-                    </div>
-                  </div>
-                  <div class="preview-card">
-                    <div class="preview-card-icon">
-                      <MailOutlined class="text-lg" style="color: var(--color-primary)" />
-                    </div>
-                    <div class="preview-card-content">
-                      <span class="preview-card-label">{{ t('user.email') }}</span>
-                      <span class="preview-card-value">{{ preview.email || '–' }}</span>
-                    </div>
-                  </div>
-                  <div v-if="user.org_id" class="preview-card">
-                    <div class="preview-card-icon">
-                      <BankOutlined class="text-lg" style="color: var(--color-primary)" />
-                    </div>
-                    <div class="preview-card-content">
-                      <span class="preview-card-label">{{ t('user.org') }}</span>
-                      <span class="preview-card-value">{{
-                        user.org_name || user.org_id || '–'
-                      }}</span>
-                    </div>
-                  </div>
-                  <div class="preview-card">
-                    <div class="preview-card-icon">
-                      <ApartmentOutlined class="text-lg" style="color: var(--color-primary)" />
-                    </div>
-                    <div class="preview-card-content">
-                      <span class="preview-card-label">{{ t('user.dept') }}</span>
-                      <span class="preview-card-value">{{
-                        user.dept_name || user.dept_id || '–'
-                      }}</span>
-                    </div>
-                  </div>
-                  <div v-if="preview.remark" class="preview-card">
-                    <div class="preview-card-icon">
-                      <FileTextOutlined class="text-lg" style="color: var(--color-primary)" />
-                    </div>
-                    <div class="preview-card-content">
-                      <span class="preview-card-label">{{ t('user.remark') }}</span>
-                      <span class="preview-card-value preview-card-value-multiline">{{
-                        preview.remark
-                      }}</span>
+                    <div class="profile-preview-copy">
+                      <div class="profile-preview-label">{{ item.label }}</div>
+                      <div class="profile-preview-value">
+                        {{ getPreviewDisplayValue(item.value) }}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -296,11 +230,13 @@ import {
   BankOutlined,
   CameraOutlined,
   FileTextOutlined,
+  IdcardOutlined,
   LockOutlined,
   MailOutlined,
   PhoneOutlined,
   UserOutlined,
 } from '@ant-design/icons-vue'
+import type { Component } from 'vue'
 import type { UserRole } from '@/types/auth'
 import { normalizeAuthUser, mergeUserWithWorkbenchFlags } from '@/utils/authUser'
 import type { Rule } from 'ant-design-vue/es/form'
@@ -324,6 +260,16 @@ const ROLE_LABEL_KEYS: Record<UserRole, string> = {
   org_admin: 'user.roleOrgAdmin',
   dept_admin: 'user.roleDeptAdmin',
   user: 'user.roleUser',
+}
+
+interface ReadonlyDescriptionItem {
+  label: string
+  value?: string | number | string[] | null
+  span?: 1 | 2
+}
+
+interface ProfilePreviewCardItem extends ReadonlyDescriptionItem {
+  icon: Component
 }
 
 const roleLabel = computed(() => {
@@ -361,6 +307,34 @@ const preview = computed(() => ({
   email: formState.email.trim() || user.value?.email || '',
   remark: formState.remark.trim() || '',
 }))
+
+const previewName = computed(() => preview.value.real_name || preview.value.username || '–')
+
+const previewAvatarUrl = computed(() =>
+  preview.value.avatar_url ? toAbsoluteFileUrl(preview.value.avatar_url) : ''
+)
+
+const previewTags = computed(() => (roleLabel.value === '–' ? [] : [roleLabel.value]))
+
+const previewCardItems = computed<ProfilePreviewCardItem[]>(() => [
+  { label: t('user.username'), value: preview.value.username, icon: IdcardOutlined },
+  { label: t('user.phone'), value: preview.value.phone, icon: PhoneOutlined },
+  { label: t('user.email'), value: preview.value.email, icon: MailOutlined },
+  { label: t('user.org'), value: user.value?.org_name || user.value?.org_id, icon: BankOutlined },
+  {
+    label: t('user.dept'),
+    value: user.value?.dept_name || user.value?.dept_id,
+    icon: ApartmentOutlined,
+  },
+  { label: t('user.remark'), value: preview.value.remark, span: 2, icon: FileTextOutlined },
+])
+
+function getPreviewDisplayValue(value: ReadonlyDescriptionItem['value']) {
+  if (value == null) return '–'
+  if (Array.isArray(value)) return value.length > 0 ? value.join('、') : '–'
+  if (value === '') return '–'
+  return value
+}
 
 const formRules: Record<string, Rule[]> = {
   real_name: [
@@ -409,11 +383,6 @@ watch(
 
 function triggerAvatarInput() {
   fileInputRef.value?.click()
-}
-
-function onAvatarCardClick() {
-  if (formState.avatar_url) return
-  triggerAvatarInput()
 }
 
 async function handleChangePasswordOk() {
@@ -531,79 +500,220 @@ onMounted(() => {
 <style scoped lang="scss">
 .profile-page {
   width: 100%;
-  min-width: 680px;
+  min-width: 0;
 }
-.profile-layout :deep(.ant-card-body) {
-  padding: var(--spacing-4, 1rem);
-}
-/* 头像上传区域 */
-.profile-avatar-section {
-  padding: 4px 0;
-}
-.profile-avatar-camera-btn :deep(.anticon) {
-  color: white !important;
-}
-.profile-avatar-camera-btn :deep(.anticon svg) {
-  fill: currentColor;
-}
-.profile-preview-col {
+
+.profile-form-stack {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  gap: 28px;
+  min-height: 520px;
 }
+
+.profile-editor-card,
+.profile-preview-card {
+  height: 100%;
+  border: 1px solid var(--color-border-secondary);
+  border-radius: 10px;
+  box-shadow: 0 10px 32px rgb(15 23 42 / 6%);
+}
+
+.profile-editor-card :deep(.ant-card-body) {
+  padding: 28px;
+}
+
+.profile-preview-title {
+  margin: 0;
+  color: var(--color-text-base);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.profile-identity-form {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  align-items: start;
+  gap: 24px;
+  min-width: 0;
+}
+
+.profile-avatar-field {
+  margin-bottom: 0;
+}
+
+.profile-avatar-editor {
+  position: relative;
+  width: 96px;
+  height: 96px;
+}
+
+.profile-avatar,
+.profile-preview-avatar {
+  color: var(--color-primary);
+  background: linear-gradient(135deg, #e7f3ff 0%, #f0fbff 100%);
+  border: 1px solid #d5ebff;
+}
+
+.profile-avatar-action {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 28%, transparent);
+}
+
+.profile-fields {
+  min-width: 0;
+}
+
+.profile-fields :deep(.ant-form-item),
+.profile-remark :deep(.ant-form-item) {
+  margin-bottom: 0;
+}
+
+.profile-fields :deep(.ant-form-item-label > label),
+.profile-remark :deep(.ant-form-item-label > label) {
+  color: var(--color-text-base);
+  font-weight: 600;
+}
+
+.profile-remark :deep(.ant-input) {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.profile-remark :deep(.ant-input-textarea-show-count::after) {
+  color: var(--color-text-tertiary);
+}
+
+.profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 12px;
+}
+
 .profile-preview-card {
   position: sticky;
   top: 1rem;
   width: 100%;
 }
-/* 个人名片预览：头像区域 */
-.preview-avatar-wrap {
-  position: relative;
+
+.profile-preview-card :deep(.ant-card-body) {
+  padding: 28px 22px 24px;
 }
-/* 个人名片预览：信息卡片 */
-.preview-card {
+
+.profile-preview {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px 14px;
-  background: var(--color-bg-layout, #f1f5f9);
-  border-radius: var(--radius-sm, 8px);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-}
-.preview-card-icon {
-  flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-primary-100);
-  border-radius: 8px;
-}
-.preview-card-icon :deep(.anticon) {
-  color: var(--color-primary) !important;
-}
-.preview-card-icon :deep(.anticon svg) {
-  fill: currentColor;
-}
-.preview-card-content {
-  flex: 1;
   min-width: 0;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.profile-preview-title {
+  align-self: flex-start;
+}
+
+.profile-preview-hero {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
 }
-.preview-card-label {
-  font-size: 12px;
-  color: var(--color-text-tertiary);
+
+.profile-preview-name {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--color-text-base);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.45;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.preview-card-value {
+
+.profile-preview-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.profile-preview-tags :deep(.ant-tag) {
+  margin-inline-end: 0;
+}
+
+.profile-preview-list {
+  display: grid;
+  gap: 14px;
+}
+
+.profile-preview-item {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  align-items: center;
+  min-width: 0;
+  padding: 12px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #f2f8ff 0%, #f7faff 100%);
+}
+
+.profile-preview-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  color: var(--color-primary);
+  background: #e3f2ff;
+  font-size: 16px;
+}
+
+.profile-preview-copy {
+  min-width: 0;
+}
+
+.profile-preview-label {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.profile-preview-value {
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+  color: var(--color-text-base);
   font-size: 14px;
-  font-weight: 500;
-  color: var(--color-text);
+  font-weight: 600;
+  line-height: 1.5;
 }
-.preview-card-value-multiline {
-  white-space: pre-wrap;
-  word-break: break-word;
-  font-weight: 400;
+
+:global(html[data-theme='dark']) .profile-preview-item {
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg-elevated);
+  background-image: none;
+}
+
+:global(html[data-theme='dark']) .profile-preview-icon {
+  background: rgb(56 189 248 / 12%);
+}
+
+@media (max-width: 992px) {
+  .profile-preview-card {
+    position: static;
+  }
+}
+
+@media (max-width: 640px) {
+  .profile-editor-card :deep(.ant-card-body),
+  .profile-preview-card :deep(.ant-card-body) {
+    padding: 20px;
+  }
+
+  .profile-identity-form {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

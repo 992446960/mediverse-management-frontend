@@ -1,4 +1,5 @@
 import { Modal } from 'ant-design-vue'
+import { getI18nMessage } from '@/utils/i18nMessage'
 
 export interface ConfirmDeleteOptions {
   /** 标题（建议调用方使用 t() 传入） */
@@ -12,10 +13,10 @@ export interface ConfirmDeleteOptions {
 
 export function confirmDelete(options: ConfirmDeleteOptions): void {
   const {
-    title = '确认删除',
-    content = '删除后不可恢复，是否继续？',
-    okText = '删除',
-    cancelText = '取消',
+    title = getI18nMessage('common.confirmDeleteTitle', '确认删除'),
+    content = getI18nMessage('common.confirmDeleteContent', '删除后不可恢复，是否继续？'),
+    okText = getI18nMessage('common.delete', '删除'),
+    cancelText = getI18nMessage('common.cancel', '取消'),
     onOk,
   } = options
 

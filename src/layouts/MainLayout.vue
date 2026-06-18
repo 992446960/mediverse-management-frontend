@@ -260,18 +260,24 @@ watch(
   overflow: hidden;
 }
 
+.sider :deep(.ant-menu),
+.sider :deep(.ant-menu-sub),
+.sider :deep(.ant-menu-inline) {
+  background: var(--color-bg-sidebar) !important;
+}
+
 .logo {
   box-sizing: border-box;
   width: 100%;
   min-width: 0;
-  min-height: 44px;
-  margin: 16px 0 0;
-  padding: 0 12px 16px;
+  min-height: 78px;
+  margin: 0;
+  padding: 18px 18px 16px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   overflow: hidden;
-  color: var(--color-primary);
+  color: var(--color-text-inverse);
   font-weight: 700;
   font-size: 16px;
   font-size: 16px;
@@ -282,24 +288,25 @@ watch(
 .logo--collapsed {
   padding-left: 0;
   padding-right: 0;
+  justify-content: center;
 }
 
 /* 短文案（如中文）整体居中；超长时撑满侧栏宽度并省略，logo 不被裁切 */
 .logo__inner {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   width: max-content;
   max-width: 100%;
   min-width: 0;
 }
 
 .logo__img {
-  flex: 0 0 28px;
-  width: 28px;
-  height: 28px;
-  min-width: 28px;
-  min-height: 28px;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  min-height: 34px;
   object-fit: contain;
   display: block;
 }
@@ -317,14 +324,36 @@ watch(
 }
 
 .logo__text {
-  display: block;
+  display: flex;
+  flex-direction: column;
   width: 100%;
   min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
   cursor: default;
-  line-height: 28px;
+  line-height: 1.05;
+}
+
+.logo__title,
+.logo__subtitle {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.logo__title {
+  color: var(--color-text-title);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.logo__subtitle {
+  margin-top: 3px;
+  color: var(--color-text-title);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
 }
 
 .header {
@@ -433,35 +462,5 @@ watch(
   border-radius: var(--radius-base);
   overflow-y: auto;
   overflow-x: hidden;
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-</style>
-
-<style>
-/* 用户菜单：关闭「与触发器等宽」后，由内容决定宽度；略设 max-width 防溢出 */
-.user-menu-overlay.ant-dropdown {
-  width: max-content;
-  max-width: min(100vw - var(--spacing-xl), 20rem);
-}
-
-.user-menu-overlay .ant-dropdown-menu {
-  width: max-content;
-  min-width: unset;
-}
-
-.user-menu-overlay .ant-dropdown-menu-item {
-  .user-menu-item-text {
-    white-space: nowrap;
-    margin-left: var(--spacing-xs);
-  }
 }
 </style>

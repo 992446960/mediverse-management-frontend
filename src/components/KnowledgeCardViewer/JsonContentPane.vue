@@ -1,14 +1,16 @@
 <template>
   <div class="json-content-pane">
     <div class="flex items-center justify-between mb-2">
-      <span class="text-sm font-medium text-gray-500">{{ t('knowledge.card.jsonPane') }}</span>
+      <span class="text-sm font-medium text-(--color-text-secondary)">{{
+        t('knowledge.card.jsonPane')
+      }}</span>
       <a-button v-if="hasJsonContent" size="small" type="text" @click="handleCopy">
         <template #icon><CopyOutlined /></template>
         {{ t('knowledge.card.copyJson') }}
       </a-button>
     </div>
     <div
-      class="json-content-pane__body p-4 bg-gray-50 rounded-lg min-h-[200px] h-[min(480px,calc(100vh-240px))] overflow-y-auto"
+      class="json-content-pane__body p-4 bg-(--color-bg-layout) rounded-lg min-h-[200px] h-[min(480px,calc(100vh-240px))] overflow-y-auto"
     >
       <vue-json-pretty
         v-if="parsedData !== null"

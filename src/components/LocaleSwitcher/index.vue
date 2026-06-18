@@ -65,36 +65,28 @@ const handleLocaleChange = ({ key }: { key: string }) => {
 }
 
 .locale-switcher-wrapper:hover {
-  background-color: rgba(0, 0, 0, 0.03);
-}
-
-.dark .locale-switcher-wrapper:hover {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: color-mix(in srgb, var(--color-border) 35%, transparent);
 }
 
 .icon-box {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #64748b;
+  color: var(--color-text-secondary);
   transition: color 0.2s;
 }
 
 .locale-text {
   font-size: 13px;
   font-weight: 600;
-  color: #475569;
+  color: var(--color-text-secondary);
   margin-left: 8px;
   letter-spacing: 0.02em;
 }
 
-.dark .locale-text {
-  color: #94a3b8;
-}
-
 .arrow-icon {
   font-size: 10px;
-  color: #94a3b8;
+  color: var(--color-text-tertiary);
   margin-left: 6px;
   transition: all 0.3s ease;
 }
@@ -104,12 +96,8 @@ const handleLocaleChange = ({ key }: { key: string }) => {
   color: var(--color-primary);
 }
 
-.dark .locale-switcher-wrapper:hover .locale-text {
-  color: var(--color-primary);
-}
-
 :deep(.ant-dropdown-open) .arrow-icon {
   transform: rotate(180deg);
-  color: #3b82f6;
+  color: var(--color-primary);
 }
 </style>

@@ -13,12 +13,12 @@ const html = computed(() => sanitizeKnowledgePreviewHtml(props.content))
 const rootClass = computed(() => {
   const base = 'citation-preview-html markdown-body prose prose-sm max-w-none dark:prose-invert'
   if (props.variant === 'card') {
-    return `${base} citation-preview-html--card text-xs text-gray-600 leading-relaxed mb-0 flex-1 min-w-0 line-clamp-3`
+    return `${base} citation-preview-html--card text-xs text-(--color-text-secondary) leading-relaxed mb-0 flex-1 min-w-0 line-clamp-3`
   }
   if (props.variant === 'skill') {
-    return `${base} citation-preview-html--skill text-xs text-gray-500 dark:text-gray-400 line-clamp-3`
+    return `${base} citation-preview-html--skill text-xs text-(--color-text-secondary) line-clamp-3`
   }
-  return `${base} citation-preview-html--modal text-gray-600`
+  return `${base} citation-preview-html--modal text-(--color-text-secondary)`
 })
 </script>
 

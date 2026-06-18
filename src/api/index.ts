@@ -9,6 +9,7 @@ import { getToken, setToken, getRefreshToken, clearAuth } from '@/utils/auth'
 import { checkRepeatSubmit } from '@/utils/requestDedup'
 import { getHttpErrorMessage } from '@/config/errorCodes'
 import { buildApiUrl, getApiBaseUrl } from '@/config/apiBaseUrl'
+import { getI18nMessage } from '@/utils/i18nMessage'
 import type { ApiResponse } from '@/types'
 import type { RefreshTokenResponse } from '@/types/auth'
 
@@ -193,7 +194,7 @@ api.interceptors.response.use(
       } catch (refreshError) {
         clearAuth()
         requestsQueue = []
-        message.error('登录已过期，请重新登录')
+        message.error(getI18nMessage('common.loginExpired', '登录已过期，请重新登录'))
         // 使用 window.location.href 跳转，确保清除状态
         window.location.href = '/login'
         return Promise.reject(refreshError)
@@ -204,7 +205,10 @@ api.interceptors.response.use(
 
     // 登录或刷新接口 401：直接展示后端错误信息，不刷新页面、不跳转
     if (error.response?.status === 401 && isLoginOrRefresh) {
-      const errorMsg = error.response?.data?.message || error.message || '请求失败'
+      const errorMsg =
+        error.response?.data?.message ||
+        error.message ||
+        getI18nMessage('common.requestFailed', '请求失败')
       message.error(errorMsg)
       return Promise.reject(error)
     }
@@ -221,7 +225,7 @@ api.interceptors.response.use(
         error.response?.data?.message ||
         (error.response?.status ? getHttpErrorMessage(error.response.status) : null) ||
         error.message ||
-        '请求失败'
+        getI18nMessage('common.requestFailed', '请求失败')
       const silent = originalRequest?.skipErrorToast === true
       if (!silent) {
         message.error(errorMsg)

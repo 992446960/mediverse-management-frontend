@@ -112,9 +112,9 @@ defineExpose({ expand })
 
 <style scoped lang="scss">
 .item-active {
-  background-color: rgb(14 165 233 / 0.05);
-  color: #0ea5e9;
-  border-left-color: #0ea5e9 !important;
+  background-color: color-mix(in srgb, var(--color-primary) 5%, transparent);
+  color: var(--color-primary);
+  border-left-color: var(--color-primary) !important;
   font-weight: 700;
 }
 </style>

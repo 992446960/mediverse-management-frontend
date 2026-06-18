@@ -100,7 +100,13 @@ const getSkillIconColor = (skillCode: string) => {
   return 'text-purple-500'
 }
 
+const getSkillCode = (skill: Skill) => skill.skill_code || skill.name || ''
+const getSkillTitle = (skill: Skill) => skill.title || getSkillCode(skill)
+
 const handleSkillClick = async (skill: Skill) => {
+  const skillCode = getSkillCode(skill)
+  if (!skillCode) return
+
   const args = buildSkillExecuteArgs({
     skill,
     inputText: skillInputContext.value.inputText,
@@ -119,7 +125,7 @@ const handleSkillClick = async (skill: Skill) => {
     avatar_id: currentSession.value?.avatar_id,
   }
 
-  await executeSkill(skill.skill_code, args, context)
+  await executeSkill(skillCode, args, context)
 }
 
 const goBack = () => {
@@ -162,31 +168,31 @@ const goBack = () => {
         <div v-else class="flex flex-col gap-4">
           <div
             v-for="skill in skills"
-            :key="skill.skill_code"
+            :key="getSkillCode(skill)"
             class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 cursor-pointer hover:shadow-md transition-shadow"
             @click="handleSkillClick(skill)"
           >
             <div class="flex items-center gap-2 mb-2">
               <component
-                :is="getSkillIcon(skill.skill_code)"
-                :class="['text-lg', getSkillIconColor(skill.skill_code)]"
+                :is="getSkillIcon(getSkillCode(skill))"
+                :class="['text-lg', getSkillIconColor(getSkillCode(skill))]"
               />
               <div class="font-medium text-gray-800 dark:text-gray-200">
-                {{ skill.title }}
+                {{ getSkillTitle(skill) }}
               </div>
             </div>
             <div class="text-xs text-gray-500 dark:text-gray-400 mb-3">
               {{ skill.description }}
             </div>
             <!-- Optional Tags (Mocked for now as they are not in API response) -->
-            <div v-if="skill.skill_code === 'knowledge-retrieval'" class="flex flex-wrap gap-2">
+            <div v-if="getSkillCode(skill) === 'knowledge-retrieval'" class="flex flex-wrap gap-2">
               <span
                 class="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-[10px] rounded-full"
-                >高血压指南</span
+                >{{ t('chat.skillTagHypertensionGuideline') }}</span
               >
               <span
                 class="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-[10px] rounded-full"
-                >糖尿病饮食</span
+                >{{ t('chat.skillTagDiabetesDiet') }}</span
               >
             </div>
           </div>

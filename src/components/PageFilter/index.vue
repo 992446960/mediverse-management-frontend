@@ -94,7 +94,7 @@
         </a-col>
 
         <!-- 按钮栏 -->
-        <a-col v-if="filterConf.btns?.length" :span="actionColSpan">
+        <a-col v-if="hasActionControls" :span="actionControlsColSpan">
           <a-space>
             <a-button
               v-for="(btn, idx) in filterConf.btns"
@@ -107,16 +107,19 @@
               </template>
               {{ btn.text }}
             </a-button>
-          </a-space>
-        </a-col>
 
-        <!-- 多行筛选项时：收起为单行 / 展开全部（置于查询等按钮之后） -->
-        <a-col v-if="showRowCollapseToggle" :span="2">
-          <a-button type="link" class="page-filter__row-toggle" @click="toggleRowLayoutCollapsed">
-            {{ rowLayoutCollapsed ? t('common.expand') : t('common.collapse') }}
-            <DownOutlined v-if="rowLayoutCollapsed" />
-            <UpOutlined v-else />
-          </a-button>
+            <!-- 多行筛选项时：收起为单行 / 展开全部（与查询等按钮同列） -->
+            <a-button
+              v-if="showRowCollapseToggle"
+              type="link"
+              class="page-filter__row-toggle"
+              @click="toggleRowLayoutCollapsed"
+            >
+              {{ rowLayoutCollapsed ? t('common.expand') : t('common.collapse') }}
+              <DownOutlined v-if="rowLayoutCollapsed" />
+              <UpOutlined v-else />
+            </a-button>
+          </a-space>
         </a-col>
       </a-row>
     </a-form>
@@ -236,16 +239,20 @@ function countTextUnits(text: string): number {
   return [...text].reduce((sum, char) => sum + (char.charCodeAt(0) <= 0xff ? 0.55 : 1), 0)
 }
 
+function countButtonUnits(text: string, hasIcon = false): number {
+  const textUnits = countTextUnits(text)
+  const iconUnits = hasIcon ? 2 : 0
+  const buttonPaddingUnits = 4
+  return textUnits + iconUnits + buttonPaddingUnits
+}
+
 const estimatedActionColSpan = computed(() => {
   const btns = props.filterConf.btns ?? []
   if (!btns.length) return 0
 
   const units = btns.reduce(
     (sum, btn) => {
-      const textUnits = countTextUnits(btn.text)
-      const iconUnits = btn.icon ? 2 : 0
-      const buttonPaddingUnits = 4
-      return sum + textUnits + iconUnits + buttonPaddingUnits
+      return sum + countButtonUnits(btn.text, Boolean(btn.icon))
     },
     Math.max(0, btns.length - 1) * 2
   )
@@ -272,6 +279,29 @@ const showRowCollapseToggle = computed(
 
 const rowLayoutCollapsed = ref(true)
 
+const estimatedActionControlsColSpan = computed(() => {
+  const btns = props.filterConf.btns ?? []
+  const buttonGapUnits = Math.max(0, btns.length - 1) * 2
+  const btnUnits = btns.reduce((sum, btn) => sum + countButtonUnits(btn.text, Boolean(btn.icon)), 0)
+  const toggleUnits = showRowCollapseToggle.value
+    ? countButtonUnits(rowLayoutCollapsed.value ? t('common.expand') : t('common.collapse'), true)
+    : 0
+  const toggleGapUnits = btns.length && showRowCollapseToggle.value ? 2 : 0
+  const units = btnUnits + buttonGapUnits + toggleUnits + toggleGapUnits
+  if (!units) return 0
+  return Math.min(MAX_ACTION_COL_SPAN, Math.max(MIN_ACTION_COL_SPAN, Math.ceil(units / 4)))
+})
+
+const actionControlsColSpan = computed(() => {
+  const configuredMinSpan = props.filterConf.btns?.length ? (props.filterConf.btnsCol ?? 0) : 0
+  const toggleMinSpan = showRowCollapseToggle.value ? ROW_COLLAPSE_TOGGLE_SPAN : 0
+  return Math.max(configuredMinSpan, toggleMinSpan, estimatedActionControlsColSpan.value)
+})
+
+const hasActionControls = computed(
+  () => Boolean(props.filterConf.btns?.length) || showRowCollapseToggle.value
+)
+
 watch(showRowCollapseToggle, (ok) => {
   if (!ok) rowLayoutCollapsed.value = true
 })
@@ -280,8 +310,7 @@ watch(showRowCollapseToggle, (ok) => {
 const tailReservedSpans = computed(() => {
   let n = 0
   if (hasMoreFields.value) n += MORE_FILTER_BTN_SPAN
-  if (props.filterConf.btns?.length) n += actionColSpan.value
-  if (showRowCollapseToggle.value) n += ROW_COLLAPSE_TOGGLE_SPAN
+  if (hasActionControls.value) n += actionControlsColSpan.value
   return n
 })
 

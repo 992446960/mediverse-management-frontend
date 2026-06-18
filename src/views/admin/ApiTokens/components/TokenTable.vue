@@ -7,35 +7,37 @@
     @fetch-table-data="$emit('fetch-table-data')"
   >
     <template #tokenCell="{ row }">
-      <div class="flex items-center gap-2 min-w-0">
+      <div class="token-cell">
         <a-tooltip :title="visibleIds.has(row.id) ? row.token_hash : maskToken(row.token_hash)">
-          <span class="font-mono text-sm truncate block min-w-0 max-w-[140px]">
+          <span class="token-cell__text">
             {{ visibleIds.has(row.id) ? row.token_hash : maskToken(row.token_hash) }}
           </span>
         </a-tooltip>
-        <a-button
-          type="text"
-          size="small"
-          class="shrink-0"
-          :title="visibleIds.has(row.id) ? t('apiToken.hideToken') : t('apiToken.showToken')"
-          @click="toggleVisibility(row.id)"
-        >
-          <template #icon>
-            <EyeOutlined v-if="!visibleIds.has(row.id)" />
-            <EyeInvisibleOutlined v-else />
-          </template>
-        </a-button>
-        <a-button
-          type="text"
-          size="small"
-          class="shrink-0"
-          :title="t('apiToken.copy')"
-          @click="copyToken(row)"
-        >
-          <template #icon>
-            <CopyOutlined />
-          </template>
-        </a-button>
+        <div class="token-cell__actions">
+          <a-button
+            type="text"
+            size="small"
+            class="token-cell__button"
+            :title="visibleIds.has(row.id) ? t('apiToken.hideToken') : t('apiToken.showToken')"
+            @click="toggleVisibility(row.id)"
+          >
+            <template #icon>
+              <EyeOutlined v-if="!visibleIds.has(row.id)" />
+              <EyeInvisibleOutlined v-else />
+            </template>
+          </a-button>
+          <a-button
+            type="text"
+            size="small"
+            class="token-cell__button"
+            :title="t('apiToken.copy')"
+            @click="copyToken(row)"
+          >
+            <template #icon>
+              <CopyOutlined />
+            </template>
+          </a-button>
+        </div>
       </div>
     </template>
   </PageTable>
@@ -102,9 +104,12 @@ const tableColumns = computed<PageTableColumnConfig[]>(() => [
   { label: t('apiToken.name'), prop: 'name', width: 160, showOverflowTooltip: true },
   {
     label: t('apiToken.token'),
+    prop: 'token_hash',
+    _id: 'token_hash',
     type: 'slot',
     slotName: 'tokenCell',
     width: 260,
+    resizable: true,
   },
   { label: t('apiToken.org'), prop: 'org_name', width: 140, showOverflowTooltip: true },
   {
@@ -174,3 +179,43 @@ defineExpose({
   },
 })
 </script>
+
+<style scoped lang="scss">
+.token-cell {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.token-cell__text {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
+  font-size: 13px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.token-cell__actions {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 4px;
+}
+
+.token-cell__button {
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+</style>

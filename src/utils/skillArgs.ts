@@ -32,8 +32,9 @@ export function buildSkillExecuteArgs(
   options: BuildSkillArgsOptions
 ): Record<string, unknown> | null {
   const { skill, inputText, fileList, user, t } = options
-  const required = skill.args_schema.required ?? []
-  const properties = skill.args_schema.properties ?? {}
+  const schema = skill.args_schema ?? {}
+  const required = schema.required ?? []
+  const properties = schema.properties ?? {}
   const args: Record<string, unknown> = {}
 
   if (required.includes('query')) {
