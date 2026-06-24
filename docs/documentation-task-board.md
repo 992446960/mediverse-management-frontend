@@ -34,7 +34,11 @@
 
 ## 近期同步记录
 
+- 知识卡类型显示枚举对齐：补齐 `score_element`、`evidence`、`doctor_visit`、`doctor_trajectory`、`doctor_summary` 的中英文 i18n 文案与标签颜色；知识卡列表 Type 列在本地 i18n 未覆盖时回退使用 `/knowledge/card-types` 返回的 `name`，避免新增类型显示裸 code；本地 MSW card-types 同步当前接口枚举。
+- 知识卡批量操作入口调整：`PageTable` 新增容器内 `toolbarExtra` 扩展区，知识卡列表的批量通过、上线和更多操作改为选中后显示在表格大容器内且位于统计/刷新/设置栏上方；批量条无独立底部分隔线、按钮使用默认操作按钮尺寸，批量通过/驳回的 Modal 提示和成功提示均与单个审核提示区分，批量条和选中行跟随表格容器背景，页头仅保留新建知识卡和召回测试入口，并补充静态 UI 契约单测。
+- 文件管理目录树响应兼容：`getDirectoryTree` 归一化数组和后端 `data.tree` 包裹形态，保留 `total_file_count` / `unclassified_file_count` 并在“所有文件”“未分类”虚拟目录展示文件数，避免目录接口返回对象时传入 `DirectoryTree` 导致 `nodes.filter is not a function`，并新增目录树 API 归一化单测。
 - 分身配置表单告警修复：工作台分身配置的自定义沟通风格输入改为 `a-form-item-rest`，避免 `style` 表单项同时收集单选组和输入框导致 Ant Design Vue 控制台告警，并补充静态契约单测。
+- 前端对齐正式后端知识库合同：补齐文件分类、文件批量删除、知识卡批量删除/审核/上线/下线/引用计数 API 封装和类型；知识卡列表新增批量操作选择列与批量审核/上下线/删除入口；召回请求支持 `owner_ids` / `knowledge_scope`，Agentic 结果保留 `cited_card_ids` 与来源元数据，Non-Agentic `/search` 按轻量响应归一化；同步 MSW mock 与 `tests/api-contract/knowledge*.test.ts` 覆盖。
 - 暗黑主题编辑态补强：`md-editor-v3` 知识卡编辑器绑定 `themeStore` 并新增 `src/styles/editor.css` 复用主题变量；全局 Ant 输入控件、聚焦态、文本选区和 Chrome autofill 背景改为语义变量，修复暗色下编辑器白底和用户管理搜索框浅底。
 - 暗黑主题不一致补强：新增 `src/styles/markdown.css` 作为 Markdown / `v-html` 内容统一主题入口，禁止业务组件直接引入 GitHub light Markdown CSS；召回结果、Modal 标题区、分身配置和统计卡片改为语义变量，并扩展 `pnpm check:theme` 拦截无效 CSS 变量任意值与浅色 Markdown 全局 import。
 - 主布局侧栏视觉微调：品牌区按设计图改为图标加 `Mediverse` / `Management` 双行标题，标题白色展示；暗色侧边栏与菜单背景改为深海蓝主题变量，不改新增分身/新建会话等按钮颜色。
