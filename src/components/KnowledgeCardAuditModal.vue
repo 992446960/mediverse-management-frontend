@@ -40,9 +40,11 @@ const props = withDefaults(
     open: boolean
     action: 'approved' | 'rejected'
     confirmLoading?: boolean
+    batchCount?: number
   }>(),
   {
     confirmLoading: false,
+    batchCount: 0,
   }
 )
 
@@ -53,15 +55,28 @@ const emit = defineEmits<{
 
 const reasonValue = ref('')
 const showError = ref(false)
+const isBatchAudit = computed(() => props.batchCount > 0)
 
 const modalTitle = computed(() =>
-  props.action === 'approved' ? t('knowledge.card.auditApprove') : t('knowledge.card.auditReject')
+  props.action === 'approved'
+    ? t(isBatchAudit.value ? 'knowledge.card.batchAuditApprove' : 'knowledge.card.auditApprove')
+    : t(isBatchAudit.value ? 'knowledge.card.batchAuditReject' : 'knowledge.card.auditReject')
 )
 
 const confirmText = computed(() =>
   props.action === 'approved'
-    ? t('knowledge.card.auditApproveConfirm')
-    : t('knowledge.card.auditRejectConfirm')
+    ? t(
+        isBatchAudit.value
+          ? 'knowledge.card.batchAuditApproveConfirm'
+          : 'knowledge.card.auditApproveConfirm',
+        { count: props.batchCount }
+      )
+    : t(
+        isBatchAudit.value
+          ? 'knowledge.card.batchAuditRejectConfirm'
+          : 'knowledge.card.auditRejectConfirm',
+        { count: props.batchCount }
+      )
 )
 
 const okButtonProps = computed(() => (props.action === 'rejected' ? { danger: true } : {}))

@@ -4,6 +4,8 @@
       <DirectoryTree
         :title="t('knowledge.directory')"
         :tree-data="treeData"
+        :all-files-count="directoryFileCounts.total_file_count"
+        :uncategorized-file-count="directoryFileCounts.unclassified_file_count"
         :selected-key="selectedDirId"
         :loading="treeLoading"
         :fetch-data="loadTree"
@@ -139,6 +141,7 @@ import {
   getFileList,
   deleteFile,
   batchMoveFiles,
+  batchDeleteFiles,
   retryFileIndexingTask,
 } from '@/api/knowledge'
 import { confirmDelete } from '@/utils/confirm'
@@ -152,6 +155,7 @@ import {
   getFileOriginalUrl,
   type OwnerType,
   type DirectoryNode,
+  type DirectoryTreeResponse,
   type FileListItem,
   type FileStatus,
 } from '@/types/knowledge'
@@ -175,12 +179,23 @@ const total = ref(0)
 // ----- 左侧目录树 -----
 const treeLoading = ref(false)
 const treeData = ref<DirectoryNode[]>([])
+const directoryFileCounts = ref<
+  Pick<DirectoryTreeResponse, 'total_file_count' | 'unclassified_file_count'>
+>({
+  total_file_count: 0,
+  unclassified_file_count: 0,
+})
 const selectedDirId = ref('__all__')
 
 async function loadTree() {
   treeLoading.value = true
   try {
-    treeData.value = await getDirectoryTree(props.ownerType, props.ownerId)
+    const result = await getDirectoryTree(props.ownerType, props.ownerId)
+    treeData.value = result.tree
+    directoryFileCounts.value = {
+      total_file_count: result.total_file_count,
+      unclassified_file_count: result.unclassified_file_count,
+    }
   } finally {
     treeLoading.value = false
   }
@@ -361,6 +376,11 @@ const headConf = computed<PageHeadConfig>(() => {
       text: t('knowledge.batchMoveFiles'),
       icon: SwapOutlined,
       handle: openBatchMoveModal,
+    },
+    {
+      text: t('knowledge.batchDeleteFiles'),
+      icon: DeleteOutlined,
+      handle: openBatchDeleteFiles,
     },
   ]
   const hasActive = uploadQueue.value.length > 0 && !allDone.value
@@ -596,6 +616,34 @@ async function handleBatchMove() {
   } finally {
     batchMoveLoading.value = false
   }
+}
+
+function openBatchDeleteFiles() {
+  if (selectedFileIds.value.length === 0) {
+    message.warning(t('knowledge.batchDeleteNoSelection'))
+    return
+  }
+  confirmDelete({
+    title: t('knowledge.batchDeleteFiles'),
+    content: t('knowledge.batchDeleteFilesConfirm', { count: selectedFileIds.value.length }),
+    okText: t('common.confirm'),
+    cancelText: t('common.cancel'),
+    onOk: handleBatchDeleteFiles,
+  })
+}
+
+async function handleBatchDeleteFiles() {
+  if (selectedFileIds.value.length === 0) {
+    message.warning(t('knowledge.batchDeleteNoSelection'))
+    return
+  }
+  const result = await batchDeleteFiles(props.ownerType, props.ownerId, {
+    file_ids: selectedFileIds.value,
+  })
+  message.success(t('knowledge.batchDeleteFilesSuccess', { count: result.deleted_count }))
+  pageTableRef.value?.clearSelection()
+  await loadTree()
+  await loadData()
 }
 
 // ----- 数据拉取 -----

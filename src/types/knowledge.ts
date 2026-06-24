@@ -6,6 +6,8 @@ export type FileStatus = 'uploading' | 'parsing' | 'extracting' | 'indexing' | '
 export type CardType = string
 export type OnlineStatus = 'online' | 'offline' | 'creating' | 'updating'
 export type AuditStatus = 'pending' | 'approved' | 'rejected'
+export type FileCategory = 'guidline' | 'consensus' | 'clinical_record' | string
+export type BatchAuditStatus = Extract<AuditStatus, 'approved' | 'rejected'>
 
 /** GET /api/v1/knowledge/card-types 返回的单条 */
 export interface CardTypeOption {
@@ -46,6 +48,16 @@ export interface BatchMoveFilesResult {
   moved_count: number
 }
 
+/** POST /knowledge/{owner_type}/{owner_id}/files/batch/delete */
+export interface FileBatchDeletePayload {
+  file_ids: string[]
+}
+
+export interface FileBatchDeleteResult {
+  deleted_count: number
+  file_ids: string[]
+}
+
 /** POST /knowledge/{owner_type}/{owner_id}/files/indexing-tasks/{task_id}/retry */
 export interface FileIndexingRetryResult {
   task_id: string
@@ -73,6 +85,12 @@ export interface DirectoryNode {
   children?: DirectoryNode[]
 }
 
+export interface DirectoryTreeResponse {
+  tree: DirectoryNode[]
+  total_file_count: number
+  unclassified_file_count: number
+}
+
 /** 上传文件接口返回（单文件上传响应） */
 export interface UploadFileResult {
   id: string
@@ -80,6 +98,14 @@ export interface UploadFileResult {
   file_size: number
   status: FileStatus
   created_at: string
+  cards?: FileCard[]
+  storage_url?: string | null
+  file_type?: string | null
+  downstream_file_uuid?: string | null
+  task_id?: string | null
+  async_pending?: boolean
+  downstream?: Record<string, unknown> | null
+  indexing_task_id?: string | null
 }
 
 /** 文件列表项 */
@@ -180,8 +206,14 @@ export interface KnowledgeCardVersion {
 /** 文件处理状态响应 */
 export interface FileStatusResponse {
   id: string
+  file_uuid?: string
   status: FileStatus
+  cards?: FileCard[]
   indexing_task_id?: string | null
+  downstream_file_uuid?: string | null
+  task_id?: string | null
+  async_pending?: boolean
+  downstream?: Record<string, unknown> | null
   progress: {
     current_step: FileStatus
     steps: FileStatus[]
@@ -210,6 +242,52 @@ export interface KnowledgeCardListParams extends PaginationParams {
   tag?: string
 }
 
+/** POST /knowledge/{owner_type}/{owner_id}/cards/batch/delete */
+export interface CardBatchDeletePayload {
+  card_ids: string[]
+}
+
+export interface CardBatchDeleteResult {
+  deleted_count: number
+  card_ids: string[]
+}
+
+/** POST /knowledge/{owner_type}/{owner_id}/cards/batch/audit */
+export interface CardBatchAuditPayload {
+  card_ids: string[]
+  audit_status: BatchAuditStatus
+  audit_reject_reason?: string
+}
+
+export interface CardBatchAuditResult {
+  updated_count: number
+  card_ids: string[]
+}
+
+/** POST /knowledge/{owner_type}/{owner_id}/cards/batch/online */
+export interface CardBatchOnlinePayload {
+  card_ids: string[]
+}
+
+export interface CardBatchOfflinePayload {
+  card_ids: string[]
+  note?: string
+}
+
+export interface CardBatchOnlineResult {
+  updated_count: number
+  card_ids: string[]
+}
+
+/** POST /knowledge/{owner_type}/{owner_id}/cards/batch/increment-reference-count */
+export interface KnowledgeCardBatchIncrementReferenceCountPayload {
+  card_ids: string[]
+}
+
+export interface KnowledgeCardBatchIncrementReferenceCountResult {
+  updated_count: number
+}
+
 /** 创建目录请求负载 */
 export interface CreateDirectoryPayload {
   parent_id: string | null
@@ -235,7 +313,12 @@ export const CARD_TYPE_CONFIG: Record<string, { color: string; label: string }> 
   risk_point: { color: 'red', label: '风险控制点卡' },
   pathway_clause: { color: 'cyan', label: '路径条款卡' },
   melody_element: { color: 'geekblue', label: '乐谱元素卡' },
+  score_element: { color: 'geekblue', label: '乐谱元素卡' },
   disease_overview: { color: 'blue', label: '疾病概览卡' },
+  evidence: { color: 'green', label: '证据卡' },
+  doctor_visit: { color: 'magenta', label: '就诊卡' },
+  doctor_trajectory: { color: 'gold', label: '轨迹卡' },
+  doctor_summary: { color: 'volcano', label: '经验卡' },
 }
 
 type TranslateFn = (key: string) => string
@@ -246,7 +329,12 @@ const CARD_TYPE_LABEL_KEYS: Record<string, string> = {
   risk_point: 'knowledge.card.typeRiskPoint',
   pathway_clause: 'knowledge.card.typePathwayClause',
   melody_element: 'knowledge.card.typeMelodyElement',
+  score_element: 'knowledge.card.typeScoreElement',
   disease_overview: 'knowledge.card.typeDiseaseOverview',
+  evidence: 'knowledge.card.typeEvidence',
+  doctor_visit: 'knowledge.card.typeDoctorVisit',
+  doctor_trajectory: 'knowledge.card.typeDoctorTrajectory',
+  doctor_summary: 'knowledge.card.typeDoctorSummary',
 }
 
 /**

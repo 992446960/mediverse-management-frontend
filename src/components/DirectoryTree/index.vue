@@ -72,6 +72,7 @@
             >
               <FileOutlined class="text-[18px] text-slate-400" />
               <span class="text-[14px] font-medium">{{ t('knowledge.allFiles') }}</span>
+              <span class="ml-auto text-[12px] text-slate-400">{{ allFilesCount }}</span>
             </div>
 
             <!-- 虚拟节点：未分类 -->
@@ -92,6 +93,7 @@
             >
               <InboxOutlined class="text-[18px] text-slate-400" />
               <span class="text-[14px] font-medium">{{ t('knowledge.uncategorized') }}</span>
+              <span class="ml-auto text-[12px] text-slate-400">{{ uncategorizedFileCount }}</span>
             </div>
 
             <div class="h-px bg-slate-100 dark:bg-slate-800 my-2 mx-5" />
@@ -217,6 +219,8 @@ import DirectoryTreeItem from './DirectoryTreeItem.vue'
 interface Props {
   title: string
   treeData: DirectoryNode[]
+  allFilesCount?: number
+  uncategorizedFileCount?: number
   selectedKey: string
   loading?: boolean
   fetchData?: () => void | Promise<void>
@@ -238,6 +242,8 @@ const COLLAPSED_TREE_WIDTH = 48
 
 const props = withDefaults(defineProps<Props>(), {
   loading: false,
+  allFilesCount: 0,
+  uncategorizedFileCount: 0,
   maxHeight: TABLE_TREE_HEIGHT_CALC,
   resizable: false,
   collapsible: false,

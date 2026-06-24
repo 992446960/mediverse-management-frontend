@@ -401,6 +401,44 @@ export const knowledgeHandlers = [
     })
   }),
 
+  // 批量删除文件
+  http.post(`${API_BASE}/knowledge/:ownerType/:ownerId/files/batch/delete`, async ({ request }) => {
+    const payload = (await request.json()) as { file_ids?: string[] }
+    const fileIds = Array.isArray(payload.file_ids) ? payload.file_ids : []
+    if (fileIds.length === 0) {
+      return HttpResponse.json(
+        { code: 400, message: 'file_ids is required', data: null },
+        { status: 400 }
+      )
+    }
+
+    let deletedCount = 0
+    for (const id of fileIds) {
+      const index = mutableFiles.findIndex((file) => file.id === id)
+      if (index >= 0) {
+        mutableFiles.splice(index, 1)
+        deletedCount++
+      }
+    }
+
+    return HttpResponse.json({
+      code: 0,
+      message: 'ok',
+      data: { deleted_count: deletedCount, file_ids: fileIds },
+    })
+  }),
+
+  // 删除全部文件
+  http.post(`${API_BASE}/knowledge/:ownerType/:ownerId/files/delete-all`, async () => {
+    const fileIds = mutableFiles.map((file) => file.id)
+    mutableFiles.splice(0, mutableFiles.length)
+    return HttpResponse.json({
+      code: 0,
+      message: 'ok',
+      data: { deleted_count: fileIds.length, file_ids: fileIds },
+    })
+  }),
+
   // 查询文件处理状态（轮询）
   http.get(`${API_BASE}/knowledge/:ownerType/:ownerId/files/:fileId/status`, async ({ params }) => {
     const { fileId } = params
@@ -513,9 +551,22 @@ export const knowledgeHandlers = [
         { name: '量表卡', code: 'scale' },
         { name: '风险控制点卡', code: 'risk_point' },
         { name: '路径条款卡', code: 'pathway_clause' },
-        { name: '乐谱元素卡', code: 'melody_element' },
+        { name: '乐谱元素卡', code: 'score_element' },
         { name: '疾病概览卡', code: 'disease_overview' },
+        { name: '证据卡', code: 'evidence' },
+        { name: '就诊卡', code: 'doctor_visit' },
+        { name: '轨迹卡', code: 'doctor_trajectory' },
+        { name: '经验卡', code: 'doctor_summary' },
       ],
+    })
+  }),
+
+  // 查询文件分类选项
+  http.get(`${API_BASE}/knowledge/files/categories`, async () => {
+    return HttpResponse.json({
+      code: 0,
+      message: 'ok',
+      data: ['guidline', 'consensus', 'clinical_record'],
     })
   }),
 
@@ -760,6 +811,185 @@ export const knowledgeHandlers = [
       data: { card_id: cardId, action: 'deleted' },
     })
   }),
+
+  // 批量删除知识卡
+  http.post(`${API_BASE}/knowledge/:ownerType/:ownerId/cards/batch/delete`, async ({ request }) => {
+    const payload = (await request.json()) as { card_ids?: string[] }
+    const cardIds = Array.isArray(payload.card_ids) ? payload.card_ids : []
+    if (cardIds.length === 0) {
+      return HttpResponse.json(
+        { code: 400, message: 'card_ids is required', data: null },
+        { status: 400 }
+      )
+    }
+
+    let deletedCount = 0
+    for (const id of cardIds) {
+      const index = mutableCards.findIndex((card) => card.id === id)
+      if (index >= 0) {
+        mutableCards.splice(index, 1)
+        deletedCount++
+      }
+    }
+
+    await delay(200)
+    return HttpResponse.json({
+      code: 0,
+      message: 'ok',
+      data: { deleted_count: deletedCount, card_ids: cardIds },
+    })
+  }),
+
+  // 删除全部知识卡
+  http.post(`${API_BASE}/knowledge/:ownerType/:ownerId/cards/delete-all`, async () => {
+    const cardIds = mutableCards.map((card) => card.id)
+    mutableCards.splice(0, mutableCards.length)
+    return HttpResponse.json({
+      code: 0,
+      message: 'ok',
+      data: { deleted_count: cardIds.length, card_ids: cardIds },
+    })
+  }),
+
+  // 批量审核知识卡
+  http.post(`${API_BASE}/knowledge/:ownerType/:ownerId/cards/batch/audit`, async ({ request }) => {
+    const payload = (await request.json()) as {
+      card_ids?: string[]
+      audit_status?: 'approved' | 'rejected'
+      audit_reject_reason?: string
+    }
+    const cardIds = Array.isArray(payload.card_ids) ? payload.card_ids : []
+    if (cardIds.length === 0 || !payload.audit_status) {
+      return HttpResponse.json(
+        { code: 400, message: 'card_ids and audit_status are required', data: null },
+        { status: 400 }
+      )
+    }
+
+    let updatedCount = 0
+    for (const card of mutableCards) {
+      if (!cardIds.includes(card.id)) continue
+      card.audit_status = payload.audit_status
+      card.audit_reject_reason =
+        payload.audit_status === 'rejected' ? (payload.audit_reject_reason ?? '') : null
+      card.updated_at = new Date().toISOString()
+      updatedCount++
+    }
+
+    return HttpResponse.json({
+      code: 0,
+      message: 'ok',
+      data: { updated_count: updatedCount, card_ids: cardIds },
+    })
+  }),
+
+  // 全部审核通过
+  http.post(`${API_BASE}/knowledge/:ownerType/:ownerId/cards/audit-approve-all`, async () => {
+    const cardIds: string[] = []
+    for (const card of mutableCards) {
+      if (card.audit_status === 'approved') continue
+      card.audit_status = 'approved'
+      card.audit_reject_reason = null
+      card.updated_at = new Date().toISOString()
+      cardIds.push(card.id)
+    }
+    return HttpResponse.json({
+      code: 0,
+      message: 'ok',
+      data: { updated_count: cardIds.length, card_ids: cardIds },
+    })
+  }),
+
+  // 批量上线知识卡
+  http.post(`${API_BASE}/knowledge/:ownerType/:ownerId/cards/batch/online`, async ({ request }) => {
+    const payload = (await request.json()) as { card_ids?: string[] }
+    const cardIds = Array.isArray(payload.card_ids) ? payload.card_ids : []
+    let updatedCount = 0
+    for (const card of mutableCards) {
+      if (!cardIds.includes(card.id)) continue
+      card.online_status = 'online'
+      card.updated_at = new Date().toISOString()
+      updatedCount++
+    }
+    return HttpResponse.json({
+      code: 0,
+      message: 'ok',
+      data: { updated_count: updatedCount, card_ids: cardIds },
+    })
+  }),
+
+  // 全部上线知识卡
+  http.post(`${API_BASE}/knowledge/:ownerType/:ownerId/cards/online-all`, async () => {
+    const cardIds: string[] = []
+    for (const card of mutableCards) {
+      if (card.audit_status !== 'approved' || card.online_status === 'online') continue
+      card.online_status = 'online'
+      card.updated_at = new Date().toISOString()
+      cardIds.push(card.id)
+    }
+    return HttpResponse.json({
+      code: 0,
+      message: 'ok',
+      data: { updated_count: cardIds.length, card_ids: cardIds },
+    })
+  }),
+
+  // 批量下线知识卡
+  http.post(
+    `${API_BASE}/knowledge/:ownerType/:ownerId/cards/batch/offline`,
+    async ({ request }) => {
+      const payload = (await request.json()) as { card_ids?: string[] }
+      const cardIds = Array.isArray(payload.card_ids) ? payload.card_ids : []
+      let updatedCount = 0
+      for (const card of mutableCards) {
+        if (!cardIds.includes(card.id)) continue
+        card.online_status = 'offline'
+        card.updated_at = new Date().toISOString()
+        updatedCount++
+      }
+      return HttpResponse.json({
+        code: 0,
+        message: 'ok',
+        data: { updated_count: updatedCount, card_ids: cardIds },
+      })
+    }
+  ),
+
+  // 全部下线知识卡
+  http.post(`${API_BASE}/knowledge/:ownerType/:ownerId/cards/offline-all`, async () => {
+    const cardIds: string[] = []
+    for (const card of mutableCards) {
+      if (card.online_status !== 'online') continue
+      card.online_status = 'offline'
+      card.updated_at = new Date().toISOString()
+      cardIds.push(card.id)
+    }
+    return HttpResponse.json({
+      code: 0,
+      message: 'ok',
+      data: { updated_count: cardIds.length, card_ids: cardIds },
+    })
+  }),
+
+  // 批量增加引用次数
+  http.post(
+    `${API_BASE}/knowledge/:ownerType/:ownerId/cards/batch/increment-reference-count`,
+    async ({ request }) => {
+      const payload = (await request.json()) as { card_ids?: string[] }
+      const cardIds = Array.isArray(payload.card_ids) ? payload.card_ids : []
+      let updatedCount = 0
+      for (const card of mutableCards) {
+        if (!cardIds.includes(card.id)) continue
+        card.reference_count += 1
+        updatedCount++
+      }
+      return HttpResponse.json({
+        code: 0,
+        message: 'ok',
+        data: { updated_count: updatedCount },
+      })
+    }
+  ),
 
   // 修改审核状态（API 4.1.17）
   http.patch(

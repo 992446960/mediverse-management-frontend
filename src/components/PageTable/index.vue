@@ -3,6 +3,11 @@
     class="page-table p-2.5 rounded-md border border-(--color-border) bg-(--color-bg-container) shadow-sm overflow-hidden flex flex-col flex-1 min-h-0"
     :style="{ '--min-height': tableConf?.tableMinHeight ?? '200px' }"
   >
+    <!-- 顶部工具栏扩展区：用于表格容器内的上下文操作，不影响默认统计/设置布局 -->
+    <div v-if="$slots.toolbarExtra" class="page-table__toolbar-extra shrink-0">
+      <slot name="toolbarExtra" />
+    </div>
+
     <!-- 顶部工具栏 -->
     <div
       v-if="!tableConf?.hideTableBar"
@@ -413,6 +418,11 @@ defineExpose({
 </script>
 
 <style scoped lang="scss">
+.page-table__toolbar-extra {
+  padding: 10px 24px;
+  background: var(--color-bg-container);
+}
+
 .page-table :deep(.ant-table-thead > tr > th) {
   font-weight: 600;
   font-size: 13px;
@@ -421,6 +431,10 @@ defineExpose({
 .page-table :deep(.ant-table-tbody > tr > td) {
   padding: 20px 24px;
   font-size: 13px;
+}
+.page-table :deep(.ant-table-tbody > tr.ant-table-row-selected > td),
+.page-table :deep(.ant-table-tbody > tr.ant-table-row-selected:hover > td) {
+  background: var(--color-bg-container);
 }
 .page-table__body :deep(.ant-table-body) {
   min-height: var(--min-height);

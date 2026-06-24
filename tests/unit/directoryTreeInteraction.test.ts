@@ -22,6 +22,8 @@ describe('directory tree interaction options', () => {
     expect(directoryTreeSource).toContain('maxWidth?: number')
     expect(directoryTreeSource).toContain('collapsedWidth?: number')
     expect(directoryTreeSource).toContain('collapsedLabel?: string')
+    expect(directoryTreeSource).toContain('allFilesCount?: number')
+    expect(directoryTreeSource).toContain('uncategorizedFileCount?: number')
   })
 
   it('implements resize and collapsed entry in DirectoryTree without persistence', () => {
@@ -30,6 +32,8 @@ describe('directory tree interaction options', () => {
     expect(directoryTreeSource).toContain('@dblclick="resetWidth"')
     expect(directoryTreeSource).toContain('directory-tree__collapsed-entry')
     expect(directoryTreeSource).toContain('@click="expandPanel"')
+    expect(directoryTreeSource).toContain('{{ allFilesCount }}')
+    expect(directoryTreeSource).toContain('{{ uncategorizedFileCount }}')
     expect(directoryTreeSource).not.toContain('localStorage')
   })
 
@@ -37,6 +41,12 @@ describe('directory tree interaction options', () => {
     expect(knowledgeFilesSource).toContain(':resizable="true"')
     expect(knowledgeFilesSource).toContain(':collapsible="true"')
     expect(knowledgeFilesSource).toContain(':default-width="280"')
+    expect(knowledgeFilesSource).toContain(
+      ':all-files-count="directoryFileCounts.total_file_count"'
+    )
+    expect(knowledgeFilesSource).toContain(
+      ':uncategorized-file-count="directoryFileCounts.unclassified_file_count"'
+    )
     expect(knowledgeFilesSource).not.toContain('startDirectoryResize')
     expect(knowledgeFilesSource).not.toContain('knowledge-files__directory-resize-handle')
   })

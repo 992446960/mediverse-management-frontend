@@ -12,6 +12,11 @@ import {
 const enLabels: Record<string, string> = {
   'knowledge.card.typeRule': 'Rule',
   'knowledge.card.typeDiseaseOverview': 'Disease Overview',
+  'knowledge.card.typeScoreElement': 'Score Element',
+  'knowledge.card.typeEvidence': 'Evidence',
+  'knowledge.card.typeDoctorVisit': 'Doctor Visit',
+  'knowledge.card.typeDoctorTrajectory': 'Doctor Trajectory',
+  'knowledge.card.typeDoctorSummary': 'Doctor Summary',
   'knowledge.card.onlineStatusCreating': 'Creating',
   'knowledge.card.auditApproved': 'Approved',
 }
@@ -37,6 +42,11 @@ describe('knowledge card status rules', () => {
       color: 'blue',
       label: 'Disease Overview',
     })
+    expect(getCardTypeConfig('score_element', t).label).toBe('Score Element')
+    expect(getCardTypeConfig('evidence', t).label).toBe('Evidence')
+    expect(getCardTypeConfig('doctor_visit', t).label).toBe('Doctor Visit')
+    expect(getCardTypeConfig('doctor_trajectory', t).label).toBe('Doctor Trajectory')
+    expect(getCardTypeConfig('doctor_summary', t).label).toBe('Doctor Summary')
     expect(getOnlineStatusConfig('creating', t)).toEqual({
       color: 'processing',
       label: 'Creating',

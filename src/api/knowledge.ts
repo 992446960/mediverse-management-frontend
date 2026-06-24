@@ -2,9 +2,11 @@ import { request } from './index'
 import type {
   OwnerType,
   DirectoryNode,
+  DirectoryTreeResponse,
   FileListItem,
   FileListParams,
   FileStatusResponse,
+  FileCategory,
   CreateDirectoryPayload,
   UploadFileResult,
   FileCard,
@@ -18,14 +20,29 @@ import type {
   RenameDirectoryPayload,
   BatchMoveFilesPayload,
   BatchMoveFilesResult,
+  FileBatchDeletePayload,
+  FileBatchDeleteResult,
   FileIndexingRetryResult,
   KnowledgeCardWriteTaskResult,
+  CardBatchDeletePayload,
+  CardBatchDeleteResult,
+  CardBatchAuditPayload,
+  CardBatchAuditResult,
+  CardBatchOnlinePayload,
+  CardBatchOfflinePayload,
+  CardBatchOnlineResult,
+  KnowledgeCardBatchIncrementReferenceCountPayload,
+  KnowledgeCardBatchIncrementReferenceCountResult,
 } from '@/types/knowledge'
 import type { PaginatedData } from '@/types/api'
 import type { AxiosRequestConfig } from 'axios'
 
 const BASE_URL = '/knowledge'
 const KNOWLEDGE_CARD_WRITE_TIMEOUT = 600_000
+
+type UploadFileConfig = AxiosRequestConfig & {
+  category?: FileCategory
+}
 
 /** 后端 GET .../cards/:id/versions 单条（字段名可能与前端模型不一致） */
 interface KnowledgeCardVersionRaw {
@@ -133,7 +150,7 @@ export function uploadFile(
   ownerId: string,
   file: File,
   dirId?: string,
-  config?: AxiosRequestConfig
+  config?: UploadFileConfig
 ): Promise<UploadFileResult> {
   if (!(file instanceof File)) {
     return Promise.reject(new Error('uploadFile requires a native File object'))
@@ -143,8 +160,12 @@ export function uploadFile(
   if (dirId !== undefined && dirId !== '') {
     form.append('dir_id', String(dirId))
   }
+  const { category, ...axiosConfig } = config ?? {}
+  if (category !== undefined && category !== '') {
+    form.append('category', String(category))
+  }
   // 全局 axios 默认 10s，大文件经反代上传易超时；调用方可通过 config.timeout 覆盖
-  const uploadConfig = { timeout: 600_000, ...config }
+  const uploadConfig = { timeout: 600_000, ...axiosConfig }
   return request
     .post<
       UploadFileResult | UploadFileResult[]
@@ -157,10 +178,59 @@ export function uploadFile(
 }
 
 /**
+ * 查询文件分类选项
+ */
+export function getFileCategories(): Promise<FileCategory[]> {
+  return request.get<FileCategory[]>(`${BASE_URL}/files/categories`)
+}
+
+function sumRootDirectoryFileCount(nodes: DirectoryNode[]): number {
+  return nodes.reduce(
+    (sum, node) => sum + (Number.isFinite(node.file_count) ? node.file_count : 0),
+    0
+  )
+}
+
+/**
  * 获取目录树
  */
+export function normalizeDirectoryTreeResponse(data: unknown): DirectoryTreeResponse {
+  if (Array.isArray(data)) {
+    const tree = data as DirectoryNode[]
+    return {
+      tree,
+      total_file_count: sumRootDirectoryFileCount(tree),
+      unclassified_file_count: 0,
+    }
+  }
+  if (data == null || typeof data !== 'object') {
+    return { tree: [], total_file_count: 0, unclassified_file_count: 0 }
+  }
+
+  const raw = data as Record<string, unknown>
+  const candidates = [raw.tree, raw.directories, raw.items, raw.list, raw.records, raw.data]
+  const directoryTree = candidates.find(Array.isArray)
+  const tree = Array.isArray(directoryTree) ? (directoryTree as DirectoryNode[]) : []
+  const totalFileCount =
+    typeof raw.total_file_count === 'number' && Number.isFinite(raw.total_file_count)
+      ? raw.total_file_count
+      : sumRootDirectoryFileCount(tree)
+  const unclassifiedFileCount =
+    typeof raw.unclassified_file_count === 'number' && Number.isFinite(raw.unclassified_file_count)
+      ? raw.unclassified_file_count
+      : 0
+
+  return {
+    tree,
+    total_file_count: totalFileCount,
+    unclassified_file_count: unclassifiedFileCount,
+  }
+}
+
 export function getDirectoryTree(ownerType: OwnerType, ownerId: string) {
-  return request.get<DirectoryNode[]>(`${BASE_URL}/${ownerType}/${ownerId}/directories`)
+  return request
+    .get<unknown>(`${BASE_URL}/${ownerType}/${ownerId}/directories`)
+    .then(normalizeDirectoryTreeResponse)
 }
 
 /**
@@ -245,6 +315,27 @@ export function getFileStatus(ownerType: OwnerType, ownerId: string, fileId: str
  */
 export function deleteFile(ownerType: OwnerType, ownerId: string, fileId: string) {
   return request.delete(`${BASE_URL}/${ownerType}/${ownerId}/files/${fileId}`)
+}
+
+/**
+ * 批量删除文件
+ */
+export function batchDeleteFiles(
+  ownerType: OwnerType,
+  ownerId: string,
+  payload: FileBatchDeletePayload
+) {
+  return request.post<FileBatchDeleteResult>(
+    `${BASE_URL}/${ownerType}/${ownerId}/files/batch/delete`,
+    payload
+  )
+}
+
+/**
+ * 删除当前工作台全部文件
+ */
+export function deleteAllFiles(ownerType: OwnerType, ownerId: string) {
+  return request.post<FileBatchDeleteResult>(`${BASE_URL}/${ownerType}/${ownerId}/files/delete-all`)
 }
 
 /**
@@ -409,6 +500,27 @@ export function deleteKnowledgeCard(
 }
 
 /**
+ * 批量删除知识卡
+ */
+export function batchDeleteKnowledgeCards(
+  ownerType: OwnerType,
+  ownerId: string,
+  payload: CardBatchDeletePayload
+) {
+  return request.post<CardBatchDeleteResult>(
+    `${BASE_URL}/${ownerType}/${ownerId}/cards/batch/delete`,
+    payload
+  )
+}
+
+/**
+ * 删除当前工作台全部知识卡
+ */
+export function deleteAllKnowledgeCards(ownerType: OwnerType, ownerId: string) {
+  return request.post<CardBatchDeleteResult>(`${BASE_URL}/${ownerType}/${ownerId}/cards/delete-all`)
+}
+
+/**
  * 修改知识卡审核状态（API 4.1.17）
  * PATCH /api/v1/knowledge/{owner_type}/{owner_id}/cards/{id}/audit
  */
@@ -428,6 +540,87 @@ export function auditKnowledgeCard(
       KnowledgeCard & { review_action?: { card_id: string; review_state: string } }
     >(`${BASE_URL}/${ownerType}/${ownerId}/cards/${cardId}/audit`, body)
     .then(normalizeKnowledgeCard)
+}
+
+/**
+ * 批量修改知识卡审核状态
+ */
+export function batchAuditKnowledgeCards(
+  ownerType: OwnerType,
+  ownerId: string,
+  payload: CardBatchAuditPayload
+) {
+  return request.post<CardBatchAuditResult>(
+    `${BASE_URL}/${ownerType}/${ownerId}/cards/batch/audit`,
+    payload
+  )
+}
+
+/**
+ * 批量审核通过当前工作台全部知识卡
+ */
+export function auditApproveAllKnowledgeCards(ownerType: OwnerType, ownerId: string) {
+  return request.post<CardBatchAuditResult>(
+    `${BASE_URL}/${ownerType}/${ownerId}/cards/audit-approve-all`
+  )
+}
+
+/**
+ * 批量上线知识卡
+ */
+export function batchOnlineKnowledgeCards(
+  ownerType: OwnerType,
+  ownerId: string,
+  payload: CardBatchOnlinePayload
+) {
+  return request.post<CardBatchOnlineResult>(
+    `${BASE_URL}/${ownerType}/${ownerId}/cards/batch/online`,
+    payload
+  )
+}
+
+/**
+ * 上线当前工作台全部已审核知识卡
+ */
+export function onlineAllKnowledgeCards(ownerType: OwnerType, ownerId: string) {
+  return request.post<CardBatchOnlineResult>(`${BASE_URL}/${ownerType}/${ownerId}/cards/online-all`)
+}
+
+/**
+ * 批量下线知识卡
+ */
+export function batchOfflineKnowledgeCards(
+  ownerType: OwnerType,
+  ownerId: string,
+  payload: CardBatchOfflinePayload
+) {
+  return request.post<CardBatchOnlineResult>(
+    `${BASE_URL}/${ownerType}/${ownerId}/cards/batch/offline`,
+    payload
+  )
+}
+
+/**
+ * 下线当前工作台全部在线知识卡
+ */
+export function offlineAllKnowledgeCards(ownerType: OwnerType, ownerId: string) {
+  return request.post<CardBatchOnlineResult>(
+    `${BASE_URL}/${ownerType}/${ownerId}/cards/offline-all`
+  )
+}
+
+/**
+ * 批量增加知识卡引用次数
+ */
+export function batchIncrementKnowledgeCardReferenceCount(
+  ownerType: OwnerType,
+  ownerId: string,
+  payload: KnowledgeCardBatchIncrementReferenceCountPayload
+) {
+  return request.post<KnowledgeCardBatchIncrementReferenceCountResult>(
+    `${BASE_URL}/${ownerType}/${ownerId}/cards/batch/increment-reference-count`,
+    payload
+  )
 }
 
 /**

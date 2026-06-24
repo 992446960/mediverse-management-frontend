@@ -9,6 +9,7 @@
  *  DELETE /knowledge/{owner_type}/{owner_id}/directories/{directory_id}
  *  GET    /knowledge/{owner_type}/{owner_id}/files
  *  POST   /knowledge/{owner_type}/{owner_id}/files/batch/move
+ *  POST   /knowledge/{owner_type}/{owner_id}/files/batch/delete
  *  POST   /knowledge/{owner_type}/{owner_id}/files/indexing-tasks/{task_id}/retry
  *  GET    /knowledge/{owner_type}/{owner_id}/cards
  *  POST   /knowledge/{owner_type}/{owner_id}/cards
@@ -17,7 +18,9 @@
  *  PATCH  /knowledge/{owner_type}/{owner_id}/cards/{id}/status
  *  GET    /knowledge/{owner_type}/{owner_id}/cards/{id}/versions
  *  GET    /knowledge/card-types
+ *  GET    /knowledge/files/categories
  *  DELETE /knowledge/{owner_type}/{owner_id}/cards/{id}
+ *  POST   /knowledge/{owner_type}/{owner_id}/cards/batch/*
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import {
@@ -186,6 +189,16 @@ describe('Knowledge 模块', () => {
       expect([400, 404]).toContain(res.status)
     })
 
+    it('POST files/batch/delete 无效文件应返回 400 或 404', async () => {
+      if (!owner) return console.warn('跳过: 无可用 owner')
+
+      const fakeId = '00000000-0000-0000-0000-000000000000'
+      const res = await authedPost(`${basePath()}/files/batch/delete`, {
+        file_ids: [fakeId],
+      })
+      expect([400, 404]).toContain(res.status)
+    })
+
     it('POST files/indexing-tasks/{task_id}/retry 无效任务应返回 400 或 404', async () => {
       if (!owner) return console.warn('跳过: 无可用 owner')
 
@@ -208,6 +221,17 @@ describe('Knowledge 模块', () => {
         expect(typeof first.name).toBe('string')
         expect(typeof first.code).toBe('string')
       }
+    })
+  })
+
+  describe('File Categories', () => {
+    it('GET /knowledge/files/categories 应返回文件分类数组', async () => {
+      const res = await authedGet('/knowledge/files/categories')
+      expect(res.status).toBe(200)
+      assertBaseResponseOk(res.data as Record<string, any>)
+      expect(Array.isArray((res.data as any).data)).toBe(true)
+      const first = (res.data as any).data[0]
+      if (first) expect(typeof first).toBe('string')
     })
   })
 
@@ -316,6 +340,58 @@ describe('Knowledge 模块', () => {
       assertBaseResponseOk(deleteRes.data as Record<string, any>)
       expect((deleteRes.data as any).data.card_id).toBe(cardId)
       expect((deleteRes.data as any).data.action).toBe('deleted')
+    })
+
+    it('POST cards/batch/delete 无效知识卡应返回 400 或 404', async () => {
+      if (!owner) return console.warn('跳过: 无可用 owner')
+
+      const fakeId = '00000000-0000-0000-0000-000000000000'
+      const res = await authedPost(`${basePath()}/cards/batch/delete`, {
+        card_ids: [fakeId],
+      })
+      expect([400, 404]).toContain(res.status)
+    })
+
+    it('POST cards/batch/audit 无效知识卡应返回 400 或 404', async () => {
+      if (!owner) return console.warn('跳过: 无可用 owner')
+
+      const fakeId = '00000000-0000-0000-0000-000000000000'
+      const res = await authedPost(`${basePath()}/cards/batch/audit`, {
+        card_ids: [fakeId],
+        audit_status: 'approved',
+      })
+      expect([400, 404]).toContain(res.status)
+    })
+
+    it('POST cards/batch/online 无效知识卡应返回 400 或 404', async () => {
+      if (!owner) return console.warn('跳过: 无可用 owner')
+
+      const fakeId = '00000000-0000-0000-0000-000000000000'
+      const res = await authedPost(`${basePath()}/cards/batch/online`, {
+        card_ids: [fakeId],
+      })
+      expect([400, 404]).toContain(res.status)
+    })
+
+    it('POST cards/batch/offline 无效知识卡应返回 400 或 404', async () => {
+      if (!owner) return console.warn('跳过: 无可用 owner')
+
+      const fakeId = '00000000-0000-0000-0000-000000000000'
+      const res = await authedPost(`${basePath()}/cards/batch/offline`, {
+        card_ids: [fakeId],
+        note: 'vitest-invalid',
+      })
+      expect([400, 404]).toContain(res.status)
+    })
+
+    it('POST cards/batch/increment-reference-count 无效知识卡应返回 400 或 404', async () => {
+      if (!owner) return console.warn('跳过: 无可用 owner')
+
+      const fakeId = '00000000-0000-0000-0000-000000000000'
+      const res = await authedPost(`${basePath()}/cards/batch/increment-reference-count`, {
+        card_ids: [fakeId],
+      })
+      expect([400, 404]).toContain(res.status)
     })
   })
 

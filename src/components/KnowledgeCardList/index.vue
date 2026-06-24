@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { message } from 'ant-design-vue'
+import { message, Modal } from 'ant-design-vue'
 import {
   PlusOutlined,
   EditOutlined,
@@ -12,6 +12,7 @@ import {
   ReloadOutlined,
   CheckOutlined,
   CloseOutlined,
+  DownOutlined,
 } from '@ant-design/icons-vue'
 import type {
   KnowledgeCard,
@@ -42,6 +43,10 @@ import {
   getKnowledgeCards,
   toggleKnowledgeCardStatus,
   deleteKnowledgeCard,
+  batchDeleteKnowledgeCards,
+  batchAuditKnowledgeCards,
+  batchOnlineKnowledgeCards,
+  batchOfflineKnowledgeCards,
   getCardTypes,
   auditKnowledgeCard,
 } from '@/api/knowledge'
@@ -96,10 +101,19 @@ const auditModalOpen = ref(false)
 const auditLoading = ref(false)
 const auditCard = ref<KnowledgeCard | null>(null)
 const auditAction = ref<'approved' | 'rejected'>('approved')
+const batchAuditIds = ref<string[]>([])
+const batchStatusIds = ref<string[]>([])
 
 const translateKnowledgeConfig = (key: string) => t(key)
-const getLocalizedCardTypeConfig = (type: string) =>
-  getCardTypeConfig(type, translateKnowledgeConfig)
+const cardTypeNameMap = computed(() => new Map(cardTypes.value.map((ct) => [ct.code, ct.name])))
+const getLocalizedCardTypeConfig = (type: string) => {
+  const config = getCardTypeConfig(type, translateKnowledgeConfig)
+  if (config.label !== type) return config
+  return {
+    ...config,
+    label: cardTypeNameMap.value.get(type) || type,
+  }
+}
 const getLocalizedOnlineStatusConfig = (status: string) =>
   getOnlineStatusConfig(status, translateKnowledgeConfig)
 const getLocalizedAuditStatusConfig = (status: AuditStatus) =>
@@ -220,6 +234,14 @@ const tableConf = computed<PageTableConfig>(() => ({
 }))
 
 const tableColumns = computed<PageTableColumnConfig[]>(() => [
+  {
+    label: t('common.selectionColumn'),
+    type: 'selection',
+    width: 60,
+    fixed: 'left',
+    selectDisabled: (row) => !canOperateKnowledgeCard((row as KnowledgeCard).online_status),
+    configurable: { resizable: false },
+  },
   {
     label: t('knowledge.card.columnTitle'),
     prop: 'title',
@@ -373,6 +395,79 @@ const fetchCardTypes = async () => {
   }
 }
 
+const selectedCards = computed(
+  () => (pageTableRef.value?.multipleSelection ?? []) as KnowledgeCard[]
+)
+const selectedCardIds = computed(() => selectedCards.value.map((item) => item.id))
+
+function ensureBatchSelection() {
+  if (selectedCardIds.value.length === 0) {
+    message.warning(t('knowledge.card.batchNoSelection'))
+    return false
+  }
+  if (selectedCards.value.some((card) => !canOperateKnowledgeCard(card.online_status))) {
+    message.warning(t('knowledge.card.creatingBlocked'))
+    return false
+  }
+  return true
+}
+
+function clearBatchSelection() {
+  pageTableRef.value?.clearSelection()
+}
+
+function clearBatchAuditContext() {
+  batchAuditIds.value = []
+}
+
+function openBatchAudit(action: 'approved' | 'rejected') {
+  if (!ensureBatchSelection()) return
+  batchAuditIds.value = [...selectedCardIds.value]
+  auditCard.value = null
+  auditAction.value = action
+  auditModalOpen.value = true
+}
+
+function openBatchOnline() {
+  if (!ensureBatchSelection()) return
+  if (selectedCards.value.some((card) => !canPublishKnowledgeCard(card.audit_status))) {
+    message.warning(t('knowledge.card.onlineBlockedByAudit'))
+    return
+  }
+  batchStatusIds.value = [...selectedCardIds.value]
+  statusConfirmCard.value = null
+  statusConfirmTargetStatus.value = 'online'
+  statusConfirmOpen.value = true
+}
+
+function openBatchOffline() {
+  if (!ensureBatchSelection()) return
+  batchStatusIds.value = [...selectedCardIds.value]
+  statusConfirmCard.value = null
+  statusConfirmTargetStatus.value = 'offline'
+  statusConfirmOpen.value = true
+}
+
+function openBatchDelete() {
+  if (!ensureBatchSelection()) return
+  const ids = [...selectedCardIds.value]
+  Modal.confirm({
+    title: t('knowledge.card.batchDelete'),
+    content: t('knowledge.card.batchDeleteConfirm', { count: ids.length }),
+    okText: t('common.confirm'),
+    cancelText: t('common.cancel'),
+    okType: 'danger',
+    onOk: async () => {
+      const result = await batchDeleteKnowledgeCards(props.ownerType, props.ownerId, {
+        card_ids: ids,
+      })
+      message.success(t('knowledge.card.batchDeleteSuccess', { count: result.deleted_count }))
+      clearBatchSelection()
+      await fetchData()
+    },
+  })
+}
+
 const handleDelete = async (record: KnowledgeCard) => {
   if (!canOperateKnowledgeCard(record.online_status)) {
     message.warning(t('knowledge.card.creatingBlocked'))
@@ -473,17 +568,42 @@ const handleStatusToggle = (record: KnowledgeCard) => {
 }
 
 const handleStatusConfirm = async (note?: string) => {
-  if (!statusConfirmCard.value) return
+  if (!statusConfirmCard.value && batchStatusIds.value.length === 0) return
   statusConfirmLoading.value = true
-  const ok = await doStatusToggle(
-    statusConfirmCard.value,
-    statusConfirmTargetStatus.value,
-    statusConfirmTargetStatus.value === 'offline' ? note : undefined
-  )
-  statusConfirmLoading.value = false
-  if (ok) {
+  try {
+    if (statusConfirmCard.value) {
+      const ok = await doStatusToggle(
+        statusConfirmCard.value,
+        statusConfirmTargetStatus.value,
+        statusConfirmTargetStatus.value === 'offline' ? note : undefined
+      )
+      if (ok) {
+        statusConfirmOpen.value = false
+        statusConfirmCard.value = null
+      }
+      return
+    }
+
+    const ids = [...batchStatusIds.value]
+    if (statusConfirmTargetStatus.value === 'online') {
+      const result = await batchOnlineKnowledgeCards(props.ownerType, props.ownerId, {
+        card_ids: ids,
+      })
+      message.success(t('knowledge.card.batchOnlineSuccess', { count: result.updated_count }))
+      ids.forEach((id) => patchTableRowOnlineStatus(id, 'online'))
+    } else {
+      const result = await batchOfflineKnowledgeCards(props.ownerType, props.ownerId, {
+        card_ids: ids,
+        note,
+      })
+      message.success(t('knowledge.card.batchOfflineSuccess', { count: result.updated_count }))
+      ids.forEach((id) => patchTableRowOnlineStatus(id, 'offline'))
+    }
     statusConfirmOpen.value = false
-    statusConfirmCard.value = null
+    batchStatusIds.value = []
+    clearBatchSelection()
+  } finally {
+    statusConfirmLoading.value = false
   }
 }
 
@@ -508,15 +628,45 @@ const handleAuditAction = (record: KnowledgeCard, action: 'approved' | 'rejected
     message.warning(t('knowledge.card.creatingBlocked'))
     return
   }
+  clearBatchAuditContext()
   auditCard.value = record
   auditAction.value = action
   auditModalOpen.value = true
 }
 
 const handleAuditConfirm = async (reason?: string) => {
-  if (!auditCard.value) return
+  if (!auditCard.value && batchAuditIds.value.length === 0) return
   auditLoading.value = true
   try {
+    if (batchAuditIds.value.length > 0) {
+      const ids = [...batchAuditIds.value]
+      const result = await batchAuditKnowledgeCards(props.ownerType, props.ownerId, {
+        card_ids: ids,
+        audit_status: auditAction.value,
+        audit_reject_reason: auditAction.value === 'rejected' ? reason : undefined,
+      })
+      message.success(
+        t(
+          auditAction.value === 'approved'
+            ? 'knowledge.card.batchAuditApproveSuccess'
+            : 'knowledge.card.batchAuditRejectSuccess',
+          { count: result.updated_count }
+        )
+      )
+      ids.forEach((id) =>
+        patchTableRowAuditStatus(
+          id,
+          auditAction.value,
+          auditAction.value === 'rejected' ? reason : undefined
+        )
+      )
+      auditModalOpen.value = false
+      clearBatchAuditContext()
+      clearBatchSelection()
+      return
+    }
+
+    if (!auditCard.value) return
     await auditKnowledgeCard(
       props.ownerType,
       props.ownerId,
@@ -576,11 +726,59 @@ const handleAuditConfirm = async (reason?: string) => {
         :table-data="tableData"
         @fetch-table-data="fetchData"
       >
+        <template v-if="selectedCardIds.length > 0" #toolbarExtra>
+          <div class="knowledge-card-list__batch-toolbar">
+            <span class="knowledge-card-list__batch-count">
+              {{ t('knowledge.card.batchSelectedCount', { count: selectedCardIds.length }) }}
+            </span>
+            <a-button
+              type="link"
+              class="knowledge-card-list__batch-clear"
+              @click="clearBatchSelection"
+            >
+              {{ t('common.clearSelection') }}
+            </a-button>
+            <a-button type="primary" @click="openBatchAudit('approved')">
+              <template #icon>
+                <CheckOutlined />
+              </template>
+              {{ t('knowledge.card.batchAuditApprove') }}
+            </a-button>
+            <a-button @click="openBatchOnline">
+              <template #icon>
+                <CloudUploadOutlined />
+              </template>
+              {{ t('knowledge.card.batchOnline') }}
+            </a-button>
+            <a-dropdown :trigger="['click']">
+              <a-button>
+                {{ t('common.more') }}
+                <DownOutlined class="knowledge-card-list__more-icon" />
+              </a-button>
+              <template #overlay>
+                <a-menu>
+                  <a-menu-item key="reject" @click="openBatchAudit('rejected')">
+                    <CloseOutlined />
+                    {{ t('knowledge.card.batchAuditReject') }}
+                  </a-menu-item>
+                  <a-menu-item key="offline" @click="openBatchOffline">
+                    <CloudDownloadOutlined />
+                    {{ t('knowledge.card.batchOffline') }}
+                  </a-menu-item>
+                  <a-menu-item key="delete" danger @click="openBatchDelete">
+                    <DeleteOutlined />
+                    {{ t('knowledge.card.batchDelete') }}
+                  </a-menu-item>
+                </a-menu>
+              </template>
+            </a-dropdown>
+          </div>
+        </template>
         <template #title="{ row }">
           <div class="flex flex-col">
-            <span class="font-medium text-gray-800 dark:text-gray-100">{{
-              (row as KnowledgeCard).title
-            }}</span>
+            <span class="font-medium text-gray-800 dark:text-gray-100">
+              {{ (row as KnowledgeCard).title }}
+            </span>
             <div class="flex flex-wrap gap-1 mt-1">
               <a-tag v-for="tag in (row as KnowledgeCard).tags" :key="tag" size="small">
                 {{ tag }}
@@ -621,8 +819,35 @@ const handleAuditConfirm = async (reason?: string) => {
     <KnowledgeCardAuditModal
       v-model:open="auditModalOpen"
       :action="auditAction"
+      :batch-count="batchAuditIds.length"
       :confirm-loading="auditLoading"
       @confirm="handleAuditConfirm"
     />
   </div>
 </template>
+
+<style scoped lang="scss">
+.knowledge-card-list__batch-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 36px;
+  min-width: 0;
+}
+
+.knowledge-card-list__batch-count {
+  color: var(--color-text-base);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.knowledge-card-list__batch-clear {
+  height: auto;
+  padding: 0;
+}
+
+.knowledge-card-list__more-icon {
+  margin-left: 4px;
+  font-size: 12px;
+}
+</style>
