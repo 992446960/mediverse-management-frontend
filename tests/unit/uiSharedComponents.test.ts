@@ -154,3 +154,15 @@ describe('avatar wizard visual contracts', () => {
     expect(stepTypeSource).toContain('UserOutlined')
   })
 })
+
+describe('avatar config form contracts', () => {
+  const avatarConfigSource = readFileSync(
+    resolve(process.cwd(), 'src/components/AvatarConfig/index.vue'),
+    'utf8'
+  )
+
+  it('keeps custom style input out of the style form item collection', () => {
+    expect(avatarConfigSource).toContain('<a-form-item-rest>')
+    expect(avatarConfigSource).toContain('</a-form-item-rest>')
+  })
+})

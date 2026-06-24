@@ -92,15 +92,17 @@
             <a-form-item :label="t('avatar.style')" name="style">
               <AvatarStyleSelector v-model="formData.style" />
 
-              <div v-if="formData.style === 'custom'" class="mt-3">
-                <a-input
-                  :value="formData.style_custom ?? ''"
-                  :placeholder="t('avatar.styleCustom')"
-                  :maxlength="100"
-                  class="step-info-input"
-                  @update:value="onStyleCustomUpdate"
-                />
-              </div>
+              <a-form-item-rest>
+                <div v-if="formData.style === 'custom'" class="mt-3">
+                  <a-input
+                    :value="formData.style_custom ?? ''"
+                    :placeholder="t('avatar.styleCustom')"
+                    :maxlength="100"
+                    class="step-info-input"
+                    @update:value="onStyleCustomUpdate"
+                  />
+                </div>
+              </a-form-item-rest>
             </a-form-item>
 
             <a-form-item :label="t('avatar.tags')" name="tags">

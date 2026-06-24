@@ -34,6 +34,7 @@
 
 ## 近期同步记录
 
+- 分身配置表单告警修复：工作台分身配置的自定义沟通风格输入改为 `a-form-item-rest`，避免 `style` 表单项同时收集单选组和输入框导致 Ant Design Vue 控制台告警，并补充静态契约单测。
 - 暗黑主题编辑态补强：`md-editor-v3` 知识卡编辑器绑定 `themeStore` 并新增 `src/styles/editor.css` 复用主题变量；全局 Ant 输入控件、聚焦态、文本选区和 Chrome autofill 背景改为语义变量，修复暗色下编辑器白底和用户管理搜索框浅底。
 - 暗黑主题不一致补强：新增 `src/styles/markdown.css` 作为 Markdown / `v-html` 内容统一主题入口，禁止业务组件直接引入 GitHub light Markdown CSS；召回结果、Modal 标题区、分身配置和统计卡片改为语义变量，并扩展 `pnpm check:theme` 拦截无效 CSS 变量任意值与浅色 Markdown 全局 import。
 - 主布局侧栏视觉微调：品牌区按设计图改为图标加 `Mediverse` / `Management` 双行标题，标题白色展示；暗色侧边栏与菜单背景改为深海蓝主题变量，不改新增分身/新建会话等按钮颜色。
