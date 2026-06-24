@@ -37,6 +37,12 @@
   --color-text-title:       var(--color-primary);
   --color-text-on-primary:  #FFFFFF;
 
+  --color-avatar-quick-guide-bg: #38BDF8;
+  --color-avatar-quick-guide-text: #FFFFFF;
+  --color-avatar-quick-guide-content: rgba(255, 255, 255, 0.9);
+  --color-avatar-quick-guide-button-bg: #FFFFFF;
+  --color-avatar-quick-guide-button-text: #38BDF8;
+
   --color-border:           #E2E8F0;
   --color-border-secondary: #F1F5F9;
 

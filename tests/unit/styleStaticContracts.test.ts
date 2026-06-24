@@ -161,6 +161,19 @@ describe('style static contracts', () => {
     }
   })
 
+  it('keeps quick action guide button colors stable across color modes', () => {
+    const source = readSource('src/components/AvatarConfig/QuickActionGuide.vue')
+    const variables = readSource('src/styles/variables.css')
+
+    expect(source).toContain('--quick-action-guide-button-bg')
+    expect(source).toContain('--quick-action-guide-button-text')
+    expect(source).not.toContain('var(--color-primary)')
+    expect(source).not.toContain('var(--color-text-inverse)')
+    expect(variables).toContain('--color-avatar-quick-guide-bg: #38BDF8;')
+    expect(variables).toContain('--color-avatar-quick-guide-button-bg: #FFFFFF;')
+    expect(variables).toContain('--color-avatar-quick-guide-button-text: #38BDF8;')
+  })
+
   it('keeps phase 3 paired dark styles and static grays on theme variables', () => {
     const bannedTokensByFile: Record<string, string[]> = {
       'src/components/LocaleSwitcher/index.vue': [
