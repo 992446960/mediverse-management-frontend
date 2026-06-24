@@ -213,6 +213,7 @@ textarea.ant-input:-webkit-autofill:active {
 /* 全局 Modal 样式 */
 .ant-modal {
   .ant-modal-content {
+    overflow: auto;
     padding: 0;
     background-color: var(--color-bg-elevated);
     .ant-modal-header {
