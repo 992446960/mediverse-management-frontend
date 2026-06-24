@@ -24,6 +24,12 @@ const recallSources = [
         page_hint: '第 12 页',
       },
     ],
+    tags: ['高血压', '诊断'],
+    online_status: 'online',
+    audit_status: 'approved',
+    audit_reject_reason: null,
+    reference_count: 4,
+    created_at: '2024-03-01T18:00:00Z',
     updated_at: '2024-03-01T18:30:00Z',
   },
   {
@@ -37,6 +43,12 @@ const recallSources = [
     md_content:
       '## 降压药物选用原则\n\n- 初始治疗从小剂量开始。\n- 优先选择长效制剂。\n- 高危患者可结合病情考虑联合用药。',
     sources: [],
+    tags: ['用药', '指南'],
+    online_status: 'online',
+    audit_status: 'approved',
+    audit_reject_reason: null,
+    reference_count: 2,
+    created_at: '2024-03-02T09:00:00Z',
     updated_at: '2024-03-02T09:15:00Z',
   },
   {
@@ -61,6 +73,12 @@ const recallSources = [
         page_hint: null,
       },
     ],
+    tags: ['住院安全'],
+    online_status: 'offline',
+    audit_status: 'approved',
+    audit_reject_reason: null,
+    reference_count: 1,
+    created_at: '2024-03-03T11:00:00Z',
     updated_at: '2024-03-03T11:20:00Z',
   },
 ]
@@ -207,9 +225,48 @@ export const knowledgeRecallHandlers = [
           confidence: sources.length > 0 ? 0.86 : 0.3,
           query_time_ms: 420,
           count: sources.length,
+          cited_card_ids: sources.map((source) => source.id),
           sources,
         },
       })
     }
   ),
+  http.post(`${API_BASE}/knowledge-recall/:ownerType/:ownerId/search`, async ({ request }) => {
+    await delay(300)
+    const body = (await request.json()) as {
+      query?: string
+      top_k?: number
+      metadata?: { card_type?: string[] }
+    }
+    const query = body.query?.trim()
+    if (!query) {
+      return HttpResponse.json({ code: 400, message: 'query is required' }, { status: 400 })
+    }
+
+    const topK = Math.min(20, Math.max(1, Number(body.top_k) || 5))
+    const selectedTypes = body.metadata?.card_type ?? []
+    const filtered =
+      selectedTypes.length > 0
+        ? recallSources.filter((source) => selectedTypes.includes(source.card_type))
+        : recallSources
+    const sources = filtered.slice(0, topK).map((source) => ({
+      id: source.id,
+      card_type: source.card_type,
+      title: source.title,
+      excerpt: source.excerpt,
+      relevance_score: source.relevance_score,
+    }))
+
+    return HttpResponse.json({
+      code: 0,
+      message: 'ok',
+      data: {
+        query,
+        sources,
+        cited_card_ids: sources.map((source) => source.id),
+        confidence: sources.length > 0 ? 0.82 : 0.2,
+        query_time_ms: 260,
+      },
+    })
+  }),
 ]

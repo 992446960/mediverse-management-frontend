@@ -2,6 +2,7 @@ import type {
   KnowledgeRecallFormState,
   KnowledgeRecallRequest,
   KnowledgeRecallResult,
+  NonAgenticKnowledgeRecallResult,
   KnowledgeRecallSessionDetail,
   KnowledgeRecallViewModel,
 } from '@/types/knowledgeRecall'
@@ -84,13 +85,22 @@ export function buildKnowledgeRecallPayload(
     top_k: state.topK,
   }
 
+  const metadata: NonNullable<KnowledgeRecallRequest['metadata']> = {}
+
   if (
     state.cardTypes.length > 0 &&
     !selectedCoversAllAvailable(state.cardTypes, state.availableCardTypes ?? [])
   ) {
-    payload.metadata = {
-      card_type: [...state.cardTypes],
-    }
+    metadata.card_type = [...state.cardTypes]
+  }
+  if (state.ownerIds?.length) {
+    metadata.owner_ids = [...state.ownerIds]
+  }
+  if (state.knowledgeScope) {
+    metadata.knowledge_scope = state.knowledgeScope
+  }
+  if (Object.keys(metadata).length > 0) {
+    payload.metadata = metadata
   }
 
   return payload
@@ -162,6 +172,8 @@ export function normalizeKnowledgeRecallResult(
   context: NormalizeRecallResultContext
 ): KnowledgeRecallViewModel {
   return {
+    sessionId: result.id,
+    citedCardIds: result.cited_card_ids ?? [],
     query: result.query,
     answer: result.answer ?? '',
     cardType: resolveSingleCardType(context.cardTypes),
@@ -182,13 +194,57 @@ export function normalizeKnowledgeRecallResult(
         previewContentFallback: displayMarkdown.usedFallback,
         jsonContent: source.json_content ?? '',
         sourceFiles: source.source_files ?? source.sources ?? [],
+        tags: source.tags ?? [],
+        onlineStatus: source.online_status ?? null,
+        auditStatus: source.audit_status ?? null,
+        auditRejectReason: source.audit_reject_reason ?? null,
+        referenceCount: source.reference_count ?? null,
+        createdAt: source.created_at ?? null,
+        updatedAt: source.updated_at ?? null,
+        currentVersion: source.current_version ?? null,
+      }
+    }),
+    citations: [],
+    downstream: null,
+  }
+}
+
+export function normalizeNonAgenticKnowledgeRecallResult(
+  result: NonAgenticKnowledgeRecallResult,
+  context: NormalizeRecallResultContext
+): KnowledgeRecallViewModel {
+  return {
+    citedCardIds: result.cited_card_ids ?? [],
+    query: result.query,
+    answer: '',
+    cardType: resolveSingleCardType(context.cardTypes),
+    topK: context.topK,
+    count: result.sources.length,
+    queryTimeMs: result.query_time_ms,
+    confidence: result.confidence,
+    sources: result.sources.map((source, index) => {
+      const cardId = source.card_id ?? source.id ?? null
+      const excerpt = source.content ?? source.excerpt ?? ''
+      const displayMarkdown = normalizeDisplayMarkdown('', excerpt)
+      return {
+        id: cardId ?? `non-agentic-source-${index}`,
+        cardId,
+        title: source.title || '-',
+        cardType: source.card_type || '',
+        excerpt,
+        score: source.relevance_score ?? null,
+        mdContent: displayMarkdown.content,
+        previewContentFallback: displayMarkdown.usedFallback,
+        jsonContent: '',
+        sourceFiles: source.source_files ?? source.sources ?? [],
         tags: [],
         onlineStatus: null,
         auditStatus: null,
         auditRejectReason: null,
         referenceCount: null,
-        createdAt: source.created_at ?? null,
-        updatedAt: source.updated_at ?? null,
+        createdAt: null,
+        updatedAt: null,
+        currentVersion: null,
       }
     }),
     citations: [],

@@ -24,7 +24,18 @@ describe('Knowledge Recall 模块', () => {
     const res = await authedPost(`${basePath()}/recall`, { query: '发热问诊' })
     expect(res.status).toBe(200)
     assertBaseResponseOk(res.data as Record<string, any>)
-    expect((res.data as any).data.query).toBe('发热问诊')
+    const data = (res.data as any).data
+    expect(data.query).toBe('发热问诊')
+    expect(Array.isArray(data.cited_card_ids)).toBe(true)
+    expect(Array.isArray(data.sources)).toBe(true)
+    if (data.sources.length > 0) {
+      expect('md_content' in data.sources[0]).toBe(true)
+      expect('json_content' in data.sources[0]).toBe(true)
+      expect('tags' in data.sources[0]).toBe(true)
+      expect('online_status' in data.sources[0]).toBe(true)
+      expect('audit_status' in data.sources[0]).toBe(true)
+      expect('reference_count' in data.sources[0]).toBe(true)
+    }
     await assertMatchesSchema(
       'recall_api_v1_knowledge_recall__owner_type___owner_id__recall_post',
       res.data
@@ -35,6 +46,17 @@ describe('Knowledge Recall 模块', () => {
     const res = await authedPost(`${basePath()}/search`, { query: '发热问诊' })
     expect(res.status).toBe(200)
     assertBaseResponseOk(res.data as Record<string, any>)
+    const data = (res.data as any).data
+    expect(data.answer).toBeUndefined()
+    expect(data.count).toBeUndefined()
+    expect(data.id).toBeUndefined()
+    expect(Array.isArray(data.cited_card_ids)).toBe(true)
+    expect(Array.isArray(data.sources)).toBe(true)
+    if (data.sources.length > 0) {
+      expect('id' in data.sources[0]).toBe(true)
+      expect('excerpt' in data.sources[0]).toBe(true)
+      expect('md_content' in data.sources[0]).toBe(false)
+    }
     await assertMatchesSchema(
       'non_agentic_search_api_v1_knowledge_recall__owner_type___owner_id__search_post',
       res.data

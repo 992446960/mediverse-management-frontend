@@ -6,6 +6,7 @@ import {
   formatRecallHistoryLatency,
   formatRecallConfidence,
   normalizeKnowledgeRecallResult,
+  normalizeNonAgenticKnowledgeRecallResult,
   normalizeKnowledgeRecallSessionDetail,
   resolveRecallCardTypeSelection,
 } from '../../src/utils/knowledgeRecall'
@@ -51,6 +52,25 @@ describe('knowledge recall payload', () => {
     ).toEqual({
       query: '如何进行知识库权限管理？',
       top_k: 5,
+    })
+  })
+
+  it('sends owner ids and knowledge scope in metadata when provided', () => {
+    expect(
+      buildKnowledgeRecallPayload({
+        query: '跨院区召回应如何限定范围？',
+        topK: 6,
+        cardTypes: [],
+        ownerIds: ['owner-a', 'owner-b'],
+        knowledgeScope: 'collective',
+      })
+    ).toEqual({
+      query: '跨院区召回应如何限定范围？',
+      top_k: 6,
+      metadata: {
+        owner_ids: ['owner-a', 'owner-b'],
+        knowledge_scope: 'collective',
+      },
     })
   })
 })
@@ -124,6 +144,7 @@ describe('knowledge recall view model', () => {
         confidence: 0.8,
         query_time_ms: 123,
         count: 1,
+        cited_card_ids: ['card-1'],
         sources: [
           {
             id: 'card-1',
@@ -133,6 +154,13 @@ describe('knowledge recall view model', () => {
             relevance_score: 0.91,
             md_content: '## 正文',
             json_content: '{"a":1}',
+            tags: ['高血压'],
+            online_status: 'online',
+            audit_status: 'approved',
+            audit_reject_reason: null,
+            reference_count: 3,
+            created_at: '2026-05-25T10:00:00Z',
+            updated_at: '2026-05-25T11:00:00Z',
             sources: [],
           },
         ],
@@ -148,6 +176,7 @@ describe('knowledge recall view model', () => {
       count: 1,
       queryTimeMs: 123,
       confidence: 0.8,
+      citedCardIds: ['card-1'],
       sources: [
         {
           id: 'card-1',
@@ -158,6 +187,55 @@ describe('knowledge recall view model', () => {
           mdContent: '## 正文',
           previewContentFallback: false,
           jsonContent: '{"a":1}',
+          tags: ['高血压'],
+          onlineStatus: 'online',
+          auditStatus: 'approved',
+          auditRejectReason: null,
+          referenceCount: 3,
+          createdAt: '2026-05-25T10:00:00Z',
+          updatedAt: '2026-05-25T11:00:00Z',
+        },
+      ],
+    })
+  })
+
+  it('normalizes non-agentic recall result without answer or count fields', () => {
+    const view = normalizeNonAgenticKnowledgeRecallResult(
+      {
+        query: '知识卡批量操作',
+        confidence: 0.64,
+        query_time_ms: 88,
+        cited_card_ids: ['card-2'],
+        sources: [
+          {
+            id: 'card-2',
+            card_type: 'risk_point',
+            title: '批量删除风险',
+            excerpt: '先确认所属权再删除',
+            relevance_score: 0.72,
+          },
+        ],
+      },
+      { topK: 3, cardTypes: [] }
+    )
+
+    expect(view).toMatchObject({
+      query: '知识卡批量操作',
+      answer: '',
+      count: 1,
+      topK: 3,
+      confidence: 0.64,
+      queryTimeMs: 88,
+      citedCardIds: ['card-2'],
+      sources: [
+        {
+          id: 'card-2',
+          cardId: 'card-2',
+          title: '批量删除风险',
+          excerpt: '先确认所属权再删除',
+          score: 0.72,
+          mdContent: '先确认所属权再删除',
+          previewContentFallback: true,
         },
       ],
     })

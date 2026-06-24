@@ -5,6 +5,8 @@ export interface KnowledgeRecallFormState {
   topK: number
   cardTypes: CardType[]
   availableCardTypes?: CardType[]
+  ownerIds?: string[]
+  knowledgeScope?: string
 }
 
 export interface KnowledgeRecallRequest {
@@ -12,6 +14,9 @@ export interface KnowledgeRecallRequest {
   top_k: number
   metadata?: {
     card_type?: CardType[]
+    input_data?: Record<string, unknown>
+    owner_ids?: string[]
+    knowledge_scope?: string
   }
 }
 
@@ -28,15 +33,43 @@ export interface KnowledgeRecallSource {
   updated_at?: string | null
   source_files?: FileSource[] | null
   sources?: FileSource[] | null
+  tags?: string[]
+  online_status?: string | null
+  audit_status?: string | null
+  audit_reject_reason?: string | null
+  reference_count?: number | null
+  current_version?: number | string | null
 }
 
 export interface KnowledgeRecallResult {
+  id?: string
   query: string
-  answer: string
+  answer?: string
   confidence?: number
   query_time_ms?: number
   count?: number
+  cited_card_ids?: string[]
   sources: KnowledgeRecallSource[]
+}
+
+export interface NonAgenticKnowledgeRecallSource {
+  id?: string | null
+  card_id?: string | null
+  card_type?: CardType | null
+  title?: string | null
+  excerpt?: string | null
+  content?: string | null
+  relevance_score?: number | null
+  source_files?: FileSource[] | null
+  sources?: FileSource[] | null
+}
+
+export interface NonAgenticKnowledgeRecallResult {
+  query: string
+  sources: NonAgenticKnowledgeRecallSource[]
+  cited_card_ids: string[]
+  confidence?: number
+  query_time_ms?: number
 }
 
 export type KnowledgeRecallOwnerType = Exclude<OwnerType, 'avatar'>
@@ -140,10 +173,12 @@ export interface KnowledgeRecallViewSource {
   referenceCount: number | null
   createdAt: string | null
   updatedAt: string | null
+  currentVersion?: number | string | null
 }
 
 export interface KnowledgeRecallViewModel {
   sessionId?: string
+  citedCardIds?: string[]
   query: string
   answer: string
   cardType: CardType | ''
