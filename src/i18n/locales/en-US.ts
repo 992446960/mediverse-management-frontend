@@ -45,6 +45,7 @@ export default {
     detail: 'Detail',
     more: 'More',
     clearSelection: 'Clear selection',
+    selectedCount: '{count} selected',
     featureInDevelopment: 'Feature In Development',
     featureInDevelopmentDesc: 'This feature is currently under development. Stay tuned.',
     back: 'Back',

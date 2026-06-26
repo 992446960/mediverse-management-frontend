@@ -140,6 +140,7 @@
 - 全量自飞书 Wiki（`RjKPwTWUBivbaykfexbcBzaTnvb`）重新生成 `docs/API设计.md`，内容与飞书 docx 纯文本一致；本地不再自行改写 SSE/召回字段注释格式。
 - 同步策略调整为：**语义与飞书 Wiki 一致**，本地 `docs/API设计.md` 使用规范 Markdown（代码块、表格、缩进 JSON）；§3.2.2 SSE 示例拆分为流式 `http` 片段与展开的 `done` JSON。
 - `PageTable` 的 `type: 'selection'` 列配置现映射 `width` → `rowSelection.columnWidth`、`fixed` → `rowSelection.fixed`，列宽与固定列设置可生效。
+- 新增 `BatchActionToolbar` 通用批量操作栏，知识卡与文件管理均改为选中后在 `PageTable` 的 `toolbarExtra` 区域展示批量操作；文件管理页头部仅保留上传与上传进度入口，避免批量入口位置不一致。
 
 ## 待维护规则
 

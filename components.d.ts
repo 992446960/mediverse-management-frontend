@@ -80,6 +80,7 @@ declare module 'vue' {
     AvatarStats: typeof import('./src/components/AvatarStats/index.vue')['default']
     AvatarTestPage: typeof import('./src/components/AvatarTestPage/index.vue')['default']
     AvatarUploadPanel: typeof import('./src/components/AvatarUploadPanel/index.vue')['default']
+    BatchActionToolbar: typeof import('./src/components/BatchActionToolbar/index.vue')['default']
     BubbleRenderer: typeof import('./src/components/ChatWindow/BubbleRenderer.vue')['default']
     CardContentBody: typeof import('./src/components/KnowledgeCardViewer/CardContentBody.vue')['default']
     ChangePasswordForm: typeof import('./src/components/ChangePasswordForm/index.vue')['default']

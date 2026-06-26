@@ -9,6 +9,18 @@ function readSource(path: string) {
 }
 
 describe('knowledge batch operation ui contracts', () => {
+  it('provides a shared batch action toolbar component', () => {
+    const componentSource = readSource('src/components/BatchActionToolbar/index.vue')
+    const typeSource = readSource('src/components/BatchActionToolbar/types.ts')
+
+    expect(componentSource).toContain('batch-action-toolbar')
+    expect(componentSource).toContain('selectedCount')
+    expect(componentSource).toContain('primaryActions')
+    expect(componentSource).toContain('moreActions')
+    expect(componentSource).toContain("emit('clear')")
+    expect(typeSource).toContain('BatchActionToolbarAction')
+  })
+
   it('exposes file batch delete from selected rows', () => {
     const source = readSource('src/views/shared/KnowledgeFiles.vue')
 
@@ -64,9 +76,18 @@ describe('knowledge batch operation ui contracts', () => {
     )
 
     expect(cardListSource).toContain('#toolbarExtra')
-    expect(cardListSource).toContain('knowledge-card-list__batch-toolbar')
+    expect(cardListSource).toContain('<BatchActionToolbar')
     expect(cardListSource).toMatch(
-      /<template\s+v-if="selectedCardIds\.length > 0"\s+#toolbarExtra>[\s\S]*?clearBatchSelection[\s\S]*?openBatchAudit\('approved'\)[\s\S]*?openBatchOnline[\s\S]*?openBatchAudit\('rejected'\)[\s\S]*?openBatchOffline[\s\S]*?openBatchDelete/
+      /<template\s+v-if="selectedCardIds\.length > 0"\s+#toolbarExtra>[\s\S]*?<BatchActionToolbar[\s\S]*?:selected-count="selectedCardIds\.length"[\s\S]*?:primary-actions="batchPrimaryActions"[\s\S]*?:more-actions="batchMoreActions"[\s\S]*?@clear="clearBatchSelection"/
+    )
+  })
+
+  it('renders file batch actions inside the PageTable toolbar extra slot', () => {
+    const source = readSource('src/views/shared/KnowledgeFiles.vue')
+
+    expect(source).toContain('#toolbarExtra')
+    expect(source).toMatch(
+      /<template\s+v-if="selectedFileIds\.length > 0"\s+#toolbarExtra>[\s\S]*?<BatchActionToolbar[\s\S]*?:selected-count="selectedFileIds\.length"[\s\S]*?:primary-actions="batchPrimaryActions"[\s\S]*?:more-actions="batchMoreActions"[\s\S]*?@clear="clearBatchSelection"/
     )
   })
 
@@ -86,6 +107,15 @@ describe('knowledge batch operation ui contracts', () => {
     }
   })
 
+  it('keeps file batch operations out of the page header buttons', () => {
+    const source = readSource('src/views/shared/KnowledgeFiles.vue')
+    const headConfBody = source.match(/const headConf[\s\S]*?\n\}\)\n/)?.[0] ?? ''
+
+    expect(headConfBody).toContain('knowledge.uploadFile')
+    expect(headConfBody).not.toContain('knowledge.batchMoveFiles')
+    expect(headConfBody).not.toContain('knowledge.batchDeleteFiles')
+  })
+
   it('keeps selected batch toolbar and selected rows on the table container background', () => {
     const pageTableSource = readSource('src/components/PageTable/index.vue')
     const toolbarExtraRule =
@@ -99,13 +129,10 @@ describe('knowledge batch operation ui contracts', () => {
   })
 
   it('keeps card batch operation buttons at the default action button size', () => {
-    const source = readSource('src/components/KnowledgeCardList/index.vue')
-    const batchToolbarStart = source.indexOf('knowledge-card-list__batch-toolbar')
-    const batchToolbarEnd = source.indexOf('<template #title', batchToolbarStart)
-    const batchToolbarTemplate = source.slice(batchToolbarStart, batchToolbarEnd)
+    const source = readSource('src/components/BatchActionToolbar/index.vue')
 
-    expect(batchToolbarTemplate).toContain('knowledge-card-list__batch-toolbar')
-    expect(batchToolbarTemplate).not.toContain('size="small"')
+    expect(source).toContain('batch-action-toolbar')
+    expect(source).not.toContain('size="small"')
   })
 
   it('uses distinct success messages for single and batch audit approval', () => {

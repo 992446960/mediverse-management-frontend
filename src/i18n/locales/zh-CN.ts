@@ -45,6 +45,7 @@ export default {
     detail: '详情',
     more: '更多',
     clearSelection: '清空选择',
+    selectedCount: '已选 {count} 项',
     featureInDevelopment: '功能开发中',
     featureInDevelopmentDesc: '该功能正在开发中，敬请期待。',
     back: '返回',

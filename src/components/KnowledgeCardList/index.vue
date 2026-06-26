@@ -12,7 +12,6 @@ import {
   ReloadOutlined,
   CheckOutlined,
   CloseOutlined,
-  DownOutlined,
 } from '@ant-design/icons-vue'
 import type {
   KnowledgeCard,
@@ -39,6 +38,7 @@ import KnowledgeCardAuditModal from '../KnowledgeCardAuditModal.vue'
 import PageHead from '@/components/PageHead/index.vue'
 import PageFilter from '@/components/PageFilter/index.vue'
 import PageTable from '@/components/PageTable/index.vue'
+import BatchActionToolbar from '@/components/BatchActionToolbar/index.vue'
 import {
   getKnowledgeCards,
   toggleKnowledgeCardStatus,
@@ -54,6 +54,7 @@ import { useFileRemoteSearch } from '@/composables/useFileRemoteSearch'
 import type { PageHeadConfig } from '@/components/PageHead/types'
 import type { PageFilterConfig } from '@/components/PageFilter/types'
 import type { PageTableConfig, PageTableColumnConfig } from '@/components/PageTable/types'
+import type { BatchActionToolbarAction } from '@/components/BatchActionToolbar/types'
 import dayjs from 'dayjs'
 
 const { t } = useI18n()
@@ -399,6 +400,37 @@ const selectedCards = computed(
   () => (pageTableRef.value?.multipleSelection ?? []) as KnowledgeCard[]
 )
 const selectedCardIds = computed(() => selectedCards.value.map((item) => item.id))
+const batchPrimaryActions = computed<BatchActionToolbarAction[]>(() => [
+  {
+    text: t('knowledge.card.batchAuditApprove'),
+    type: 'primary',
+    icon: CheckOutlined,
+    handle: () => openBatchAudit('approved'),
+  },
+  {
+    text: t('knowledge.card.batchOnline'),
+    icon: CloudUploadOutlined,
+    handle: openBatchOnline,
+  },
+])
+const batchMoreActions = computed<BatchActionToolbarAction[]>(() => [
+  {
+    text: t('knowledge.card.batchAuditReject'),
+    icon: CloseOutlined,
+    handle: () => openBatchAudit('rejected'),
+  },
+  {
+    text: t('knowledge.card.batchOffline'),
+    icon: CloudDownloadOutlined,
+    handle: openBatchOffline,
+  },
+  {
+    text: t('knowledge.card.batchDelete'),
+    icon: DeleteOutlined,
+    color: 'danger',
+    handle: openBatchDelete,
+  },
+])
 
 function ensureBatchSelection() {
   if (selectedCardIds.value.length === 0) {
@@ -727,52 +759,17 @@ const handleAuditConfirm = async (reason?: string) => {
         @fetch-table-data="fetchData"
       >
         <template v-if="selectedCardIds.length > 0" #toolbarExtra>
-          <div class="knowledge-card-list__batch-toolbar">
-            <span class="knowledge-card-list__batch-count">
-              {{ t('knowledge.card.batchSelectedCount', { count: selectedCardIds.length }) }}
-            </span>
-            <a-button
-              type="link"
-              class="knowledge-card-list__batch-clear"
-              @click="clearBatchSelection"
-            >
-              {{ t('common.clearSelection') }}
-            </a-button>
-            <a-button type="primary" @click="openBatchAudit('approved')">
-              <template #icon>
-                <CheckOutlined />
-              </template>
-              {{ t('knowledge.card.batchAuditApprove') }}
-            </a-button>
-            <a-button @click="openBatchOnline">
-              <template #icon>
-                <CloudUploadOutlined />
-              </template>
-              {{ t('knowledge.card.batchOnline') }}
-            </a-button>
-            <a-dropdown :trigger="['click']">
-              <a-button>
-                {{ t('common.more') }}
-                <DownOutlined class="knowledge-card-list__more-icon" />
-              </a-button>
-              <template #overlay>
-                <a-menu>
-                  <a-menu-item key="reject" @click="openBatchAudit('rejected')">
-                    <CloseOutlined />
-                    {{ t('knowledge.card.batchAuditReject') }}
-                  </a-menu-item>
-                  <a-menu-item key="offline" @click="openBatchOffline">
-                    <CloudDownloadOutlined />
-                    {{ t('knowledge.card.batchOffline') }}
-                  </a-menu-item>
-                  <a-menu-item key="delete" danger @click="openBatchDelete">
-                    <DeleteOutlined />
-                    {{ t('knowledge.card.batchDelete') }}
-                  </a-menu-item>
-                </a-menu>
-              </template>
-            </a-dropdown>
-          </div>
+          <BatchActionToolbar
+            :selected-count="selectedCardIds.length"
+            :selected-text="
+              t('knowledge.card.batchSelectedCount', { count: selectedCardIds.length })
+            "
+            :clear-text="t('common.clearSelection')"
+            :more-text="t('common.more')"
+            :primary-actions="batchPrimaryActions"
+            :more-actions="batchMoreActions"
+            @clear="clearBatchSelection"
+          />
         </template>
         <template #title="{ row }">
           <div class="flex flex-col">
@@ -825,29 +822,3 @@ const handleAuditConfirm = async (reason?: string) => {
     />
   </div>
 </template>
-
-<style scoped lang="scss">
-.knowledge-card-list__batch-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 36px;
-  min-width: 0;
-}
-
-.knowledge-card-list__batch-count {
-  color: var(--color-text-base);
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.knowledge-card-list__batch-clear {
-  height: auto;
-  padding: 0;
-}
-
-.knowledge-card-list__more-icon {
-  margin-left: 4px;
-  font-size: 12px;
-}
-</style>

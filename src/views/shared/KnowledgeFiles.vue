@@ -40,6 +40,17 @@
           :table-data="tableData"
           @fetch-table-data="onTableFetch"
         >
+          <template v-if="selectedFileIds.length > 0" #toolbarExtra>
+            <BatchActionToolbar
+              :selected-count="selectedFileIds.length"
+              :selected-text="t('common.selectedCount', { count: selectedFileIds.length })"
+              :clear-text="t('common.clearSelection')"
+              :more-text="t('common.more')"
+              :primary-actions="batchPrimaryActions"
+              :more-actions="batchMoreActions"
+              @clear="clearBatchSelection"
+            />
+          </template>
           <template #status="{ row }">
             <a-tooltip
               v-if="(row as FileListItem).status === 'failed' && (row as FileListItem).error_msg"
@@ -131,6 +142,7 @@ import { clearUploadQueueItems, removeUploadQueueItem } from '@/components/FileU
 import PageHead from '@/components/PageHead/index.vue'
 import PageFilter from '@/components/PageFilter/index.vue'
 import PageTable from '@/components/PageTable/index.vue'
+import BatchActionToolbar from '@/components/BatchActionToolbar/index.vue'
 import { useFileStatusPoll } from '@/composables/useFileStatusPoll'
 import type { UploadQueueItem } from '@/components/FileUploader/types'
 import {
@@ -151,6 +163,7 @@ import { FILE_STATUS_CONFIG } from '@/types/knowledge'
 import type { PageHeadConfig } from '@/components/PageHead/types'
 import type { PageFilterConfig } from '@/components/PageFilter/types'
 import type { PageTableConfig, PageTableColumnConfig } from '@/components/PageTable/types'
+import type { BatchActionToolbarAction } from '@/components/BatchActionToolbar/types'
 import {
   getFileOriginalUrl,
   type OwnerType,
@@ -372,16 +385,6 @@ const headConf = computed<PageHeadConfig>(() => {
       icon: UploadOutlined,
       handle: openUploadModal,
     },
-    {
-      text: t('knowledge.batchMoveFiles'),
-      icon: SwapOutlined,
-      handle: openBatchMoveModal,
-    },
-    {
-      text: t('knowledge.batchDeleteFiles'),
-      icon: DeleteOutlined,
-      handle: openBatchDeleteFiles,
-    },
   ]
   const hasActive = uploadQueue.value.length > 0 && !allDone.value
   if (hasActive) {
@@ -584,9 +587,29 @@ const selectedFiles = computed(
   () => (pageTableRef.value?.multipleSelection ?? []) as FileListItem[]
 )
 const selectedFileIds = computed(() => selectedFiles.value.map((item) => item.id))
+const batchPrimaryActions = computed<BatchActionToolbarAction[]>(() => [
+  {
+    text: t('knowledge.batchMoveFiles'),
+    type: 'primary',
+    icon: SwapOutlined,
+    handle: openBatchMoveModal,
+  },
+])
+const batchMoreActions = computed<BatchActionToolbarAction[]>(() => [
+  {
+    text: t('knowledge.batchDeleteFiles'),
+    icon: DeleteOutlined,
+    color: 'danger',
+    handle: openBatchDeleteFiles,
+  },
+])
 const batchMoveModalVisible = ref(false)
 const batchMoveLoading = ref(false)
 const batchMoveTargetDirId = ref<string | null>(null)
+
+function clearBatchSelection() {
+  pageTableRef.value?.clearSelection()
+}
 
 function openBatchMoveModal() {
   if (selectedFileIds.value.length === 0) {
