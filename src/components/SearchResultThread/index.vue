@@ -307,7 +307,7 @@ watch(
 <style scoped lang="scss">
 .kb-user-bubble {
   background: var(--color-primary);
-  color: var(--color-text-inverse);
+  color: var(--color-text-on-primary);
 }
 
 .kb-assistant-avatar {
