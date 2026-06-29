@@ -285,6 +285,20 @@ describe('style static contracts', () => {
     expect(markdownStyle).toContain('var(--color-code-bg)')
   })
 
+  it('keeps chat user bubbles aligned with knowledge search user bubbles', () => {
+    const messageList = readSource('src/components/ChatWindow/MessageList.vue')
+    const searchThread = readSource('src/components/SearchResultThread/index.vue')
+
+    for (const source of [messageList, searchThread]) {
+      expect(source).toContain('var(--color-primary)')
+      expect(source).toContain('var(--color-text-on-primary)')
+    }
+
+    expect(messageList).toContain('--chat-user-bubble-bg: var(--color-primary);')
+    expect(messageList).toContain('--chat-user-bubble-fg: var(--color-text-on-primary);')
+    expect(messageList).toContain(".ant-bubble.ant-bubble-end[role='user']")
+  })
+
   it('keeps modal chrome on the elevated semantic token', () => {
     const globalStyle = readSource('src/styles/index.css')
     const variables = readSource('src/styles/variables.css')

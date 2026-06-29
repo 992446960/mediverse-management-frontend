@@ -514,9 +514,41 @@ const roles = {
 
 /* message-list-wrapper 下的深度选择器 */
 .message-list-wrapper {
+  --chat-user-bubble-bg: var(--color-primary);
+  --chat-user-bubble-fg: var(--color-text-on-primary);
+
   :deep(.ant-bubble-content-wrapper) {
     max-width: 80%;
   }
+
+  :deep(
+    .ant-bubble.ant-bubble-end[role='user'] .ant-bubble-content:not(:has(.message-with-attachments))
+  ),
+  :deep(.ant-bubble.ant-bubble-end[role='user'] .message-text-bubble) {
+    color: var(--chat-user-bubble-fg);
+    background: var(--chat-user-bubble-bg);
+    border-color: transparent;
+    box-shadow: var(--shadow-sm);
+  }
+
+  :deep(
+    .ant-bubble.ant-bubble-end[role='user']
+      .ant-bubble-content:not(:has(.message-with-attachments))
+      .markdown-body
+  ),
+  :deep(.ant-bubble.ant-bubble-end[role='user'] .message-text-bubble .markdown-body) {
+    --markdown-fg: var(--chat-user-bubble-fg);
+    --markdown-muted: color-mix(in srgb, var(--chat-user-bubble-fg) 78%, transparent);
+    --markdown-border: color-mix(in srgb, var(--chat-user-bubble-fg) 28%, transparent);
+    --markdown-code-bg: color-mix(in srgb, var(--chat-user-bubble-bg) 82%, #000);
+    color: var(--chat-user-bubble-fg);
+  }
+
+  :deep(.ant-bubble.ant-bubble-end[role='user'] .markdown-body a) {
+    color: var(--chat-user-bubble-fg);
+    text-decoration-color: color-mix(in srgb, var(--chat-user-bubble-fg) 70%, transparent);
+  }
+
   /* 仅带附件时去除外层气泡阴影（文字有独立气泡）；单文本保留默认气泡 */
   :deep(
     .ant-bubble.ant-bubble-end[role='user'] .ant-bubble-content:has(.message-with-attachments)
