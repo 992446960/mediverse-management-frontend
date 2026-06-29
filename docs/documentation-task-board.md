@@ -34,6 +34,7 @@
 
 ## 近期同步记录
 
+- 分身会话助手头像隐藏：`ChatWindow/MessageList` 不再给 assistant 气泡传递 `avatar`，仅保留用户消息头像，并补充静态契约单测防止助手头像回退。
 - 分身会话用户气泡样式对齐知识库搜索：`ChatWindow/MessageList` 的用户消息气泡改为复用主色背景与白色文字，并覆盖纯文本、带附件和 Markdown 子元素，保持明暗主题一致。
 - 知识卡类型显示枚举对齐：补齐 `score_element`、`evidence`、`doctor_visit`、`doctor_trajectory`、`doctor_summary` 的中英文 i18n 文案与标签颜色；知识卡列表 Type 列在本地 i18n 未覆盖时回退使用 `/knowledge/card-types` 返回的 `name`，避免新增类型显示裸 code；本地 MSW card-types 同步当前接口枚举。
 - 知识卡批量操作入口调整：`PageTable` 新增容器内 `toolbarExtra` 扩展区，知识卡列表的批量通过、上线和更多操作改为选中后显示在表格大容器内且位于统计/刷新/设置栏上方；批量条无独立底部分隔线、按钮使用默认操作按钮尺寸，批量通过/驳回的 Modal 提示和成功提示均与单个审核提示区分，批量条和选中行跟随表格容器背景，页头仅保留新建知识卡和召回测试入口，并补充静态 UI 契约单测。

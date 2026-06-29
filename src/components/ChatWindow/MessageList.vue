@@ -9,7 +9,6 @@ import { isImagePart, isPdfPart } from '@/types/chat'
 import { getMessageText } from '@/types/chat'
 import {
   UserOutlined,
-  RobotOutlined,
   FileOutlined,
   FilePdfOutlined,
   VerticalAlignBottomOutlined,
@@ -76,7 +75,7 @@ const items = computed(() => {
     loading: msg.status === 'streaming',
     // 仅正在流式输出的消息显示打字效果，历史记录直接展示完整内容
     typing: msg.status === 'streaming' ? { step: 5, interval: 20 } : false,
-    avatar: msg.role === 'user' ? { icon: h(UserOutlined) } : { icon: h(RobotOutlined) },
+    ...(msg.role === 'user' ? { avatar: { icon: h(UserOutlined) } } : {}),
   }))
 })
 
@@ -220,7 +219,6 @@ const roles = {
   assistant: {
     placement: 'start' as const,
     variant: 'outlined' as const,
-    avatar: { icon: h(RobotOutlined), style: { backgroundColor: '#1890ff' } },
     // typing 由 items 中按 msg.status 控制，历史记录不显示打字效果
   },
 }

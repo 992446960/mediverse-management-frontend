@@ -42,6 +42,18 @@ describe('style static contracts', () => {
     expect(globalStyle).toContain('.user-menu-overlay.ant-dropdown')
   })
 
+  it('keeps chat assistant bubbles without avatar props', () => {
+    const source = readSource('src/components/ChatWindow/MessageList.vue')
+
+    expect(source).toContain(
+      "...(msg.role === 'user' ? { avatar: { icon: h(UserOutlined) } } : {})"
+    )
+    expect(source).toContain(
+      "avatar: { icon: h(UserOutlined), style: { backgroundColor: '#87d068' } }"
+    )
+    expect(source).not.toContain('RobotOutlined')
+  })
+
   it('keeps shared tree component states on theme variables instead of hardcoded tokens', () => {
     const treeSources = [
       'src/components/DirectoryTree/index.vue',
