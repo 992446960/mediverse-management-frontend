@@ -36,7 +36,7 @@
 
 - 分身会话助手头像隐藏：`ChatWindow/MessageList` 不再给 assistant 气泡传递 `avatar`，仅保留用户消息头像，并补充静态契约单测防止助手头像回退。
 - 分身会话用户气泡样式对齐知识库搜索：`ChatWindow/MessageList` 的用户消息气泡改为复用主色背景与白色文字，并覆盖纯文本、带附件和 Markdown 子元素，保持明暗主题一致。
-- 知识卡类型显示枚举对齐：补齐 `score_element`、`evidence`、`doctor_visit`、`doctor_trajectory`、`doctor_summary` 的中英文 i18n 文案与标签颜色；知识卡列表 Type 列在本地 i18n 未覆盖时回退使用 `/knowledge/card-types` 返回的 `name`，避免新增类型显示裸 code；本地 MSW card-types 同步当前接口枚举。
+- 知识卡类型显示枚举对齐：`GET /knowledge/card-types` 返回后由前端根据 `code` 派生 `en_name`（如 `disease_overview` → `Disease Overview`），中文展示后端 `name`、英文展示派生 `en_name`，请求和筛选值继续使用 `code`；本地 MSW card-types 保持后端形态，不写前端派生字段。
 - 知识卡批量操作入口调整：`PageTable` 新增容器内 `toolbarExtra` 扩展区，知识卡列表的批量通过、上线和更多操作改为选中后显示在表格大容器内且位于统计/刷新/设置栏上方；批量条无独立底部分隔线、按钮使用默认操作按钮尺寸，批量通过/驳回的 Modal 提示和成功提示均与单个审核提示区分，批量条和选中行跟随表格容器背景，页头仅保留新建知识卡和召回测试入口，并补充静态 UI 契约单测。
 - 文件管理目录树响应兼容：`getDirectoryTree` 归一化数组和后端 `data.tree` 包裹形态，保留 `total_file_count` / `unclassified_file_count` 并在“所有文件”“未分类”虚拟目录展示文件数，避免目录接口返回对象时传入 `DirectoryTree` 导致 `nodes.filter is not a function`，并新增目录树 API 归一化单测。
 - 分身配置表单告警修复：工作台分身配置的自定义沟通风格输入改为 `a-form-item-rest`，避免 `style` 表单项同时收集单选组和输入框导致 Ant Design Vue 控制台告警，并补充静态契约单测。
@@ -101,7 +101,7 @@
 - `DirectoryTree` 与 `PageTable` 暗色容器背景改为使用 `--color-bg-container`，避免继续固定到 `slate-900`。
 - 文件上传队列改为先计算文件内容 MD5，并以 MD5 作为队列唯一标识；加入队列前按 MD5 去重，避免同一文件重复进入上传队列。
 - 知识卡管理新增隐藏的召回测试页入口，调用 `POST /knowledge-recall/{owner_type}/{owner_id}/recall` 并展示最终回答与召回知识卡列表；不实现测试历史。
-- 知识卡召回测试页调整为左侧问题、右侧参数布局，标题补充副标题提示；知识卡类型优先读取本地缓存，缺失时调用 `GET /knowledge/card-types`，并补齐“全部/多选”选中边界。
+- 知识卡召回测试页调整为左侧问题、右侧参数布局，标题补充副标题提示；知识卡类型刷新页面时直接调用 `GET /knowledge/card-types`，不再读取本地缓存，并补齐“全部/多选”选中边界。
 - 知识卡召回测试入口改为前端路由跳转，隐藏菜单但保留 nav-tag，避免点击入口时出现整页加载跳转。
 - 知识卡召回测试页头部改为独立 header，修复标题展示；左右布局断点下调，全选按钮支持全选/全不选，Top-K 进度条使用 `#0ea5e9` 页面变量。
 - 知识卡召回最终回答按 Markdown 文本安全渲染，并限制回答区域最大高度，长内容在区域内滚动。
