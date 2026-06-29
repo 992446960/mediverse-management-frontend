@@ -113,7 +113,7 @@ import { getKnowledgeCardDetail, saveKnowledgeCard, updateKnowledgeCard } from '
 import MarkdownEditor from './MarkdownEditor.vue'
 import { useFileRemoteSearch } from '@/composables/useFileRemoteSearch'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const props = defineProps<{
   open: boolean
@@ -138,9 +138,8 @@ const inputTagValue = ref('')
 const inputTagVisible = ref(false)
 
 const isEditMode = computed(() => !!props.card?.id)
-const translateKnowledgeConfig = (key: string) => t(key)
 const getLocalizedCardTypeOptionLabel = (option: CardTypeOption) =>
-  getCardTypeOptionLabel(option, translateKnowledgeConfig)
+  getCardTypeOptionLabel(option, locale.value)
 
 const {
   options: editorSourceFileOptions,

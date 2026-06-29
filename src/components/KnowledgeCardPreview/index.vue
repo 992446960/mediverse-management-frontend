@@ -38,7 +38,7 @@ import { useI18n } from 'vue-i18n'
 import { FileTextOutlined } from '@ant-design/icons-vue'
 import { getCardTypeConfig } from '@/types/knowledge'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const props = withDefaults(
   defineProps<{
@@ -58,7 +58,7 @@ const props = withDefaults(
 
 /** 类型配置：颜色 + label，未知类型自动 fallback */
 const normalizedType = computed(() => props.type.trim())
-const typeConfig = computed(() => getCardTypeConfig(normalizedType.value, (key) => t(key)))
+const typeConfig = computed(() => getCardTypeConfig(normalizedType.value, locale.value))
 const showTypeTag = computed(() => normalizedType.value !== '')
 
 const HOVER_BORDER_COLOR: Record<string, string> = {

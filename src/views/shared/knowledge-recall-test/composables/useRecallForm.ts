@@ -5,39 +5,6 @@ import {
   resolveRecallCardTypeSelection,
 } from '@/utils/knowledgeRecall'
 
-const CARD_TYPES_CACHE_KEY = 'knowledge-recall-card-types'
-
-function isCardTypeOption(item: unknown): item is CardTypeOption {
-  if (!item || typeof item !== 'object') return false
-
-  const record = item as Record<string, unknown>
-  return typeof record.name === 'string' && typeof record.code === 'string'
-}
-
-function readCachedCardTypes(): CardTypeOption[] {
-  try {
-    const raw = localStorage.getItem(CARD_TYPES_CACHE_KEY)
-    if (!raw) return []
-
-    const parsed: unknown = JSON.parse(raw)
-    if (!Array.isArray(parsed)) return []
-
-    return parsed.filter(isCardTypeOption)
-  } catch {
-    return []
-  }
-}
-
-function writeCachedCardTypes(types: CardTypeOption[]) {
-  if (types.length === 0) return
-
-  try {
-    localStorage.setItem(CARD_TYPES_CACHE_KEY, JSON.stringify(types))
-  } catch {
-    return
-  }
-}
-
 export function useRecallForm() {
   const cardTypes = ref<CardTypeOption[]>([])
   const cardTypesLoading = ref(false)
@@ -49,9 +16,14 @@ export function useRecallForm() {
     () => selectedAllCardTypes.value || selectedCardTypes.value.length > 0
   )
 
-  function syncAllCardTypesSelection() {
-    if (!selectedAllCardTypes.value) return
-    selectedCardTypes.value = [...availableCardTypes.value]
+  function syncCardTypesSelection() {
+    if (selectedAllCardTypes.value) {
+      selectedCardTypes.value = [...availableCardTypes.value]
+      return
+    }
+
+    const available = new Set(availableCardTypes.value)
+    selectedCardTypes.value = selectedCardTypes.value.filter((type) => available.has(type))
   }
 
   function resetCardTypes() {
@@ -76,19 +48,11 @@ export function useRecallForm() {
   }
 
   async function fetchCardTypes() {
-    const cachedCardTypes = readCachedCardTypes()
-    if (cachedCardTypes.length > 0) {
-      cardTypes.value = cachedCardTypes
-      syncAllCardTypesSelection()
-      return
-    }
-
     cardTypesLoading.value = true
     try {
       const remoteCardTypes = await getCardTypes()
       cardTypes.value = remoteCardTypes
-      writeCachedCardTypes(remoteCardTypes)
-      syncAllCardTypesSelection()
+      syncCardTypesSelection()
     } catch {
       cardTypes.value = []
     } finally {
@@ -105,7 +69,7 @@ export function useRecallForm() {
     hasSelectedCardType,
     fetchCardTypes,
     resetCardTypes,
-    syncAllCardTypesSelection,
+    syncCardTypesSelection,
     isCardTypeActive,
     handleCardTypeClick,
   }

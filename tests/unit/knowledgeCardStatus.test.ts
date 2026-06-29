@@ -3,20 +3,15 @@ import {
   ONLINE_STATUS_CONFIG,
   canPublishKnowledgeCard,
   canOperateKnowledgeCard,
+  formatCardTypeCodeName,
   getAuditStatusConfig,
   getCardTypeConfig,
   getCardTypeOptionLabel,
   getOnlineStatusConfig,
+  normalizeCardTypeOption,
 } from '../../src/types/knowledge'
 
 const enLabels: Record<string, string> = {
-  'knowledge.card.typeRule': 'Rule',
-  'knowledge.card.typeDiseaseOverview': 'Disease Overview',
-  'knowledge.card.typeScoreElement': 'Score Element',
-  'knowledge.card.typeEvidence': 'Evidence',
-  'knowledge.card.typeDoctorVisit': 'Doctor Visit',
-  'knowledge.card.typeDoctorTrajectory': 'Doctor Trajectory',
-  'knowledge.card.typeDoctorSummary': 'Doctor Summary',
   'knowledge.card.onlineStatusCreating': 'Creating',
   'knowledge.card.auditApproved': 'Approved',
 }
@@ -38,15 +33,15 @@ describe('knowledge card status rules', () => {
   })
 
   it('renders known card configs with locale labels', () => {
-    expect(getCardTypeConfig('disease_overview', t)).toEqual({
+    expect(getCardTypeConfig('disease_overview', 'en-US')).toEqual({
       color: 'blue',
       label: 'Disease Overview',
     })
-    expect(getCardTypeConfig('score_element', t).label).toBe('Score Element')
-    expect(getCardTypeConfig('evidence', t).label).toBe('Evidence')
-    expect(getCardTypeConfig('doctor_visit', t).label).toBe('Doctor Visit')
-    expect(getCardTypeConfig('doctor_trajectory', t).label).toBe('Doctor Trajectory')
-    expect(getCardTypeConfig('doctor_summary', t).label).toBe('Doctor Summary')
+    expect(getCardTypeConfig('score_element', 'en-US').label).toBe('Score Element')
+    expect(getCardTypeConfig('evidence', 'en-US').label).toBe('Evidence')
+    expect(getCardTypeConfig('doctor_visit', 'en-US').label).toBe('Doctor Visit')
+    expect(getCardTypeConfig('risk_point', 'en-US').label).toBe('Risk Point')
+    expect(getCardTypeConfig('disease_overview', 'zh-CN').label).toBe('疾病概览卡')
     expect(getOnlineStatusConfig('creating', t)).toEqual({
       color: 'processing',
       label: 'Creating',
@@ -57,9 +52,32 @@ describe('knowledge card status rules', () => {
     })
   })
 
-  it('renders backend card type options with locale labels first', () => {
-    expect(getCardTypeOptionLabel({ code: 'rule', name: '规则卡' }, t)).toBe('Rule')
-    expect(getCardTypeOptionLabel({ code: 'future_type', name: '未来卡' }, t)).toBe('未来卡')
+  it('formats backend card type code into readable English names', () => {
+    expect(formatCardTypeCodeName('disease_overview')).toBe('Disease Overview')
+    expect(formatCardTypeCodeName('risk_point')).toBe('Risk Point')
+    expect(formatCardTypeCodeName('doctor_visit')).toBe('Doctor Visit')
+    expect(formatCardTypeCodeName('')).toBe('')
+  })
+
+  it('normalizes backend card type options with derived English names', () => {
+    expect(normalizeCardTypeOption({ code: 'disease_overview', name: '疾病概览卡' })).toEqual({
+      code: 'disease_overview',
+      name: '疾病概览卡',
+      en_name: 'Disease Overview',
+    })
+  })
+
+  it('renders backend card type options by active locale', () => {
+    const option = normalizeCardTypeOption({ code: 'risk_point', name: '风险控制点卡' })
+
+    expect(getCardTypeOptionLabel(option, 'zh-CN')).toBe('风险控制点卡')
+    expect(getCardTypeOptionLabel(option, 'en-US')).toBe('Risk Point')
+    expect(getCardTypeOptionLabel({ code: 'future_type', name: '', en_name: '' }, 'en-US')).toBe(
+      'Future Type'
+    )
+    expect(getCardTypeOptionLabel({ code: 'future_type', name: '', en_name: '' }, 'zh-CN')).toBe(
+      'future_type'
+    )
   })
 
   it('falls back for unknown backend online status', () => {

@@ -13,6 +13,7 @@ export type BatchAuditStatus = Extract<AuditStatus, 'approved' | 'rejected'>
 export interface CardTypeOption {
   name: string
   code: string
+  en_name: string
 }
 
 /** DELETE /api/v1/knowledge/{owner_type}/{owner_id}/cards/{id} 返回的 data */
@@ -323,35 +324,49 @@ export const CARD_TYPE_CONFIG: Record<string, { color: string; label: string }> 
 
 type TranslateFn = (key: string) => string
 
-const CARD_TYPE_LABEL_KEYS: Record<string, string> = {
-  rule: 'knowledge.card.typeRule',
-  scale: 'knowledge.card.typeScale',
-  risk_point: 'knowledge.card.typeRiskPoint',
-  pathway_clause: 'knowledge.card.typePathwayClause',
-  melody_element: 'knowledge.card.typeMelodyElement',
-  score_element: 'knowledge.card.typeScoreElement',
-  disease_overview: 'knowledge.card.typeDiseaseOverview',
-  evidence: 'knowledge.card.typeEvidence',
-  doctor_visit: 'knowledge.card.typeDoctorVisit',
-  doctor_trajectory: 'knowledge.card.typeDoctorTrajectory',
-  doctor_summary: 'knowledge.card.typeDoctorSummary',
+/**
+ * 安全获取知识卡类型配置；颜色取兜底 Map，英文标签按通用规则由 code 生成，
+ * 中文取兜底中文名（未知类型回退 code 原文）。
+ */
+export function getCardTypeConfig(
+  type: string,
+  locale = 'zh-CN'
+): { color: string; label: string } {
+  const config = CARD_TYPE_CONFIG[type] ?? { color: 'default', label: type }
+  if (locale.toLowerCase().startsWith('en')) {
+    return { ...config, label: formatCardTypeCodeName(type) || type }
+  }
+  return config
 }
 
-/**
- * 安全获取知识卡类型配置；未知类型返回 fallback（灰色 + code 原文）。
- */
-export function getCardTypeConfig(type: string, t?: TranslateFn): { color: string; label: string } {
-  const config = CARD_TYPE_CONFIG[type] ?? { color: 'default', label: type }
-  const labelKey = CARD_TYPE_LABEL_KEYS[type]
+export function formatCardTypeCodeName(code: string): string {
+  return code
+    .split('_')
+    .filter(Boolean)
+    .map((part) => {
+      const normalized = part.toLowerCase()
+      return normalized.charAt(0).toUpperCase() + normalized.slice(1)
+    })
+    .join(' ')
+}
+
+export function normalizeCardTypeOption(
+  option: Pick<CardTypeOption, 'code'> & Partial<Pick<CardTypeOption, 'name' | 'en_name'>>
+): CardTypeOption {
   return {
-    ...config,
-    label: labelKey && t ? t(labelKey) : config.label,
+    code: option.code,
+    name: option.name ?? '',
+    en_name: option.en_name || formatCardTypeCodeName(option.code),
   }
 }
 
-export function getCardTypeOptionLabel(option: CardTypeOption, t?: TranslateFn): string {
-  const config = getCardTypeConfig(option.code, t)
-  return config.label === option.code ? option.name || option.code : config.label
+export function getCardTypeOptionLabel(option: CardTypeOption, locale = 'zh-CN'): string {
+  const normalized = normalizeCardTypeOption(option)
+  if (locale.toLowerCase().startsWith('en')) {
+    return normalized.en_name || formatCardTypeCodeName(normalized.code) || normalized.code
+  }
+
+  return normalized.name || normalized.code
 }
 
 /** 知识卡在线状态配置 */

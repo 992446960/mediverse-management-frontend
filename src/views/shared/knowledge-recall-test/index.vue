@@ -93,7 +93,7 @@
                 :disabled="loading"
                 @click="handleCardTypeClick(item.code)"
               >
-                {{ item.name }}
+                {{ getLocalizedCardTypeOptionLabel(item) }}
               </a-button>
             </div>
           </a-spin>
@@ -171,6 +171,8 @@ import {
 } from '@ant-design/icons-vue'
 import { useI18n } from 'vue-i18n'
 import { recallKnowledgeCards } from '@/api/knowledgeRecall'
+import type { CardTypeOption } from '@/types/knowledge'
+import { getCardTypeOptionLabel } from '@/types/knowledge'
 import type {
   KnowledgeRecallOwnerType,
   KnowledgeRecallViewModel,
@@ -190,7 +192,7 @@ const props = defineProps<{
   ownerId: string
 }>()
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const router = useRouter()
 const {
   cardTypes,
@@ -212,6 +214,8 @@ const result = ref<KnowledgeRecallViewModel | null>(null)
 const detailOpen = ref(false)
 const selectedSource = ref<KnowledgeRecallViewSource | null>(null)
 const historyOpen = ref(false)
+const getLocalizedCardTypeOptionLabel = (option: CardTypeOption) =>
+  getCardTypeOptionLabel(option, locale.value)
 
 const normalizedTopK = computed(() => Math.min(20, Math.max(1, Number(topK.value) || 5)))
 const canSubmit = computed(

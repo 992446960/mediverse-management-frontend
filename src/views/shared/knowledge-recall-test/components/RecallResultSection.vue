@@ -104,8 +104,8 @@ const emit = defineEmits<{
   'open-source-detail': [source: KnowledgeRecallViewSource]
 }>()
 
-const { t } = useI18n()
-const getLocalizedCardTypeConfig = (type: string) => getCardTypeConfig(type, (key) => t(key))
+const { t, locale } = useI18n()
+const getLocalizedCardTypeConfig = (type: string) => getCardTypeConfig(type, locale.value)
 
 const sourceCount = computed(() => props.result?.count ?? props.result?.sources.length ?? 0)
 const hasFinalAnswer = computed(() => (props.result?.answer ?? '').trim() !== '')

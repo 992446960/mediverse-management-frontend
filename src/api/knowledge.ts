@@ -34,6 +34,7 @@ import type {
   KnowledgeCardBatchIncrementReferenceCountPayload,
   KnowledgeCardBatchIncrementReferenceCountResult,
 } from '@/types/knowledge'
+import { normalizeCardTypeOption } from '@/types/knowledge'
 import type { PaginatedData } from '@/types/api'
 import type { AxiosRequestConfig } from 'axios'
 
@@ -482,9 +483,14 @@ export function rollbackKnowledgeCard(
  * GET /api/v1/knowledge/card-types
  */
 export function getCardTypes(): Promise<CardTypeOption[]> {
-  return request.get<CardTypeOption[]>(`${BASE_URL}/card-types`, {
-    successCodes: [0, 200],
-  })
+  return request
+    .get<Array<Pick<CardTypeOption, 'code'> & Partial<Pick<CardTypeOption, 'name' | 'en_name'>>>>(
+      `${BASE_URL}/card-types`,
+      {
+        successCodes: [0, 200],
+      }
+    )
+    .then((rows) => rows.map(normalizeCardTypeOption))
 }
 
 /**

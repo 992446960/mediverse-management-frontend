@@ -57,7 +57,7 @@ import type { PageTableConfig, PageTableColumnConfig } from '@/components/PageTa
 import type { BatchActionToolbarAction } from '@/components/BatchActionToolbar/types'
 import dayjs from 'dayjs'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const router = useRouter()
 
 const props = defineProps<{
@@ -106,13 +106,20 @@ const batchAuditIds = ref<string[]>([])
 const batchStatusIds = ref<string[]>([])
 
 const translateKnowledgeConfig = (key: string) => t(key)
-const cardTypeNameMap = computed(() => new Map(cardTypes.value.map((ct) => [ct.code, ct.name])))
+const cardTypeOptionMap = computed(() => new Map(cardTypes.value.map((ct) => [ct.code, ct])))
 const getLocalizedCardTypeConfig = (type: string) => {
-  const config = getCardTypeConfig(type, translateKnowledgeConfig)
-  if (config.label !== type) return config
+  const config = getCardTypeConfig(type, locale.value)
+  const option = cardTypeOptionMap.value.get(type)
+  if (option) {
+    return {
+      ...config,
+      label: getCardTypeOptionLabel(option, locale.value),
+    }
+  }
+
   return {
     ...config,
-    label: cardTypeNameMap.value.get(type) || type,
+    label: config.label,
   }
 }
 const getLocalizedOnlineStatusConfig = (status: string) =>
@@ -133,7 +140,7 @@ const headConf = computed<PageHeadConfig>(() => ({
   tabsOptions: [
     { label: t('common.all'), value: 'all' },
     ...cardTypes.value.map((ct) => ({
-      label: getCardTypeOptionLabel(ct, translateKnowledgeConfig),
+      label: getCardTypeOptionLabel(ct, locale.value),
       value: ct.code,
     })),
   ],

@@ -147,8 +147,8 @@ const emit = defineEmits<{
   'update:open': [value: boolean]
 }>()
 
-const { t } = useI18n()
-const getLocalizedCardTypeConfig = (type: string) => getCardTypeConfig(type, (key) => t(key))
+const { t, locale } = useI18n()
+const getLocalizedCardTypeConfig = (type: string) => getCardTypeConfig(type, locale.value)
 
 const modelOpen = computed({
   get: () => props.open,

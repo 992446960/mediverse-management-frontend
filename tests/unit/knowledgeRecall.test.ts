@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
   ALL_RECALL_CARD_TYPES_VALUE,
@@ -41,6 +43,22 @@ describe('knowledge recall payload', () => {
     })
   })
 
+  it('keeps recall card type payload values as backend codes', () => {
+    expect(
+      buildKnowledgeRecallPayload({
+        query: '糖尿病',
+        topK: 5,
+        cardTypes: ['risk_point', 'pathway_clause'],
+      })
+    ).toEqual({
+      query: '糖尿病',
+      top_k: 5,
+      metadata: {
+        card_type: ['risk_point', 'pathway_clause'],
+      },
+    })
+  })
+
   it('does not send card_type when selected card types cover all available types', () => {
     expect(
       buildKnowledgeRecallPayload({
@@ -72,6 +90,18 @@ describe('knowledge recall payload', () => {
         knowledge_scope: 'collective',
       },
     })
+  })
+})
+
+describe('knowledge recall card type loading contract', () => {
+  it('does not cache recall card type options in localStorage', () => {
+    const source = readFileSync(
+      resolve(process.cwd(), 'src/views/shared/knowledge-recall-test/composables/useRecallForm.ts'),
+      'utf8'
+    )
+
+    expect(source).not.toContain('knowledge-recall-card-types')
+    expect(source).not.toContain('localStorage')
   })
 })
 

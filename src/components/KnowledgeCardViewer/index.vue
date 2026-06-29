@@ -289,7 +289,7 @@ import KnowledgeCardStatusConfirmModal from '../KnowledgeCardStatusConfirmModal.
 import KnowledgeCardAuditModal from '../KnowledgeCardAuditModal.vue'
 import dayjs from 'dayjs'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const router = useRouter()
 
 /** 与 KnowledgeFiles / 知识库首页文件预览路由一致（个人/科室/机构） */
@@ -355,8 +355,7 @@ const isCardOperationDisabled = computed(
   () => !!card.value && !canOperateKnowledgeCard(card.value.online_status)
 )
 const translateKnowledgeConfig = (key: string) => t(key)
-const getLocalizedCardTypeConfig = (type: string) =>
-  getCardTypeConfig(type, translateKnowledgeConfig)
+const getLocalizedCardTypeConfig = (type: string) => getCardTypeConfig(type, locale.value)
 const getLocalizedOnlineStatusConfig = (status: string) =>
   getOnlineStatusConfig(status, translateKnowledgeConfig)
 const getLocalizedAuditStatusConfig = (status: AuditStatus) =>

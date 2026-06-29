@@ -64,8 +64,8 @@ const emit = defineEmits<{
   select: [view: KnowledgeRecallViewModel]
 }>()
 
-const { t } = useI18n()
-const getLocalizedCardTypeConfig = (type: string) => getCardTypeConfig(type, (key) => t(key))
+const { t, locale } = useI18n()
+const getLocalizedCardTypeConfig = (type: string) => getCardTypeConfig(type, locale.value)
 
 const modelOpen = computed({
   get: () => props.open,
@@ -77,6 +77,7 @@ const historyRows = ref<KnowledgeRecallSessionItem[]>([])
 const historyTotal = ref(0)
 const historyFilterRef = ref<InstanceType<typeof PageFilter> | null>(null)
 const historyTableRef = ref<InstanceType<typeof PageTable> | null>(null)
+const cardTypeOptionMap = computed(() => new Map(props.cardTypes.map((item) => [item.code, item])))
 
 const historyStatusOptions = computed(() => [
   { label: t('knowledge.recall.statusSuccess'), value: 'success' },
@@ -86,7 +87,7 @@ const historyStatusOptions = computed(() => [
 ])
 const historyCardTypeOptions = computed(() =>
   props.cardTypes.map((item) => ({
-    label: getCardTypeOptionLabel(item, (key) => t(key)),
+    label: getCardTypeOptionLabel(item, locale.value),
     value: item.code,
   }))
 )
@@ -226,6 +227,8 @@ async function handleSelectHistory(row: KnowledgeRecallSessionItem) {
 
 function formatHistoryCardType(type: CardType | null | undefined) {
   if (!type) return '-'
+  const option = cardTypeOptionMap.value.get(type)
+  if (option) return getCardTypeOptionLabel(option, locale.value)
   return getLocalizedCardTypeConfig(type).label
 }
 
