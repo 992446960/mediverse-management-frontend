@@ -39,7 +39,7 @@ DEV_PROXY_TARGET=http://127.0.0.1:8005
 | `pnpm check:theme`  | 检查 Vue 组件主题色守卫                   |
 | `pnpm check:docs`   | 检查文档新鲜度                            |
 | `pnpm verify`       | 执行主题守卫、文档检查和生产构建          |
-| `pnpm docker:build` | 构建 Docker 镜像、导出 tar 并上传到服务器 |
+| `pnpm docker:build` | 构建 Docker 镜像并导出 tar，可按参数上传到服务器 |
 
 ## Docker
 

@@ -34,6 +34,7 @@
 
 ## 近期同步记录
 
+- Docker 打包脚本改为可选上传地址：`pnpm docker:build` 只构建并导出 tar，`pnpm docker:build -- <REMOTE_HOST>` 在导出后上传到服务器，文档同步移除 `REMOTE_HOST` 占位符流程。
 - 分身会话助手头像隐藏：`ChatWindow/MessageList` 不再给 assistant 气泡传递 `avatar`，仅保留用户消息头像，并补充静态契约单测防止助手头像回退。
 - 分身会话用户气泡样式对齐知识库搜索：`ChatWindow/MessageList` 的用户消息气泡改为复用主色背景与白色文字，并覆盖纯文本、带附件和 Markdown 子元素，保持明暗主题一致。
 - 知识卡类型显示枚举对齐：`GET /knowledge/card-types` 返回后由前端根据 `code` 派生 `en_name`（如 `disease_overview` → `Disease Overview`），中文展示后端 `name`、英文展示派生 `en_name`，请求和筛选值继续使用 `code`；本地 MSW card-types 保持后端形态，不写前端派生字段。

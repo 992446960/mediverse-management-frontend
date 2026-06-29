@@ -114,14 +114,19 @@ docker compose up --build
 docker compose down
 ```
 
-打包并上传：
+只打包并保存到本地：
 
 ```bash
-mkdir -p docker-dist
 pnpm docker:build
 ```
 
-`scripts/docker-build.sh` 中的 `REMOTE_HOST="YOUR_REMOTE_HOST"` 是占位值。配置真实服务器前，脚本会主动报错，避免上传到错误目标。
+打包后上传到服务器：
+
+```bash
+pnpm docker:build -- <REMOTE_HOST>
+```
+
+服务器地址只作为本次命令参数传入，不写入脚本。
 
 ## 7. 提交前检查
 

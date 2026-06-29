@@ -10,7 +10,7 @@
 | `compose.yaml` | 本地构建和预览生产镜像，服务名为 `frontend` |
 | `nginx.conf` | Nginx 模板，托管静态资源并反向代理 `/api/` |
 | `scripts/docker-pre.sh` | 执行 `docker compose up --build`，用于本地生产镜像预览 |
-| `scripts/docker-build.sh` | 构建镜像、导出 tar、上传到服务器 |
+| `scripts/docker-build.sh` | 构建镜像、导出 tar，可选上传到服务器 |
 | `docker-dist/` | 本地导出的镜像 tar 目录，不纳入 Git |
 
 构建阶段使用 `pnpm@10.28.2`，执行 `pnpm install --frozen-lockfile` 和 `pnpm build`。运行阶段只包含 Nginx 和 `dist/` 静态文件。
@@ -58,33 +58,36 @@ chmod +x scripts/docker-pre.sh
 ./scripts/docker-pre.sh
 ```
 
-## 4. 打包 tar 并上传服务器
+## 4. 打包 tar 并可选上传服务器
 
-首次执行前创建输出目录：
+首次执行前确认脚本可执行：
 
 ```bash
-mkdir -p docker-dist
 chmod +x scripts/docker-build.sh
 ```
 
-打开 `scripts/docker-build.sh`，把 `REMOTE_HOST="YOUR_REMOTE_HOST"` 改为实际服务器 IP 或域名。不要把真实地址提交到公共仓库。
-
-执行：
+只打包并保存到本地 `docker-dist/`：
 
 ```bash
 pnpm docker:build
 ```
 
-脚本会执行：
+打包后上传到服务器：
+
+```bash
+pnpm docker:build -- <REMOTE_HOST>
+```
+
+不要把真实服务器地址提交到公共仓库。脚本会执行：
 
 1. `docker compose build`
 2. `docker save mediverse-management-frontend:latest -o ./docker-dist/mediverse-frontend-YYYYMMDD.tar`
-3. `scp` 上传到 `root@<REMOTE_HOST>:/root/docker-images/`
+3. 传入 `<REMOTE_HOST>` 时，`scp` 上传到 `root@<REMOTE_HOST>:/root/docker-dist/`
 
 如果不使用脚本，可手动上传：
 
 ```bash
-scp ./docker-dist/mediverse-frontend-YYYYMMDD.tar root@<host>:/root/docker-images/
+scp ./docker-dist/mediverse-frontend-YYYYMMDD.tar root@<host>:/root/docker-dist/
 ```
 
 ## 5. 服务器部署
@@ -94,7 +97,7 @@ scp ./docker-dist/mediverse-frontend-YYYYMMDD.tar root@<host>:/root/docker-image
 加载镜像：
 
 ```bash
-docker load -i /root/docker-images/mediverse-frontend-YYYYMMDD.tar
+docker load -i /root/docker-dist/mediverse-frontend-YYYYMMDD.tar
 docker images | grep mediverse-management-frontend
 ```
 
@@ -177,7 +180,7 @@ curl -I http://127.0.0.1/api/v1/auth/me
 回滚流程：
 
 1. 保留上一版本 tar 或给旧镜像打 tag。
-2. 重新 `docker load -i /root/docker-images/<old-tar>`。
+2. 重新 `docker load -i /root/docker-dist/<old-tar>`。
 3. 停止并移除当前容器。
 4. 用旧镜像重新 `docker run`。
 5. 执行部署验证。
@@ -186,7 +189,7 @@ curl -I http://127.0.0.1/api/v1/auth/me
 
 | 现象 | 处理 |
 | --- | --- |
-| `scripts/docker-build.sh` 提示 `YOUR_REMOTE_HOST` | 先把脚本中的占位主机改为实际目标，或改用手动 `scp` |
+| `scripts/docker-build.sh` 未上传 tar | 执行 `pnpm docker:build -- <REMOTE_HOST>`，或手动 `scp` 到服务器 |
 | API 代理返回 4xx/5xx | 确认 `API_UPSTREAM` 和 `API_PROXY_HOST` 域名一致 |
 | 修改 `VITE_API_BASE_URL` 后未生效 | 该变量是构建期变量，必须重新构建镜像 |
 | 上传文件失败 | 检查 `nginx.conf` 中 `client_max_body_size 50m` 和后端上传限制 |
