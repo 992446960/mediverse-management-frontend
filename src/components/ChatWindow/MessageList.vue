@@ -528,7 +528,6 @@ const roles = {
     color: var(--chat-user-bubble-fg);
     background: var(--chat-user-bubble-bg);
     border-color: transparent;
-    box-shadow: var(--shadow-sm);
   }
 
   :deep(
