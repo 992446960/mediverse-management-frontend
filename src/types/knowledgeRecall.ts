@@ -1,12 +1,14 @@
 import type { CardType, FileSource, OwnerType } from '@/types/knowledge'
 
+export type KnowledgeScope = 'collective' | 'individual' | 'all'
+
 export interface KnowledgeRecallFormState {
   query: string
   topK: number
   cardTypes: CardType[]
   availableCardTypes?: CardType[]
   ownerIds?: string[]
-  knowledgeScope?: string
+  knowledgeScope?: KnowledgeScope
 }
 
 export interface KnowledgeRecallRequest {
@@ -16,7 +18,7 @@ export interface KnowledgeRecallRequest {
     card_type?: CardType[]
     input_data?: Record<string, unknown>
     owner_ids?: string[]
-    knowledge_scope?: string
+    knowledge_scope?: KnowledgeScope
   }
 }
 

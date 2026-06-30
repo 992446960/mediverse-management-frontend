@@ -105,6 +105,18 @@
           </p>
         </div>
 
+        <div class="mb-5">
+          <div class="mb-2 text-sm font-medium text-(--color-text-base)">
+            {{ t('knowledge.recall.scopeLabel') }}
+          </div>
+          <a-segmented
+            v-model:value="selectedKnowledgeScope"
+            class="knowledge-recall-test__scope w-full"
+            :options="knowledgeScopeOptions"
+            :disabled="loading"
+          />
+        </div>
+
         <div>
           <div class="mb-2 flex items-center justify-between gap-2">
             <span class="text-sm font-medium text-(--color-text-base)">
@@ -174,6 +186,7 @@ import { recallKnowledgeCards } from '@/api/knowledgeRecall'
 import type { CardTypeOption } from '@/types/knowledge'
 import { getCardTypeOptionLabel } from '@/types/knowledge'
 import type {
+  KnowledgeScope,
   KnowledgeRecallOwnerType,
   KnowledgeRecallViewModel,
   KnowledgeRecallViewSource,
@@ -209,6 +222,7 @@ const {
 
 const query = ref('')
 const topK = ref(5)
+const selectedKnowledgeScope = ref<KnowledgeScope>('collective')
 const loading = ref(false)
 const result = ref<KnowledgeRecallViewModel | null>(null)
 const detailOpen = ref(false)
@@ -216,6 +230,11 @@ const selectedSource = ref<KnowledgeRecallViewSource | null>(null)
 const historyOpen = ref(false)
 const getLocalizedCardTypeOptionLabel = (option: CardTypeOption) =>
   getCardTypeOptionLabel(option, locale.value)
+const knowledgeScopeOptions = computed(() => [
+  { label: t('knowledge.recall.scopeCollective'), value: 'collective' },
+  { label: t('knowledge.recall.scopeIndividual'), value: 'individual' },
+  { label: t('knowledge.recall.scopeAll'), value: 'all' },
+])
 
 const normalizedTopK = computed(() => Math.min(20, Math.max(1, Number(topK.value) || 5)))
 const canSubmit = computed(
@@ -225,6 +244,7 @@ const canReset = computed(
   () =>
     query.value.length > 0 ||
     topK.value !== 5 ||
+    selectedKnowledgeScope.value !== 'collective' ||
     !selectedAllCardTypes.value ||
     result.value !== null
 )
@@ -232,6 +252,7 @@ const canReset = computed(
 function handleReset() {
   query.value = ''
   topK.value = 5
+  selectedKnowledgeScope.value = 'collective'
   resetCardTypes()
   result.value = null
 }
@@ -263,6 +284,7 @@ async function handleRecall() {
       topK: normalizedTopK.value,
       cardTypes: selectedCardTypes.value,
       availableCardTypes: availableCardTypes.value,
+      knowledgeScope: selectedKnowledgeScope.value,
     })
     result.value = normalizeKnowledgeRecallResult(data, {
       topK: normalizedTopK.value,
@@ -284,6 +306,7 @@ function handleSelectHistory(view: KnowledgeRecallViewModel) {
   result.value = view
   query.value = view.query
   topK.value = view.topK ?? 5
+  selectedKnowledgeScope.value = 'collective'
   if (view.cardType) {
     selectedAllCardTypes.value = false
     selectedCardTypes.value = [view.cardType]
@@ -339,5 +362,14 @@ onMounted(fetchCardTypes)
 
 .knowledge-recall-test :deep(.knowledge-recall-test__top-k-slider:hover .ant-slider-handle::after) {
   box-shadow: 0 0 0 2px var(--knowledge-recall-top-k-color);
+}
+
+.knowledge-recall-test :deep(.knowledge-recall-test__scope .ant-segmented-group) {
+  width: 100%;
+}
+
+.knowledge-recall-test :deep(.knowledge-recall-test__scope .ant-segmented-item) {
+  flex: 1;
+  min-width: 0;
 }
 </style>

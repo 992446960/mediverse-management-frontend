@@ -93,6 +93,22 @@ describe('knowledge recall payload', () => {
   })
 })
 
+describe('knowledge recall scope ui contract', () => {
+  it('exposes knowledge scope options and submits selected scope', () => {
+    const source = readFileSync(
+      resolve(process.cwd(), 'src/views/shared/knowledge-recall-test/index.vue'),
+      'utf8'
+    )
+
+    expect(source).toContain('knowledge.recall.scopeLabel')
+    expect(source).toContain('knowledge.recall.scopeCollective')
+    expect(source).toContain('knowledge.recall.scopeIndividual')
+    expect(source).toContain('knowledge.recall.scopeAll')
+    expect(source).toContain("selectedKnowledgeScope = ref<KnowledgeScope>('collective')")
+    expect(source).toContain('knowledgeScope: selectedKnowledgeScope.value')
+  })
+})
+
 describe('knowledge recall card type loading contract', () => {
   it('does not cache recall card type options in localStorage', () => {
     const source = readFileSync(

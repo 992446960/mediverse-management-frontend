@@ -21,7 +21,10 @@ describe('Knowledge Recall 模块', () => {
   })
 
   it('POST recall 应返回 Agentic 召回结果', async () => {
-    const res = await authedPost(`${basePath()}/recall`, { query: '发热问诊' })
+    const res = await authedPost(`${basePath()}/recall`, {
+      query: '发热问诊',
+      metadata: { knowledge_scope: 'collective' },
+    })
     expect(res.status).toBe(200)
     assertBaseResponseOk(res.data as Record<string, any>)
     const data = (res.data as any).data

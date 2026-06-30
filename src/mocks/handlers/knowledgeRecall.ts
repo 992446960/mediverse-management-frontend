@@ -201,7 +201,7 @@ export const knowledgeRecallHandlers = [
       const body = (await request.json()) as {
         query?: string
         top_k?: number
-        metadata?: { card_type?: string[] }
+        metadata?: { card_type?: string[]; knowledge_scope?: string }
       }
       const query = body.query?.trim()
       if (!query) {
@@ -236,7 +236,7 @@ export const knowledgeRecallHandlers = [
     const body = (await request.json()) as {
       query?: string
       top_k?: number
-      metadata?: { card_type?: string[] }
+      metadata?: { card_type?: string[]; knowledge_scope?: string }
     }
     const query = body.query?.trim()
     if (!query) {

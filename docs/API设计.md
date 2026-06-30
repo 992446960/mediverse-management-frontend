@@ -3475,6 +3475,7 @@ POST /api/v1/knowledge-recall/{owner_type}/{owner_id}/recall
   "top_k": 5,
   "metadata": {
     "card_type": ["rule", "disease_overview"],
+    "knowledge_scope": "collective",
     "input_data": {}
   }
 }
@@ -3486,10 +3487,10 @@ POST /api/v1/knowledge-recall/{owner_type}/{owner_id}/recall
 | query | string | ✅ | 搜索关键词 / 临床问题，最多 2000 字 |
 | top_k | int | ❌ | 最大命中数，默认 5，范围 1–20 |
 | metadata | object | ❌ | 过滤元数据（`NonAgenticSearchMetadata`） |
-| metadata.card_type | string[] | ❌ | 6 类知识卡 `code`；不传则全域检索；空数组 → 422 |
+| metadata.card_type | string[] | ❌ | 知识卡 `code`；不传或空数组则全域检索 |
 | metadata.input_data | object | ❌ | ES filter 透传白名单字段 |
-| metadata.owner_id | string | — | 由路由从路径注入，调用方无需传 |
-| metadata.owner_scope | string | — | 由路由从路径注入，调用方无需传 |
+| metadata.owner_ids | string[] | ❌ | 检索范围 owner_id 集合；不传则由后端按当前 owner / 用户角色决定 |
+| metadata.knowledge_scope | string | ❌ | 知识卡范围：`collective`（群体知识卡，默认）/ `individual`（个体知识卡）/ `all`（全部） |
 
 
 **Response data**
@@ -3577,7 +3578,8 @@ POST /api/v1/knowledge-recall/{owner_type}/{owner_id}/search
   "query": "高血压 降压药",
   "top_k": 5,
   "metadata": {
-    "card_type": ["rule"]
+    "card_type": ["rule"],
+    "knowledge_scope": "collective"
   }
 }
 ```

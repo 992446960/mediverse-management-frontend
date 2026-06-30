@@ -56,6 +56,10 @@ const requiredKeys = [
   'chat.createSessionFrontendInvalid',
   'chat.skillTagHypertensionGuideline',
   'chat.skillTagDiabetesDiet',
+  'knowledge.recall.scopeLabel',
+  'knowledge.recall.scopeCollective',
+  'knowledge.recall.scopeIndividual',
+  'knowledge.recall.scopeAll',
 ]
 
 const sourceExpectations = [
