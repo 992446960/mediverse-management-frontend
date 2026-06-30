@@ -116,6 +116,11 @@ describe('knowledge recall scope ui contract', () => {
     expect(source).not.toContain('knowledge-recall-test__scope-segmented')
     expect(source).not.toContain('useSegmentedKnowledgeScopeControl')
   })
+
+  it('keeps the parameter panel at 400px on desktop layouts', () => {
+    expect(source).toContain('grid-template-columns: minmax(0, 1fr) 400px')
+    expect(source).not.toContain('grid-template-columns: minmax(0, 1fr) 500px')
+  })
 })
 
 describe('knowledge recall result display contract', () => {

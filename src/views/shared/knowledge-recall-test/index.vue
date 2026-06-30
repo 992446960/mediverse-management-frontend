@@ -350,7 +350,7 @@ onMounted(fetchCardTypes)
 
 @media (min-width: 720px) {
   .knowledge-recall-test__form-grid {
-    grid-template-columns: minmax(0, 1fr) 500px;
+    grid-template-columns: minmax(0, 1fr) 400px;
   }
 }
 
