@@ -92,7 +92,7 @@ import { FileTextOutlined, MessageOutlined } from '@ant-design/icons-vue'
 import { useI18n } from 'vue-i18n'
 import type { KnowledgeRecallViewModel, KnowledgeRecallViewSource } from '@/types/knowledgeRecall'
 import { getCardTypeConfig } from '@/types/knowledge'
-import { formatRecallConfidence } from '@/utils/knowledgeRecall'
+import { formatRecallConfidence, formatRecallQueryTime } from '@/utils/knowledgeRecall'
 import { renderMarkdownSafe } from '@/utils/renderMarkdownSafe'
 
 const props = defineProps<{
@@ -111,9 +111,8 @@ const sourceCount = computed(() => props.result?.count ?? props.result?.sources.
 const hasFinalAnswer = computed(() => (props.result?.answer ?? '').trim() !== '')
 const finalAnswerHtml = computed(() => renderMarkdownSafe(props.result?.answer))
 const queryTimeText = computed(() => {
-  const value = props.result?.queryTimeMs
-  if (typeof value !== 'number' || !Number.isFinite(value)) return ''
-  return t('knowledge.recall.queryTime', { time: `${Math.round(value)}ms` })
+  const text = formatRecallQueryTime(props.result?.queryTimeMs)
+  return text === '-' ? '' : t('knowledge.recall.queryTime', { time: text })
 })
 const confidenceText = computed(() => {
   const text = formatRecallConfidence(props.result?.confidence)

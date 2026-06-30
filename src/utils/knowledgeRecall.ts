@@ -153,6 +153,15 @@ export function formatRecallHistoryLatency(value: number | null | undefined) {
   return `${value.toFixed(2)} s`
 }
 
+export function formatRecallQueryTime(value: number | null | undefined) {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return '-'
+
+  if (value < 1000) return `${Math.round(value)}ms`
+
+  const seconds = Math.round((value / 1000) * 10) / 10
+  return `${Number.isInteger(seconds) ? seconds.toFixed(0) : seconds.toFixed(1)}s`
+}
+
 export function formatRecallHistoryCreatedAt(value: string | null | undefined) {
   if (!value) return '-'
 

@@ -7,6 +7,7 @@ import {
   formatRecallHistoryCreatedAt,
   formatRecallHistoryLatency,
   formatRecallConfidence,
+  formatRecallQueryTime,
   normalizeKnowledgeRecallResult,
   normalizeNonAgenticKnowledgeRecallResult,
   normalizeKnowledgeRecallSessionDetail,
@@ -94,18 +95,41 @@ describe('knowledge recall payload', () => {
 })
 
 describe('knowledge recall scope ui contract', () => {
-  it('exposes knowledge scope options and submits selected scope', () => {
-    const source = readFileSync(
-      resolve(process.cwd(), 'src/views/shared/knowledge-recall-test/index.vue'),
-      'utf8'
-    )
+  const source = readFileSync(
+    resolve(process.cwd(), 'src/views/shared/knowledge-recall-test/index.vue'),
+    'utf8'
+  )
 
+  it('exposes knowledge scope options and submits selected scope', () => {
     expect(source).toContain('knowledge.recall.scopeLabel')
     expect(source).toContain('knowledge.recall.scopeCollective')
     expect(source).toContain('knowledge.recall.scopeIndividual')
     expect(source).toContain('knowledge.recall.scopeAll')
     expect(source).toContain("selectedKnowledgeScope = ref<KnowledgeScope>('collective')")
     expect(source).toContain('knowledgeScope: selectedKnowledgeScope.value')
+  })
+
+  it('uses a select control for knowledge scope selection', () => {
+    expect(source).toContain('<a-select')
+    expect(source).toContain('knowledge-recall-test__scope-select')
+    expect(source).not.toContain('<a-segmented')
+    expect(source).not.toContain('knowledge-recall-test__scope-segmented')
+    expect(source).not.toContain('useSegmentedKnowledgeScopeControl')
+  })
+})
+
+describe('knowledge recall result display contract', () => {
+  it('uses compact query time formatting in result badges', () => {
+    const source = readFileSync(
+      resolve(
+        process.cwd(),
+        'src/views/shared/knowledge-recall-test/components/RecallResultSection.vue'
+      ),
+      'utf8'
+    )
+
+    expect(source).toContain('formatRecallQueryTime')
+    expect(source).not.toContain('`${Math.round(value)}ms`')
   })
 })
 
@@ -424,6 +448,18 @@ describe('knowledge recall view model', () => {
 })
 
 describe('knowledge recall history formatters', () => {
+  it('formats result query time with compact millisecond and second units', () => {
+    expect(formatRecallQueryTime(239)).toBe('239ms')
+    expect(formatRecallQueryTime(999.4)).toBe('999ms')
+    expect(formatRecallQueryTime(1000)).toBe('1s')
+    expect(formatRecallQueryTime(1200)).toBe('1.2s')
+    expect(formatRecallQueryTime(12400)).toBe('12.4s')
+    expect(formatRecallQueryTime(0)).toBe('0ms')
+    expect(formatRecallQueryTime(null)).toBe('-')
+    expect(formatRecallQueryTime(Number.NaN)).toBe('-')
+    expect(formatRecallQueryTime(-1)).toBe('-')
+  })
+
   it('formats recall confidence with safe percent display', () => {
     expect(formatRecallConfidence(0.86)).toBe('86%')
     expect(formatRecallConfidence(86)).toBe('86%')

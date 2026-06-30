@@ -109,9 +109,9 @@
           <div class="mb-2 text-sm font-medium text-(--color-text-base)">
             {{ t('knowledge.recall.scopeLabel') }}
           </div>
-          <a-segmented
+          <a-select
             v-model:value="selectedKnowledgeScope"
-            class="knowledge-recall-test__scope w-full"
+            class="knowledge-recall-test__scope-select w-full"
             :options="knowledgeScopeOptions"
             :disabled="loading"
           />
@@ -230,7 +230,13 @@ const selectedSource = ref<KnowledgeRecallViewSource | null>(null)
 const historyOpen = ref(false)
 const getLocalizedCardTypeOptionLabel = (option: CardTypeOption) =>
   getCardTypeOptionLabel(option, locale.value)
-const knowledgeScopeOptions = computed(() => [
+
+interface KnowledgeScopeOption {
+  label: string
+  value: KnowledgeScope
+}
+
+const knowledgeScopeOptions = computed<KnowledgeScopeOption[]>(() => [
   { label: t('knowledge.recall.scopeCollective'), value: 'collective' },
   { label: t('knowledge.recall.scopeIndividual'), value: 'individual' },
   { label: t('knowledge.recall.scopeAll'), value: 'all' },
@@ -344,7 +350,7 @@ onMounted(fetchCardTypes)
 
 @media (min-width: 720px) {
   .knowledge-recall-test__form-grid {
-    grid-template-columns: minmax(0, 1fr) 320px;
+    grid-template-columns: minmax(0, 1fr) 500px;
   }
 }
 
@@ -362,14 +368,5 @@ onMounted(fetchCardTypes)
 
 .knowledge-recall-test :deep(.knowledge-recall-test__top-k-slider:hover .ant-slider-handle::after) {
   box-shadow: 0 0 0 2px var(--knowledge-recall-top-k-color);
-}
-
-.knowledge-recall-test :deep(.knowledge-recall-test__scope .ant-segmented-group) {
-  width: 100%;
-}
-
-.knowledge-recall-test :deep(.knowledge-recall-test__scope .ant-segmented-item) {
-  flex: 1;
-  min-width: 0;
 }
 </style>
