@@ -121,6 +121,17 @@ describe('knowledge recall scope ui contract', () => {
     expect(source).toContain('grid-template-columns: minmax(0, 1fr) 400px')
     expect(source).not.toContain('grid-template-columns: minmax(0, 1fr) 500px')
   })
+
+  it('uses semantic icon colors for query and parameter sections', () => {
+    expect(source).toContain('knowledge-recall-test__icon--query')
+    expect(source).toContain('knowledge-recall-test__icon--params')
+    expect(source).toContain('--knowledge-recall-icon-query: #2563eb')
+    expect(source).toContain('--knowledge-recall-icon-params: #0891b2')
+    expect(source).toContain('--knowledge-recall-icon-answer: #16a34a')
+    expect(source).toContain('--knowledge-recall-icon-sources: #f59e0b')
+    expect(source).toContain('--knowledge-recall-icon-card: var(--color-primary)')
+    expect(source).toContain(":root[data-theme='dark'] .knowledge-recall-test")
+  })
 })
 
 describe('knowledge recall result display contract', () => {
@@ -135,6 +146,20 @@ describe('knowledge recall result display contract', () => {
 
     expect(source).toContain('formatRecallQueryTime')
     expect(source).not.toContain('`${Math.round(value)}ms`')
+  })
+
+  it('uses semantic icon colors for answer, source list and source card titles', () => {
+    const source = readFileSync(
+      resolve(
+        process.cwd(),
+        'src/views/shared/knowledge-recall-test/components/RecallResultSection.vue'
+      ),
+      'utf8'
+    )
+
+    expect(source).toContain('knowledge-recall-test__icon--answer')
+    expect(source).toContain('knowledge-recall-test__icon--sources')
+    expect(source).toContain('knowledge-recall-test__icon--card')
   })
 })
 

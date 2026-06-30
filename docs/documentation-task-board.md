@@ -34,6 +34,7 @@
 
 ## 近期同步记录
 
+- 知识卡召回测试页标题图标改为按区域语义配色：测试问题使用蓝色、参数设置使用青蓝色、最终回答使用绿色、召回知识卡使用琥珀色，卡片标题内文件图标保留主色，并补充静态契约单测避免回退为统一主色。
 - 知识卡召回测试页参数区宽度调整为 400px，知识范围控件改为下拉选择框，避免分段按钮选中态与动画样式不稳定；结果卡顶部耗时徽标保持紧凑格式，`<1000ms` 显示毫秒、`>=1000ms` 显示秒（如 `1s` / `1.2s` / `12.4s`），并补充静态契约和 formatter 单测。
 - 知识卡召回测试页对齐后端 `metadata.knowledge_scope` 合同：参数区新增“知识范围”控件（群体知识卡 / 个体知识卡 / 全部），默认 `collective`，执行召回时随请求体提交；`docs/API设计.md` 同步补充 `metadata.knowledge_scope` 并修正旧的 `metadata.owner_id` / `owner_scope` 字段为当前 `metadata.owner_ids` 合同。
 - Docker 打包脚本改为可选上传地址：`pnpm docker:build` 只构建并导出 tar，`pnpm docker:build -- <REMOTE_HOST>` 在导出后上传到服务器，文档同步移除 `REMOTE_HOST` 占位符流程。

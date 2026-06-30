@@ -49,7 +49,9 @@
       <section class="app-container min-w-0 p-5">
         <div class="mb-3 flex items-center justify-between gap-3">
           <h2 class="m-0 flex items-center gap-2 text-base font-semibold text-(--color-text-base)">
-            <QuestionCircleOutlined class="text-primary" />
+            <QuestionCircleOutlined
+              class="knowledge-recall-test__icon knowledge-recall-test__icon--query"
+            />
             {{ t('knowledge.recall.queryLabel') }}
           </h2>
           <span class="text-xs text-(--color-text-tertiary)"> {{ query.length }} / 2000 </span>
@@ -65,7 +67,7 @@
 
       <aside class="app-container min-w-0 p-5">
         <div class="mb-5 flex items-center gap-2">
-          <FilterOutlined class="text-primary" />
+          <FilterOutlined class="knowledge-recall-test__icon knowledge-recall-test__icon--params" />
           <h2 class="m-0 text-base font-semibold text-(--color-text-base)">
             {{ t('knowledge.recall.paramsTitle') }}
           </h2>
@@ -334,6 +336,30 @@ onMounted(fetchCardTypes)
 <style scoped lang="scss">
 .knowledge-recall-test {
   --knowledge-recall-top-k-color: var(--color-primary);
+  --knowledge-recall-icon-query: #2563eb;
+  --knowledge-recall-icon-params: #0891b2;
+  --knowledge-recall-icon-answer: #16a34a;
+  --knowledge-recall-icon-sources: #f59e0b;
+  --knowledge-recall-icon-card: var(--color-primary);
+}
+
+:root[data-theme='dark'] .knowledge-recall-test {
+  --knowledge-recall-icon-query: #60a5fa;
+  --knowledge-recall-icon-params: #22d3ee;
+  --knowledge-recall-icon-answer: #4ade80;
+  --knowledge-recall-icon-sources: #fbbf24;
+}
+
+.knowledge-recall-test__icon {
+  transition: color 0.2s ease;
+}
+
+.knowledge-recall-test__icon--query {
+  color: var(--knowledge-recall-icon-query);
+}
+
+.knowledge-recall-test__icon--params {
+  color: var(--knowledge-recall-icon-params);
 }
 
 .knowledge-recall-test__header {

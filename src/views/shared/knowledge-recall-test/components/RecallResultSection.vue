@@ -22,7 +22,9 @@
       <section class="knowledge-recall-test__result-card rounded-md border p-4 shadow-sm">
         <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
           <h2 class="m-0 flex items-center gap-2 text-base font-semibold text-(--color-text-base)">
-            <MessageOutlined class="text-primary" />
+            <MessageOutlined
+              class="knowledge-recall-test__icon knowledge-recall-test__icon--answer"
+            />
             {{ t('knowledge.recall.finalAnswer') }}
           </h2>
           <div class="flex flex-wrap gap-2 text-xs text-(--color-text-tertiary)">
@@ -42,7 +44,9 @@
       <section class="knowledge-recall-test__result-card rounded-md border p-4 shadow-sm">
         <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
           <h2 class="m-0 flex items-center gap-2 text-base font-semibold text-(--color-text-base)">
-            <FileTextOutlined class="text-primary" />
+            <FileTextOutlined
+              class="knowledge-recall-test__icon knowledge-recall-test__icon--sources"
+            />
             {{ t('knowledge.recall.retrievedSources') }}
           </h2>
           <span class="text-sm text-(--color-text-secondary)">
@@ -70,7 +74,9 @@
               <span
                 class="inline-flex min-w-0 items-center gap-1.5 font-medium text-(--color-text-base)"
               >
-                <FileTextOutlined class="shrink-0 text-primary" />
+                <FileTextOutlined
+                  class="knowledge-recall-test__icon knowledge-recall-test__icon--card shrink-0"
+                />
                 <span class="truncate">{{ source.title }}</span>
               </span>
               <a-tag :color="getLocalizedCardTypeConfig(source.cardType).color">
@@ -126,6 +132,22 @@ function formatScore(score: number | null) {
 </script>
 
 <style scoped lang="scss">
+.knowledge-recall-test__icon {
+  transition: color 0.2s ease;
+}
+
+.knowledge-recall-test__icon--answer {
+  color: var(--knowledge-recall-icon-answer);
+}
+
+.knowledge-recall-test__icon--sources {
+  color: var(--knowledge-recall-icon-sources);
+}
+
+.knowledge-recall-test__icon--card {
+  color: var(--knowledge-recall-icon-card);
+}
+
 .knowledge-recall-test__answer-body {
   max-height: min(420px, calc(100vh - 360px));
   overflow-y: auto;
