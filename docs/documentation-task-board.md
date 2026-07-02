@@ -20,6 +20,7 @@
 | `docs/superpowers/plans/2026-05-20-python-mock-backend-openapi.md`        | 线上 Swagger、Python mock 后端实现计划                            | 已新增 | mock 后端接口范围、路径或验证命令变化时更新      |
 | `docs/superpowers/specs/2026-05-29-avatar-user-ui-unification-design.md`  | 分身与用户管理 UI 设计图、当前 Vue/Ant Design 组件边界            | 已新增 | 分身、用户、个人资料 UI 统一规格变化时更新       |
 | `docs/superpowers/plans/2026-05-29-avatar-user-ui-unification.md`         | UI 统一设计规格、当前组件结构、验证要求                           | 已新增 | 分身与用户 UI 实施任务或验收范围变化时更新       |
+| `docs/superpowers/plans/2026-07-02-xls-preview-worker.md`                 | Excel 预览现状、`.xls` Worker 转换方案、10MB/8 秒降级规则          | 已新增 | `.xls` 预览兼容策略、阈值或验收范围变化时更新    |
 
 ## 检查任务
 
@@ -34,6 +35,7 @@
 
 ## 近期同步记录
 
+- 落地 `.xls` Excel 前端 Worker 兼容预览：覆盖后端直接返回 `.xls` 以及错标为 `.xlsx` 但实际为 OLE `.xls` 的文件；明确 10MB 和 8 秒降级阈值，复杂样式、合并单元格和公式显示可能有损，失败或超限时提示下载查看。
 - 知识卡召回测试页标题图标改为按区域语义配色：测试问题使用蓝色、参数设置使用青蓝色、最终回答使用绿色、召回知识卡使用琥珀色，卡片标题内文件图标保留主色，并补充静态契约单测避免回退为统一主色。
 - 知识卡召回测试页参数区宽度调整为 400px，知识范围控件改为下拉选择框，避免分段按钮选中态与动画样式不稳定；结果卡顶部耗时徽标保持紧凑格式，`<1000ms` 显示毫秒、`>=1000ms` 显示秒（如 `1s` / `1.2s` / `12.4s`），并补充静态契约和 formatter 单测。
 - 知识卡召回测试页对齐后端 `metadata.knowledge_scope` 合同：参数区新增“知识范围”控件（群体知识卡 / 个体知识卡 / 全部），默认 `collective`，执行召回时随请求体提交；`docs/API设计.md` 同步补充 `metadata.knowledge_scope` 并修正旧的 `metadata.owner_id` / `owner_scope` 字段为当前 `metadata.owner_ids` 合同。
