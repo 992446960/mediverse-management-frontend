@@ -15,7 +15,12 @@
       >
         <PdfViewer v-if="previewKind === 'pdf' && previewUrl" :file-url="previewUrl" />
         <DocxViewer v-else-if="previewKind === 'docx' && previewUrl" :file-url="previewUrl" />
-        <ExcelViewer v-else-if="previewKind === 'xlsx' && previewUrl" :file-url="previewUrl" />
+        <ExcelPreviewLoader
+          v-else-if="(previewKind === 'xlsx' || previewKind === 'xls') && previewUrl"
+          :file-url="previewUrl"
+          :file-type="previewKind"
+          :file-name="previewTitle"
+        />
         <PptxViewer v-else-if="previewKind === 'pptx' && previewUrl" :file-url="previewUrl" />
         <TextFileViewer
           v-else-if="previewKind === 'txt' && previewUrl"
@@ -129,7 +134,9 @@ import { CHAT_ATTACHMENT_ACCEPT, isChatDocumentAttachment } from '@/utils/docume
 
 const PdfViewer = defineAsyncComponent(() => import('@/components/FilePreview/PdfViewer.vue'))
 const DocxViewer = defineAsyncComponent(() => import('@/components/FilePreview/DocxViewer.vue'))
-const ExcelViewer = defineAsyncComponent(() => import('@/components/FilePreview/ExcelViewer.vue'))
+const ExcelPreviewLoader = defineAsyncComponent(
+  () => import('@/components/FilePreview/ExcelPreviewLoader.vue')
+)
 const PptxViewer = defineAsyncComponent(() => import('@/components/FilePreview/PptxViewer.vue'))
 const TextFileViewer = defineAsyncComponent(
   () => import('@/components/FilePreview/TextFileViewer.vue')
@@ -398,7 +405,7 @@ const onFileChange = (e: Event) => {
   target.value = ''
 }
 
-type PendingPreviewKind = 'pdf' | 'docx' | 'pptx' | 'xlsx' | 'txt' | 'md'
+type PendingPreviewKind = 'pdf' | 'docx' | 'pptx' | 'xls' | 'xlsx' | 'txt' | 'md'
 
 const previewOpen = ref(false)
 const previewTitle = ref('')
@@ -429,10 +436,12 @@ function resolvePendingPreviewKind(file: File): PendingPreviewKind | 'legacy-doc
     return 'pptx'
   }
   if (
+    name.endsWith('.xls') ||
+    mime === 'application/vnd.ms-excel' ||
     name.endsWith('.xlsx') ||
     mime === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
   ) {
-    return 'xlsx'
+    return name.endsWith('.xls') || mime === 'application/vnd.ms-excel' ? 'xls' : 'xlsx'
   }
   if (name.endsWith('.txt') || mime === 'text/plain') return 'txt'
   if (name.endsWith('.md') || mime === 'text/markdown' || mime === 'text/x-markdown') return 'md'

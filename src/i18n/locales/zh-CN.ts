@@ -384,6 +384,13 @@ export default {
     previewScrollPrevScreen: '上一屏',
     previewScrollNextScreen: '下一屏',
     previewExcelSheetHint: '工作表切换请使用表格底部标签栏。',
+    previewExcelPreparing: '正在准备 Excel 预览...',
+    previewExcelConverting: '正在转换旧版 Excel 文件...',
+    previewExcelLegacyRisk: '旧版 Excel 在线预览可能出现样式、合并单元格或公式显示差异。',
+    previewExcelLegacyLargeOrTimeout:
+      '旧版 Excel 在线预览存在兼容和性能限制。当前文件较大或转换耗时过长，建议下载后使用本机 Excel 查看。',
+    previewExcelLegacyFailed:
+      '旧版 Excel 在线预览可能出现样式、合并单元格或公式显示差异。当前文件转换失败，请下载后使用本机 Excel 查看。',
     previewPptxHint: '可缩放查看幻灯片；复杂动画以本机打开为准。',
     previewDocLegacy:
       '「.doc」格式暂不支持在线预览，请点击「原文件下载」在本地 Word 或其他兼容软件中打开。',

@@ -95,6 +95,7 @@ declare module 'vue' {
     DocxViewer: typeof import('./src/components/FilePreview/DocxViewer.vue')['default']
     EmptyState: typeof import('./src/components/EmptyState/index.vue')['default']
     ErrorBoundary: typeof import('./src/components/ErrorBoundary/index.vue')['default']
+    ExcelPreviewLoader: typeof import('./src/components/FilePreview/ExcelPreviewLoader.vue')['default']
     ExcelViewer: typeof import('./src/components/FilePreview/ExcelViewer.vue')['default']
     FilePreview: typeof import('./src/components/FilePreview/index.vue')['default']
     FileUploader: typeof import('./src/components/FileUploader/index.vue')['default']

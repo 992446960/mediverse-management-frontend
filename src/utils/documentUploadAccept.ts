@@ -9,6 +9,7 @@ export const KNOWLEDGE_DOCUMENT_EXTENSIONS = [
   '.pptx',
   '.txt',
   '.md',
+  '.xls',
   '.xlsx',
   '.csv',
   '.json',
@@ -25,6 +26,7 @@ const CHAT_DOCUMENT_EXT_SET = new Set<string>([
   '.pptx',
   '.txt',
   '.md',
+  '.xls',
   '.xlsx',
 ])
 
@@ -33,6 +35,7 @@ const CHAT_DOCUMENT_MIME_SET = new Set([
   'application/msword',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'application/vnd.ms-excel',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   'text/plain',
   'text/markdown',
@@ -62,6 +65,7 @@ export const CHAT_ATTACHMENT_ACCEPT = [
   '.docx',
   '.doc',
   '.pptx',
+  '.xls',
   '.xlsx',
   '.txt',
   '.md',

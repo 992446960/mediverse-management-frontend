@@ -60,6 +60,11 @@ const requiredKeys = [
   'knowledge.recall.scopeCollective',
   'knowledge.recall.scopeIndividual',
   'knowledge.recall.scopeAll',
+  'knowledge.previewExcelPreparing',
+  'knowledge.previewExcelConverting',
+  'knowledge.previewExcelLegacyRisk',
+  'knowledge.previewExcelLegacyLargeOrTimeout',
+  'knowledge.previewExcelLegacyFailed',
 ]
 
 const sourceExpectations = [

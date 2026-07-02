@@ -28,9 +28,11 @@
             @rendered="onOfficeReady"
             @error="onOfficeReady"
           />
-          <ExcelViewer
+          <ExcelPreviewLoader
             v-else-if="category === 'xlsx'"
             :file-url="fileUrl"
+            :file-type="excelFileType"
+            :file-name="displayName"
             :viewport-size="previewBodySize"
             @rendered="onOfficeReady"
             @error="onOfficeReady"
@@ -90,11 +92,11 @@ import { message } from 'ant-design-vue'
 import { useI18n } from 'vue-i18n'
 import { DownloadOutlined } from '@ant-design/icons-vue'
 import DocxViewer from '@/components/FilePreview/DocxViewer.vue'
-import ExcelViewer from '@/components/FilePreview/ExcelViewer.vue'
+import ExcelPreviewLoader from '@/components/FilePreview/ExcelPreviewLoader.vue'
 import PdfViewer from '@/components/FilePreview/PdfViewer.vue'
 import TextFileViewer from '@/components/FilePreview/TextFileViewer.vue'
 import type { FileCategory } from '@/utils/fileType'
-import { getFileCategory, getTextViewerFileType } from '@/utils/fileType'
+import { extractExtension, getFileCategory, getTextViewerFileType } from '@/utils/fileType'
 import { sanitizeDownloadFilename, triggerFileDownload } from '@/utils/triggerFileDownload'
 
 const { t } = useI18n()
@@ -119,6 +121,10 @@ const displayName = computed(() => {
 const category = computed<FileCategory>(() => getFileCategory(props.fileUrl, props.fileName))
 
 const textFileType = computed(() => getTextViewerFileType(props.fileName, props.fileUrl))
+
+const excelFileType = computed(
+  () => extractExtension(displayName.value) || extractExtension(props.fileUrl)
+)
 
 const contentLoading = ref(true)
 const previewBodyRef = ref<HTMLElement | null>(null)

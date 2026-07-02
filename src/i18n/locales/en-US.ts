@@ -388,6 +388,14 @@ export default {
     previewScrollPrevScreen: 'Previous screen',
     previewScrollNextScreen: 'Next screen',
     previewExcelSheetHint: 'Switch sheets using the tab bar at the bottom of the grid.',
+    previewExcelPreparing: 'Preparing Excel preview...',
+    previewExcelConverting: 'Converting legacy Excel file...',
+    previewExcelLegacyRisk:
+      'Legacy Excel online preview may differ in styles, merged cells or formula display.',
+    previewExcelLegacyLargeOrTimeout:
+      'Legacy Excel online preview has compatibility and performance limits. This file is large or took too long to convert. Download it and open it with desktop Excel.',
+    previewExcelLegacyFailed:
+      'Legacy Excel online preview may differ in styles, merged cells or formula display. This file could not be converted. Download it and open it with desktop Excel.',
     previewPptxHint: 'Zoom to browse slides; complex animations may differ from desktop Office.',
     previewDocLegacy:
       'Legacy .doc files cannot be previewed in the browser. Use Download Original to open in Word.',

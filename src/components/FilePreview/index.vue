@@ -72,9 +72,11 @@
               :file-url="originalFileUrl"
             />
             <!-- Excel -->
-            <ExcelViewer
-              v-else-if="currentFile?.file_type === 'xlsx' && originalFileUrl"
+            <ExcelPreviewLoader
+              v-else-if="isExcelType && originalFileUrl"
               :file-url="originalFileUrl"
+              :file-type="currentFile?.file_type"
+              :file-name="currentFile?.file_name"
             />
             <!-- PPTX -->
             <PptxViewer
@@ -130,7 +132,7 @@ import dayjs from 'dayjs'
 import { DownloadOutlined } from '@ant-design/icons-vue'
 import PageHead from '@/components/PageHead/index.vue'
 import DocxViewer from './DocxViewer.vue'
-import ExcelViewer from './ExcelViewer.vue'
+import ExcelPreviewLoader from './ExcelPreviewLoader.vue'
 import PptxViewer from './PptxViewer.vue'
 import PdfOriginalTabPanel from './PdfOriginalTabPanel.vue'
 import PdfParsedTabPanel from './PdfParsedTabPanel.vue'
@@ -180,6 +182,10 @@ const isTextType = computed(() => {
 })
 
 const isLegacyDocType = computed(() => currentFile.value?.file_type?.toLowerCase() === 'doc')
+
+const isExcelType = computed(() =>
+  ['xls', 'xlsx'].includes(currentFile.value?.file_type?.toLowerCase() ?? '')
+)
 
 const showPdfTabs = computed(() => currentFile.value?.file_type?.toLowerCase() === 'pdf')
 

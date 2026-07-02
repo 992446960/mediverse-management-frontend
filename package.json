@@ -40,7 +40,8 @@
     "vue-demi": "^0.14.10",
     "vue-i18n": "^11.2.8",
     "vue-json-pretty": "^2.6.0",
-    "vue-router": "^5.0.3"
+    "vue-router": "^5.0.3",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

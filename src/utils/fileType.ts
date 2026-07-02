@@ -13,6 +13,7 @@ export type FileCategory =
 const EXT_MAP: Record<string, FileCategory> = {
   pdf: 'pdf',
   docx: 'docx',
+  xls: 'xlsx',
   xlsx: 'xlsx',
   txt: 'text',
   md: 'text',

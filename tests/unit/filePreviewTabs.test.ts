@@ -17,4 +17,10 @@ describe('FilePreview tabs', () => {
     expect(headConfSource).not.toContain('tabChangeHandle')
     expect(filePreviewSource).toContain('v-if="showPdfTabs"')
   })
+
+  it('routes xls and xlsx files through the excel preview loader', () => {
+    expect(filePreviewSource).toContain('ExcelPreviewLoader')
+    expect(filePreviewSource).toContain("['xls', 'xlsx']")
+    expect(filePreviewSource).toContain(':file-type="currentFile?.file_type"')
+  })
 })

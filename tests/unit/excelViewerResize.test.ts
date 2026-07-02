@@ -71,8 +71,9 @@ describe('ExcelViewer resize recovery', () => {
 })
 
 describe('UniversalFilePreview excel viewport', () => {
-  it('passes measured preview body dimensions to the excel viewer', () => {
+  it('passes measured preview body dimensions to the excel preview loader', () => {
     expect(universalFilePreviewSource).toContain('ref="previewBodyRef"')
+    expect(universalFilePreviewSource).toContain('ExcelPreviewLoader')
     expect(universalFilePreviewSource).toContain(':viewport-size="previewBodySize"')
     expect(universalFilePreviewSource).toContain('new ResizeObserver')
   })
